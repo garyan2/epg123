@@ -683,7 +683,8 @@ namespace epg123
                         stationItem.Name
                     })
                 {
-                    Checked = allStationIDs.Contains(station.StationId) || allStationIDs.Contains(station.Alternate)
+                    Checked = allStationIDs.Contains(station.StationId) || allStationIDs.Contains(station.Alternate),
+                    ForeColor = allStationIDs.Contains(stationItem.StationId) ? SystemColors.WindowText : SystemColors.GrayText
                 });
             }
 

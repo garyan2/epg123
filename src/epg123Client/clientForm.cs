@@ -1470,6 +1470,7 @@ namespace epg123
             if (openFileDialog1.ShowDialog() != DialogResult.OK) return;
 
             // close all object store items
+            forceExit = true;
             clientForm_FormClosing(null, null);
 
             // perform the file import with progress form
