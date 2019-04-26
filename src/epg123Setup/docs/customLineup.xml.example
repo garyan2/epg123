@@ -1,0 +1,231 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CustomLineups>
+  <CustomLineup name="HDHomeRun Premium TV" location="Pacific" lineup="EPG123-CUSTOM-01">
+    <station number="1010" subnumber="0" callsign="QVCHD" name="QVC HD" alternate="11069">60222</station>
+    <station number="1102" subnumber="0" callsign="WEATHHD" name="The Weather Channel HD" alternate="11187">58812</station>
+    <station number="1110" subnumber="0" callsign="FNCHD" name="Fox News Channel HD" alternate="16374">60179</station>
+    <station number="1111" subnumber="0" callsign="CNNHD" name="CNN HD" alternate="10142">58646</station>
+    <station number="1112" subnumber="0" callsign="HLNHD" name="HLN HD" alternate="10145">64549</station>
+    <station number="1113" subnumber="0" callsign="MNBCHD" name="MSNBC HD" alternate="16300">64241</station>
+    <station number="1121" subnumber="0" callsign="CNBCHD" name="CNBC HD" alternate="10139">58780</station>
+    <station number="1128" subnumber="0" callsign="CSPANHD" name="CSPAN HD" alternate="10161">68344</station>
+    <station number="1205" subnumber="0" callsign="ESPNHD" name="ESPNHD" alternate="10179">32645</station>
+    <station number="1206" subnumber="0" callsign="ESPN2HD" name="ESPN2 HD" alternate="12444">45507</station>
+    <station number="1210" subnumber="0" callsign="ESPNWHD" name="ESPNEWS HD" alternate="16485">59976</station>
+    <station number="1211" subnumber="0" callsign="ESPNCL" name="ESPN Classic">15451</station>
+    <station number="1301" subnumber="0" callsign="ESPNUHD" name="ESPNU HD" alternate="45654">60696</station>
+    <station number="1402" subnumber="0" callsign="AETVHDP" name="A&amp;E Network HD (Pacific)" alternate="21760">57439</station>
+    <station number="1403" subnumber="0" callsign="USAHDP" name="USA Network HD (Pacific)" alternate="11208">74030</station>
+    <station number="1404" subnumber="0" callsign="TNTPHD" name="Turner Network TV HD (Pacific)" alternate="18510">61340</station>
+    <station number="1405" subnumber="0" callsign="AMCPHD" name="AMC HD (Pacific)" alternate="31556">78836</station>
+    <station number="1409" subnumber="0" callsign="FXPHD" name="FX HD (Pacific)" alternate="14753">59814</station>
+    <station number="1411" subnumber="0" callsign="SYFYHDP" name="Syfy HD (Pacific)" alternate="24533">65626</station>
+    <station number="1412" subnumber="0" callsign="PARPHD" name="Paramount Network HD Pacific" alternate="19002">64593</station>
+    <station number="1430" subnumber="0" callsign="TRUTVHP" name="truTV HD (Pacific)" alternate="24569">65717</station>
+    <station number="1434" subnumber="0" callsign="TBSHDP" name="TBS HD (Pacific)" alternate="34240">67890</station>
+    <station number="1435" subnumber="0" callsign="CCHDP" name="Comedy Central HD (Pacific)" alternate="10150">64599</station>
+    <station number="1449" subnumber="0" callsign="DSCHDP" name="The Discovery Channel HD (Pacific)" alternate="12500">80399</station>
+    <station number="1450" subnumber="0" callsign="TLCPHD" name="The Learning Channel HD (Pacific)" alternate="19543">79911</station>
+    <station number="1455" subnumber="0" callsign="LIFEPHD" name="Lifetime HD (Pacific)" alternate="10919">60250</station>
+    <station number="1458" subnumber="0" callsign="HALLHD" name="Hallmark Channel HD" alternate="19933">66268</station>
+    <station number="1463" subnumber="0" callsign="BRAVOHP" name="Bravo HD (Pacific)" alternate="31555">73994</station>
+    <station number="1464" subnumber="0" callsign="OWNHD" name="Oprah Winfrey Network HD" alternate="70392">70388</station>
+    <station number="1466" subnumber="0" callsign="EPHD" name="E! Entertainment Television HD (Pacific)" alternate="17561">91579</station>
+    <station number="1471" subnumber="0" callsign="APLHDP" name="Animal Planet HD (Pacific)" alternate="50001">68785</station>
+    <station number="1473" subnumber="0" callsign="NGCPHD" name="National Geographic HD (Pacific)" alternate="71595">71601</station>
+    <station number="1478" subnumber="0" callsign="HSTRYHP" name="History HD (Pacific)" alternate="21762">88545</station>
+    <station number="1484" subnumber="0" callsign="FOODPHD" name="Food Network HD (Pacific)" alternate="33648">82119</station>
+    <station number="1488" subnumber="0" callsign="TRAVHD" name="The Travel Channel HD" alternate="50000">59303</station>
+    <station number="1492" subnumber="0" callsign="HGTVPHD" name="Home &amp; Garden Television HD (Pacific)" alternate="34215">87317</station>
+    <station number="1606" subnumber="0" callsign="MTVPHD" name="MTV - Music Television HD (Pacific)" alternate="10987">64630</station>
+    <station number="1607" subnumber="0" callsign="VH1PHD" name="VH1 HD (Pacific)" alternate="16376">64634</station>
+    <station number="1608" subnumber="0" callsign="CMTVHDP" name="Country Music Television HD Pacific" alternate="27203">64610</station>
+    <station number="1625" subnumber="0" callsign="BETHDP" name="BET HD (Pacific)" alternate="24483">64673</station>
+    <station number="1715" subnumber="0" callsign="DISNHDP" name="Disney Channel HD (Pacific)" alternate="12510">63320</station>
+    <station number="1728" subnumber="0" callsign="NIKPHD" name="Nickelodeon HD (Pacific)" alternate="11007">64591</station>
+    <station number="1734" subnumber="0" callsign="TOONPHD" name="Cartoon Network HD (Pacific)" alternate="18151">67703</station>
+    <station number="1742" subnumber="0" callsign="FRFMHDP" name="Freeform HD (Pacific)" alternate="12499">63324</station>
+    <station number="1755" subnumber="0" callsign="TCMHD" name="Turner Classic Movies HD" alternate="12852">64312</station>
+  </CustomLineup>
+  <CustomLineup name="HDHomeRun Premium TV" location="Eastern" lineup="EPG123-CUSTOM-02">
+    <station number="1010" subnumber="0" callsign="QVCHD" name="QVC HD" alternate="11069">60222</station>
+    <station number="1102" subnumber="0" callsign="WEATHHD" name="The Weather Channel HD" alternate="11187">58812</station>
+    <station number="1110" subnumber="0" callsign="FNCHD" name="Fox News Channel HD" alternate="16374">60179</station>
+    <station number="1111" subnumber="0" callsign="CNNHD" name="CNN HD" alternate="10142">58646</station>
+    <station number="1112" subnumber="0" callsign="HLNHD" name="HLN HD" alternate="10145">64549</station>
+    <station number="1113" subnumber="0" callsign="MNBCHD" name="MSNBC HD" alternate="16300">64241</station>
+    <station number="1121" subnumber="0" callsign="CNBCHD" name="CNBC HD" alternate="10139">58780</station>
+    <station number="1128" subnumber="0" callsign="CSPANHD" name="CSPAN HD" alternate="10161">68344</station>
+    <station number="1205" subnumber="0" callsign="ESPNHD" name="ESPNHD" alternate="10179">32645</station>
+    <station number="1206" subnumber="0" callsign="ESPN2HD" name="ESPN2 HD" alternate="12444">45507</station>
+    <station number="1210" subnumber="0" callsign="ESPNWHD" name="ESPNEWS HD" alternate="16485">59976</station>
+    <station number="1211" subnumber="0" callsign="ESPNCL" name="ESPN Classic">15451</station>
+    <station number="1301" subnumber="0" callsign="ESPNUHD" name="ESPNU HD" alternate="45654">60696</station>
+    <station number="1402" subnumber="0" callsign="AETVHD" name="A&amp;E Network HD East" alternate="10035">51529</station>
+    <station number="1403" subnumber="0" callsign="USAHDP" name="USA Network HD (Pacific)" alternate="11208">74030</station>
+    <station number="1404" subnumber="0" callsign="TNTHD" name="Turner Network TV HD" alternate="11164">42642</station>
+    <station number="1405" subnumber="0" callsign="AMCHD" name="AMC HD" alternate="10021">59337</station>
+    <station number="1409" subnumber="0" callsign="FXPHD" name="FX HD (Pacific)" alternate="14753">59814</station>
+    <station number="1411" subnumber="0" callsign="SYFYHDP" name="Syfy HD (Pacific)" alternate="24533">65626</station>
+    <station number="1412" subnumber="0" callsign="PARPHD" name="Paramount Network HD Pacific" alternate="19002">64593</station>
+    <station number="1430" subnumber="0" callsign="TRUTVHP" name="truTV HD (Pacific)" alternate="24569">65717</station>
+    <station number="1434" subnumber="0" callsign="TBSHD" name="TBS HD" alternate="11867">58515</station>
+    <station number="1435" subnumber="0" callsign="CCHDP" name="Comedy Central HD (Pacific)" alternate="10150">64599</station>
+    <station number="1449" subnumber="0" callsign="DSCHDP" name="The Discovery Channel HD (Pacific)" alternate="12500">80399</station>
+    <station number="1450" subnumber="0" callsign="TLCPHD" name="The Learning Channel HD (Pacific)" alternate="19543">79911</station>
+    <station number="1455" subnumber="0" callsign="LIFEHD" name="Lifetime HD" alternate="10918">60150</station>
+    <station number="1458" subnumber="0" callsign="HALLHD" name="Hallmark Channel HD" alternate="19933">66268</station>
+    <station number="1463" subnumber="0" callsign="BRAVOHP" name="Bravo HD (Pacific)" alternate="31555">73994</station>
+    <station number="1464" subnumber="0" callsign="OWNHD" name="Oprah Winfrey Network HD" alternate="70392">70388</station>
+    <station number="1466" subnumber="0" callsign="EHD" name="E! Entertainment Television HD" alternate="10989">61812</station>
+    <station number="1471" subnumber="0" callsign="APLHDP" name="Animal Planet HD (Pacific)" alternate="50001">68785</station>
+    <station number="1473" subnumber="0" callsign="NGCHD" name="National Geographic HD" alternate="24959">49438</station>
+    <station number="1478" subnumber="0" callsign="HSTRYHD" name="History HD" alternate="14771">57708</station>
+    <station number="1484" subnumber="0" callsign="FOODHD" name="Food Network HD" alternate="12574">50747</station>
+    <station number="1488" subnumber="0" callsign="TRAVHD" name="The Travel Channel HD" alternate="50000">59303</station>
+    <station number="1492" subnumber="0" callsign="HGTVD" name="Home &amp; Garden Television HD" alternate="14902">49788</station>
+    <station number="1606" subnumber="0" callsign="MTVPHD" name="MTV - Music Television HD (Pacific)" alternate="10987">64630</station>
+    <station number="1607" subnumber="0" callsign="VH1PHD" name="VH1 HD (Pacific)" alternate="16376">64634</station>
+    <station number="1608" subnumber="0" callsign="CMTVHDP" name="Country Music Television HD Pacific" alternate="27203">64610</station>
+    <station number="1625" subnumber="0" callsign="BETHD" name="BET HD" alternate="10051">63236</station>
+    <station number="1715" subnumber="0" callsign="DISNHDP" name="Disney Channel HD (Pacific)" alternate="12510">63320</station>
+    <station number="1728" subnumber="0" callsign="NIKPHD" name="Nickelodeon HD (Pacific)" alternate="11007">64591</station>
+    <station number="1734" subnumber="0" callsign="TOONHD" name="Cartoon Network HD" alternate="12131">60048</station>
+    <station number="1742" subnumber="0" callsign="FRFMHDP" name="Freeform HD (Pacific)" alternate="12499">63324</station>
+    <station number="1755" subnumber="0" callsign="TCMHD" name="Turner Classic Movies HD" alternate="12852">64312</station>
+  </CustomLineup>
+  <CustomLineup name="Sling TV" location="USA" lineup="EPG123-CUSTOM-03">
+    <station number="1402" subnumber="0" callsign="AETVHD" name="A&amp;E Network HD East" alternate="10035">51529</station>
+    <station number="1480" subnumber="0" callsign="AHCHD" name="American Heroes Channel HD" alternate="18284">78808</station>
+    <station number="1405" subnumber="0" callsign="AMCHD" name="AMC HD" alternate="10021">59337</station>
+    <station number="1613" subnumber="0" callsign="AXSTV" name="AXS TV" alternate="92053">28506</station>
+    <station number="1710" subnumber="0" callsign="BBTVP" name="Baby TV US" alternate="73831">70337</station>
+    <station number="1418" subnumber="0" callsign="BBCAHD" name="BBC America HD" alternate="18332">64492</station>
+    <station number="1117" subnumber="0" callsign="BBCNAHD" name="BBC World News (North America) HD" alternate="101443">89690</station>
+    <station number="1228" subnumber="0" callsign="BEIN1HD" name="beIn Sports HD" alternate="76942">76950</station>
+    <station number="1625" subnumber="0" callsign="BETHD" name="BET HD" alternate="10051">63236</station>
+    <station number="1140" subnumber="0" callsign="BLAZEHD" name="The Blaze TV HD" alternate="77361">80212</station>
+    <station number="1122" subnumber="0" callsign="BLOOMHD" name="Bloomberg HD" alternate="14755">71799</station>
+    <station number="1735" subnumber="0" callsign="BOOM" name="Boomerang">21883</station>
+    <station number="1463" subnumber="0" callsign="BRAVOHD" name="Bravo HD" alternate="10057">58625</station>
+    <station number="387" subnumber="0" callsign="CBNSTR" name="Cheddar Big News Stream">107241</station>
+    <station number="1435" subnumber="0" callsign="CCHD" name="Comedy Central HD" alternate="10149">62420</station>
+    <station number="1131" subnumber="0" callsign="CGTN" name="China Global Television Network">29114</station>
+    <station number="73" subnumber="0" callsign="CHEDSTR" name="Cheddar Stream">101103</station>
+    <station number="388" subnumber="0" callsign="CINEMUS" name="Cinemoi US">77407</station>
+    <station number="1608" subnumber="0" callsign="CMTVHD" name="Country Music Television HD" alternate="10138">59440</station>
+    <station number="1121" subnumber="0" callsign="CNBCHD" name="CNBC HD" alternate="10139">58780</station>
+    <station number="1111" subnumber="0" callsign="CNNHD" name="CNN HD" alternate="10142">58646</station>
+    <station number="1485" subnumber="0" callsign="COOKHD" name="Cooking Channel HD" alternate="30156">68065</station>
+    <station number="1656" subnumber="0" callsign="COWBOY" name="The Cowboy Channel">10188</station>
+    <station number="1487" subnumber="0" callsign="DESTHD" name="Destination America HD" alternate="16617">60468</station>
+    <station number="1715" subnumber="0" callsign="DISNHDP" name="Disney Channel HD (Pacific)" alternate="12510">63320</station>
+    <station number="1493" subnumber="0" callsign="DIYHD" name="Do-It-Yourself Network HD" alternate="18544">67375</station>
+    <station number="1701" subnumber="0" callsign="DJCHHDP" name="Disney Junior US HD (Pacific)" alternate="75003">75004</station>
+    <station number="1449" subnumber="0" callsign="DSCHD" name="The Discovery Channel HD" alternate="11150">56905</station>
+    <station number="74" subnumber="0" callsign="DUCKTV" name="DUCKTV">90850</station>
+    <station number="1716" subnumber="0" callsign="DXDHDP" name="Disney XD HD (Pacific)" alternate="18793">63322</station>
+    <station number="1466" subnumber="0" callsign="EHD" name="E! Entertainment Television HD" alternate="10989">61812</station>
+    <station number="1794" subnumber="0" callsign="EPDVN" name="Epix Drive-in">68409</station>
+    <station number="1792" subnumber="0" callsign="EPIX2HD" name="EPIX 2 HD" alternate="73075">67929</station>
+    <station number="1790" subnumber="0" callsign="EPIXHD" name="Epix HD" alternate="65669">65687</station>
+    <station number="1796" subnumber="0" callsign="EPIXHIT" name="Epix Hits" alternate="74320">74073</station>
+    <station number="1206" subnumber="0" callsign="ESPN2HD" name="ESPN2 HD" alternate="12444">45507</station>
+    <station number="1205" subnumber="0" callsign="ESPNHD" name="ESPNHD" alternate="10179">32645</station>
+    <station number="1301" subnumber="0" callsign="ESPNUHD" name="ESPNU HD" alternate="45654">60696</station>
+    <station number="1210" subnumber="0" callsign="ESPNWHD" name="ESPNEWS HD" alternate="16485">59976</station>
+    <station number="1132" subnumber="0" callsign="EURONEW" name="Euro News">28174</station>
+    <station number="1133" subnumber="0" callsign="F24EN" name="France 24 English">70130</station>
+    <station number="1853" subnumber="0" callsign="FAMZ" name="Showtime Familyzone">25274</station>
+    <station number="1484" subnumber="0" callsign="FOODHD" name="Food Network HD" alternate="12574">50747</station>
+    <station number="1742" subnumber="0" callsign="FRFMHDP" name="Freeform HD (Pacific)" alternate="12499">63324</station>
+    <station number="1208" subnumber="0" callsign="FS1HD" name="Fox Sports 1 HD" alternate="82541">82547</station>
+    <station number="1209" subnumber="0" callsign="FS2HD" name="Fox Sports 2 HD" alternate="33178">59305</station>
+    <station number="1134" subnumber="0" callsign="FSTV" name="Free Speech TV">16220</station>
+    <station number="1467" subnumber="0" callsign="FUSEHD" name="Fuse HD" alternate="14929">59116</station>
+    <station number="1135" subnumber="0" callsign="FUSIONH" name="Fusion HD" alternate="83173">83174</station>
+    <station number="1409" subnumber="0" callsign="FXHD" name="FX HD" alternate="14321">58574</station>
+    <station number="1486" subnumber="0" callsign="FYIHD" name="FYI Channel HD" alternate="16834">58988</station>
+    <station number="1223" subnumber="0" callsign="GOLFHD" name="The Golf Channel HD" alternate="14899">61854</station>
+    <station number="1425" subnumber="0" callsign="GSNHD" name="GSN HD" alternate="14909">68827</station>
+    <station number="1460" subnumber="0" callsign="HALLDR" name="Hallmark Drama" alternate="105756">105723</station>
+    <station number="1458" subnumber="0" callsign="HALLHD" name="Hallmark Channel HD" alternate="11221">66268</station>
+    <station number="1803" subnumber="0" callsign="HBOHD" name="HBO HD" alternate="10240">19548</station>
+    <station number="1754" subnumber="0" callsign="HDNETMV" name="HDNet Movies">33668</station>
+    <station number="1492" subnumber="0" callsign="HGTVD" name="Home &amp; Garden Television HD" alternate="14902">49788</station>
+    <station number="1112" subnumber="0" callsign="HLNHD" name="HLN HD" alternate="10145">64549</station>
+    <station number="1459" subnumber="0" callsign="HMMHD" name="Hallmark Movies &amp; Mysteries HD" alternate="61522">46710</station>
+    <station number="1478" subnumber="0" callsign="HSTRYHD" name="History HD" alternate="14771">57708</station>
+    <station number="1444" subnumber="0" callsign="IDHD" name="Investigation Discovery HD" alternate="16615">65342</station>
+    <station number="1438" subnumber="0" callsign="IFCHD" name="IFC HD" alternate="14873">59444</station>
+    <station number="1455" subnumber="0" callsign="LIFEHD" name="Lifetime HD" alternate="10918">60150</station>
+    <station number="1456" subnumber="0" callsign="LIFEMVH" name="Lifetime Movies HD" alternate="18480">55887</station>
+    <station number="251" subnumber="0" callsign="LOCNOW" name="Local Now">99988</station>
+    <station number="1439" subnumber="0" callsign="LOGOHD" name="LOGO HD" alternate="46762">96971</station>
+    <station number="1820" subnumber="0" callsign="MAXHD" name="CineMAX HD" alternate="10120">34933</station>
+    <station number="1113" subnumber="0" callsign="MNBCHD" name="MSNBC HD" alternate="16300">64241</station>
+    <station number="1243" subnumber="0" callsign="MTHD" name="MOTORTREND HD">31046</station>
+    <station number="1639" subnumber="0" callsign="MTV2HD" name="MTV2: Music Television HD" alternate="16361">75077</station>
+    <station number="1606" subnumber="0" callsign="MTVHD" name="MTV - Music Television HD" alternate="10986">60964</station>
+    <station number="1218" subnumber="0" callsign="NBATVHD" name="NBA TV HDTV" alternate="32281">45526</station>
+    <station number="1207" subnumber="0" callsign="NBCSNHD" name="NBCSN HD" alternate="15952">48639</station>
+    <station number="1136" subnumber="0" callsign="NDT247V" name="NDTV 24x7" alternate="49172">74025</station>
+    <station number="1137" subnumber="0" callsign="NEWS18" name="News 18" alternate="94070">82870</station>
+    <station number="1138" subnumber="0" callsign="NEWSMXH" name="Newsmax TV HD" alternate="87925">97163</station>
+    <station number="1114" subnumber="0" callsign="NEWSY" name="Newsy" alternate="105782">96827</station>
+    <station number="1854" subnumber="0" callsign="NEXTHD" name="Showtime Next HD" alternate="25270">68342</station>
+    <station number="1215" subnumber="0" callsign="NFLHD" name="NFL Network HD" alternate="34710">45399</station>
+    <station number="1216" subnumber="0" callsign="NFLNRZD" name="NFL RedZone HD" alternate="65024">65025</station>
+    <station number="1473" subnumber="0" callsign="NGCHD" name="National Geographic HD" alternate="24959">49438</station>
+    <station number="1217" subnumber="0" callsign="NHLHD" name="NHL Network HD" alternate="58570">58690</station>
+    <station number="1702" subnumber="0" callsign="NICJRHD" name="Nick Jr HD" alternate="19211">82649</station>
+    <station number="1727" subnumber="0" callsign="NIKTNHD" name="Nicktoons Network HD" alternate="30420">82654</station>
+    <station number="1222" subnumber="0" callsign="OLYHD" name="Olympic Channel" alternate="104186">104089</station>
+    <station number="1236" subnumber="0" callsign="OUTHD" name="Outdoor Channel HD" alternate="14776">46737</station>
+    <station number="1242" subnumber="0" callsign="OUTSDSD" name="Outside Television" alternate="92844">80651</station>
+    <station number="1465" subnumber="0" callsign="OXYGNHD" name="Oxygen HD" alternate="21484">70522</station>
+    <station number="1329" subnumber="0" callsign="PAC12HD" name="Pac-12 Network HD" alternate="76366">76382</station>
+    <station number="1412" subnumber="0" callsign="PARHD" name="Paramount Network HD" alternate="11163">59186</station>
+    <station number="1461" subnumber="0" callsign="PIXL" name="PixL" alternate="73077">70113</station>
+    <station number="1429" subnumber="0" callsign="REELZHD" name="ReelzChannel HD" alternate="52199">68385</station>
+    <station number="1239" subnumber="0" callsign="RFDHD" name="RFD TV HD" alternate="25148">63717</station>
+    <station number="1240" subnumber="0" callsign="RIDETVH" name="Ride TV HD" alternate="90880">90858</station>
+    <station number="1139" subnumber="0" callsign="RTTV" name="RT">58333</station>
+    <station number="1637" subnumber="0" callsign="RVLTHD" name="Revolt HD" alternate="83097">83098</station>
+    <station number="1451" subnumber="0" callsign="SCIHD" name="Science Channel HD" alternate="16616">57390</station>
+    <station number="1321" subnumber="0" callsign="SECH" name="SEC Network HD" alternate="89535">89714</station>
+    <station number="1842" subnumber="0" callsign="SHO2HD" name="SHO 2 HD" alternate="11116">58533</station>
+    <station number="1846" subnumber="0" callsign="SHOCSHD" name="Showtime Showcase HD" alternate="16153">61001</station>
+    <station number="1844" subnumber="0" callsign="SHOWBHD" name="Showtime Beyond HD" alternate="20622">68340</station>
+    <station number="1840" subnumber="0" callsign="SHOWHD" name="Showtime HD" alternate="11115">21868</station>
+    <station number="1841" subnumber="0" callsign="SHOWHDP" name="Showtime HD (Pacific)" alternate="11117">22532</station>
+    <station number="1848" subnumber="0" callsign="SHOWXHD" name="Showtime Extreme HD" alternate="18086">60947</station>
+    <station number="1237" subnumber="0" callsign="SPMNHD" name="The Sportsman Channel HD" alternate="33930">66310</station>
+    <station number="1245" subnumber="0" callsign="STADIUM" name="Stadium HD">104950</station>
+    <station number="1878" subnumber="0" callsign="STZCHD" name="Starz Comedy HD" alternate="34901">57569</station>
+    <station number="1870" subnumber="0" callsign="STZEHD" name="Starz Edge HD" alternate="16311">57573</station>
+    <station number="1773" subnumber="0" callsign="STZENHD" name="Starz Encore HD" alternate="10178">36225</station>
+    <station number="1868" subnumber="0" callsign="STZHD" name="Starz HD" alternate="12719">34941</station>
+    <station number="1869" subnumber="0" callsign="STZHDP" name="Starz HD (Pacific)" alternate="12741">34949</station>
+    <station number="1874" subnumber="0" callsign="STZKHD" name="Starz Kids HD" alternate="19635">57581</station>
+    <station number="1440" subnumber="0" callsign="SUNDHD" name="SundanceTV HD" alternate="16108">71280</station>
+    <station number="1411" subnumber="0" callsign="SYFYHD" name="Syfy HD" alternate="11097">58623</station>
+    <station number="1434" subnumber="0" callsign="TBSHD" name="TBS HD" alternate="11867">58515</station>
+    <station number="1755" subnumber="0" callsign="TCMHD" name="Turner Classic Movies HD" alternate="12852">64312</station>
+    <station number="1450" subnumber="0" callsign="TLCHD" name="The Learning Channel HD" alternate="11158">57391</station>
+    <station number="1740" subnumber="0" callsign="TNCKHD" name="Teen Nick HD" alternate="59036">97047</station>
+    <station number="1404" subnumber="0" callsign="TNTHD" name="Turner Network TV HD" alternate="11164">42642</station>
+    <station number="1734" subnumber="0" callsign="TOONHD" name="Cartoon Network HD" alternate="12131">60048</station>
+    <station number="1488" subnumber="0" callsign="TRAVHD" name="The Travel Channel HD" alternate="11180">59303</station>
+    <station number="1430" subnumber="0" callsign="TRUTVHD" name="truTV HD" alternate="10153">64490</station>
+    <station number="1426" subnumber="0" callsign="TVLNDHD" name="TV Land HD" alternate="16123">73541</station>
+    <station number="1403" subnumber="0" callsign="USAHD" name="USA Network HD" alternate="11207">58452</station>
+    <station number="1607" subnumber="0" callsign="VH1HD" name="VH1 HD" alternate="11218">60046</station>
+    <station number="1436" subnumber="0" callsign="VICEHD" name="Viceland HD" alternate="18822">65732</station>
+    <station number="1428" subnumber="0" callsign="WEHD" name="WE tv HD" alternate="16409">59296</station>
+    <station number="1241" subnumber="0" callsign="WFNUSHD" name="World Fishing Network HD (US)" alternate="63234">64046</station>
+    <station number="1850" subnumber="0" callsign="WOMENHD" name="Showtime Women HD" alternate="25272">68338</station>
+    <station number="1103" subnumber="0" callsign="WTHRNHD" name="Weather Nation TV HD" alternate="72413">72422</station>
+    <station number="1468" subnumber="0" callsign="ZLVINGH" name="Z Living HD" alternate="58493">71906</station>
+  </CustomLineup>
+</CustomLineups>
