@@ -7,3 +7,12 @@ EPG123 was created to not only compensate for the lacking guide information, but
 
 # Acknowledgments
 This project was born out of frustration and desperation following the transfer from Zap2it to Rovi. It could never have made it as far as it has without the involvement of a lot of WMC enthusiasts and users at [The Green Button](http://www.thegreenbutton.tv). Many of the improvements and features were born of their experiences and suggestions. There was also quite a bit of technical support provided by Schedules Direct to ensure the EPG123 client/server interaction was optimal.
+
+# Guide & WMC Tweaks
+EPG123 provides the ability to adjust many dimensional aspects of the guide. Some WMC tweaks are added as well to improve user experience.
+
+<p align="center"><img src="https://github.com/garyan2/epg123/blob/master/web.resources/tweak_gui.png"></p>
+<p align="center"><img src="https://github.com/garyan2/epg123/blob/master/web.resources/guide_default.png"></p>
+<p align="center"><img src="https://github.com/garyan2/epg123/blob/master/web.resources/guide_22x10.png"></p>
+<p align="center"><img src="https://github.com/garyan2/epg123/blob/master/web.resources/guide_12x24.png"></p>
+<p align="center"><img src="https://github.com/garyan2/epg123/blob/master/web.resources/guide_48x7.png"></p>
