@@ -8,6 +8,16 @@ EPG123 was created to not only compensate for the lacking guide information, but
 # Acknowledgments
 This project was born out of frustration and desperation following the transfer from Zap2it to Rovi. It could never have made it as far as it has without the involvement of a lot of WMC enthusiasts and users at [The Green Button](http://www.thegreenbutton.tv). Many of the improvements and features were born of their experiences and suggestions. There was also quite a bit of technical support provided by Schedules Direct to ensure the EPG123 client/server interaction was optimal.
 
+# Configuration GUI
+With a Schedules Direct subscription, you can have up to 4 lineups to provide all the guide listings you may need. You can select what stations to download and what stations to ignore. Missing movie posters can be retrieved from [TMDb](http://www.themoviedb.org) along with some other customizations.
+
+<p align="center"><img src="https://github.com/garyan2/epg123/blob/master/web.resources/configuration_gui.png"></p>
+
+# Client GUI
+The client allows for automatic or manual mapping of guide listings with tuner channels, handle database configuration backups and restores, database rebuilds if needed, and more.
+
+<p align="center"><img src="https://github.com/garyan2/epg123/blob/master/web.resources/client_gui.png"></p>
+
 # Guide & WMC Tweaks
 EPG123 provides the ability to adjust many dimensional aspects of the guide. Some WMC tweaks are added as well to improve user experience.
 
