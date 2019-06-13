@@ -192,8 +192,8 @@ namespace epg123
                                 string url = string.Empty;
                                 if ((station.StationLogos != null) && (station.StationLogos.Count > 0))
                                 {
-                                    // the last station logo is typically the best contrast
-                                    url = station.StationLogos[station.StationLogos.Count - 1].URL;
+                                    // the second station logo is typically the best contrast
+                                    url = station.StationLogos[Math.Min(station.StationLogos.Count - 1, 1)].URL;
                                 }
                                 else if (station.Logo != null)
                                 {

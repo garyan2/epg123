@@ -51,7 +51,7 @@ namespace epg123
             // required to show UAC shield on buttons
             Application.EnableVisualStyles();
 
-            // create form objests
+            // create form objects
             InitializeComponent();
 
             // adjust components for screen dpi

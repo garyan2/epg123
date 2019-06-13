@@ -2131,6 +2131,7 @@ namespace epg123
         private void btnExportMxf_Click(object sender, EventArgs e)
         {
             this.Cursor = Cursors.WaitCursor;
+            if (!Directory.Exists(Helper.Epg123OutputFolder)) Directory.CreateDirectory(Helper.Epg123OutputFolder);
 
             XmlWriterSettings settings = new XmlWriterSettings() { Indent = true };
             using (XmlWriter writer = XmlWriter.Create(new StreamWriter(Helper.Epg123OutputFolder + "\\mxfExport.mxf"), settings))

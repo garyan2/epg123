@@ -575,7 +575,7 @@ namespace epg123
 
         private static void determineCastAndCrew(ref MxfProgram prg, sdProgram sd)
         {
-            prg.ActorRole = getPersons(sd.Cast, new string[] { "Actor", "Voice" });
+            prg.ActorRole = getPersons(sd.Cast, new string[] { "Actor", "Voice", "Judge" });
             prg.DirectorRole = getPersons(sd.Crew, new string[] { "Director" });
             prg.GuestActorRole = getPersons(sd.Cast, new string[] { "Guest" }); // "Guest Star", "Guest"
             prg.HostRole = getPersons(sd.Cast, new string[] { "Anchor", "Host", "Presenter" });

@@ -381,7 +381,7 @@ namespace epg123
         private bool tweakMediaCenterTunerCount(int count)
         {
             // create mxf file with increased tuner limits
-            string[] countries = { /*"default", */"au", "be", "br", "ca", "ch", "cn", "cz", "de", "dk", "es", "fi", "fr", "gb", "hk", "hu", "ie", "in",/*"it",*/ "jp", "kr", "mx", "nl", "no", "nz", "pl",/* "pt",*/ "ru", "se", "sg", "sk",/* "tr", "tw",*/ "us", "za" };
+            string[] countries = { /*"default", */"au", "be", "br", "ca", "ch", "cn", "cz", "de", "dk", "es", "fi", "fr", "gb", "hk", "hu", "ie", "in",/* "it",*/ "jp", "kr", "mx", "nl", "no", "nz", "pl",/* "pt",*/ "ru", "se", "sg", "sk",/* "tr", "tw",*/ "us", "za" };
             string xml = "<?xml version=\"1.0\" standalone=\"yes\"?>\r\n" +
                          "<MXF version=\"1.0\" xmlns=\"\">\r\n" +
                          "  <Assembly name=\"ehshell\">\r\n" +
