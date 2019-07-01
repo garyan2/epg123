@@ -61,8 +61,6 @@ namespace epg123
         [XmlElement("XmltvIncludeChannelNumbers")]
         public bool XmltvIncludeChannelNumbers { get; set; }
 
-        [XmlAnyElement("XmltvIncludeChannelLogosComment")]
-        public XmlComment XmltvIncludeChannelLogosComment { get { return new XmlDocument().CreateComment(" XmltvIncludeChannelLogos: Allowed values are 'false', 'url', 'local', and 'substitute'. "); } set { } }
         [XmlElement("XmltvIncludeChannelLogos")]
         public string XmltvIncludeChannelLogos { get; set; }
 
@@ -79,6 +77,11 @@ namespace epg123
         public XmlComment BrandLogoImageComment { get { return new XmlDocument().CreateComment(" BrandLogoImage: Allowed values are 'none', 'light', and 'dark'. "); } set { } }
         [XmlElement("BrandLogoImage")]
         public string BrandLogoImage { get; set; }
+
+        [XmlAnyElement("SuppressStationEmptyWarningsComment")]
+        public XmlComment SuppressStationEmptyWarningsComment { get { return new XmlDocument().CreateComment(" SuppressStationEmptyWarnings: Enter specific station callsigns, comma delimited, to suppress warnings for no guide data, or use a wildcard (*) for a group of callsigns. A solitary wildcard means all station warnings will be suppressed."); } set { } }
+        [XmlElement("SuppressStationEmptyWarnings")]
+        public string SuppressStationEmptyWarnings { get; set; }
 
         [XmlElement("IncludedLineup")]
         public List<string> IncludedLineup { get; set; }

@@ -50,6 +50,18 @@ namespace epg123Transfer
             importBinFile();
             assignColumnSorters();
             buildListViews();
+
+            if (!string.IsNullOrEmpty(file))
+            {
+                if (lvMxfRecordings.Items.Count > 0)
+                {
+                    btnTransfer_Click(btnAddRecordings, null);
+                }
+                if (lvMxfRecordings.Items.Count <= 0)
+                {
+                    this.Close();
+                }
+            }
         }
 
         private void buildListViews()
@@ -96,7 +108,7 @@ namespace epg123Transfer
                 }
                 if (oldRecordings.ManualRequest.Count + oldRecordings.OneTimeRequest.Count + oldRecordings.SeriesRequest.Count + oldRecordings.WishListRequest.Count == 0)
                 {
-                    MessageBox.Show("There are no scheduled recording requests in the backup file to restore.", "Empty Requests", MessageBoxButtons.OK);
+                    //MessageBox.Show("There are no scheduled recording requests in the backup file to restore.", "Empty Requests", MessageBoxButtons.OK);
                 }
             }
 
@@ -223,6 +235,44 @@ namespace epg123Transfer
                 });
             }
 
+            foreach (MxfRequest request in oldRecordings.OneTimeRequest)
+            {
+                if (request.Complete || (request.PrototypicalStartTime < DateTime.UtcNow) ||
+                    wmcRecording.Contains(request.PrototypicalTitle + " " + request.PrototypicalStartTime)) continue;
+
+                // create ListViewItem
+                listViewItems.Add(new ListViewItem(
+                    new string[]
+                    {
+                        "OneTime",
+                        request.PrototypicalTitle ?? request.Title
+                    })
+                {
+                    BackColor = Color.LightSalmon,
+                    Checked = false,
+                    Tag = request
+                });
+            }
+
+            foreach (MxfRequest request in oldRecordings.ManualRequest)
+            {
+                if (request.Complete || (request.PrototypicalStartTime < DateTime.Now) || 
+                    wmcRecording.Contains(request.Title + " " + request.PrototypicalStartTime + " " + request.PrototypicalChannelNumber)) continue;
+
+                // create ListViewItem
+                listViewItems.Add(new ListViewItem(
+                    new string[]
+                    {
+                        "Manual",
+                        request.Title ?? request.PrototypicalTitle
+                    })
+                {
+                    BackColor = Color.LightGreen,
+                    Checked = true,
+                    Tag = request
+                });
+            }
+
             lvMxfRecordings.Items.AddRange(listViewItems.ToArray());
         }
 
@@ -233,17 +283,9 @@ namespace epg123Transfer
             {
                 e.NewValue = e.CurrentValue;
             }
-            else if (((ListView)sender).Items[e.Index].BackColor == Color.LightPink)
+            else if (((ListView)sender).Items[e.Index].BackColor != Color.LightGreen)
             {
                 e.NewValue = CheckState.Unchecked;
-            }
-        }
-
-        private void lvMxfRecordings_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
-        {
-            if (((ListView)sender).Items[e.ItemIndex].BackColor == Color.LightPink)
-            {
-                //e.Item.Selected = false;
             }
         }
 
@@ -293,12 +335,15 @@ namespace epg123Transfer
                     new string[]
                     {
                         "Manual",
-                        request.ToString().Substring(8)
+                        request.ToString().Substring(7)
                     })
                 {
                     BackColor = Color.LightGreen,
                     Tag = request
                 });
+
+                // add the manaul recording title, starttime, and channel number
+                wmcRecording.Add(request.Title + " " + request.StartTime + " " + request.Channel.ChannelNumber.Number + "." + request.Channel.ChannelNumber.SubNumber);
             }
 
             foreach (WishListRequest request in new WishListRequests(object_store))
@@ -332,12 +377,15 @@ namespace epg123Transfer
                     new string[]
                     {
                         "OneTime",
-                        request.ToString().Substring(8)
+                        request.Title
                     })
                 {
                     BackColor = Color.LightGreen,
                     Tag = request
                 });
+
+                // add the manaul recording title, starttime, and channel number
+                wmcRecording.Add(request.Title + " " + request.StartTime);
             }
 
             if (listViewItems.Count > 0)
@@ -404,6 +452,8 @@ namespace epg123Transfer
 
         private void btnTransfer_Click(object sender, EventArgs e)
         {
+            if (lvMxfRecordings.Items.Count <= 0) return;
+
             // clear the recordings
             oldRecordings.ManualRequest = new List<MxfRequest>();
             oldRecordings.OneTimeRequest = new List<MxfRequest>();
@@ -425,6 +475,12 @@ namespace epg123Transfer
                         break;
                     case "WishList":
                         oldRecordings.WishListRequest.Add((MxfRequest)item.Tag);
+                        break;
+                    case "OneTime":
+                        oldRecordings.OneTimeRequest.Add((MxfRequest)item.Tag);
+                        break;
+                    case "Manual":
+                        oldRecordings.ManualRequest.Add((MxfRequest)item.Tag);
                         break;
                     default:
                         break;
@@ -459,7 +515,7 @@ namespace epg123Transfer
                 // kick off the pvr schedule task
                 startInfo = new ProcessStartInfo()
                 {
-                    FileName = Environment.ExpandEnvironmentVariables("%WINDIR%") + @"\ehome\mcupdate.exe",
+                    FileName = Environment.ExpandEnvironmentVariables(@"%WINDIR%\ehome\mcupdate.exe"),
                     Arguments = "-PvrSchedule",
                     UseShellExecute = false,
                     CreateNoWindow = true

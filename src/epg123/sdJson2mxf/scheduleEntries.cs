@@ -105,7 +105,15 @@ namespace epg123
                     if (stationResponse.Count == 0)
                     {
                         MxfService mxfService = sdMxf.With[0].getService(request.StationID);
-                        Logger.WriteWarning(string.Format("Failed to parse the schedule Md5 return for stationId {0} ({1}) on {2} and after.", mxfService.StationID, mxfService.CallSign, dates[0]));
+                        string comment = string.Format("Failed to parse the schedule Md5 return for stationId {0} ({1}) on {2} and after.", mxfService.StationID, mxfService.CallSign, dates[0]);
+                        if (checkSuppressWarnings(mxfService.CallSign))
+                        {
+                            Logger.WriteInformation(comment);
+                        }
+                        else
+                        {
+                            Logger.WriteWarning(comment);
+                        }
                         processedObjects += dates.Length; reportProgress();
                         continue;
                     }
@@ -377,7 +385,7 @@ namespace epg123
 
         private static bool checkHdOverride(string stationId)
         {
-            foreach (SdChannelDownload station in config.StationID)
+            foreach (SdChannelDownload station in config.StationID ?? new List<SdChannelDownload>())
             {
                 if (station.StationID == stationId) return station.HDOverride;
             }
@@ -385,12 +393,23 @@ namespace epg123
         }
         private static bool checkSdOverride(string stationId)
         {
-            foreach (SdChannelDownload station in config.StationID)
+            foreach (SdChannelDownload station in config.StationID ?? new List<SdChannelDownload>())
             {
                 if (station.StationID == stationId) return station.SDOverride;
             }
             return false;
         }
+        private static bool checkSuppressWarnings(string callsign)
+        {
+            if (sdJson2mxf.suppressedPrefixes.Contains("*")) return true;
+            foreach (string prefix in sdJson2mxf.suppressedPrefixes)
+            {
+                if (callsign.Equals(prefix)) return true;
+                if (prefix.Contains("*") && callsign.StartsWith(prefix.Replace("*", ""))) return true;
+            }
+            return false;
+        }
+
         private static string safeFilename(string md5)
         {
             if (md5 == null) return null;

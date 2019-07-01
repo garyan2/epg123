@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Xml.Serialization;
@@ -30,6 +31,16 @@ namespace epg123
             Logger.WriteInformation(string.Format("Beginning EPG123 update execution. {0:u}", DateTime.Now.ToUniversalTime()));
             Logger.WriteVerbose(string.Format("DaysToDownload: {0} , TheTVDBNumbers : {1} , PrefixEpisodeTitle: {2} , PrefixEpisodeDescription : {3} , AppendEpisodeDesc: {4} , OADOverride : {5} , TMDbCoverArt: {6} , IncludeSDLogos : {7} , AutoAddNew: {8} , CreateXmltv: {9} , ModernMediaUiPlusSupport: {10}",
                                 config.DaysToDownload, config.TheTVDBNumbers, config.PrefixEpisodeTitle, config.PrefixEpisodeDescription, config.AppendEpisodeDesc, config.OADOverride, config.TMDbCoverArt, config.IncludeSDLogos, config.AutoAddNew, config.CreateXmltv, config.ModernMediaUiPlusSupport));
+
+            // populate station prefixes to suppress
+            if (config.SuppressStationEmptyWarnings == null)
+            {
+                suppressedPrefixes = new List<string>(defaultSuppressedPrefixes.Split(','));
+            }
+            else
+            {
+                suppressedPrefixes = new List<string>(config.SuppressStationEmptyWarnings.Split(','));
+            }
 
             // login to Schedules Direct and build the mxf file
             if (sdAPI.sdGetToken(config.UserAccount.LoginName, config.UserAccount.PasswordHash, ref errString))

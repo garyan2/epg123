@@ -80,7 +80,12 @@ namespace epg123Transfer
             {
                 if (File.Exists(args[0])) file = args[0];
             }
-            Application.Run(new frmTransfer(file));
+
+            try
+            {
+                Application.Run(new frmTransfer(file));
+            }
+            catch { }
         }
 
         static void EstablishFileFolderPaths()

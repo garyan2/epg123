@@ -53,7 +53,7 @@
             // 
             // lvWmcRecordings
             // 
-            this.lvWmcRecordings.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            this.lvWmcRecordings.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left)));
             this.lvWmcRecordings.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.clmType,
@@ -61,6 +61,7 @@
             this.lvWmcRecordings.ContextMenuStrip = this.contextMenuStrip1;
             this.lvWmcRecordings.FullRowSelect = true;
             this.lvWmcRecordings.GridLines = true;
+            this.lvWmcRecordings.HideSelection = false;
             this.lvWmcRecordings.Location = new System.Drawing.Point(426, 41);
             this.lvWmcRecordings.Name = "lvWmcRecordings";
             this.lvWmcRecordings.Size = new System.Drawing.Size(346, 479);
@@ -95,7 +96,7 @@
             // 
             // lvMxfRecordings
             // 
-            this.lvMxfRecordings.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            this.lvMxfRecordings.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left)));
             this.lvMxfRecordings.CheckBoxes = true;
             this.lvMxfRecordings.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
@@ -104,6 +105,7 @@
             this.lvMxfRecordings.ContextMenuStrip = this.contextMenuStrip2;
             this.lvMxfRecordings.FullRowSelect = true;
             this.lvMxfRecordings.GridLines = true;
+            this.lvMxfRecordings.HideSelection = false;
             this.lvMxfRecordings.Location = new System.Drawing.Point(12, 41);
             this.lvMxfRecordings.Name = "lvMxfRecordings";
             this.lvMxfRecordings.Size = new System.Drawing.Size(339, 479);
@@ -112,7 +114,6 @@
             this.lvMxfRecordings.View = System.Windows.Forms.View.Details;
             this.lvMxfRecordings.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.lvLineupSort);
             this.lvMxfRecordings.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.oldRecordingListView_ItemCheck);
-            this.lvMxfRecordings.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(this.lvMxfRecordings_ItemSelectionChanged);
             // 
             // clmOldType
             // 

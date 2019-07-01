@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using Microsoft.Win32;
 
 namespace epg123
 {
@@ -78,6 +79,16 @@ namespace epg123
                 }
             }
             cmbCountries.SelectedIndex = index;
+
+            // automatically fetch the zipcode as entered during TV Setup and perform a fetch
+            using (RegistryKey key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Media Center\Settings\ProgramGuide", false))
+            {
+                if ((key != null) && (!string.IsNullOrEmpty(key.GetValue("strLocation").ToString())))
+                {
+                    txtZipcode.Text = key.GetValue("strLocation").ToString().Split(' ')[0];
+                    btnFetch_Click(btnFetch, null);
+                }
+            }
         }
 
         private void cmbCountries_SelectedIndexChanged(object sender, EventArgs e)

@@ -164,6 +164,7 @@ namespace epg123
             // create settings
             settingsType settings = new settingsType()
             {
+                DisallowStartIfOnBatteries = false,
                 StopIfGoingOnBatteries = false,
                 ExecutionTimeLimit = "PT23H",
                 Priority = 6,
@@ -172,7 +173,7 @@ namespace epg123
                     Count = 5,
                     Interval = "PT30M"
                 },
-                //StartWhenAvailable = true,
+                StartWhenAvailable = true,
                 //RunOnlyIfNetworkAvailable = true,
                 WakeToRun = wakeToRun
             };

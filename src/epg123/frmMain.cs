@@ -322,9 +322,9 @@ namespace epg123
             else
             {
                 cbImport.Enabled = !task.exist;
-                cbImport.Checked = (clientIndex >= 0);
+                cbImport.Checked = (clientIndex >= 0) || (!task.exist && config.AutoImport);
                 cbAutomatch.Enabled = !task.exist && cbImport.Checked;
-                cbAutomatch.Checked = (clientIndex >= 0) && task.actions[clientIndex].Arguments.ToLower().Contains("-match");
+                cbAutomatch.Checked = ((clientIndex >= 0) && task.actions[clientIndex].Arguments.ToLower().Contains("-match")) || (!task.exist && config.Automatch);
             }
 
             // set task create/delete button text and update status string
@@ -471,18 +471,29 @@ namespace epg123
                 buildLineupTabs();
 
                 // set configuration options
-                numDays.Value = (config.DaysToDownload <= 0) ? 14 : Math.Min(config.DaysToDownload, numDays.Maximum);
-                cbPrefixTitle.Checked = config.PrefixEpisodeTitle;
-                cbAppendDescription.Checked = config.AppendEpisodeDesc;
-                cbOadOverride.Checked = config.OADOverride;
-                cbTMDb.Checked = config.TMDbCoverArt;
-                cbSdLogos.Checked = config.IncludeSDLogos;
-                cbTVDB.Checked = config.TheTVDBNumbers;
-                cbPrefixDescription.Checked = config.PrefixEpisodeDescription;
-                cbAddNewStations.Checked = config.AutoAddNew;
-                cbXmltv.Checked = config.CreateXmltv;
-                cbSeriesPosterArt.Checked = config.SeriesPosterArt;
-                cbModernMedia.Checked = config.ModernMediaUiPlusSupport;
+                if (config.DaysToDownload <= 0)
+                {
+                    numDays.Value = 14;
+                    cbTVDB.Checked = true;
+                    cbOadOverride.Checked = true;
+                    cbTMDb.Checked = true;
+                    cbSdLogos.Checked = true;
+                }
+                else
+                {
+                    numDays.Value = Math.Min(config.DaysToDownload, numDays.Maximum);
+                    cbPrefixTitle.Checked = config.PrefixEpisodeTitle;
+                    cbAppendDescription.Checked = config.AppendEpisodeDesc;
+                    cbOadOverride.Checked = config.OADOverride;
+                    cbTMDb.Checked = config.TMDbCoverArt;
+                    cbSdLogos.Checked = config.IncludeSDLogos;
+                    cbTVDB.Checked = config.TheTVDBNumbers;
+                    cbPrefixDescription.Checked = config.PrefixEpisodeDescription;
+                    cbAddNewStations.Checked = config.AutoAddNew;
+                    cbXmltv.Checked = config.CreateXmltv;
+                    cbSeriesPosterArt.Checked = config.SeriesPosterArt;
+                    cbModernMedia.Checked = config.ModernMediaUiPlusSupport;
+                }
 
                 // get persistent cfg values
                 if (!task.exist && File.Exists(Helper.Epg123ClientExePath) && File.Exists(Helper.Epg123CfgPath))
@@ -554,25 +565,6 @@ namespace epg123
             // populate the listviews with channels/services
             buildListViewChannels();
             buildCustomListViewChannels();
-
-            // set checkbox state of included stations
-            foreach (ListView listView in listViews)
-            {
-                foreach (ListViewItem item in listView.Items)
-                {
-                    // bring in the overrides
-                    if (config.StationID == null) break;
-                    foreach (SdChannelDownload station in config.StationID)
-                    {
-                        if (station.StationID == item.SubItems[(int)LineupColumn.StationID].Text)
-                        {
-                            ((SdChannelDownload)item.Tag).HDOverride = station.HDOverride;
-                            ((SdChannelDownload)item.Tag).SDOverride = station.SDOverride;
-                            break;
-                        }
-                    }
-                }
-            }
 
             // assign a listviewcolumnsorter to a listview
             assignColumnSorters();
@@ -753,8 +745,8 @@ namespace epg123
                                 {
                                     CallSign = station.Callsign,
                                     StationID = station.StationID,
-                                    HDOverride = false,
-                                    SDOverride = false
+                                    HDOverride = checkHdOverride(station.StationID),
+                                    SDOverride = checkSdOverride(station.StationID)
                                 };
 
                                 // QAM
@@ -1235,6 +1227,7 @@ namespace epg123
             newConfig.XmltvLogoSubstitutePath = xmltvConfig.XmltvLogoSubstitutePath;
             newConfig.ModernMediaUiPlusSupport = cbModernMedia.Checked;
             newConfig.BrandLogoImage = config.BrandLogoImage ?? "none";
+            newConfig.SuppressStationEmptyWarnings = config.SuppressStationEmptyWarnings ?? sdJson2mxf.defaultSuppressedPrefixes;
 
             // sanity checks
             if ((newConfig.ExpectedServicecount == 0) && (sender != null))
@@ -1282,6 +1275,7 @@ namespace epg123
                     XmltvIncludeChannelNumbers = xmltvConfig.XmltvIncludeChannelNumbers,
                     XmltvLogoSubstitutePath = xmltvConfig.XmltvLogoSubstitutePath ?? string.Empty,
                     BrandLogoImage = newConfig.BrandLogoImage ?? "none",
+                    SuppressStationEmptyWarnings = newConfig.SuppressStationEmptyWarnings,
                     UserAccount = new SdUserAccount()
                     {
                         LoginName = newConfig.UserAccount.LoginName,
@@ -1550,6 +1544,23 @@ namespace epg123
                 TextToAdd += string.Format("{0}\t{1}\t{2}\t{3}\r\n", listViewItem.SubItems[0].Text, listViewItem.SubItems[1].Text, listViewItem.SubItems[2].Text, listViewItem.SubItems[3].Text);
             }
             Clipboard.SetText(TextToAdd);
+        }
+
+        private bool checkHdOverride(string stationId)
+        {
+            foreach (SdChannelDownload station in config.StationID ?? new List<SdChannelDownload>())
+            {
+                if (station.StationID == stationId) return station.HDOverride;
+            }
+            return false;
+        }
+        private bool checkSdOverride(string stationId)
+        {
+            foreach (SdChannelDownload station in config.StationID ?? new List<SdChannelDownload>())
+            {
+                if (station.StationID == stationId) return station.SDOverride;
+            }
+            return false;
         }
     }
 }

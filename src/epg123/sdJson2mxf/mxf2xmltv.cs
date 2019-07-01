@@ -69,8 +69,21 @@ namespace epg123
                             string num = mxfChannel.Number.ToString();
                             num += (mxfChannel.SubNumber > 0) ? "." + mxfChannel.SubNumber.ToString() : string.Empty;
 
-                            ret.DisplayNames.Add(new XmltvText() { Text = num + " " + mxfService.CallSign });
-                            ret.DisplayNames.Add(new XmltvText() { Text = num });
+                            bool duplicate = false;
+                            foreach (XmltvText xmltvText in ret.DisplayNames)
+                            {
+                                if (xmltvText.Text.Equals(num + " " + mxfService.CallSign))
+                                {
+                                    duplicate = true;
+                                    break;
+                                }
+                            }
+
+                            if (!duplicate)
+                            {
+                                ret.DisplayNames.Add(new XmltvText() { Text = num + " " + mxfService.CallSign });
+                                ret.DisplayNames.Add(new XmltvText() { Text = num });
+                            }
                         }
                     }
                 }

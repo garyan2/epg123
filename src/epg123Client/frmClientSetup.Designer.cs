@@ -37,6 +37,7 @@
             this.lblConfig = new System.Windows.Forms.Label();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.statusLabel = new System.Windows.Forms.ToolStripStatusLabel();
+            this.cbAutostep = new System.Windows.Forms.CheckBox();
             this.statusStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -105,7 +106,7 @@
             // 
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.statusLabel});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 156);
+            this.statusStrip1.Location = new System.Drawing.Point(0, 167);
             this.statusStrip1.Name = "statusStrip1";
             this.statusStrip1.Size = new System.Drawing.Size(284, 22);
             this.statusStrip1.TabIndex = 10;
@@ -116,11 +117,26 @@
             this.statusLabel.Name = "statusLabel";
             this.statusLabel.Size = new System.Drawing.Size(0, 17);
             // 
+            // cbAutostep
+            // 
+            this.cbAutostep.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.cbAutostep.AutoSize = true;
+            this.cbAutostep.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.cbAutostep.Checked = true;
+            this.cbAutostep.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.cbAutostep.Location = new System.Drawing.Point(84, 147);
+            this.cbAutostep.Name = "cbAutostep";
+            this.cbAutostep.Size = new System.Drawing.Size(188, 17);
+            this.cbAutostep.TabIndex = 11;
+            this.cbAutostep.Text = "Automatically proceed to next step";
+            this.cbAutostep.UseVisualStyleBackColor = true;
+            // 
             // frmClientSetup
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(284, 178);
+            this.ClientSize = new System.Drawing.Size(284, 189);
+            this.Controls.Add(this.cbAutostep);
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.lblConfig);
             this.Controls.Add(this.lblTvSetup);
@@ -131,7 +147,7 @@
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-            this.MinimumSize = new System.Drawing.Size(300, 217);
+            this.MinimumSize = new System.Drawing.Size(300, 228);
             this.Name = "frmClientSetup";
             this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Hide;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
@@ -154,5 +170,6 @@
         private System.Windows.Forms.Label lblConfig;
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStripStatusLabel statusLabel;
+        private System.Windows.Forms.CheckBox cbAutostep;
     }
 }

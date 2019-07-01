@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System.Collections.Generic;
 
 namespace epg123
 {
@@ -17,7 +18,9 @@ namespace epg123
                 return string.Format("{0}.{1}.{2}", vers[0], vers[1], vers[2]);
             }
         }
-        //private static string CACHE = Environment.CurrentDirectory + "\\cache";
+        
+        public static string defaultSuppressedPrefixes = "GOAC*,LOOR*,EDAC*,LEAC*,PEG*,LOAC*,PPV*,PUAC*,SPALT*,INFO*";
+        private static List<string> suppressedPrefixes = new List<string>();
 
         private static int processedObjects = 0;
         private static int totalObjects = 0;

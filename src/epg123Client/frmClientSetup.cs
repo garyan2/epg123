@@ -32,11 +32,19 @@ namespace epg123
         private bool epg123Installed = false;
         private bool taskWorking = false;
         private Process procWmc;
-        private bool timeout
+        private bool timeoutWmc
         {
             get
             {
                 return (DateTime.Now > (procWmc.StartTime + TimeSpan.FromSeconds(60)));
+            }
+        }
+        private Process procMcupdate;
+        private bool timeoutMcupdate
+        {
+            get
+            {
+                return (DateTime.Now > (procMcupdate.StartTime + TimeSpan.FromSeconds(60)));
             }
         }
 
@@ -113,7 +121,6 @@ namespace epg123
             {
                 if (!backupZipFile.Equals(BYPASSED) && File.Exists("epg123Transfer.exe"))
                 {
-                    MessageBox.Show("All setup options have been completed. Opening the Transfer Tool to restore any scheduled recordings from the backup.", "Setup Complete", MessageBoxButtons.OK);
                     ProcessStartInfo startInfo = new ProcessStartInfo()
                     {
                         FileName = "epg123Transfer.exe",
@@ -121,11 +128,16 @@ namespace epg123
                     };
                     Process.Start(startInfo).WaitForExit();
                 }
-                else
-                {
-                    MessageBox.Show("All setup options have been completed. Returning to the EPG123 Client Guide Tool GUI.", "Setup Complete", MessageBoxButtons.OK);
-                }
+                MessageBox.Show("Setup is complete. Be sure to create a Scheduled Task to perform daily updates and keep your guide up to date!", "Setup Complete", MessageBoxButtons.OK);
                 this.Close();
+            }
+            else if (cbAutostep.Checked && btnTvSetup.Enabled)
+            {
+                button_Click(btnTvSetup, null);
+            }
+            else if (cbAutostep.Checked && btnConfig.Enabled)
+            {
+                button_Click(btnConfig, null);
             }
         }
 
@@ -133,8 +145,6 @@ namespace epg123
         {
             if ((procWmc != null) && (!procWmc.HasExited))
             {
-                // show wmc window
-                //ShowWindow(procWmc.MainWindowHandle, SW_RESTORE);
                 procWmc.Kill();
             }
         }
@@ -304,22 +314,22 @@ namespace epg123
                 }
                 Thread.Sleep(100);
                 Application.DoEvents();
-            } while ((FindWindow("WMDMNotificationWindowClass", null) == IntPtr.Zero) && !timeout);
+            } while ((FindWindow("WMDMNotificationWindowClass", null) == IntPtr.Zero) && !timeoutWmc);
 
             // process an update to avoid overwriting the increased limit
             // note a mcupdate -uf run will reset tuner limits to 4
             updateStatusText("Performing a manual database update ...");
             startInfo = new ProcessStartInfo()
             {
-                FileName = @"c:\windows\ehome\mcupdate.exe",
+                FileName = Environment.ExpandEnvironmentVariables("%WINDIR%") + @"\ehome\mcupdate.exe",
                 Arguments = "-u -manual -nogc"
             };
-            Process procMcupdate = Process.Start(startInfo);
+            procMcupdate = Process.Start(startInfo);
             do
             {
                 Thread.Sleep(100);
                 Application.DoEvents();
-            } while (!procMcupdate.HasExited);
+            } while (!procMcupdate.HasExited && !timeoutMcupdate);
 
             // increase the tuner count to 32
             updateStatusText("Increasing tuner limits ...");
@@ -384,38 +394,24 @@ namespace epg123
             string[] countries = { /*"default", */"au", "be", "br", "ca", "ch", "cn", "cz", "de", "dk", "es", "fi", "fr", "gb", "hk", "hu", "ie", "in",/* "it",*/ "jp", "kr", "mx", "nl", "no", "nz", "pl",/* "pt",*/ "ru", "se", "sg", "sk",/* "tr", "tw",*/ "us", "za" };
             string xml = "<?xml version=\"1.0\" standalone=\"yes\"?>\r\n" +
                          "<MXF version=\"1.0\" xmlns=\"\">\r\n" +
+                         "  <Assembly name=\"mcstore\">\r\n" +
+                         "    <NameSpace name=\"Microsoft.MediaCenter.Store\">\r\n" +
+                         "      <Type name=\"StoredType\" />\r\n" +
+                         "    </NameSpace>\r\n" +
+                         "  </Assembly>\r\n" +
                          "  <Assembly name=\"ehshell\">\r\n" +
                          "    <NameSpace name=\"ServiceBus.UIFramework\">\r\n" +
                          "      <Type name=\"TvSignalSetupParams\" />\r\n" +
                          "    </NameSpace>\r\n" +
-                         "  </Assembly>\r\n" +
-                         "  <Assembly name=\"mcstore\">\r\n" +
-                         "    <NameSpace name=\"Microsoft.MediaCenter.Store\">\r\n" +
-                         "      <Type name=\"UId\" parentFieldName=\"target\" />\r\n" +
-                         "    </NameSpace>\r\n" +
                          "  </Assembly>\r\n";
+            xml += string.Format("  <With maxRecordersForHomePremium=\"{0}\" maxRecordersForUltimate=\"{0}\" maxRecordersForRacing=\"{0}\" maxRecordersForBusiness=\"{0}\" maxRecordersForEnterprise=\"{0}\" maxRecordersForOthers=\"{0}\">\r\n", count);
 
             foreach (string country in countries)
             {
-                xml += string.Format("  <TvSignalSetupParams maxRecordersForEnterprise=\"{0}\">\r\n" +
-                                     "    <UId idValue=\"vss-{1}\" />\r\n" +
-                                     "  </TvSignalSetupParams>\r\n" +
-                                     "  <TvSignalSetupParams maxRecordersForHomePremium=\"{0}\">\r\n" +
-                                     "    <UId idValue=\"vss-{1}\" />\r\n" +
-                                     "  </TvSignalSetupParams>\r\n" +
-                                     "  <TvSignalSetupParams maxRecordersForBusiness=\"{0}\">\r\n" +
-                                     "    <UId idValue=\"vss-{1}\" />\r\n" +
-                                     "  </TvSignalSetupParams>\r\n" +
-                                     "  <TvSignalSetupParams maxRecordersForUltimate=\"{0}\">\r\n" +
-                                     "    <UId idValue=\"vss-{1}\" />\r\n" +
-                                     "  </TvSignalSetupParams>\r\n" +
-                                     "  <TvSignalSetupParams maxRecordersForOthers=\"{0}\">\r\n" +
-                                     "    <UId idValue=\"vss-{1}\" />\r\n" +
-                                     "  </TvSignalSetupParams>\r\n" +
-                                     "  <TvSignalSetupParams maxRecordersForRacing=\"{0}\">\r\n" +
-                                     "    <UId idValue=\"vss-{1}\" />\r\n" +
-                                     "  </TvSignalSetupParams>\r\n", count, country.ToLower());
+                xml += string.Format("    <TvSignalSetupParams uid=\"tvss-{0}\" />\r\n", country);
             }
+
+            xml += "  </With>\r\n";
             xml += "</MXF>";
 
             // create temporary file

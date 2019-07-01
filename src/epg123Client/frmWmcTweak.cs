@@ -991,69 +991,78 @@ namespace epg123
         #region ========== Resource Files ==========
         private void UpdateShellDll()
         {
-            // copy current shell dll file to temp folder
-            File.Copy(shellEhomePath, shellTempPath, true);
-
-            // update resources of the shell dll in the temp folder
-            bool updateSuccess = true;
-            for (int i = 0; i < (int)SHELLRESOURCE.MAX; ++i)
+            try
             {
-                updateSuccess &= ReplaceFileResource(shellTempPath, ((SHELLRESOURCE)i).ToString().Replace("_", "."), shellDllResources[i]);
-            }
+                // copy current shell dll file to temp folder
+                File.Copy(shellEhomePath, shellTempPath, true);
 
-            if (updateSuccess)
-            {
-                // kill any processes running for WMC shell
-                foreach (Process process in Process.GetProcessesByName("ehshell"))
+                // update resources of the shell dll in the temp folder
+                bool updateSuccess = true;
+                for (int i = 0; i < (int)SHELLRESOURCE.MAX; ++i)
                 {
-                    process.Kill();
-                    process.WaitForExit(10000);
-                }
-                foreach (Process process in Process.GetProcessesByName("ehexthost"))
-                {
-                    process.Kill();
-                    process.WaitForExit(10000);
+                    updateSuccess &= ReplaceFileResource(shellTempPath, ((SHELLRESOURCE)i).ToString().Replace("_", "."), shellDllResources[i]);
                 }
 
-                // move the shell dll from the temp folder to the ehome folder
-                try
+                if (updateSuccess)
                 {
-                    File.Copy(shellTempPath, shellEhomePath, true);
-                }
-                catch (UnauthorizedAccessException)
-                {
-                    // take ownership and try again
-                    if (TakeOwnership(shellEhomePath))
+                    // kill any processes running for WMC shell
+                    foreach (Process process in Process.GetProcessesByName("ehshell"))
                     {
-                        try
-                        {
-                            File.Copy(shellTempPath, shellEhomePath, true);
-                        }
-                        catch { }
+                        process.Kill();
+                        process.WaitForExit(10000);
                     }
-                }
-                catch (Exception ex)
-                {
-                    string msg = ex.Message + "\n";
-                    foreach (Process process in FileUtil.WhoIsLocking(shellEhomePath))
+                    foreach (Process process in Process.GetProcessesByName("ehexthost"))
                     {
-                        msg += "\nThe following processes are preventing the shell file from being updated:";
-                        if (process.MainModule != null)
+                        process.Kill();
+                        process.WaitForExit(10000);
+                    }
+
+                    // move the shell dll from the temp folder to the ehome folder
+                    try
+                    {
+                        File.Copy(shellTempPath, shellEhomePath, true);
+                    }
+                    catch (UnauthorizedAccessException)
+                    {
+                        // take ownership and try again
+                        if (TakeOwnership(shellEhomePath))
                         {
-                            msg += "\n" + process.MainModule.FileVersionInfo.FileDescription ?? string.Empty;
-                            msg += " (" + process.MainModule.FileName + ")";
-                        }
-                        else
-                        {
-                            msg += "\n" + process.ProcessName;
+                            try
+                            {
+                                File.Copy(shellTempPath, shellEhomePath, true);
+                            }
+                            catch { }
                         }
                     }
-                    MessageBox.Show(msg, "Shell Update Failed");
+                    catch (Exception ex)
+                    {
+                        string msg = ex.Message + "\n";
+                        foreach (Process process in FileUtil.WhoIsLocking(shellEhomePath))
+                        {
+                            msg += "\nThe following processes are preventing the shell file from being updated:";
+                            if (process.MainModule != null)
+                            {
+                                msg += "\n" + process.MainModule.FileVersionInfo.FileDescription ?? string.Empty;
+                                msg += " (" + process.MainModule.FileName + ")";
+                            }
+                            else
+                            {
+                                msg += "\n" + process.ProcessName;
+                            }
+                        }
+                        MessageBox.Show(msg, "Shell Update Failed");
+                    }
                 }
-            }
 
-            // cleanup and exit
-            File.Delete(shellTempPath);
+                // cleanup and exit
+                File.Delete(shellTempPath);
+            }
+            catch (Exception ex)
+            {
+                Logger.WriteError(ex.Message);
+                Logger.WriteError(ex.InnerException.Message);
+                Logger.WriteError(ex.StackTrace);
+            }
         }
         private void importResources()
         {
@@ -1264,38 +1273,24 @@ namespace epg123
             string[] countries = { /*"default", */"au", "be", "br", "ca", "ch", "cn", "cz", "de", "dk", "es", "fi", "fr", "gb", "hk", "hu", "ie", "in",/* "it",*/ "jp", "kr", "mx", "nl", "no", "nz", "pl",/* "pt",*/ "ru", "se", "sg", "sk",/* "tr", "tw",*/ "us", "za" };
             string xml = "<?xml version=\"1.0\" standalone=\"yes\"?>\r\n" +
                          "<MXF version=\"1.0\" xmlns=\"\">\r\n" +
+                         "  <Assembly name=\"mcstore\">\r\n" +
+                         "    <NameSpace name=\"Microsoft.MediaCenter.Store\">\r\n" +
+                         "      <Type name=\"StoredType\" />\r\n" +
+                         "    </NameSpace>\r\n" +
+                         "  </Assembly>\r\n" +
                          "  <Assembly name=\"ehshell\">\r\n" +
                          "    <NameSpace name=\"ServiceBus.UIFramework\">\r\n" +
                          "      <Type name=\"TvSignalSetupParams\" />\r\n" +
                          "    </NameSpace>\r\n" +
-                         "  </Assembly>\r\n" +
-                         "  <Assembly name=\"mcstore\">\r\n" +
-                         "    <NameSpace name=\"Microsoft.MediaCenter.Store\">\r\n" +
-                         "      <Type name=\"UId\" parentFieldName=\"target\" />\r\n" +
-                         "    </NameSpace>\r\n" +
                          "  </Assembly>\r\n";
+            xml += string.Format("  <With maxRecordersForHomePremium=\"{0}\" maxRecordersForUltimate=\"{0}\" maxRecordersForRacing=\"{0}\" maxRecordersForBusiness=\"{0}\" maxRecordersForEnterprise=\"{0}\" maxRecordersForOthers=\"{0}\">\r\n", count);
 
             foreach (string country in countries)
             {
-                xml += string.Format("  <TvSignalSetupParams maxRecordersForEnterprise=\"{0}\">\r\n" +
-                                     "    <UId idValue=\"vss-{1}\" />\r\n" +
-                                     "  </TvSignalSetupParams>\r\n" +
-                                     "  <TvSignalSetupParams maxRecordersForHomePremium=\"{0}\">\r\n" +
-                                     "    <UId idValue=\"vss-{1}\" />\r\n" +
-                                     "  </TvSignalSetupParams>\r\n" +
-                                     "  <TvSignalSetupParams maxRecordersForBusiness=\"{0}\">\r\n" +
-                                     "    <UId idValue=\"vss-{1}\" />\r\n" +
-                                     "  </TvSignalSetupParams>\r\n" +
-                                     "  <TvSignalSetupParams maxRecordersForUltimate=\"{0}\">\r\n" +
-                                     "    <UId idValue=\"vss-{1}\" />\r\n" +
-                                     "  </TvSignalSetupParams>\r\n" +
-                                     "  <TvSignalSetupParams maxRecordersForOthers=\"{0}\">\r\n" +
-                                     "    <UId idValue=\"vss-{1}\" />\r\n" +
-                                     "  </TvSignalSetupParams>\r\n" +
-                                     "  <TvSignalSetupParams maxRecordersForRacing=\"{0}\">\r\n" +
-                                     "    <UId idValue=\"vss-{1}\" />\r\n" +
-                                     "  </TvSignalSetupParams>\r\n", count, country.ToLower());
+                xml += string.Format("    <TvSignalSetupParams uid=\"tvss-{0}\" />\r\n", country);
             }
+
+            xml += "  </With>\r\n";
             xml += "</MXF>";
 
             // create temporary file

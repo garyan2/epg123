@@ -126,9 +126,6 @@ namespace epg123
             // enable/disable the transfer tool button
             btnTransferTool.Enabled = File.Exists(Helper.Epg123TransferExePath);
 
-            // update the task panel
-            updateTaskPanel();
-
             // status the registry configuration
             createEventLogSource();
 
@@ -159,6 +156,9 @@ namespace epg123
             // flag initial form load building
             Application.UseWaitCursor = true;
             initLvBuild = true;
+
+            // update task panel
+            updateTaskPanel();
 
             // populate listviews
             if (object_store != null)
@@ -1457,7 +1457,7 @@ namespace epg123
             };
 
             // determine initial path
-            if (Directory.Exists(Helper.Epg123OutputFolder))
+            if (Directory.Exists(Helper.Epg123OutputFolder) && tbTaskInfo.Text.Equals(Helper.Epg123ExePath))
             {
                 openFileDialog1.InitialDirectory = Helper.Epg123OutputFolder;
             }
@@ -1883,7 +1883,7 @@ namespace epg123
             ProcessStartInfo startInfo = new ProcessStartInfo()
             {
                 FileName = Environment.ExpandEnvironmentVariables("%WINDIR%") + @"\ehome\mcupdate.exe",
-                Arguments = "-u -manual -nogc",
+                Arguments = "-b",
                 UseShellExecute = false,
                 CreateNoWindow = true
             };
