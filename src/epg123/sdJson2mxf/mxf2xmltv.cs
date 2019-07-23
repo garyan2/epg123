@@ -29,6 +29,35 @@ namespace epg123
                 {
                     DateTime startTime = new DateTime();
                     xmltv.Channels.Add(buildXmltvChannel(service));
+                    if (service.mxfScheduleEntries.ScheduleEntry.Count == 0 && config.XmltvAddFillerData)
+                    {
+                        // add a program specific for this service
+                        MxfProgram program = new MxfProgram()
+                        {
+                            Description = config.XmltvFillerProgramDescription,
+                            IsGeneric = "true",
+                            Title = service.Name,
+                            tmsId = string.Format("EPG123FILL{0}", service.StationID),
+                            index = sdMxf.With[0].Programs.Count + 1,
+                            jsonProgramData = new sdProgram()
+                        };
+
+                        // populate the schedule entries
+                        startTime = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, DateTime.UtcNow.Day, 0, 0, 0);
+                        DateTime stopTime = startTime + TimeSpan.FromDays(config.DaysToDownload);
+                        do
+                        {
+                            service.mxfScheduleEntries.ScheduleEntry.Add(new MxfScheduleEntry()
+                            {
+                                Duration = config.XmltvFillerProgramLength * 60 * 60,
+                                Program = sdMxf.With[0].getProgram(program.tmsId, program).Id,
+                                StartTime = startTime.ToString("yyyy-MM-ddTHH:mm:ss"),
+                                IsRepeat = "true"
+                            });
+                            startTime += TimeSpan.FromHours((double)config.XmltvFillerProgramLength);
+                        } while (startTime < stopTime);
+                    }
+
                     foreach (MxfScheduleEntry scheduleEntry in service.mxfScheduleEntries.ScheduleEntry)
                     {
                         if (!string.IsNullOrEmpty(scheduleEntry.StartTime))
@@ -322,11 +351,14 @@ namespace epg123
         private static List<XmltvEpisodeNum> buildEpisodeNumbers(MxfProgram mxfProgram, MxfScheduleEntry mxfScheduleEntry, DateTime startTime, string channelId)
         {
             List<XmltvEpisodeNum> list = new List<XmltvEpisodeNum>();
-            list.Add(new XmltvEpisodeNum()
+            if (!mxfProgram.tmsId.StartsWith("EPG123"))
             {
-                System = "dd_progid",
-                Text = mxfProgram.Uid.Substring(9).Replace("_", ".")
-            });
+                list.Add(new XmltvEpisodeNum()
+                {
+                    System = "dd_progid",
+                    Text = mxfProgram.Uid.Substring(9).Replace("_", ".")
+                });
+            }
 
             if (!string.IsNullOrEmpty(mxfProgram.EpisodeNumber) || !string.IsNullOrEmpty(mxfScheduleEntry.Part))
             {
@@ -336,6 +368,11 @@ namespace epg123
                     (mxfScheduleEntry.Part != null) ? (int.Parse(mxfScheduleEntry.Part) - 1).ToString() + "/" : "0/",
                     (mxfScheduleEntry.Parts != null) ? (int.Parse(mxfScheduleEntry.Parts)).ToString() : "1");
                 list.Add(new XmltvEpisodeNum() { System = "xmltv_ns", Text = text });
+            }
+            else if (mxfProgram.tmsId.StartsWith("EPG123"))
+            {
+                // filler data - create oad of scheduled start time
+                list.Add(new XmltvEpisodeNum() { System = "original-air-date", Text = startTime.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss") });
             }
             else if (!mxfProgram.tmsId.StartsWith("MV"))
             {
@@ -480,7 +517,6 @@ namespace epg123
             if (!string.IsNullOrEmpty(mxfProgram.MpaaRating) || !string.IsNullOrEmpty(mxfScheduleEntry.TvRating) || (mxfProgram.contentRatings != null))
             {
                 List<XmltvRating> ret = new List<XmltvRating>();
-                addProgramRating(mxfScheduleEntry, ret);
                 addProgramRatingAdvisory(mxfProgram.HasAdult, ret, "Adult Situations");
                 addProgramRatingAdvisory(mxfProgram.HasBriefNudity, ret, "Brief Nudity");
                 addProgramRatingAdvisory(mxfProgram.HasGraphicLanguage, ret, "Graphic Language");
@@ -491,6 +527,7 @@ namespace epg123
                 addProgramRatingAdvisory(mxfProgram.HasRape, ret, "Rape");
                 addProgramRatingAdvisory(mxfProgram.HasStrongSexualContent, ret, "Strong Sexual Content");
                 addProgramRatingAdvisory(mxfProgram.HasViolence, ret, "Violence");
+                addProgramRating(mxfScheduleEntry, ret);
                 return ret;
             }
             return null;

@@ -35,6 +35,7 @@
             this.ckLocalLogos = new System.Windows.Forms.CheckBox();
             this.ckSubstitutePath = new System.Windows.Forms.CheckBox();
             this.txtSubstitutePath = new System.Windows.Forms.TextBox();
+            this.ckXmltvFillerData = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // ckChannelNumbers
@@ -102,11 +103,24 @@
             this.txtSubstitutePath.Size = new System.Drawing.Size(300, 20);
             this.txtSubstitutePath.TabIndex = 5;
             // 
+            // ckXmltvFillerData
+            // 
+            this.ckXmltvFillerData.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left)));
+            this.ckXmltvFillerData.AutoSize = true;
+            this.ckXmltvFillerData.Location = new System.Drawing.Point(12, 153);
+            this.ckXmltvFillerData.Name = "ckXmltvFillerData";
+            this.ckXmltvFillerData.Size = new System.Drawing.Size(294, 17);
+            this.ckXmltvFillerData.TabIndex = 6;
+            this.ckXmltvFillerData.Text = "Create filler programs for stations that have no guide data";
+            this.ckXmltvFillerData.UseVisualStyleBackColor = true;
+            // 
             // frmXmltvConfig
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(357, 156);
+            this.ClientSize = new System.Drawing.Size(357, 182);
+            this.Controls.Add(this.ckXmltvFillerData);
             this.Controls.Add(this.txtSubstitutePath);
             this.Controls.Add(this.ckSubstitutePath);
             this.Controls.Add(this.ckLocalLogos);
@@ -136,5 +150,6 @@
         private System.Windows.Forms.CheckBox ckLocalLogos;
         private System.Windows.Forms.CheckBox ckSubstitutePath;
         private System.Windows.Forms.TextBox txtSubstitutePath;
+        private System.Windows.Forms.CheckBox ckXmltvFillerData;
     }
 }

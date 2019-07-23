@@ -240,6 +240,11 @@ namespace epg123Transfer
                 if (request.Complete || (request.PrototypicalStartTime < DateTime.UtcNow) ||
                     wmcRecording.Contains(request.PrototypicalTitle + " " + request.PrototypicalStartTime)) continue;
 
+                // detect if onetime request is from EPG123
+                bool epg123 = request.PrototypicalService.StartsWith("!Service!EPG123") &&
+                             (request.PrototypicalProgram.StartsWith("!Program!SH") || request.PrototypicalProgram.StartsWith("!Program!EP") ||
+                              request.PrototypicalProgram.StartsWith("!Program!MV") || request.PrototypicalProgram.StartsWith("!Program!SP"));
+
                 // create ListViewItem
                 listViewItems.Add(new ListViewItem(
                     new string[]
@@ -248,8 +253,8 @@ namespace epg123Transfer
                         request.PrototypicalTitle ?? request.Title
                     })
                 {
-                    BackColor = Color.LightSalmon,
-                    Checked = false,
+                    BackColor = epg123 ? Color.LightGreen : Color.LightSalmon,
+                    Checked = epg123,
                     Tag = request
                 });
             }

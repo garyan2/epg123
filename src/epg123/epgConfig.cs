@@ -67,6 +67,15 @@ namespace epg123
         [XmlElement("XmltvLogoSubtitutePath")]
         public string XmltvLogoSubstitutePath { get; set; }
 
+        [XmlElement("XmltvAddFillerData")]
+        public bool XmltvAddFillerData { get; set; }
+
+        [XmlElement("XmltvFillerProgramLength")]
+        public int XmltvFillerProgramLength { get; set; }
+
+        [XmlElement("XmltvFillerProgramDescription")]
+        public string XmltvFillerProgramDescription { get; set; }
+
         [XmlElement("ModernMediaUiPlusSupport")]
         public bool ModernMediaUiPlusSupport { get; set; }
 

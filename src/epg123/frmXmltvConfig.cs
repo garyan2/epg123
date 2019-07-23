@@ -18,6 +18,7 @@ namespace epg123
             ckUrlLogos.Checked = (config.XmltvIncludeChannelLogos == "url") || !ckLocalLogos.Checked;
             ckSubstitutePath.Checked = (config.XmltvIncludeChannelLogos == "substitute");
             txtSubstitutePath.Text = config.XmltvLogoSubstitutePath;
+            ckXmltvFillerData.Checked = config.XmltvAddFillerData;
 
             ckLogos_CheckedChanged(ckChannelLogos, null);
         }
@@ -26,6 +27,7 @@ namespace epg123
         {
             localConfig.XmltvIncludeChannelNumbers = ckChannelNumbers.Checked;
             localConfig.XmltvLogoSubstitutePath = txtSubstitutePath.Text;
+            localConfig.XmltvAddFillerData = ckXmltvFillerData.Checked;
 
             if (!ckChannelLogos.Checked)
             {

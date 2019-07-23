@@ -44,7 +44,7 @@ namespace epg123
         {
             get
             {
-                return (DateTime.Now > (procMcupdate.StartTime + TimeSpan.FromSeconds(60)));
+                return (DateTime.Now > (procMcupdate.StartTime + TimeSpan.FromSeconds(90)));
             }
         }
 
@@ -350,6 +350,9 @@ namespace epg123
             {
                 foreach (FileInfo file in di.GetFiles("*.*", SearchOption.AllDirectories))
                 {
+                    // keep the playready crypto file in-place if it exists
+                    if (file.FullName.ToLower().Contains("mcendindiv")) continue;
+
                     try
                     {
                         foreach (Process proc in FileUtil.WhoIsLocking(file.FullName))
@@ -374,6 +377,9 @@ namespace epg123
             {
                 foreach (DirectoryInfo dir in di.GetDirectories())
                 {
+                    // keep the playready crypto cache folder in-place if it exists
+                    if (dir.FullName.ToLower().Contains("cache")) continue;
+
                     try
                     {
                         dir.Delete(true);

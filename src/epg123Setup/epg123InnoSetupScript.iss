@@ -71,7 +71,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "misc\dotNetFx40_Client_setup.exe"; DestDir: "{tmp}"; Flags: dontcopy
+Source: "misc\dotNetFx40_Full_setup.exe"; DestDir: "{tmp}"; Flags: dontcopy
 Source: "..\..\bin\Release\epg123.exe"; DestDir: "{app}"; Flags: ignoreversion; Components: main1
 Source: "..\..\bin\Release\Newtonsoft.Json.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\bin\Release\epg123Client.exe"; DestDir: "{app}"; Flags: ignoreversion; Components: main2
@@ -123,7 +123,7 @@ var
     success: boolean;
     install: cardinal;
 begin
-    success := RegQueryDWordValue(HKLM, 'SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Client', 'Install', install);
+    success := RegQueryDWordValue(HKLM, 'SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full', 'Install', install);
     result := success and (install = 1);
 end;
 
@@ -135,10 +135,10 @@ begin
     // check if minimum framework is installed
     if not Framework4IsInstalled() then begin
         // prompt user to install if not suppressed
-        if SuppressibleMsgBox('The minimum .NET Framework is not installed. Do you wish to install .NET Framework 4.0 Client software now?', mbConfirmation, MB_YESNO, IDNO) = IDYES then begin
+        if SuppressibleMsgBox('The minimum .NET Framework is not installed. Do you wish to install .NET Framework 4.0 Client and Extended software now?', mbConfirmation, MB_YESNO, IDNO) = IDYES then begin
             // extract web bootstrap and execute
-            ExtractTemporaryFile('dotNetFx40_Client_setup.exe');
-            if not Exec(ExpandConstant('{tmp}\dotNetFx40_Client_setup.exe'), '/passive /norestart', '', SW_SHOW, ewWaitUntilTerminated, ResultCode) then begin
+            ExtractTemporaryFile('dotNetFx40_Full_setup.exe');
+            if not Exec(ExpandConstant('{tmp}\dotNetFx40_Full_setup.exe'), '/passive /norestart', '', SW_SHOW, ewWaitUntilTerminated, ResultCode) then begin
                 MsgBox('.NET installation failed with code: ' + IntToStr(ResultCode) + '.', mbError, MB_OK);
             end;
         end;
