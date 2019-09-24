@@ -160,6 +160,8 @@ namespace epg123
                 Categories = buildProgramCategories(mxfProgram, scheduleEntry),
                 Language = mxfStringToXmlText(!string.IsNullOrEmpty(mxfProgram.Language) ? mxfProgram.Language.Substring(0, 2) : null),
                 Icons = buildProgramIcons(mxfProgram),
+                Sport = grabSportEvent(mxfProgram),
+                Teams = buildSportTeams(mxfProgram),
                 EpisodeNums = buildEpisodeNumbers(mxfProgram, scheduleEntry, startTime, channelId),
                 Video = buildProgramVideo(scheduleEntry),
                 Audio = buildProgramAudio(scheduleEntry),
@@ -342,6 +344,35 @@ namespace epg123
                     }
                     return ret;
                 }
+            }
+            return null;
+        }
+
+        private static XmltvText grabSportEvent(MxfProgram program)
+        {
+            if (!string.IsNullOrEmpty(program.IsSports))
+            {
+                foreach (string category in program.jsonProgramData.Genres)
+                {
+                    if (!category.ToLower().StartsWith("sport"))
+                    {
+                        return new XmltvText() { Text = category };
+                    }
+                }
+            }
+            return null;
+        }
+
+        private static List<XmltvText> buildSportTeams(MxfProgram program)
+        {
+            if (!string.IsNullOrEmpty(program.IsSports) && program.jsonProgramData.EventDetails != null)
+            {
+                List<XmltvText> ret = new List<XmltvText>();
+                foreach (sdProgramEventDetailsTeam team in program.jsonProgramData.EventDetails.Teams)
+                {
+                    ret.Add(new XmltvText() { Text = team.Name });
+                }
+                return ret;
             }
             return null;
         }

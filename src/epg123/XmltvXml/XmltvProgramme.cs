@@ -84,6 +84,14 @@ namespace epg123.XmltvXml
         [XmlElement("country")]
         public List<XmltvText> Countries { get; set; }
 
+        // sport and team elements are from the ICETV xmltv.dtd file; unknown if supported anywhere
+        // reference https://sourceforge.net/p/xmltv/mailman/message/36126297/
+        [XmlElement("sport")]
+        public XmltvText Sport { get; set; }
+
+        [XmlElement("team")]
+        public List<XmltvText> Teams { get; set; }
+
         [XmlElement("episode-num")]
         public List<XmltvEpisodeNum> EpisodeNums { get; set; }
 

@@ -8,7 +8,6 @@ namespace epg123
     public partial class frmLineups : Form
     {
         SdLineupResponse oldLineups;       // existing lineup
-        const int MAXLINEUPS = 4;
 
         public HashSet<string> newLineups = new HashSet<string>();
         public bool cancel = true;
@@ -48,7 +47,7 @@ namespace epg123
         private void btnAdd_Click(object sender, EventArgs e)
         {
             // check to see if at capacity
-            if (listView1.Items.Count >= MAXLINEUPS)
+            if (listView1.Items.Count >= sdAPI.maxLineups)
             {
                 MessageBox.Show("You are at the maximum number of supported lineups and must\ndelete a lineup from the list in order to add another.");
                 return;

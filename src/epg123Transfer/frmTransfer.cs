@@ -296,6 +296,7 @@ namespace epg123Transfer
 
         private void btnOpenBackup_Click(object sender, EventArgs e)
         {
+            openFileDialog1.InitialDirectory = epg123.Helper.Epg123BackupFolder;
             if (openFileDialog1.ShowDialog() == DialogResult.OK)
             {
                 oldWmcFile = openFileDialog1.FileName;

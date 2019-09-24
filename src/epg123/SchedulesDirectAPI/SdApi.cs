@@ -26,6 +26,7 @@ namespace epg123
         public static string jsonApi = @"/20141201/";
         private static string sdToken;
         public static string ErrorString { get; set; }
+        public static int maxLineups { get; set; }
 
         private static long totalBytes_;
         public static string TotalDownloadBytes
@@ -231,6 +232,22 @@ namespace epg123
                         Logger.WriteVerbose(string.Format("Status request successful. account expires: {0} , lineups: {1}/{2} , lastDataUpdate: {3}",
                                                           ret.Account.Expires, ret.Lineups.Count, ret.Account.MaxLineups, ret.LastDataUpdate));
                         Logger.WriteVerbose(string.Format("system status: {0} , message: {1}", ret.SystemStatus[0].Status, ret.SystemStatus[0].Message));
+                        maxLineups = ret.Account.MaxLineups;
+
+                        TimeSpan expires = DateTime.Parse(ret.Account.Expires) - DateTime.Now;
+                        if (expires < TimeSpan.FromDays(14.0))
+                        {
+                            if (expires.Days <= 3)
+                            {
+                                Logger.WriteError(string.Format("Your Schedules Direct account expires in {0:D2} days {1:D2} hours {2:D2} minutes.",
+                                    expires.Days, expires.Hours, expires.Minutes));
+                            }
+                            else
+                            {
+                                Logger.WriteWarning(string.Format("Your Schedules Direct account expires in {0:D2} days {1:D2} hours {2:D2} minutes.",
+                                    expires.Days, expires.Hours, expires.Minutes));
+                            }
+                        }
                         return ret;
                     default:
                         break;

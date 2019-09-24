@@ -1024,6 +1024,7 @@ namespace epg123
                             tuningInfos.Add(string.Format("{0} {1}{2}",
                                 (ti.PhysicalNumber < 14) ? "VHF" : "UHF", ti.PhysicalNumber, (ti.SubNumber > 0) ? "." + ti.SubNumber.ToString() : null));
                             break;
+                        case "Cable":
                         case "ClearQAM":
                         case "Digital Cable":
                             tuningInfos.Add(string.Format("C{0}{1}",
@@ -1032,7 +1033,6 @@ namespace epg123
                         case "{adb10da8-5286-4318-9ccb-cbedc854f0dc}":
                         case "AuxIn1":
                         case "Antenna":
-                        case "Cable":
                         case "ATSCCable":
                             tuningInfos.Add(string.Format("{0} not implemented yet. Contact me!", tuningInfo.TuningSpace));
                             break;
@@ -2126,6 +2126,7 @@ namespace epg123
             // the store explorer form does a DisposeAll on the object store which basically breaks
             // the ObjectStore in the client. Closing form because I haven't found a way to reinit
             // the objectStore_ parameter.
+            forceExit = true;
             this.Close();
         }
         private void btnExportMxf_Click(object sender, EventArgs e)

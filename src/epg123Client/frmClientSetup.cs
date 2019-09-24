@@ -2,10 +2,14 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using Microsoft.Win32;
+using Microsoft.MediaCenter.Store;
 
 namespace epg123
 {
@@ -24,7 +28,9 @@ namespace epg123
         const int SW_SHOWNORMAL = 1;
         const int SW_SHOWMINIMIZED = 2;
         const int SW_RESTORE = 9;
+        const int TUNERLIMIT = 32;
 
+        private string[] countries = { /*"default", */"au", "be", "br", "ca", "ch", "cn", "cz", "de", "dk", "es", "fi", "fr", "gb", "hk", "hu", "ie", "in",/* "it",*/ "jp", "kr", "mx", "nl", "no", "nz", "pl",/* "pt",*/ "ru", "se", "sg", "sk",/* "tr", "tw",*/ "us", "za" };
         private IntPtr wmcPtr = IntPtr.Zero;
         private string backupZipFile = string.Empty;
         private string BYPASSED = "BACKUP_BYPASSED";
@@ -45,6 +51,23 @@ namespace epg123
             get
             {
                 return (DateTime.Now > (procMcupdate.StartTime + TimeSpan.FromSeconds(90)));
+            }
+        }
+
+        private static ObjectStore objectStore_;
+        private static ObjectStore object_store
+        {
+            get
+            {
+                if (objectStore_ == null)
+                {
+                    SHA256Managed sha256Man = new SHA256Managed();
+                    string clientId = ObjectStore.GetClientId(true);
+                    string providerName = @"Anonymous!User";
+                    string password = Convert.ToBase64String(sha256Man.ComputeHash(Encoding.Unicode.GetBytes(clientId)));
+                    objectStore_ = ObjectStore.Open(null, providerName, password, true);
+                }
+                return objectStore_;
             }
         }
 
@@ -93,14 +116,21 @@ namespace epg123
             // STEP 2: WMC TV Setup
             else if (sender.Equals(btnTvSetup) && configureHdPvrTuners() && openWmc() && activateGuide() && disableBackgroundScanning())
             {
-                // disable tv setup button and enable configuration button
-                btnTvSetup.Enabled = lblTvSetup.Enabled = false;
-                btnTvSetup.BackColor = System.Drawing.Color.LightGreen;
+                if (!isTunerCountTweaked(TUNERLIMIT) && MessageBox.Show("It appears the tuner limit increase did not stick. Do you wish to apply the tweak and perform a TV Setup in WMC again?", "Tuner Limit Increase Failed", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                {
+                    tweakMediaCenterTunerCount(TUNERLIMIT);
+                }
+                else
+                {
+                    // disable tv setup button and enable configuration button
+                    btnTvSetup.Enabled = lblTvSetup.Enabled = false;
+                    btnTvSetup.BackColor = System.Drawing.Color.LightGreen;
 
-                // enable config button if epg123.exe is present
-                btnConfig.Enabled = lblConfig.Enabled = epg123Installed;
-                if (epg123Installed) updateStatusText("Click the 'Step 3' button to continue.");
-                else updateStatusText(string.Empty);
+                    // enable config button if epg123.exe is present
+                    btnConfig.Enabled = lblConfig.Enabled = epg123Installed;
+                    if (epg123Installed) updateStatusText("Click the 'Step 3' button to continue.");
+                    else updateStatusText(string.Empty);
+                }
             }
 
             // STEP 3: Configure EPG123
@@ -121,6 +151,7 @@ namespace epg123
             {
                 if (!backupZipFile.Equals(BYPASSED) && File.Exists("epg123Transfer.exe"))
                 {
+                    Logger.WriteVerbose("Opening recording request transfer tool and waiting for it to close ...");
                     ProcessStartInfo startInfo = new ProcessStartInfo()
                     {
                         FileName = "epg123Transfer.exe",
@@ -129,6 +160,7 @@ namespace epg123
                     Process.Start(startInfo).WaitForExit();
                 }
                 MessageBox.Show("Setup is complete. Be sure to create a Scheduled Task to perform daily updates and keep your guide up to date!", "Setup Complete", MessageBoxButtons.OK);
+                Logger.WriteVerbose("Setup is complete.  Be sure to create a Scheduled Task to perform daily updates and keep your guide up to date!");
                 this.Close();
             }
             else if (cbAutostep.Checked && btnTvSetup.Enabled)
@@ -155,6 +187,7 @@ namespace epg123
         private void refreshRegistryKeys()
         {
             updateStatusText("Refreshing registry keys ...");
+            Logger.WriteVerbose("Refreshing registry keys ...");
             using (RegistryKey key = Registry.LocalMachine.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Media Center", true))
             {
                 if (key != null)
@@ -231,6 +264,7 @@ namespace epg123
             if (shouldBackup)
             {
                 updateStatusText("Backing up WMC configurations ...");
+                Logger.WriteVerbose("Backing up WMC configurations ...");
                 backupZipFile = clientForm.backupBackupFiles();
 
                 if (string.IsNullOrEmpty(backupZipFile))
@@ -261,6 +295,7 @@ namespace epg123
             if (colossusInstalled)
             {
                 updateStatusText("Deleting HD PVR tuner files ...");
+                Logger.WriteVerbose("Deleting HD PVR tuner files ...");
                 string folder = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData) + @"\Hauppauge\MediaCenterService";
                 foreach (string tuner in hdpvrTuners)
                 {
@@ -284,56 +319,89 @@ namespace epg123
             // delete and rebuild registry keys
             refreshRegistryKeys();
 
-            // call up media center to create database file
-            updateStatusText("Starting Windows Media Center ...");
-            ProcessStartInfo startInfo = new ProcessStartInfo()
-            {
-                FileName = Helper.EhshellExeFilePath,
-                Arguments = "/nostartupanimation"
-            };
-            procWmc = Process.Start(startInfo);
-            procWmc.WaitForInputIdle(30000);
-
-            // wait for wmc form to show and then hide it
-            // waiting for WMDMNotificationWindowClass guarantees? WMC is ready for import
-            // WMDM = Windows Media Device Manager (Windows Media Player)
-            updateStatusText("Waiting for initial WMC database build ...");
+            bool crashDetected = false;
+            int instance = 0;
             do
             {
-                if ((wmcPtr = FindWindow("eHome Render Window", "Windows Media Center")) != IntPtr.Zero)
+                // call up media center to create database file
+                updateStatusText("Starting Windows Media Center ...");
+                Logger.WriteVerbose("Starting Windows Media Center ...");
+                ProcessStartInfo startInfo = new ProcessStartInfo()
                 {
-                    if (!IsIconic(wmcPtr))
+                    FileName = Helper.EhshellExeFilePath,
+                    Arguments = "/nostartupanimation"
+                };
+                procWmc = Process.Start(startInfo);
+                procWmc.WaitForInputIdle(30000);
+
+                // wait for wmc form to show and then hide it
+                // waiting for WMDMNotificationWindowClass guarantees? WMC is ready for import
+                // WMDM = Windows Media Device Manager (Windows Media Player)
+                updateStatusText("Waiting for initial WMC database build ...");
+                Logger.WriteVerbose("Waiting for initial WMC database build ...");
+                do
+                {
+                    if ((wmcPtr = FindWindow("eHome Render Window", "Windows Media Center")) != IntPtr.Zero)
                     {
-                        Thread.Sleep(1000);
-                        ShowWindow(wmcPtr, SW_SHOWMINIMIZED);
+                        if (!IsIconic(wmcPtr))
+                        {
+                            Thread.Sleep(1000);
+                            ShowWindow(wmcPtr, SW_SHOWMINIMIZED);
+                        }
+                        else
+                        {
+                            ShowWindow(wmcPtr, SW_HIDE);
+                        }
                     }
-                    else
+                    Thread.Sleep(100);
+                    Application.DoEvents();
+                } while ((FindWindow("WMDMNotificationWindowClass", null) == IntPtr.Zero) && !timeoutWmc);
+
+                // detect whether a "recovery" occurred and try again
+                int newInstance = 0;
+                using (RegistryKey key = Registry.LocalMachine.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Media Center\\Service\\EPG", false))
+                {
+                    if (key != null)
                     {
-                        ShowWindow(wmcPtr, SW_HIDE);
+                        try
+                        {
+                            newInstance = (int)key.GetValue("EPG.instance");
+                        }
+                        catch { }
+
+                        if (crashDetected = (newInstance != instance))
+                        {
+                            Logger.WriteVerbose("WMC crash detected. Killing current instance of WMC and starting another.");
+                            procWmc.Kill();
+                            while (!procWmc.HasExited) ;
+
+                            instance = newInstance;
+                        }
+                        else
+                        {
+                            // process an update to avoid overwriting the increased limit
+                            // it appears the very first mcupdate.exe run will reset the tuner limit
+                            // WMC will perform mcupdate.exe -manual -nogc -p 0 starting with "Downloading TV Setup Data"
+                            updateStatusText("Performing a manual database update ...");
+                            Logger.WriteVerbose("Performing a manual database update ...");
+                            startInfo = new ProcessStartInfo()
+                            {
+                                FileName = Environment.ExpandEnvironmentVariables("%WINDIR%") + @"\ehome\mcupdate.exe",
+                                Arguments = "-manual -nogc -p 0"
+                            };
+                            procMcupdate = Process.Start(startInfo);
+                            do
+                            {
+                                Thread.Sleep(100);
+                                Application.DoEvents();
+                            } while (!procMcupdate.HasExited && !timeoutMcupdate);
+                        }
                     }
                 }
-                Thread.Sleep(100);
-                Application.DoEvents();
-            } while ((FindWindow("WMDMNotificationWindowClass", null) == IntPtr.Zero) && !timeoutWmc);
-
-            // process an update to avoid overwriting the increased limit
-            // note a mcupdate -uf run will reset tuner limits to 4
-            updateStatusText("Performing a manual database update ...");
-            startInfo = new ProcessStartInfo()
-            {
-                FileName = Environment.ExpandEnvironmentVariables("%WINDIR%") + @"\ehome\mcupdate.exe",
-                Arguments = "-u -manual -nogc"
-            };
-            procMcupdate = Process.Start(startInfo);
-            do
-            {
-                Thread.Sleep(100);
-                Application.DoEvents();
-            } while (!procMcupdate.HasExited && !timeoutMcupdate);
+            } while (crashDetected && instance < 5);
 
             // increase the tuner count to 32
-            updateStatusText("Increasing tuner limits ...");
-            tweakMediaCenterTunerCount(32);
+            tweakMediaCenterTunerCount(TUNERLIMIT);
             updateStatusText(string.Empty);
 
             return true;
@@ -344,6 +412,7 @@ namespace epg123
 
             // delete the ehome folder contents
             updateStatusText("Deleting eHome folder contents ...");
+            Logger.WriteVerbose("Deleting eHome folder contents ...");
             string folder = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData) + @"\Microsoft\eHome";
             DirectoryInfo di = new DirectoryInfo(folder);
             try
@@ -372,7 +441,7 @@ namespace epg123
             }
             catch { ret = false; }
 
-            // it's okay if we don't delete the folders
+            // it's okay if we don't delete the folders, I think
             try
             {
                 foreach (DirectoryInfo dir in di.GetDirectories())
@@ -396,8 +465,10 @@ namespace epg123
         }
         private bool tweakMediaCenterTunerCount(int count)
         {
+            updateStatusText("Increasing tuner limits ...");
+            Logger.WriteVerbose("Increasing tuner limits ...");
+
             // create mxf file with increased tuner limits
-            string[] countries = { /*"default", */"au", "be", "br", "ca", "ch", "cn", "cz", "de", "dk", "es", "fi", "fr", "gb", "hk", "hu", "ie", "in",/* "it",*/ "jp", "kr", "mx", "nl", "no", "nz", "pl",/* "pt",*/ "ru", "se", "sg", "sk",/* "tr", "tw",*/ "us", "za" };
             string xml = "<?xml version=\"1.0\" standalone=\"yes\"?>\r\n" +
                          "<MXF version=\"1.0\" xmlns=\"\">\r\n" +
                          "  <Assembly name=\"mcstore\">\r\n" +
@@ -416,6 +487,9 @@ namespace epg123
             {
                 xml += string.Format("    <TvSignalSetupParams uid=\"tvss-{0}\" />\r\n", country);
             }
+
+            // sneak this one in for our Canadian friends just north of the (contiguous) border to be able to tune ATSC stations from the USA
+            xml += string.Format("  <TvSignalSetupParams uid=\"tvss-ca\" atscSupported=\"true\" autoSetupLikelyAtscChannels=\"34, 35, 36, 43, 31, 39, 38, 32, 41, 27, 19, 51, 44, 42, 30, 28\" tvRatingSystem=\"US\" />");
 
             xml += "  </With>\r\n";
             xml += "</MXF>";
@@ -446,6 +520,44 @@ namespace epg123
             File.Delete(mxfFilepath);
 
             return true;
+        }
+
+        private bool isTunerCountTweaked(int count)
+        {
+            updateStatusText("Verifying tuner limit increses ...");
+            Logger.WriteVerbose("Verifying tuner limit increases ...");
+
+            int success = 0;
+            if (object_store != null)
+            {
+                foreach (UId uid in object_store.UIds)
+                {
+                    foreach (string country in countries)
+                    {
+                        if (uid.GetFullName().Equals("!vss-" + country))
+                        {
+                            Type t = uid.Target.GetType();
+                            PropertyInfo[] props = t.GetProperties();
+                            foreach (var prop in props)
+                            {
+                                if (prop.Name.StartsWith("MaxRecordersFor"))
+                                {
+                                    var q = prop.GetValue(uid.Target, null);
+                                    if ((int)q != count) return false;
+                                }
+                            }
+                            ++success;
+                            continue;
+                        }
+                    }
+                }
+
+                // dispose of the objectstore
+                objectStore_.Dispose();
+                while (!objectStore_.IsDisposed) ;
+                objectStore_ = null;
+            }
+            return (success == countries.Length);
         }
         #endregion
 
@@ -482,6 +594,7 @@ namespace epg123
             foreach (string tuner in hdpvrTuners.ToArray())
             {
                 updateStatusText("Creating HD PVR tuner files ...");
+                Logger.WriteVerbose("Creating HD PVR tuner files ...");
                 try
                 {
                     if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
@@ -548,6 +661,7 @@ namespace epg123
         private bool openWmc()
         {
             updateStatusText("Opening WMC for TV Setup ...");
+            Logger.WriteVerbose("Opening WMC for TV Setup ...");
             if (!procWmc.HasExited)
             {
                 // show wmc window
@@ -564,6 +678,7 @@ namespace epg123
                 procWmc = Process.Start(startInfo);
             }
             updateStatusText("Waiting for user to close WMC ...");
+            Logger.WriteVerbose("Waiting for user to close WMC ...");
 
             do
             {
@@ -578,6 +693,7 @@ namespace epg123
         {
             bool ret = false;
             updateStatusText("Activating guide in registry ...");
+            Logger.WriteVerbose("Activating guide in registry ...");
             RegistryKey key = Registry.LocalMachine.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Media Center\\Settings\\ProgramGuide", true);
             if (key != null)
             {
@@ -602,6 +718,7 @@ namespace epg123
         {
             bool ret = false;
             updateStatusText("Disabling background scanner ...");
+            Logger.WriteVerbose("Disabling background scanner ...");
             RegistryKey key = Registry.LocalMachine.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Media Center\\Service\\BackgroundScanner", true);
             if (key != null)
             {
@@ -634,6 +751,7 @@ namespace epg123
         private bool openEpg123Configuration()
         {
             updateStatusText("Opening EPG123 Configuration GUI ...");
+            Logger.WriteVerbose("Opening EPG123 Configuration GUI ...");
             Process procEpg123;
             if (epg123Running())
             {
@@ -652,6 +770,7 @@ namespace epg123
                 procEpg123.WaitForInputIdle(10000);
             }
             updateStatusText("Waiting for EPG123 to close ...");
+            Logger.WriteVerbose("Waiting for EPG123 to close ...");
 
             do
             {

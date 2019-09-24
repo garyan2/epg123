@@ -578,8 +578,8 @@ namespace epg123
             prg.ActorRole = getPersons(sd.Cast, new string[] { "Actor", "Voice", "Judge" });
             prg.DirectorRole = getPersons(sd.Crew, new string[] { "Director" });
             prg.GuestActorRole = getPersons(sd.Cast, new string[] { "Guest" }); // "Guest Star", "Guest"
-            prg.HostRole = getPersons(sd.Cast, new string[] { "Anchor", "Host", "Presenter", "Narrator" });
-            prg.ProducerRole = getPersons(sd.Crew, new string[] { "Producer" }); // "Producer", "Executive Producer", "Co-Executive Producer"
+            prg.HostRole = getPersons(sd.Cast, new string[] { "Anchor", "Host", "Presenter", "Narrator", "Correspondent" });
+            prg.ProducerRole = getPersons(sd.Crew, new string[] { "Executive Producer" }); // "Producer", "Executive Producer", "Co-Executive Producer"
             prg.WriterRole = getPersons(sd.Crew, new string[] { "Writer", "Story" }); // "Screenwriter", "Writer", "Co-Writer"
         }
 

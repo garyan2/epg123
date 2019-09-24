@@ -19,6 +19,9 @@ namespace epg123
 
         public static bool CreateAndSetFolderAcl(string folder)
         {
+            // bypassing this feature ... probably not needed
+            return true;
+
             try
             {
                 // establish security identifier for everyone and desired rights

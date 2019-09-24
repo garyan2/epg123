@@ -533,6 +533,12 @@ namespace epg123
             else
             {
                 txtAcctExpires.Text = DateTime.Parse(status.Account.Expires).ToString();
+                if (DateTime.Parse(status.Account.Expires) - DateTime.Now < TimeSpan.FromDays(14.0))
+                {
+                    // weird fact: the text color of a read-only textbox will only change after you set the backcolor
+                    txtAcctExpires.ForeColor = Color.Red;
+                    txtAcctExpires.BackColor = txtAcctExpires.BackColor;
+                }
                 if ((status.Lineups == null) || (status.Lineups.Count == 0))
                 {
                     MessageBox.Show("There are no lineups in your SD-JSON account. You must\nadd at least one lineup to proceed.", "No Lineups in Account", MessageBoxButtons.OK);
@@ -1498,6 +1504,8 @@ namespace epg123
             ToolStripDropDownButton[] btns = { L1IncludeExclude, L2IncludeExclude, L3IncludeExclude, L4IncludeExclude, L5IncludeExclude };
             ToolStripMenuItem[] items = { L1includeToolStripMenuItem , L2includeToolStripMenuItem , L3includeToolStripMenuItem , L4includeToolStripMenuItem , L5includeToolStripMenuItem,
                                           L1excludeToolStripMenuItem , L2excludeToolStripMenuItem , L3excludeToolStripMenuItem , L4excludeToolStripMenuItem , L5excludeToolStripMenuItem };
+            if (lineup >= btns.Length) return;
+
             int mid = items.Length / 2;
             btns[lineup].Image = Properties.Resources.GreenLight.ToBitmap();
             items[lineup].Checked = true;
@@ -1508,6 +1516,8 @@ namespace epg123
             ToolStripDropDownButton[] btns = { L1IncludeExclude, L2IncludeExclude, L3IncludeExclude, L4IncludeExclude, L5IncludeExclude };
             ToolStripMenuItem[] items = { L1includeToolStripMenuItem , L2includeToolStripMenuItem , L3includeToolStripMenuItem , L4includeToolStripMenuItem , L5includeToolStripMenuItem,
                                           L1excludeToolStripMenuItem , L2excludeToolStripMenuItem , L3excludeToolStripMenuItem , L4excludeToolStripMenuItem , L5excludeToolStripMenuItem};
+            if (lineup >= btns.Length) return;
+
             int mid = items.Length / 2;
             btns[lineup].Image = Properties.Resources.RedLight.ToBitmap();
             items[lineup].Checked = false;

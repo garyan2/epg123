@@ -101,6 +101,7 @@ namespace epg123
 
                                 cmbScannedLineups.Focus();
                                 break;
+                            case "Cable":                                   // Local Analog Cable
                             case "Digital Cable":                           // Local Digital Cable
                                 tabTunerSpace.SelectTab(tabChannelTuningInfo);
                                 lblChnTiModulationType.Visible = chnTiModulationType.Visible = false;
@@ -134,7 +135,6 @@ namespace epg123
                             case "{adb10da8-5286-4318-9ccb-cbedc854f0dc}":  // Freestyle generic tuning space for STB
                             case "AuxIn1":                                  // Analog Auxiliary Input #1
                             case "Antenna":                                 // Local Analog Antenna
-                            case "Cable":                                   // Local Analog Cable
                             case "ATSCCable":                               // Local ATSC Digital Cable
 
                             // the following are "DvbTuningInfo"
@@ -208,6 +208,7 @@ namespace epg123
                         case "ClearQAM":
                             success = addChannelTuningInfo(new ChannelTuningInfo(item.Tag as Device, (int)chnTiNumber.Value, (int)chnTiSubnumber.Value, (ModulationType)(chnTiModulationType.SelectedIndex + 1)), channel);
                             break;
+                        case "Cable":
                         case "Digital Cable":
                             success = addChannelTuningInfo(new ChannelTuningInfo(item.Tag as Device, (int)chnTiNumber.Value, (int)chnTiSubnumber.Value, ModulationType.BDA_MOD_NOT_DEFINED), channel);
                             break;
@@ -222,7 +223,6 @@ namespace epg123
                         case "{adb10da8-5286-4318-9ccb-cbedc854f0dc}":
                         case "AuxIn1":
                         case "Antenna":
-                        case "Cable":
                         case "ATSCCable":
                         default:
                             break;
