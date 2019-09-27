@@ -285,7 +285,10 @@ namespace epg123
             prg.IsSpecial = Helper.stringContains(sd.ShowType, "Special");
 
             // set sports flag if appropriate along with generic flag
-            prg.IsSports = Helper.stringContains(sd.EntityType, "Sports") ?? Helper.stringContains(sd.ShowType, "Sports");
+            if (prg.jsonProgramData.EventDetails != null)
+            {
+                prg.IsSports = Helper.stringContains(sd.EntityType, "Sports") ?? Helper.stringContains(sd.ShowType, "Sports");
+            }
 
             // set isGeneric flag if programID starts with "SH", is a series, is not a miniseries, and is not paid programming
             if (prg.tmsId.StartsWith("SH") && ((!string.IsNullOrEmpty(prg.IsSports) && string.IsNullOrEmpty(Helper.stringContains(sd.EntityType, "Sports"))) ||
