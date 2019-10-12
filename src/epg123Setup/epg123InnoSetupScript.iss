@@ -42,11 +42,11 @@ UninstallDisplayIcon={uninstallexe}
 WizardImageFile=imgs\EPG123_164x319.bmp
 WizardSmallImageFile=imgs\EPG123_55x55.bmp
 AllowRootDirectory=True
-AppCopyright=2018
+AppCopyright=2019
 VersionInfoVersion={#MyAppVersion}
 VersionInfoCompany={#MyAppPublisher}
 VersionInfoDescription=Media Center Electronic Program Guide in 1-2-3
-VersionInfoCopyright=2018
+VersionInfoCopyright=2019
 VersionInfoProductName={#MyAppName}
 VersionInfoProductVersion={#MyAppVersion}
 VersionInfoProductTextVersion={#MyAppVersion}
@@ -101,6 +101,7 @@ Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChang
 Filename: "{app}\{#MyClientExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyClientName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent runascurrentuser unchecked; Components: main2
 
 [Dirs]
+; Name: {code:GetRootDataFolder}; Permissions: everyone-full
 
 [InstallDelete]
 Type: files; Name: "{app}\Newtonsoft.json.dll"; Components: main1 main2 help
@@ -142,5 +143,16 @@ begin
                 MsgBox('.NET installation failed with code: ' + IntToStr(ResultCode) + '.', mbError, MB_OK);
             end;
         end;
+    end;
+end;
+
+// check where the installation folder is located
+function GetRootDataFolder(Param: String) : String;
+begin
+    if Pos(ExpandConstant('{pf32}'), ExpandConstant('{app}')) > 0 then begin
+        result := ExpandConstant('{commonappdata}\{#MyAppPublisher}\') + Lowercase(ExpandConstant('{#MyAppName}'))
+    end
+    else begin
+        result := ExpandConstant('{app}')
     end;
 end;

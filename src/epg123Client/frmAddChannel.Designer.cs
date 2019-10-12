@@ -46,6 +46,7 @@
             this.tabUnsupported = new System.Windows.Forms.TabPage();
             this.lblUnsupported = new System.Windows.Forms.Label();
             this.tabGhostTuner = new System.Windows.Forms.TabPage();
+            this.label7 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
             this.chnNtiSubnumber = new System.Windows.Forms.NumericUpDown();
             this.chnNtiServiceType = new System.Windows.Forms.ComboBox();
@@ -57,7 +58,7 @@
             this.btnNtiAddChannel = new System.Windows.Forms.Button();
             this.lvDevices = new System.Windows.Forms.ListView();
             this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.label7 = new System.Windows.Forms.Label();
+            this.rtbChannelAddHistory = new System.Windows.Forms.RichTextBox();
             this.tabTunerSpace.SuspendLayout();
             this.tabChannelTuningInfo.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.chnTiPhysicalNumber)).BeginInit();
@@ -301,6 +302,17 @@
             this.tabGhostTuner.Text = "NonTuner";
             this.tabGhostTuner.UseVisualStyleBackColor = true;
             // 
+            // label7
+            // 
+            this.label7.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.label7.Location = new System.Drawing.Point(6, 70);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(330, 78);
+            this.label7.TabIndex = 34;
+            this.label7.Text = "\r\n*Only Service Type \'TV\' will be visible in the EPG123 Client Guide Tool. All ot" +
+    "hers will still be visible in WMC.";
+            // 
             // label5
             // 
             this.label5.AutoSize = true;
@@ -418,6 +430,7 @@
             this.columnHeader1});
             this.lvDevices.FullRowSelect = true;
             this.lvDevices.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
+            this.lvDevices.HideSelection = false;
             this.lvDevices.Location = new System.Drawing.Point(12, 37);
             this.lvDevices.Name = "lvDevices";
             this.lvDevices.Size = new System.Drawing.Size(350, 91);
@@ -431,22 +444,22 @@
             this.columnHeader1.Text = "Devices";
             this.columnHeader1.Width = 320;
             // 
-            // label7
+            // rtbChannelAddHistory
             // 
-            this.label7.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.label7.Location = new System.Drawing.Point(6, 70);
-            this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(330, 78);
-            this.label7.TabIndex = 34;
-            this.label7.Text = "\r\n*Only Service Type \'TV\' will be visible in the EPG123 Client Guide Tool. All ot" +
-    "hers will still be visible in WMC.";
+            this.rtbChannelAddHistory.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.rtbChannelAddHistory.Cursor = System.Windows.Forms.Cursors.No;
+            this.rtbChannelAddHistory.Location = new System.Drawing.Point(368, 12);
+            this.rtbChannelAddHistory.Name = "rtbChannelAddHistory";
+            this.rtbChannelAddHistory.Size = new System.Drawing.Size(284, 328);
+            this.rtbChannelAddHistory.TabIndex = 4;
+            this.rtbChannelAddHistory.Text = "";
             // 
             // frmAddChannel
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(374, 352);
+            this.ClientSize = new System.Drawing.Size(664, 352);
+            this.Controls.Add(this.rtbChannelAddHistory);
             this.Controls.Add(this.lvDevices);
             this.Controls.Add(this.tabTunerSpace);
             this.Controls.Add(this.cmbScannedLineups);
@@ -454,6 +467,7 @@
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Add Channel to Lineup";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.frmAddChannel_FormClosing);
             this.tabTunerSpace.ResumeLayout(false);
             this.tabChannelTuningInfo.ResumeLayout(false);
             this.tabChannelTuningInfo.PerformLayout();
@@ -501,5 +515,6 @@
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.NumericUpDown chnNtiSubnumber;
         private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.RichTextBox rtbChannelAddHistory;
     }
 }

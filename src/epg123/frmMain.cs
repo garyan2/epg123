@@ -175,16 +175,16 @@ namespace epg123
         private void frmMain_FormClosing(object sender, FormClosingEventArgs e)
         {
             // check to make sure a scheduled task has been created
-            if (!forceExit && !task.exist && !task.existNoAccess)
-            {
-                updateTaskPanel();
-                if (DialogResult.No == MessageBox.Show("There is no scheduled task to continually update the guide data. Are you sure you want to exit?", "Scheduled Task Missing", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation))
-                {
-                    Execute = false;
-                    e.Cancel = true;
-                    return;
-                }
-            }
+            //if (!forceExit && !task.exist && !task.existNoAccess)
+            //{
+            //    updateTaskPanel();
+            //    if (DialogResult.No == MessageBox.Show("There is no scheduled task to continually update the guide data. Are you sure you want to exit?", "Scheduled Task Missing", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation))
+            //    {
+            //        Execute = false;
+            //        e.Cancel = true;
+            //        return;
+            //    }
+            //}
 
             // save the windows size and location
             if (WindowState == FormWindowState.Normal)
@@ -311,6 +311,13 @@ namespace epg123
                 {
                     if (task.actions[i].Path.ToLower().Contains("epg123.exe")) epg123Index = i;
                     if (task.actions[i].Path.ToLower().Contains("epg123client.exe")) clientIndex = i;
+                }
+
+                // verify task configuration with respect to this executable
+                if (epg123Index >= 0 && !task.actions[epg123Index].Path.ToLower().Equals(Helper.Epg123ExePath.ToLower()))
+                {
+                    MessageBox.Show(string.Format("The location of this program file is not the same location configured in the Scheduled Task.\n\nThis program:\n{0}\n\nTask program:\n{1}",
+                                                  Helper.Epg123ExePath, task.actions[epg123Index].Path), "Configuration Warning", MessageBoxButtons.OK);
                 }
             }
 
@@ -479,6 +486,7 @@ namespace epg123
                     cbOadOverride.Checked = true;
                     cbTMDb.Checked = true;
                     cbSdLogos.Checked = true;
+                    cbAddNewStations.Checked = true;
                 }
                 else
                 {
@@ -505,7 +513,7 @@ namespace epg123
                 else if (!task.exist && File.Exists(Helper.Epg123ClientExePath) && !File.Exists(Helper.Epg123CfgPath))
                 {
                     cbImport.Checked = cbAutomatch.Enabled = true;
-                    cbAutomatch.Checked = false;
+                    cbAutomatch.Checked = true;
                 }
 
                 // enable form controls

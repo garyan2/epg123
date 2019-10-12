@@ -44,7 +44,7 @@ namespace epg123
                 return objectStore_;
             }
         }
-        private static MergedLineup mergedLineup_;
+        public static MergedLineup mergedLineup_;
         public static MergedLineup mergedLineup
         {
             get
@@ -206,15 +206,15 @@ namespace epg123
                 }
 
                 // check to make sure a scheduled task has been created
-                if (!task.exist && !task.existNoAccess)
-                {
-                    updateTaskPanel();
-                    if (DialogResult.No == MessageBox.Show("There is no scheduled task to continually update the guide data. Are you sure you want to exit?", "Scheduled Task Missing", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation))
-                    {
-                        e.Cancel = true;
-                        return;
-                    }
-                }
+                //if (!task.exist && !task.existNoAccess)
+                //{
+                //    updateTaskPanel();
+                //    if (DialogResult.No == MessageBox.Show("There is no scheduled task to continually update the guide data. Are you sure you want to exit?", "Scheduled Task Missing", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation))
+                //    {
+                //        e.Cancel = true;
+                //        return;
+                //    }
+                //}
             }
 
             // save the windows size and locations
@@ -238,7 +238,7 @@ namespace epg123
                 mergedLineup.FullMerge(false);
                 mergedLineup.Update();
             }
-            isolateEpgDatabase();
+            //isolateEpgDatabase();
         }
 
         #region ========== Elevated Rights ==========
@@ -704,9 +704,6 @@ namespace epg123
         {
             // close all object store items
             isolateEpgDatabase();
-
-            // null the merged lineup
-            mergedLineup_ = null;
 
             // open object store and repopulate the GUI
             clientForm_Shown(null, null);
@@ -1197,7 +1194,9 @@ namespace epg123
 
             // resume listview drawing
             mergedChannelListView.EndUpdate();
-            btnRefreshLineups_Click(null, null);
+            mergedChannelListView.Items.Clear();
+            mergedLineup_.Refresh();
+            buildMergedChannelListView();
             this.Cursor = Cursors.Arrow;
         }
         private void btnChannelDisplay_Click(object sender, EventArgs e)
@@ -1305,6 +1304,13 @@ namespace epg123
                 {
                     if (task.actions[i].Path.ToLower().Contains("epg123client.exe")) clientIndex = i;
                 }
+            }
+
+            // verify task configuration with respect to this executable
+            if (clientIndex >= 0 && !task.actions[clientIndex].Path.ToLower().Equals(Helper.Epg123ClientExePath.ToLower()))
+            {
+                MessageBox.Show(string.Format("The location of this program file is not the same location configured in the Scheduled Task.\n\nThis program:\n{0}\n\nTask program:\n{1}",
+                                              Helper.Epg123ExePath, task.actions[clientIndex].Path), "Configuration Warning", MessageBoxButtons.OK);
             }
 
             // set automatch checkbox state
@@ -1444,8 +1450,35 @@ namespace epg123
         #region ========== Manual Import and Reindex ==========
         private void btnImport_Click(object sender, EventArgs e)
         {
-            if ((mergedChannelListView.Items.Count == 0) &&
-                (DialogResult.No == MessageBox.Show("There doesn't appear to be any tuners setup in WMC. Importing guide information before TV Setup is complete will corrupt the database. Restoring a lineup (tuner configuration) from a backup is safe.\n\nDo you wish to continue?", "Import Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning))) return;
+            // verify tuners are set up
+            if (mergedChannelListView.Items.Count == 0)
+            {
+                switch (MessageBox.Show("There doesn't appear to be any tuners setup in WMC. Importing guide information before TV Setup is complete will corrupt the database. Restoring a lineup (tuner configuration) from a backup is safe.\n\nDo you wish to continue?", "Import Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning))
+                {
+                    case DialogResult.Yes:
+                        Logger.WriteInformation("User opted to proceed with MXF file import while there are no tuners configured in WMC.");
+                        break;
+                    default:
+                        return;
+                }
+            }
+
+            // check for recordings in progress
+            foreach (Microsoft.MediaCenter.Pvr.Recording recording in new Microsoft.MediaCenter.Pvr.Recordings(object_store))
+            {
+                if ((recording.State == Microsoft.MediaCenter.Pvr.RecordingState.Initializing) || (recording.State == Microsoft.MediaCenter.Pvr.RecordingState.Recording))
+                {
+                    if (DialogResult.Yes == MessageBox.Show("There is currently at least one program being recorded. Importing a guide update at this time may result with an aborted recording or worse.\n\nDo you wish to proceed?",
+                                                            "Recording In Progress", MessageBoxButtons.YesNo, MessageBoxIcon.Warning))
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        return;
+                    }
+                }
+            }
 
             // configure open file dialog parameters
             openFileDialog1 = new System.Windows.Forms.OpenFileDialog()
@@ -1470,8 +1503,7 @@ namespace epg123
             if (openFileDialog1.ShowDialog() != DialogResult.OK) return;
 
             // close all object store items
-            forceExit = true;
-            clientForm_FormClosing(null, null);
+            isolateEpgDatabase();
 
             // perform the file import with progress form
             Logger.eventID = 0;
@@ -1929,13 +1961,13 @@ namespace epg123
         {
             if (mergedLineup == null) return;
 
-            frmAddChannel addChannelForm = new frmAddChannel();
-            addChannelForm.ShowDialog();
-            if (addChannelForm.channelAdded)
+            using (frmAddChannel addChannelForm = new frmAddChannel())
             {
-                this.Cursor = Cursors.WaitCursor;
-                btnRefreshLineups_Click(null, null);
-                this.Cursor = Cursors.Arrow;
+                addChannelForm.ShowDialog();
+                if (addChannelForm.channelAdded)
+                {
+                    throw new Exception("Killing process to avoid crashing due to external PVR task throwing exception on object store after adding channel(s).");
+                }
             }
         }
         #endregion

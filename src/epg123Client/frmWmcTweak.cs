@@ -9,6 +9,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Xml.Linq;
 using System.Windows.Forms;
+using Microsoft.MediaCenter.Store;
 using Microsoft.Win32;
 
 namespace epg123
@@ -84,6 +85,8 @@ namespace epg123
         private const int minMiniTableTop = 300;
         private const int hiddenDetailsOffset = 1000;
 
+        const int TUNERLIMIT = 32;
+
         public frmWmcTweak()
         {
             InitializeComponent();
@@ -124,14 +127,19 @@ namespace epg123
 
             // populate current values
             readRegistries();
+
+            // determine if tuner limit tweak is in place
+            lblTunerLimit.Enabled = btnTunerLimit.Enabled = !isTunerCountTweaked(TUNERLIMIT);
         }
         private void setNamePatternExampleText()
         {
-            textBox2.Text = "Arrow\r\n" +
-                            "s06e01 Fallout\r\n" +
-                            string.Format("{0:G}\r\n", new DateTime(2017, 10, 12, 20, 0, 0)) +
-                            "58.1\r\n" +
-                            "KWBADT";
+            textBox2.Text = "HomeTown\r\n" +
+                            "s03e07 Home is Where the Art Is\r\n" +
+                            string.Format("{0:G}\r\n", new DateTime(2019, 10, 06, 11, 0, 0)) +
+                            string.Format("{0:G}\r\n", new DateTime(2019, 2, 25, 0, 0 , 0)) +
+                            "37\r\n" +
+                            "HGTVP\r\n" +
+                            "Home & Garden Television (Pacific)";
         }
 
         #region ========== Trackbar Calculations =========
@@ -1253,24 +1261,14 @@ namespace epg123
                 }
             }
         }
+
+        string[] countries = { /*"default", */"au", "be", "br", "ca", "ch", "cn", "cz", "de", "dk", "es", "fi", "fr", "gb", "hk", "hu", "ie", "in",/* "it",*/ "jp", "kr", "mx", "nl", "no", "nz", "pl",/* "pt",*/ "ru", "se", "sg", "sk",/* "tr", "tw",*/ "us", "za" };
         private void btnTunerLimit_Click(object sender, EventArgs e)
         {
-            int count = 32;
+            // activate the wait cursor for the tweak form
+            this.UseWaitCursor = true;
 
-            // write tuner limit to registry
-            using (RegistryKey key = Registry.LocalMachine.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Media Center\Settings\TVConfig", true))
-            {
-                if (key != null)
-                {
-                    try
-                    {
-                        key.SetValue("MaxTunerCount", count, RegistryValueKind.DWord);
-                    }
-                    catch { return; }
-                }
-            }
-
-            string[] countries = { /*"default", */"au", "be", "br", "ca", "ch", "cn", "cz", "de", "dk", "es", "fi", "fr", "gb", "hk", "hu", "ie", "in",/* "it",*/ "jp", "kr", "mx", "nl", "no", "nz", "pl",/* "pt",*/ "ru", "se", "sg", "sk",/* "tr", "tw",*/ "us", "za" };
+            // create the MXF file to import
             string xml = "<?xml version=\"1.0\" standalone=\"yes\"?>\r\n" +
                          "<MXF version=\"1.0\" xmlns=\"\">\r\n" +
                          "  <Assembly name=\"mcstore\">\r\n" +
@@ -1283,7 +1281,7 @@ namespace epg123
                          "      <Type name=\"TvSignalSetupParams\" />\r\n" +
                          "    </NameSpace>\r\n" +
                          "  </Assembly>\r\n";
-            xml += string.Format("  <With maxRecordersForHomePremium=\"{0}\" maxRecordersForUltimate=\"{0}\" maxRecordersForRacing=\"{0}\" maxRecordersForBusiness=\"{0}\" maxRecordersForEnterprise=\"{0}\" maxRecordersForOthers=\"{0}\">\r\n", count);
+            xml += string.Format("  <With maxRecordersForHomePremium=\"{0}\" maxRecordersForUltimate=\"{0}\" maxRecordersForRacing=\"{0}\" maxRecordersForBusiness=\"{0}\" maxRecordersForEnterprise=\"{0}\" maxRecordersForOthers=\"{0}\">\r\n", TUNERLIMIT);
 
             foreach (string country in countries)
             {
@@ -1317,7 +1315,51 @@ namespace epg123
 
             // delete temporary file
             File.Delete(mxfFilepath);
+
+            // restore cursor for tweak form
+            this.UseWaitCursor = false;
+
+            // check tweak status
+            if (lblTunerLimit.Enabled = btnTunerLimit.Enabled = !isTunerCountTweaked(TUNERLIMIT))
+            {
+                MessageBox.Show("The tuner limit increase tweak failed to get applied.", "Unknown Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
+
+        private bool isTunerCountTweaked(int count)
+        {
+            int success = 0; int uidLimit = 500;
+            if (clientForm.object_store != null)
+            {
+                foreach (UId uid in clientForm.object_store.UIds)
+                {
+                    --uidLimit;
+                    if (!uid.GetFullName().StartsWith("!vss-")) continue;
+
+                    foreach (string country in countries)
+                    {
+                        if (uid.GetFullName().Equals("!vss-" + country))
+                        {
+                            Type t = uid.Target.GetType();
+                            PropertyInfo[] props = t.GetProperties();
+                            foreach (var prop in props)
+                            {
+                                if (prop.Name.StartsWith("MaxRecordersFor"))
+                                {
+                                    var q = prop.GetValue(uid.Target, null);
+                                    if ((int)q != count) return false;
+                                }
+                            }
+                            ++success;
+                            continue;
+                        }
+                    }
+                    if (success == countries.Length || uidLimit == 0) break;
+                }
+            }
+            return (success == countries.Length);
+        }
+
         private void txtNamePattern_KeyPress(object sender, KeyPressEventArgs e)
         {
             char[] invalidChars = { '"', '<', '>', '|', ':', '*', '?', '\\', '/' };
@@ -1337,7 +1379,7 @@ namespace epg123
                 {
                     try
                     {
-                        txtNamePattern.Text = key.GetValue("filenaming", "%T_%Cn_%Dt").ToString();
+                        txtNamePattern.Text = key.GetValue("filenaming", "%T_%Cs_%Dt").ToString();
                     }
                     catch { }
                 }
@@ -1457,11 +1499,13 @@ namespace epg123
         }
         private void txtNamePattern_TextChanged(object sender, EventArgs e)
         {
-            lblPatternExample.Text = txtNamePattern.Text.Replace("%T", "Arrow")
-                                                  .Replace("%Et", "s06e01 Fallout")
-                                                  .Replace("%Dt", "2017_10_12_20_00_00")
-                                                  .Replace("%Ch", "58.1")
-                                                  .Replace("%Cn", "KWBADT") + ".wtv";
+            lblPatternExample.Text = txtNamePattern.Text.Replace("%T", "Home Town")
+                                                  .Replace("%Et", "s03e07 Home is Where the Art Is")
+                                                  .Replace("%Dt", "2019_10_06_11_00_00")
+                                                  .Replace("%Ch", "37")
+                                                  .Replace("%Cn", "Home && Garden Television (Pacific)")
+                                                  .Replace("%Cs", "HGTVP")
+                                                  .Replace("%Do", "2019_02_25_00_00_00") + ".wtv";
         }
         #endregion
 

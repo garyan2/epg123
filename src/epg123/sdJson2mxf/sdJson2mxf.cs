@@ -151,6 +151,18 @@ namespace epg123
 
         private static bool writeMxf()
         {
+            // make sure background worker to download station logos is complete
+            int waits = 0;
+            while (!stationLogosDownloadComplete)
+            {
+                ++waits;
+                System.Threading.Thread.Sleep(100);
+            }
+            if (waits > 0)
+            {
+                Logger.WriteInformation(string.Format("Waited {0} seconds for the background worker to complete station logo downloads prior to saving files.", waits * 0.1));
+            }
+
             // reset counters
             processedObjects = 0; totalObjects = 1 + (config.CreateXmltv ? 1 : 0) + (config.ModernMediaUiPlusSupport ? 1 : 0);
             ++processStage; reportProgress();

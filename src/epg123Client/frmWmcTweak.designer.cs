@@ -33,6 +33,7 @@
             this.cbMainShowDetails = new System.Windows.Forms.CheckBox();
             this.trackMinutes = new System.Windows.Forms.TrackBar();
             this.grpMainEPG = new System.Windows.Forms.GroupBox();
+            this.cbChannelName = new System.Windows.Forms.CheckBox();
             this.cbCenterLogo = new System.Windows.Forms.CheckBox();
             this.cbRemoveAnimations = new System.Windows.Forms.CheckBox();
             this.cbHideNumber = new System.Windows.Forms.CheckBox();
@@ -85,8 +86,7 @@
             this.label10 = new System.Windows.Forms.Label();
             this.label9 = new System.Windows.Forms.Label();
             this.btnRemoveLogos = new System.Windows.Forms.Button();
-            this.label8 = new System.Windows.Forms.Label();
-            this.cbChannelName = new System.Windows.Forms.CheckBox();
+            this.lblTunerLimit = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.trackMinutes)).BeginInit();
             this.grpMainEPG.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.trackColumnWidth)).BeginInit();
@@ -180,6 +180,16 @@
             this.grpMainEPG.TabIndex = 4;
             this.grpMainEPG.TabStop = false;
             this.grpMainEPG.Text = "Guide Tweaks";
+            // 
+            // cbChannelName
+            // 
+            this.cbChannelName.AutoSize = true;
+            this.cbChannelName.Location = new System.Drawing.Point(9, 444);
+            this.cbChannelName.Name = "cbChannelName";
+            this.cbChannelName.Size = new System.Drawing.Size(200, 17);
+            this.cbChannelName.TabIndex = 28;
+            this.cbChannelName.Text = "Replace Callsign with Channel Name";
+            this.cbChannelName.UseVisualStyleBackColor = true;
             // 
             // cbCenterLogo
             // 
@@ -496,7 +506,7 @@
             this.grpWmcTweak.Controls.Add(this.label10);
             this.grpWmcTweak.Controls.Add(this.label9);
             this.grpWmcTweak.Controls.Add(this.btnRemoveLogos);
-            this.grpWmcTweak.Controls.Add(this.label8);
+            this.grpWmcTweak.Controls.Add(this.lblTunerLimit);
             this.grpWmcTweak.Controls.Add(this.btnTunerLimit);
             this.grpWmcTweak.Location = new System.Drawing.Point(349, 12);
             this.grpWmcTweak.Name = "grpWmcTweak";
@@ -602,7 +612,7 @@
             // label13
             // 
             this.label13.AutoSize = true;
-            this.label13.Location = new System.Drawing.Point(69, 328);
+            this.label13.Location = new System.Drawing.Point(69, 351);
             this.label13.Name = "label13";
             this.label13.Size = new System.Drawing.Size(144, 13);
             this.label13.TabIndex = 25;
@@ -611,7 +621,7 @@
             // label11
             // 
             this.label11.AutoSize = true;
-            this.label11.Location = new System.Drawing.Point(69, 302);
+            this.label11.Location = new System.Drawing.Point(69, 325);
             this.label11.Name = "label11";
             this.label11.Size = new System.Drawing.Size(134, 13);
             this.label11.TabIndex = 24;
@@ -620,7 +630,7 @@
             // label6
             // 
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(69, 276);
+            this.label6.Location = new System.Drawing.Point(69, 299);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(100, 13);
             this.label6.TabIndex = 23;
@@ -628,7 +638,7 @@
             // 
             // numInstantReplay
             // 
-            this.numInstantReplay.Location = new System.Drawing.Point(9, 324);
+            this.numInstantReplay.Location = new System.Drawing.Point(9, 347);
             this.numInstantReplay.Name = "numInstantReplay";
             this.numInstantReplay.Size = new System.Drawing.Size(54, 20);
             this.numInstantReplay.TabIndex = 22;
@@ -641,7 +651,7 @@
             // 
             // numSkipAhead
             // 
-            this.numSkipAhead.Location = new System.Drawing.Point(9, 298);
+            this.numSkipAhead.Location = new System.Drawing.Point(9, 321);
             this.numSkipAhead.Name = "numSkipAhead";
             this.numSkipAhead.Size = new System.Drawing.Size(54, 20);
             this.numSkipAhead.TabIndex = 21;
@@ -659,7 +669,7 @@
             0,
             0,
             0});
-            this.numBuffer.Location = new System.Drawing.Point(9, 272);
+            this.numBuffer.Location = new System.Drawing.Point(9, 295);
             this.numBuffer.Maximum = new decimal(new int[] {
             400,
             0,
@@ -686,25 +696,26 @@
             this.textBox2.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.textBox2.Cursor = System.Windows.Forms.Cursors.Default;
             this.textBox2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.textBox2.Location = new System.Drawing.Point(144, 144);
+            this.textBox2.Location = new System.Drawing.Point(144, 130);
             this.textBox2.Multiline = true;
             this.textBox2.Name = "textBox2";
             this.textBox2.ReadOnly = true;
-            this.textBox2.Size = new System.Drawing.Size(182, 67);
+            this.textBox2.Size = new System.Drawing.Size(182, 90);
             this.textBox2.TabIndex = 19;
-            this.textBox2.Text = "Arrow\r\ns06e01 Fallout\r\n10/12/2017 8:00:00 PM\r\n58.1\r\nKWBADT";
+            this.textBox2.Text = "Home Town\r\ns03e07 Home is Where the Art Is\r\n10/06/2019 11:00:00 AM\r\n02/25/2019\r\n3" +
+    "7\r\nHGTVP\r\nHome & Garden Television (Pacific)";
             // 
             // lblPatternExample
             // 
-            this.lblPatternExample.Location = new System.Drawing.Point(6, 240);
+            this.lblPatternExample.Location = new System.Drawing.Point(6, 249);
             this.lblPatternExample.Name = "lblPatternExample";
-            this.lblPatternExample.Size = new System.Drawing.Size(320, 29);
+            this.lblPatternExample.Size = new System.Drawing.Size(320, 43);
             this.lblPatternExample.TabIndex = 18;
-            this.lblPatternExample.Text = "Arrow_KWBADT_2017_10_12_20_00_00.wtv";
+            this.lblPatternExample.Text = "Home Town_HGTVP_2019_10_06_11_00_00.wtv";
             // 
             // btnClearPattern
             // 
-            this.btnClearPattern.Location = new System.Drawing.Point(279, 215);
+            this.btnClearPattern.Location = new System.Drawing.Point(279, 224);
             this.btnClearPattern.Name = "btnClearPattern";
             this.btnClearPattern.Size = new System.Drawing.Size(47, 23);
             this.btnClearPattern.TabIndex = 17;
@@ -714,7 +725,7 @@
             // 
             // btnSetPattern
             // 
-            this.btnSetPattern.Location = new System.Drawing.Point(226, 215);
+            this.btnSetPattern.Location = new System.Drawing.Point(226, 224);
             this.btnSetPattern.Name = "btnSetPattern";
             this.btnSetPattern.Size = new System.Drawing.Size(47, 23);
             this.btnSetPattern.TabIndex = 16;
@@ -724,11 +735,11 @@
             // 
             // txtNamePattern
             // 
-            this.txtNamePattern.Location = new System.Drawing.Point(9, 217);
+            this.txtNamePattern.Location = new System.Drawing.Point(9, 226);
             this.txtNamePattern.Name = "txtNamePattern";
             this.txtNamePattern.Size = new System.Drawing.Size(211, 20);
             this.txtNamePattern.TabIndex = 15;
-            this.txtNamePattern.Text = "%T_%Cn_%Dt";
+            this.txtNamePattern.Text = "%T_%Cs_%Dt";
             this.txtNamePattern.TextChanged += new System.EventHandler(this.txtNamePattern_TextChanged);
             this.txtNamePattern.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.txtNamePattern_KeyPress);
             // 
@@ -737,20 +748,20 @@
             this.textBox1.BackColor = System.Drawing.SystemColors.Control;
             this.textBox1.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.textBox1.Cursor = System.Windows.Forms.Cursors.Default;
-            this.textBox1.Location = new System.Drawing.Point(9, 144);
+            this.textBox1.Location = new System.Drawing.Point(9, 130);
             this.textBox1.Multiline = true;
             this.textBox1.Name = "textBox1";
             this.textBox1.ReadOnly = true;
-            this.textBox1.Size = new System.Drawing.Size(129, 67);
+            this.textBox1.Size = new System.Drawing.Size(129, 90);
             this.textBox1.TabIndex = 14;
-            this.textBox1.Text = "%T = Movie/Series Title\r\n%Et = Episode Title\r\n%Dt = Date and Time\r\n%Ch = Channel " +
-    "Number\r\n%Cn = Channel Name";
+            this.textBox1.Text = "%T = Movie/Series Title\r\n%Et = Episode Title\r\n%Dt = Start Time\r\n%Do = Original Ai" +
+    "r Date\r\n%Ch = Channel Number\r\n%Cs = Channel Call Sign\r\n%Cn = Station Name";
             // 
             // label10
             // 
             this.label10.AutoSize = true;
             this.label10.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Underline))), System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label10.Location = new System.Drawing.Point(6, 128);
+            this.label10.Location = new System.Drawing.Point(6, 114);
             this.label10.Name = "label10";
             this.label10.Size = new System.Drawing.Size(188, 13);
             this.label10.TabIndex = 13;
@@ -774,23 +785,13 @@
             this.btnRemoveLogos.UseVisualStyleBackColor = true;
             this.btnRemoveLogos.Click += new System.EventHandler(this.btnRemoveLogos_Click);
             // 
-            // label8
+            // lblTunerLimit
             // 
-            this.label8.Location = new System.Drawing.Point(6, 32);
-            this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(239, 13);
-            this.label8.TabIndex = 6;
-            this.label8.Text = "Increase tuner limits to 32 per tuner type.";
-            // 
-            // cbChannelName
-            // 
-            this.cbChannelName.AutoSize = true;
-            this.cbChannelName.Location = new System.Drawing.Point(9, 444);
-            this.cbChannelName.Name = "cbChannelName";
-            this.cbChannelName.Size = new System.Drawing.Size(200, 17);
-            this.cbChannelName.TabIndex = 28;
-            this.cbChannelName.Text = "Replace Callsign with Channel Name";
-            this.cbChannelName.UseVisualStyleBackColor = true;
+            this.lblTunerLimit.Location = new System.Drawing.Point(6, 32);
+            this.lblTunerLimit.Name = "lblTunerLimit";
+            this.lblTunerLimit.Size = new System.Drawing.Size(239, 13);
+            this.lblTunerLimit.TabIndex = 6;
+            this.lblTunerLimit.Text = "Increase tuner limits to 32 per tuner type.";
             // 
             // frmWmcTweak
             // 
@@ -855,7 +856,7 @@
         private System.Windows.Forms.Label lblRowHeight;
         private System.Windows.Forms.TrackBar trackRowHeight;
         private System.Windows.Forms.GroupBox grpWmcTweak;
-        private System.Windows.Forms.Label label8;
+        private System.Windows.Forms.Label lblTunerLimit;
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.Button btnRemoveLogos;
         private System.Windows.Forms.TextBox textBox1;

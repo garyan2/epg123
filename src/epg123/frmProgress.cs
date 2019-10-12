@@ -65,6 +65,14 @@ namespace epg123
                 var result = MessageBox.Show("Closing this form will abort the update. Do you wish to Abort?", "Abort Update", MessageBoxButtons.YesNo);
                 if (result == DialogResult.Yes)
                 {
+                    if (!sdJson2mxf.stationLogosDownloadComplete)
+                    {
+                        sdJson2mxf.backgroundDownloader.CancelAsync();
+                        while (!sdJson2mxf.stationLogosDownloadComplete)
+                        {
+                            System.Threading.Thread.Sleep(100);
+                        }
+                    }
                     Logger.WriteInformation("Update was aborted by the user.");
                 }
                 else

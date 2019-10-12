@@ -19,6 +19,10 @@ namespace epg123
         private static HashSet<string> customStations = new HashSet<string>();
         private static Dictionary<string, SdLineupStation> allStations = new Dictionary<string, SdLineupStation>();
 
+        public static System.ComponentModel.BackgroundWorker backgroundDownloader;
+        public static List<KeyValuePair<MxfService, string>> stationLogosToDownload = new List<KeyValuePair<MxfService, string>>();
+        public static volatile bool stationLogosDownloadComplete = true;
+
         private static bool buildLineupServices()
         {
             // query what lineups client is subscribed to
@@ -203,10 +207,7 @@ namespace epg123
                                 // download, crop & resize logo image, save and add
                                 if (!string.IsNullOrEmpty(url))
                                 {
-                                    if (downloadSDLogo(url, logoPath))
-                                    {
-                                        mxfService.LogoImage = sdMxf.With[0].getGuideImage("file://" + logoPath, getStringEncodedImage(logoPath)).Id;
-                                    }
+                                    stationLogosToDownload.Add(new KeyValuePair<MxfService, string>(mxfService, url));
                                 }
                             }
                         }
@@ -298,6 +299,17 @@ namespace epg123
                 }
             }
 
+            if (stationLogosToDownload.Count > 0)
+            {
+                stationLogosDownloadComplete = false;
+                Logger.WriteInformation(string.Format("Kicking off background worker to download and process {0} station logos.", stationLogosToDownload.Count));
+                backgroundDownloader = new System.ComponentModel.BackgroundWorker();
+                backgroundDownloader.DoWork += BackgroundDownloader_DoWork;
+                backgroundDownloader.RunWorkerCompleted += BackgroundDownloader_RunWorkerCompleted;
+                backgroundDownloader.WorkerSupportsCancellation = true;
+                backgroundDownloader.RunWorkerAsync();
+            }
+
             if (sdMxf.With[0].Services.Count > 0)
             {
                 Logger.WriteMessage("Exiting buildLineupServices(). SUCCESS.");
@@ -308,6 +320,37 @@ namespace epg123
                 Logger.WriteError(string.Format("There are 0 stations queued for download from {0} subscribed lineups. Exiting.", clientLineups.Lineups.Count));
                 Logger.WriteError("Check that lineups are 'INCLUDED' and stations are selected in the EPG123 GUI.");
                 return false;
+            }
+        }
+
+        private static void BackgroundDownloader_RunWorkerCompleted(object sender, System.ComponentModel.RunWorkerCompletedEventArgs e)
+        {
+            if (e.Cancelled)
+            {
+                Logger.WriteInformation("The background worker to download station logos was cancelled.");
+            }
+            else if (e.Error != null)
+            {
+                Logger.WriteError(string.Format("The background worker to download station logos threw an exception. Message: {0}", e.Error.Message));
+            }
+            stationLogosDownloadComplete = true;
+        }
+
+        private static void BackgroundDownloader_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
+        {
+            foreach (KeyValuePair<MxfService, string> keyValuePair in stationLogosToDownload)
+            {
+                string logoPath = string.Format("{0}\\{1}.png", Helper.Epg123LogosFolder, keyValuePair.Key.CallSign);
+                if (downloadSDLogo(keyValuePair.Value, logoPath))
+                {
+                    keyValuePair.Key.LogoImage = sdMxf.With[0].getGuideImage("file://" + logoPath, getStringEncodedImage(logoPath)).Id;
+                }
+
+                if (backgroundDownloader.CancellationPending)
+                {
+                    e.Cancel = true;
+                    break;
+                }
             }
         }
 

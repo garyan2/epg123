@@ -70,6 +70,8 @@
             this.columnHeader2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader3 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader13 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.lineupMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.copyToClipboardMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.L1IncludeExclude = new System.Windows.Forms.ToolStripDropDownButton();
             this.L1includeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -135,8 +137,6 @@
             this.btnHelp = new System.Windows.Forms.Button();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.btnClearCache = new System.Windows.Forms.Button();
-            this.lineupMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.copyToClipboardMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.btnTask = new epg123.ElevatedButton();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -148,6 +148,7 @@
             this.grpAccount.SuspendLayout();
             this.tabLineups.SuspendLayout();
             this.tabL1.SuspendLayout();
+            this.lineupMenuStrip.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             this.tabL2.SuspendLayout();
             this.toolStrip2.SuspendLayout();
@@ -157,13 +158,12 @@
             this.toolStrip4.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.toolStrip5.SuspendLayout();
-            this.lineupMenuStrip.SuspendLayout();
             this.SuspendLayout();
             // 
             // splitContainer1
             // 
-            this.splitContainer1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.splitContainer1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.splitContainer1.FixedPanel = System.Windows.Forms.FixedPanel.Panel1;
             this.splitContainer1.IsSplitterFixed = true;
@@ -353,9 +353,9 @@
             this.cbSdLogos.AutoSize = true;
             this.cbSdLogos.Location = new System.Drawing.Point(6, 210);
             this.cbSdLogos.Name = "cbSdLogos";
-            this.cbSdLogos.Size = new System.Drawing.Size(230, 17);
+            this.cbSdLogos.Size = new System.Drawing.Size(123, 17);
             this.cbSdLogos.TabIndex = 16;
-            this.cbSdLogos.Text = "Include station logos from Schedules Direct";
+            this.cbSdLogos.Text = "Include station logos";
             this.cbSdLogos.UseVisualStyleBackColor = true;
             // 
             // cbAppendDescription
@@ -372,11 +372,11 @@
             // 
             this.btnSdLogos.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.btnSdLogos.FlatAppearance.BorderSize = 2;
-            this.btnSdLogos.Location = new System.Drawing.Point(251, 206);
+            this.btnSdLogos.Location = new System.Drawing.Point(210, 206);
             this.btnSdLogos.Name = "btnSdLogos";
-            this.btnSdLogos.Size = new System.Drawing.Size(60, 23);
+            this.btnSdLogos.Size = new System.Drawing.Size(100, 23);
             this.btnSdLogos.TabIndex = 13;
-            this.btnSdLogos.Text = "collect";
+            this.btnSdLogos.Text = "Collect SD Logos";
             this.toolTip1.SetToolTip(this.btnSdLogos, "Download all logos to .\\sdlogos folder");
             this.btnSdLogos.UseVisualStyleBackColor = true;
             this.btnSdLogos.Click += new System.EventHandler(this.btnSdLogos_Click);
@@ -582,6 +582,7 @@
             this.lvL1Lineup.ContextMenuStrip = this.lineupMenuStrip;
             this.lvL1Lineup.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lvL1Lineup.FullRowSelect = true;
+            this.lvL1Lineup.HideSelection = false;
             this.lvL1Lineup.Location = new System.Drawing.Point(3, 28);
             this.lvL1Lineup.Name = "lvL1Lineup";
             this.lvL1Lineup.Size = new System.Drawing.Size(426, 469);
@@ -611,6 +612,22 @@
             // 
             this.columnHeader13.Text = "Name";
             this.columnHeader13.Width = 175;
+            // 
+            // lineupMenuStrip
+            // 
+            this.lineupMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.copyToClipboardMenuItem});
+            this.lineupMenuStrip.Name = "contextMenuStrip1";
+            this.lineupMenuStrip.Size = new System.Drawing.Size(172, 26);
+            this.lineupMenuStrip.Opening += new System.ComponentModel.CancelEventHandler(this.lineupMenuStrip_Opening);
+            // 
+            // copyToClipboardMenuItem
+            // 
+            this.copyToClipboardMenuItem.Name = "copyToClipboardMenuItem";
+            this.copyToClipboardMenuItem.Size = new System.Drawing.Size(171, 22);
+            this.copyToClipboardMenuItem.Text = "Copy to Clipboard";
+            this.copyToClipboardMenuItem.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.copyToClipboardMenuItem.Click += new System.EventHandler(this.copyToClipboardMenuItem_Click);
             // 
             // toolStrip1
             // 
@@ -644,7 +661,7 @@
             // 
             this.L1includeToolStripMenuItem.CheckOnClick = true;
             this.L1includeToolStripMenuItem.Name = "L1includeToolStripMenuItem";
-            this.L1includeToolStripMenuItem.Size = new System.Drawing.Size(114, 22);
+            this.L1includeToolStripMenuItem.Size = new System.Drawing.Size(115, 22);
             this.L1includeToolStripMenuItem.Text = "Include";
             this.L1includeToolStripMenuItem.Click += new System.EventHandler(this.LineupEnableToolStripMenuItem_Click);
             // 
@@ -653,7 +670,7 @@
             this.L1excludeToolStripMenuItem.Checked = true;
             this.L1excludeToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.L1excludeToolStripMenuItem.Name = "L1excludeToolStripMenuItem";
-            this.L1excludeToolStripMenuItem.Size = new System.Drawing.Size(114, 22);
+            this.L1excludeToolStripMenuItem.Size = new System.Drawing.Size(115, 22);
             this.L1excludeToolStripMenuItem.Text = "Exclude";
             this.L1excludeToolStripMenuItem.Click += new System.EventHandler(this.LineupEnableToolStripMenuItem_Click);
             // 
@@ -711,6 +728,7 @@
             this.lvL2Lineup.ContextMenuStrip = this.lineupMenuStrip;
             this.lvL2Lineup.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lvL2Lineup.FullRowSelect = true;
+            this.lvL2Lineup.HideSelection = false;
             this.lvL2Lineup.Location = new System.Drawing.Point(3, 28);
             this.lvL2Lineup.Name = "lvL2Lineup";
             this.lvL2Lineup.Size = new System.Drawing.Size(426, 469);
@@ -772,7 +790,7 @@
             // 
             this.L2includeToolStripMenuItem.CheckOnClick = true;
             this.L2includeToolStripMenuItem.Name = "L2includeToolStripMenuItem";
-            this.L2includeToolStripMenuItem.Size = new System.Drawing.Size(114, 22);
+            this.L2includeToolStripMenuItem.Size = new System.Drawing.Size(115, 22);
             this.L2includeToolStripMenuItem.Text = "Include";
             this.L2includeToolStripMenuItem.Click += new System.EventHandler(this.LineupEnableToolStripMenuItem_Click);
             // 
@@ -782,7 +800,7 @@
             this.L2excludeToolStripMenuItem.Checked = true;
             this.L2excludeToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.L2excludeToolStripMenuItem.Name = "L2excludeToolStripMenuItem";
-            this.L2excludeToolStripMenuItem.Size = new System.Drawing.Size(114, 22);
+            this.L2excludeToolStripMenuItem.Size = new System.Drawing.Size(115, 22);
             this.L2excludeToolStripMenuItem.Text = "Exclude";
             this.L2excludeToolStripMenuItem.Click += new System.EventHandler(this.LineupEnableToolStripMenuItem_Click);
             // 
@@ -838,6 +856,7 @@
             this.lvL3Lineup.ContextMenuStrip = this.lineupMenuStrip;
             this.lvL3Lineup.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lvL3Lineup.FullRowSelect = true;
+            this.lvL3Lineup.HideSelection = false;
             this.lvL3Lineup.Location = new System.Drawing.Point(3, 28);
             this.lvL3Lineup.Name = "lvL3Lineup";
             this.lvL3Lineup.Size = new System.Drawing.Size(426, 469);
@@ -899,7 +918,7 @@
             // 
             this.L3includeToolStripMenuItem.CheckOnClick = true;
             this.L3includeToolStripMenuItem.Name = "L3includeToolStripMenuItem";
-            this.L3includeToolStripMenuItem.Size = new System.Drawing.Size(114, 22);
+            this.L3includeToolStripMenuItem.Size = new System.Drawing.Size(115, 22);
             this.L3includeToolStripMenuItem.Text = "Include";
             this.L3includeToolStripMenuItem.Click += new System.EventHandler(this.LineupEnableToolStripMenuItem_Click);
             // 
@@ -908,7 +927,7 @@
             this.L3excludeToolStripMenuItem.Checked = true;
             this.L3excludeToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.L3excludeToolStripMenuItem.Name = "L3excludeToolStripMenuItem";
-            this.L3excludeToolStripMenuItem.Size = new System.Drawing.Size(114, 22);
+            this.L3excludeToolStripMenuItem.Size = new System.Drawing.Size(115, 22);
             this.L3excludeToolStripMenuItem.Text = "Exclude";
             this.L3excludeToolStripMenuItem.Click += new System.EventHandler(this.LineupEnableToolStripMenuItem_Click);
             // 
@@ -964,6 +983,7 @@
             this.lvL4Lineup.ContextMenuStrip = this.lineupMenuStrip;
             this.lvL4Lineup.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lvL4Lineup.FullRowSelect = true;
+            this.lvL4Lineup.HideSelection = false;
             this.lvL4Lineup.Location = new System.Drawing.Point(3, 28);
             this.lvL4Lineup.Name = "lvL4Lineup";
             this.lvL4Lineup.Size = new System.Drawing.Size(426, 469);
@@ -1025,7 +1045,7 @@
             // 
             this.L4includeToolStripMenuItem.CheckOnClick = true;
             this.L4includeToolStripMenuItem.Name = "L4includeToolStripMenuItem";
-            this.L4includeToolStripMenuItem.Size = new System.Drawing.Size(114, 22);
+            this.L4includeToolStripMenuItem.Size = new System.Drawing.Size(115, 22);
             this.L4includeToolStripMenuItem.Text = "Include";
             this.L4includeToolStripMenuItem.Click += new System.EventHandler(this.LineupEnableToolStripMenuItem_Click);
             // 
@@ -1034,7 +1054,7 @@
             this.L4excludeToolStripMenuItem.Checked = true;
             this.L4excludeToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.L4excludeToolStripMenuItem.Name = "L4excludeToolStripMenuItem";
-            this.L4excludeToolStripMenuItem.Size = new System.Drawing.Size(114, 22);
+            this.L4excludeToolStripMenuItem.Size = new System.Drawing.Size(115, 22);
             this.L4excludeToolStripMenuItem.Text = "Exclude";
             this.L4excludeToolStripMenuItem.Click += new System.EventHandler(this.LineupEnableToolStripMenuItem_Click);
             // 
@@ -1089,6 +1109,7 @@
             this.columnHeader20});
             this.lvL5Lineup.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lvL5Lineup.FullRowSelect = true;
+            this.lvL5Lineup.HideSelection = false;
             this.lvL5Lineup.Location = new System.Drawing.Point(3, 28);
             this.lvL5Lineup.Name = "lvL5Lineup";
             this.lvL5Lineup.Size = new System.Drawing.Size(426, 469);
@@ -1148,7 +1169,7 @@
             // 
             this.L5includeToolStripMenuItem.CheckOnClick = true;
             this.L5includeToolStripMenuItem.Name = "L5includeToolStripMenuItem";
-            this.L5includeToolStripMenuItem.Size = new System.Drawing.Size(114, 22);
+            this.L5includeToolStripMenuItem.Size = new System.Drawing.Size(115, 22);
             this.L5includeToolStripMenuItem.Text = "Include";
             this.L5includeToolStripMenuItem.Click += new System.EventHandler(this.LineupEnableToolStripMenuItem_Click);
             // 
@@ -1157,7 +1178,7 @@
             this.L5excludeToolStripMenuItem.Checked = true;
             this.L5excludeToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.L5excludeToolStripMenuItem.Name = "L5excludeToolStripMenuItem";
-            this.L5excludeToolStripMenuItem.Size = new System.Drawing.Size(114, 22);
+            this.L5excludeToolStripMenuItem.Size = new System.Drawing.Size(115, 22);
             this.L5excludeToolStripMenuItem.Text = "Exclude";
             this.L5excludeToolStripMenuItem.Click += new System.EventHandler(this.LineupEnableToolStripMenuItem_Click);
             // 
@@ -1177,7 +1198,7 @@
             // 
             // lblUpdate
             // 
-            this.lblUpdate.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
+            this.lblUpdate.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.lblUpdate.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblUpdate.ForeColor = System.Drawing.Color.Red;
@@ -1256,22 +1277,6 @@
             this.btnClearCache.UseVisualStyleBackColor = true;
             this.btnClearCache.Click += new System.EventHandler(this.btnClearCache_Click);
             // 
-            // lineupMenuStrip
-            // 
-            this.lineupMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.copyToClipboardMenuItem});
-            this.lineupMenuStrip.Name = "contextMenuStrip1";
-            this.lineupMenuStrip.Size = new System.Drawing.Size(181, 48);
-            this.lineupMenuStrip.Opening += new System.ComponentModel.CancelEventHandler(this.lineupMenuStrip_Opening);
-            // 
-            // copyToClipboardMenuItem
-            // 
-            this.copyToClipboardMenuItem.Name = "copyToClipboardMenuItem";
-            this.copyToClipboardMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.copyToClipboardMenuItem.Text = "Copy to Clipboard";
-            this.copyToClipboardMenuItem.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.copyToClipboardMenuItem.Click += new System.EventHandler(this.copyToClipboardMenuItem_Click);
-            // 
             // btnTask
             // 
             this.btnTask.FlatStyle = System.Windows.Forms.FlatStyle.System;
@@ -1319,6 +1324,7 @@
             this.tabLineups.ResumeLayout(false);
             this.tabL1.ResumeLayout(false);
             this.tabL1.PerformLayout();
+            this.lineupMenuStrip.ResumeLayout(false);
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
             this.tabL2.ResumeLayout(false);
@@ -1337,7 +1343,6 @@
             this.tabPage1.PerformLayout();
             this.toolStrip5.ResumeLayout(false);
             this.toolStrip5.PerformLayout();
-            this.lineupMenuStrip.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 

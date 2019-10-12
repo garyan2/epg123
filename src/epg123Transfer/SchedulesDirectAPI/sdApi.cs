@@ -4,6 +4,7 @@ using System.Windows.Forms;
 using System.IO;
 using System.Net;
 using System.Text;
+using System.Xml.Serialization;
 using Newtonsoft.Json;
 
 namespace epg123Transfer
@@ -28,14 +29,32 @@ namespace epg123Transfer
             {
                 if (string.IsNullOrEmpty(token_))
                 {
-                    frmLogin form = new frmLogin();
-                    form.ShowDialog();
+                    StreamReader sr = null;
+                    if (File.Exists(epg123.Helper.Epg123CfgPath))
+                    {
+                        epg123.epgConfig config;
+                        using (StreamReader stream = new StreamReader(epg123.Helper.Epg123CfgPath, Encoding.Default))
+                        {
+                            XmlSerializer serializer = new XmlSerializer(typeof(epg123.epgConfig));
+                            TextReader reader = new StringReader(stream.ReadToEnd());
+                            config = (epg123.epgConfig)serializer.Deserialize(reader);
+                            reader.Close();
+                        }
 
-                    StreamReader sr = sdGetRequestResponse(METHODS.POST, "token", new SdTokenRequest() { Username = form.username, Password_hash = form.passwordHash }, false);
+                        sr = sdGetRequestResponse(METHODS.POST, "token", new SdTokenRequest() { Username = config.UserAccount.LoginName, Password_hash = config.UserAccount.PasswordHash }, false);
+                    }
+
                     if (sr == null)
                     {
-                        MessageBox.Show("Failed to login to Schedules Direct. Please close this window and try again.", "Login Failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        return null;
+                        frmLogin form = new frmLogin();
+                        form.ShowDialog();
+
+                        sr = sdGetRequestResponse(METHODS.POST, "token", new SdTokenRequest() { Username = form.username, Password_hash = form.passwordHash }, false);
+                        if (sr == null)
+                        {
+                            MessageBox.Show("Failed to login to Schedules Direct. Please close this window and try again.", "Login Failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            return null;
+                        }
                     }
 
                     SdTokenResponse ret = JsonConvert.DeserializeObject<SdTokenResponse>(sr.ReadToEnd());

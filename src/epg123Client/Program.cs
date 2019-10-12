@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Text;
@@ -676,10 +677,14 @@ namespace epg123
         static void MyUnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
             Logger.WriteError(string.Format("Unhandled exception caught from {0}. message: {1}", AppDomain.CurrentDomain.FriendlyName, (e.ExceptionObject as Exception).Message));
+            Process currentProcess = Process.GetCurrentProcess();
+            currentProcess.Kill();
         }
         static void MyThreadException(object sender, ThreadExceptionEventArgs e)
         {
             Logger.WriteError(string.Format("Unhandled thread exception caught from {0}. message: {1}", AppDomain.CurrentDomain.FriendlyName, e.Exception.Message));
+            Process currentProcess = Process.GetCurrentProcess();
+            currentProcess.Kill();
         }
     }
 }

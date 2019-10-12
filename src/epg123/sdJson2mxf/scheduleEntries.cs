@@ -220,8 +220,6 @@ namespace epg123
             string filepath = string.Format("{0}\\{1}", Helper.Epg123CacheFolder, safeFilename(md5));
             if (!File.Exists(filepath))
             {
-                //scheduleEntries.TryGetValue(md5, out string[] stationDate);
-                //Logger.WriteError(string.Format("Did not find expected Md5Schedule file in cache directory. StationID {0} on {1}", stationDate[0], stationDate[1]));
                 return false;
             }
 

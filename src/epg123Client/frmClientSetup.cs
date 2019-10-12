@@ -149,8 +149,9 @@ namespace epg123
 
             if (!(btnCleanStart.Enabled || btnTvSetup.Enabled || btnConfig.Enabled))
             {
-                if (!backupZipFile.Equals(BYPASSED) && File.Exists("epg123Transfer.exe"))
+                if (File.Exists("epg123Transfer.exe"))
                 {
+                    updateStatusText("Waiting for user to close the Transfer Tool...");
                     Logger.WriteVerbose("Opening recording request transfer tool and waiting for it to close ...");
                     ProcessStartInfo startInfo = new ProcessStartInfo()
                     {
@@ -158,9 +159,11 @@ namespace epg123
                         Arguments = backupZipFile
                     };
                     Process.Start(startInfo).WaitForExit();
+                    updateStatusText(string.Empty);
                 }
                 MessageBox.Show("Setup is complete. Be sure to create a Scheduled Task to perform daily updates and keep your guide up to date!", "Setup Complete", MessageBoxButtons.OK);
                 Logger.WriteVerbose("Setup is complete.  Be sure to create a Scheduled Task to perform daily updates and keep your guide up to date!");
+                btnCleanStart.Enabled = true;
                 this.Close();
             }
             else if (cbAutostep.Checked && btnTvSetup.Enabled)
@@ -175,6 +178,12 @@ namespace epg123
 
         private void frmClientSetup_FormClosing(object sender, FormClosingEventArgs e)
         {
+            if (!btnCleanStart.Enabled && DialogResult.No == MessageBox.Show("Are you sure you wish to interrupt a clean start setup?", "Process Interruption", MessageBoxButtons.YesNo))
+            {
+                e.Cancel = true;
+                return;
+            }
+
             if ((procWmc != null) && (!procWmc.HasExited))
             {
                 procWmc.Kill();
@@ -406,6 +415,37 @@ namespace epg123
 
             return true;
         }
+
+        private bool emptyFolder(DirectoryInfo directoryInfo)
+        {
+            bool ret = true;
+
+            foreach (FileInfo file in directoryInfo.GetFiles())
+            {
+                try
+                {
+                    //foreach (Process proc in FileUtil.WhoIsLocking(file.FullName))
+                    //{
+                    //    Logger.WriteVerbose(string.Format("Stopping process \"{0}\"", proc.ProcessName));
+                    //    proc.Kill();
+                    //    proc.WaitForExit(1000);
+                    //}
+                    file.Delete();
+                }
+                catch
+                {
+                    Logger.WriteError(string.Format("Failed to delete file \"{0}\"", file.FullName));
+                    ret = false;
+                }
+            }
+
+            foreach (DirectoryInfo subfolder in directoryInfo.GetDirectories())
+            {
+                ret = emptyFolder(subfolder);
+            }
+
+            return ret;
+        }
         private bool cleaneHomeFolder()
         {
             bool ret = true;
@@ -417,11 +457,8 @@ namespace epg123
             DirectoryInfo di = new DirectoryInfo(folder);
             try
             {
-                foreach (FileInfo file in di.GetFiles("*.*", SearchOption.AllDirectories))
+                foreach (FileInfo file in di.GetFiles("mcepg*.*", SearchOption.TopDirectoryOnly))
                 {
-                    // keep the playready crypto file in-place if it exists
-                    if (file.FullName.ToLower().Contains("mcendindiv")) continue;
-
                     try
                     {
                         foreach (Process proc in FileUtil.WhoIsLocking(file.FullName))
@@ -447,19 +484,23 @@ namespace epg123
                 foreach (DirectoryInfo dir in di.GetDirectories())
                 {
                     // keep the playready crypto cache folder in-place if it exists
-                    if (dir.FullName.ToLower().Contains("cache")) continue;
+                    if (dir.Name.ToLower().StartsWith("mcepg"))
+                    {
+                        ret &= emptyFolder(dir);
 
-                    try
-                    {
-                        dir.Delete(true);
-                    }
-                    catch
-                    {
-                        Logger.WriteError(string.Format("Failed to delete folder \"{0}\"", dir.FullName));
+                        try
+                        {
+                            dir.Delete(true);
+                        }
+                        catch
+                        {
+                            Logger.WriteError(string.Format("Failed to delete folder \"{0}\"", dir.FullName));
+                            ret = false;
+                        }
                     }
                 }
             }
-            catch { }
+            catch { ret = false; }
 
             return ret;
         }
@@ -524,7 +565,7 @@ namespace epg123
 
         private bool isTunerCountTweaked(int count)
         {
-            updateStatusText("Verifying tuner limit increses ...");
+            updateStatusText("Verifying tuner limit increases ...");
             Logger.WriteVerbose("Verifying tuner limit increases ...");
 
             int success = 0;
@@ -532,6 +573,8 @@ namespace epg123
             {
                 foreach (UId uid in object_store.UIds)
                 {
+                    if (!uid.GetFullName().StartsWith("!vss-")) continue;
+
                     foreach (string country in countries)
                     {
                         if (uid.GetFullName().Equals("!vss-" + country))
@@ -550,6 +593,7 @@ namespace epg123
                             continue;
                         }
                     }
+                    if (success == countries.Length) break;
                 }
 
                 // dispose of the objectstore
@@ -761,7 +805,6 @@ namespace epg123
                 {
                     ShowWindow(procEpg123.MainWindowHandle, SW_RESTORE);
                 }
-                SetForegroundWindow(procEpg123.MainWindowHandle);
             }
             else
             {
@@ -769,6 +812,7 @@ namespace epg123
                 procEpg123 = Process.Start(Helper.Epg123ExePath);
                 procEpg123.WaitForInputIdle(10000);
             }
+            SetForegroundWindow(procEpg123.MainWindowHandle);
             updateStatusText("Waiting for EPG123 to close ...");
             Logger.WriteVerbose("Waiting for EPG123 to close ...");
 

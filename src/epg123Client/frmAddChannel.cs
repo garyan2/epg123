@@ -13,6 +13,7 @@ namespace epg123
     {
         private string nonTunerText = "No Device Group";
         public bool channelAdded;
+        public List<KeyValuePair<Lineup, Channel>> scannedChannelsToAdd = new List<KeyValuePair<Lineup, Channel>>();
 
         public frmAddChannel()
         {
@@ -174,13 +175,16 @@ namespace epg123
         {
             if (sender.Equals(btnAddChannelTuningInfo))
             {
+                // get the scannedlineup from the combo list
+                Lineup scannedLineup = cmbScannedLineups.SelectedItem as Lineup;
+
                 // create a new service based on channel callsign
                 Service service = new Service()
                 {
                     CallSign = chnTiCallsign.Text,
                     Name = chnTiCallsign.Text
                 };
-                clientForm.mergedLineup.ObjectStore.Add(service);
+                scannedLineup.ObjectStore.Add(service);
 
                 // create a new channel with service and channel number(s)
                 Channel channel = new Channel()
@@ -192,25 +196,25 @@ namespace epg123
                     OriginalSubNumber = (int)chnTiSubnumber.Value,
                     ChannelType = ChannelType.UserAdded
                 };
-                (cmbScannedLineups.SelectedItem as Lineup).AddChannel(channel);
-                channel.UniqueId = channel.Id;
-                channel.Update();
+
+                // add the channel to the scanned lineup
+                scannedLineup.AddChannel(channel);
 
                 // create device tuner info for new channel
-                bool success = false;
+                bool success = true;
                 foreach (ListViewItem item in lvDevices.Items)
                 {
                     switch (TuningSpaceName)
                     {
                         case "ATSC":
-                            success = addChannelTuningInfo(new ChannelTuningInfo(item.Tag as Device, (int)chnTiNumber.Value, (int)chnTiSubnumber.Value, (int)chnTiPhysicalNumber.Value), channel);
+                            success &= addChannelTuningInfo(new ChannelTuningInfo(item.Tag as Device, (int)chnTiNumber.Value, (int)chnTiSubnumber.Value, (int)chnTiPhysicalNumber.Value), channel);
                             break;
                         case "ClearQAM":
-                            success = addChannelTuningInfo(new ChannelTuningInfo(item.Tag as Device, (int)chnTiNumber.Value, (int)chnTiSubnumber.Value, (ModulationType)(chnTiModulationType.SelectedIndex + 1)), channel);
+                            success &= addChannelTuningInfo(new ChannelTuningInfo(item.Tag as Device, (int)chnTiNumber.Value, (int)chnTiSubnumber.Value, (ModulationType)(chnTiModulationType.SelectedIndex + 1)), channel);
                             break;
                         case "Cable":
                         case "Digital Cable":
-                            success = addChannelTuningInfo(new ChannelTuningInfo(item.Tag as Device, (int)chnTiNumber.Value, (int)chnTiSubnumber.Value, ModulationType.BDA_MOD_NOT_DEFINED), channel);
+                            success &= addChannelTuningInfo(new ChannelTuningInfo(item.Tag as Device, (int)chnTiNumber.Value, (int)chnTiSubnumber.Value, ModulationType.BDA_MOD_NOT_DEFINED), channel);
                             break;
                         case "dc65aa02-5cb0-4d6d-a020-68702a5b34b8":
                             string tuningString = string.Format("<tune:ChannelID ChannelID=\"{0}\">" +
@@ -218,7 +222,7 @@ namespace epg123
                                                                 "  <tune:Locator xsi:type=\"tune:ATSCLocatorType\" Frequency=\"-1\" PhysicalChannel=\"-1\" TransportStreamID=\"-1\" ProgramNumber=\"1\" />" +
                                                                 "  <tune:Components xsi:type=\"tune:ComponentsType\" />" +
                                                                 "</tune:ChannelID>", channel.OriginalNumber);
-                            success = addChannelTuningInfo(new StringTuningInfo(item.Tag as Device, tuningString), channel);
+                            success &= addChannelTuningInfo(new StringTuningInfo(item.Tag as Device, tuningString), channel);
                             break;
                         case "{adb10da8-5286-4318-9ccb-cbedc854f0dc}":
                         case "AuxIn1":
@@ -231,98 +235,67 @@ namespace epg123
 
                 if (success)
                 {
-                    // at this point, mcepg.dll says we should call NotifyChannelAdded(channel)
-                    // but for some reason this prevents epg123 from releasing all resources and
-                    // stays in memory. The following tactic is similar to what glugglug uses in
-                    // his channelediting code which I adapted to epg123
-                    try
-                    {
-                        // create a merged channel and add to the merged lineup
-                        MergedLineup mergedLineup = (cmbScannedLineups.SelectedItem as Lineup).PrimaryProvider ?? (cmbScannedLineups.SelectedItem as Lineup).SecondaryProvider;
-                        if (mergedLineup != null)
-                        {
-                            MergedChannel mergedChannel = new MergedChannel()
-                            {
-                                Number = channel.Number,
-                                SubNumber = channel.SubNumber,
-                                OriginalNumber = channel.OriginalNumber,
-                                OriginalSubNumber = channel.OriginalSubNumber,
-                                ChannelType = ChannelType.UserAdded,
-                                PrimaryChannel = channel,
-                                Service = channel.Service,
-                                Lineup = mergedLineup,
-                            };
-                            clientForm.mergedLineup.ObjectStore.Add(mergedChannel);
-                            foreach (TuningInfo tuningInfo in channel.TuningInfos)
-                            {
-                                mergedChannel.TuningInfos.Add(tuningInfo);
-                            }
-                            mergedChannel.UniqueId = mergedChannel.Id;
-                            mergedChannel.Update();
-                            mergedLineup.AddChannel(mergedChannel);
-                            mergedLineup.Update();
-                            MessageBox.Show("Successfully added channel to scanned lineup devices.", "Channel Add", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show("Failed to create and add a merged channel to the merged lineup." + ex.Message, "Channel Add", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
+                    // notify channel added which will create the merged channel
+                    // scannedLineup.NotifyChannelAdded(channel);
+
+                    // changed to do the notifies when form is closed until I find out why PVR task will crash 10 seconds after
+                    scannedChannelsToAdd.Add(new KeyValuePair<Lineup, Channel>(scannedLineup, channel));
+                    rtbChannelAddHistory.Text += string.Format("Channel {0}({1}) {2} has been added to {3}.\n\n", channel.ChannelNumber.ToString(), chnTiPhysicalNumber.Value.ToString(), channel.CallSign.ToString(), scannedLineup.Name.ToString());
                 }
                 else
                 {
                     MessageBox.Show("Failed to add channel to scanned lineup devices.", "Channel Add", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
-            else if (sender.Equals(btnNtiAddChannel))
-            {
-                // create a new service based on channel callsign
-                Service service = new Service()
-                {
-                    //Name = chnNtiCallsign.Text,
-                    CallSign = chnNtiCallsign.Text,
-                    ServiceType = chnNtiServiceType.SelectedIndex
-                };
-                clientForm.mergedLineup.ObjectStore.Add(service);
+            //else if (sender.Equals(btnNtiAddChannel))
+            //{
+            //    // create a new service based on channel callsign
+            //    Service service = new Service()
+            //    {
+            //        //Name = chnNtiCallsign.Text,
+            //        CallSign = chnNtiCallsign.Text,
+            //        ServiceType = chnNtiServiceType.SelectedIndex
+            //    };
+            //    clientForm.mergedLineup.ObjectStore.Add(service);
 
-                // create a new channel with service and channel number(s)
-                Channel channel = new Channel()
-                {
-                    Service = service,
-                    Number = (int)chnNtiNumber.Value,
-                    SubNumber = (int)chnNtiSubnumber.Value,
-                    OriginalNumber = (int)chnNtiNumber.Value,
-                    OriginalSubNumber = (int)chnNtiSubnumber.Value,
-                    ChannelType = ChannelType.UserAdded
-                };
-                //clientForm.mergedLineup.AddChannel(channel);
-                clientForm.mergedLineup.ObjectStore.Add(channel);
-                channel.UniqueId = channel.Id;
-                channel.Update();
+            //    // create a new channel with service and channel number(s)
+            //    Channel channel = new Channel()
+            //    {
+            //        Service = service,
+            //        Number = (int)chnNtiNumber.Value,
+            //        SubNumber = (int)chnNtiSubnumber.Value,
+            //        OriginalNumber = (int)chnNtiNumber.Value,
+            //        OriginalSubNumber = (int)chnNtiSubnumber.Value,
+            //        ChannelType = ChannelType.UserAdded
+            //    };
+            //    //clientForm.mergedLineup.AddChannel(channel);
+            //    clientForm.mergedLineup.ObjectStore.Add(channel);
+            //    channel.UniqueId = channel.Id;
+            //    channel.Update();
 
-                // create a merged channel and add to the merged lineup
-                MergedChannel mergedChannel = new MergedChannel()
-                {
-                    //CallSign = chnNtiCallsign.Text,
-                    Number = channel.Number,
-                    SubNumber = channel.SubNumber,
-                    OriginalNumber = channel.OriginalNumber,
-                    OriginalSubNumber = channel.OriginalSubNumber,
-                    ChannelType = ChannelType.Wmis,
-                    Service = service,
-                    PrimaryChannel = channel,
-                    Lineup = clientForm.mergedLineup,
-                    OneTouchNumber = (service.ServiceType == 0) ? 1 : -1,
-                };
-                clientForm.mergedLineup.ObjectStore.Add(mergedChannel);
-                mergedChannel.UniqueId = mergedChannel.Id;
-                mergedChannel.Update();
+            //    // create a merged channel and add to the merged lineup
+            //    MergedChannel mergedChannel = new MergedChannel()
+            //    {
+            //        //CallSign = chnNtiCallsign.Text,
+            //        Number = channel.Number,
+            //        SubNumber = channel.SubNumber,
+            //        OriginalNumber = channel.OriginalNumber,
+            //        OriginalSubNumber = channel.OriginalSubNumber,
+            //        ChannelType = ChannelType.Wmis,
+            //        Service = service,
+            //        PrimaryChannel = channel,
+            //        Lineup = clientForm.mergedLineup,
+            //        OneTouchNumber = (service.ServiceType == 0) ? 1 : -1,
+            //    };
+            //    clientForm.mergedLineup.ObjectStore.Add(mergedChannel);
+            //    mergedChannel.UniqueId = mergedChannel.Id;
+            //    mergedChannel.Update();
 
-                clientForm.mergedLineup.AddChannel(mergedChannel);
-                clientForm.mergedLineup.Update();
+            //    clientForm.mergedLineup.AddChannel(mergedChannel);
+            //    clientForm.mergedLineup.Update();
 
-                MessageBox.Show("Successfully added channel to scanned lineup devices.", "Channel Add", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
+            //    MessageBox.Show("Successfully added channel to scanned lineup devices.", "Channel Add", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            //}
         }
 
         private bool addChannelTuningInfo(TuningInfo tuningInfo, Channel channel)
@@ -335,6 +308,20 @@ namespace epg123
                 return true;
             }
             catch { return false; }
+        }
+
+        private void frmAddChannel_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (scannedChannelsToAdd.Count > 0)
+            {
+                MessageBox.Show("The main client form will close within 10 seconds after the new channels are added due to a PVR process triggering an exception on the database.", "Client Form Closing", MessageBoxButtons.OK);
+
+                Logger.WriteInformation("Starting lineup notification of added channels.");
+                foreach (KeyValuePair<Lineup, Channel> keyValuePair in scannedChannelsToAdd)
+                {
+                    keyValuePair.Key.NotifyChannelAdded(keyValuePair.Value);
+                }
+            }
         }
     }
 }

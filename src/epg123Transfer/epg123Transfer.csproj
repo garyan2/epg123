@@ -83,6 +83,9 @@
     <Compile Include="..\epg123\CompressXmlFiles.cs">
       <Link>CompressXmlFiles.cs</Link>
     </Compile>
+    <Compile Include="..\epg123\epgConfig.cs">
+      <Link>epgConfig.cs</Link>
+    </Compile>
     <Compile Include="..\epg123\Helper.cs">
       <Link>Helper.cs</Link>
     </Compile>

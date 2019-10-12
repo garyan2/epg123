@@ -57,10 +57,6 @@ namespace epg123Transfer
                 {
                     btnTransfer_Click(btnAddRecordings, null);
                 }
-                if (lvMxfRecordings.Items.Count <= 0)
-                {
-                    this.Close();
-                }
             }
         }
 
