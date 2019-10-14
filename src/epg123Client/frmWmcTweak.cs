@@ -1328,12 +1328,17 @@ namespace epg123
 
         private bool isTunerCountTweaked(int count)
         {
-            int success = 0; int uidLimit = 500;
+            // return false always to enable the button
+            // it appears that if some UIDs are viewed, epg123 decides
+            // to grab Microsoft.MediaCenter.Shell.dll and lock itself
+            // out of applying any updates
+            return false;
+
+            int success = 0;
             if (clientForm.object_store != null)
             {
                 foreach (UId uid in clientForm.object_store.UIds)
                 {
-                    --uidLimit;
                     if (!uid.GetFullName().StartsWith("!vss-")) continue;
 
                     foreach (string country in countries)
@@ -1354,7 +1359,7 @@ namespace epg123
                             continue;
                         }
                     }
-                    if (success == countries.Length || uidLimit == 0) break;
+                    if (success == countries.Length) break;
                 }
             }
             return (success == countries.Length);

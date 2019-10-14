@@ -28,6 +28,16 @@ namespace epg123
             if (days > 0)
             {
                 DateTime dt = DateTime.UtcNow;
+
+                // adjust number of days if currently within 0000 - 0400 UTC
+                if (dt.Hour < 4)
+                {
+                    ++days;
+                    dt -= TimeSpan.FromDays(1.0);
+                    totalObjects += sdMxf.With[0].Services.Count;
+                }
+
+                // build the date array to request
                 dates = new string[days];
                 for (int i = 0; i < dates.Length; ++i)
                 {
