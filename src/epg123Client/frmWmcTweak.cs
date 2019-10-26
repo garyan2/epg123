@@ -129,7 +129,7 @@ namespace epg123
             readRegistries();
 
             // determine if tuner limit tweak is in place
-            lblTunerLimit.Enabled = btnTunerLimit.Enabled = !isTunerCountTweaked(TUNERLIMIT);
+            lblTunerLimit.Enabled = btnTunerLimit.Enabled = !isTunerCountTweaked();
         }
         private void setNamePatternExampleText()
         {
@@ -1045,9 +1045,9 @@ namespace epg123
                     catch (Exception ex)
                     {
                         string msg = ex.Message + "\n";
+                        msg += "\nThe following processes are preventing the shell file from being updated:";
                         foreach (Process process in FileUtil.WhoIsLocking(shellEhomePath))
                         {
-                            msg += "\nThe following processes are preventing the shell file from being updated:";
                             if (process.MainModule != null)
                             {
                                 msg += "\n" + process.MainModule.FileVersionInfo.FileDescription ?? string.Empty;
@@ -1285,7 +1285,15 @@ namespace epg123
 
             foreach (string country in countries)
             {
-                xml += string.Format("    <TvSignalSetupParams uid=\"tvss-{0}\" />\r\n", country);
+                if (country.Equals("ca"))
+                {
+                    // sneak this one in for our Canadian friends just north of the (contiguous) border to be able to tune ATSC stations from the USA
+                    xml += string.Format("    <TvSignalSetupParams uid=\"tvss-{0}\" atscSupported=\"true\" autoSetupLikelyAtscChannels=\"34, 35, 36, 43, 31, 39, 38, 32, 41, 27, 19, 51, 44, 42, 30, 28\" tvRatingSystem=\"US\" />\r\n", country);
+                }
+                else
+                {
+                    xml += string.Format("    <TvSignalSetupParams uid=\"tvss-{0}\" />\r\n", country);
+                }
             }
 
             xml += "  </With>\r\n";
@@ -1311,6 +1319,14 @@ namespace epg123
             {
                 process.StandardOutput.ReadToEnd();
                 process.WaitForExit(30000);
+                if (process.ExitCode == 0)
+                {
+                    MessageBox.Show("The tuner limit increase has been successfully applied.", "Tuner Limit Tweak", MessageBoxButtons.OK);
+                }
+                else
+                {
+                    MessageBox.Show("The tuner limit increase tweak has failed.", "Tuner Limit Tweak", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
 
             // delete temporary file
@@ -1319,14 +1335,14 @@ namespace epg123
             // restore cursor for tweak form
             this.UseWaitCursor = false;
 
-            // check tweak status
-            if (lblTunerLimit.Enabled = btnTunerLimit.Enabled = !isTunerCountTweaked(TUNERLIMIT))
-            {
-                MessageBox.Show("The tuner limit increase tweak failed to get applied.", "Unknown Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
+            //// check tweak status
+            //if (lblTunerLimit.Enabled = btnTunerLimit.Enabled = !isTunerCountTweaked())
+            //{
+            //    MessageBox.Show("The tuner limit increase tweak failed to get applied.", "Unknown Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            //}
         }
 
-        private bool isTunerCountTweaked(int count)
+        private bool isTunerCountTweaked()
         {
             // return false always to enable the button
             // it appears that if some UIDs are viewed, epg123 decides
@@ -1335,34 +1351,29 @@ namespace epg123
             return false;
 
             int success = 0;
-            if (clientForm.object_store != null)
+            using (UIds uids = new UIds(clientForm.object_store))
             {
-                foreach (UId uid in clientForm.object_store.UIds)
+                foreach (UId uid in uids.Where(arg => arg.IdValue.StartsWith("vss-")))
                 {
-                    if (!uid.GetFullName().StartsWith("!vss-")) continue;
-
                     foreach (string country in countries)
                     {
-                        if (uid.GetFullName().Equals("!vss-" + country))
+                        if (uid.IdValue.Equals("vss-" + country))
                         {
                             Type t = uid.Target.GetType();
-                            PropertyInfo[] props = t.GetProperties();
-                            foreach (var prop in props)
+                            PropertyInfo[] properties = t.GetProperties();
+                            foreach (var property in properties.Where(arg => arg.Name.StartsWith("MaxRecordersFor")))
                             {
-                                if (prop.Name.StartsWith("MaxRecordersFor"))
-                                {
-                                    var q = prop.GetValue(uid.Target, null);
-                                    if ((int)q != count) return false;
-                                }
+                                var q = property.GetValue(uid.Target, null);
+                                if ((int)q != TUNERLIMIT) return false;
                             }
                             ++success;
                             continue;
                         }
                     }
-                    if (success == countries.Length) break;
+                    if (success == countries.Length) return true;
                 }
             }
-            return (success == countries.Length);
+            return false;
         }
 
         private void txtNamePattern_KeyPress(object sender, KeyPressEventArgs e)
@@ -1524,21 +1535,12 @@ namespace epg123
                 try
                 {
                     string imagePath = "file://" + Helper.Epg123StatusLogoPath;
-                    if (btn.Equals(rdoLight))
+                    if ((btn.Tag as string).Equals("None"))
                     {
-                        key.SetValue("OEMLogoAccent", "Light", RegistryValueKind.String);
-                        key.SetValue("OEMLogoUri", imagePath);
+                        imagePath = string.Empty;
                     }
-                    else if (btn.Equals(rdoDark))
-                    {
-                        key.SetValue("OEMLogoAccent", "Dark", RegistryValueKind.String);
-                        key.SetValue("OEMLogoUri", imagePath);
-                    }
-                    else
-                    {
-                        key.SetValue("OEMLogoAccent", "None", RegistryValueKind.String);
-                        key.SetValue("OEMLogoUri", string.Empty);
-                    }
+                    key.SetValue("OEMLogoAccent", btn.Tag as string, RegistryValueKind.String);
+                    key.SetValue("OEMLogoUri", imagePath);
                 }
                 catch { }
             }

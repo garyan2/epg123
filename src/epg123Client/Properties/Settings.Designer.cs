@@ -8,82 +8,78 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace epg123Client.Properties
-{
-
-
+namespace epg123Client.Properties {
+    
+    
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "14.0.0.0")]
-    public sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase
-    {
-
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "16.2.0.0")]
+    public sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
+        
         private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
-
-        public static Settings Default
-        {
-            get
-            {
+        
+        public static Settings Default {
+            get {
                 return defaultInstance;
             }
         }
-
+        
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("-1, -1")]
-        public global::System.Drawing.Point WindowLocation
-        {
-            get
-            {
+        public global::System.Drawing.Point WindowLocation {
+            get {
                 return ((global::System.Drawing.Point)(this["WindowLocation"]));
             }
-            set
-            {
+            set {
                 this["WindowLocation"] = value;
             }
         }
-
+        
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("800, 600")]
-        public global::System.Drawing.Size WindowSize
-        {
-            get
-            {
+        public global::System.Drawing.Size WindowSize {
+            get {
                 return ((global::System.Drawing.Size)(this["WindowSize"]));
             }
-            set
-            {
+            set {
                 this["WindowSize"] = value;
             }
         }
-
+        
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("415")]
-        public int SplitterDistance
-        {
-            get
-            {
+        public int SplitterDistance {
+            get {
                 return ((int)(this["SplitterDistance"]));
             }
-            set
-            {
+            set {
                 this["SplitterDistance"] = value;
             }
         }
-
+        
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool WindowMaximized
-        {
-            get
-            {
+        public bool WindowMaximized {
+            get {
                 return ((bool)(this["WindowMaximized"]));
             }
-            set
-            {
+            set {
                 this["WindowMaximized"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool UpgradeRequired {
+            get {
+                return ((bool)(this["UpgradeRequired"]));
+            }
+            set {
+                this["UpgradeRequired"] = value;
             }
         }
     }

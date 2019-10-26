@@ -280,19 +280,13 @@ namespace epg123
             prg.IsPaidProgramming = Helper.stringContains(sd.ShowType, "Paid Programming");
             //prg.IsProgramEpisodic = null;
             //prg.IsSerial = null;
-            prg.IsSeries = Helper.stringContains(sd.ShowType, "Series");
+            prg.IsSeries = Helper.stringContains(sd.ShowType, "Series") ?? Helper.stringContains(sd.ShowType, "Sports non-event");
             prg.IsShortFilm = Helper.stringContains(sd.ShowType, "Short Film");
             prg.IsSpecial = Helper.stringContains(sd.ShowType, "Special");
-
-            // set sports flag if appropriate along with generic flag
-            if (prg.jsonProgramData.EventDetails != null)
-            {
-                prg.IsSports = Helper.stringContains(sd.EntityType, "Sports") ?? Helper.stringContains(sd.ShowType, "Sports");
-            }
+            prg.IsSports = Helper.stringContains(sd.ShowType, "Sports event");
 
             // set isGeneric flag if programID starts with "SH", is a series, is not a miniseries, and is not paid programming
-            if (prg.tmsId.StartsWith("SH") && ((!string.IsNullOrEmpty(prg.IsSports) && string.IsNullOrEmpty(Helper.stringContains(sd.EntityType, "Sports"))) ||
-                                               (!string.IsNullOrEmpty(prg.IsSeries) && string.IsNullOrEmpty(prg.IsMiniseries) && string.IsNullOrEmpty(prg.IsPaidProgramming))))
+            if (prg.tmsId.StartsWith("SH") && !string.IsNullOrEmpty(prg.IsSeries) && string.IsNullOrEmpty(prg.IsMiniseries) && string.IsNullOrEmpty(prg.IsPaidProgramming))
             {
                 prg.IsGeneric = "true";
             }

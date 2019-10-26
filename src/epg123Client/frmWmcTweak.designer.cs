@@ -553,6 +553,7 @@
             this.rdoDark.Name = "rdoDark";
             this.rdoDark.Size = new System.Drawing.Size(85, 17);
             this.rdoDark.TabIndex = 31;
+            this.rdoDark.Tag = "Dark";
             this.rdoDark.Text = "Dark Accent";
             this.rdoDark.UseVisualStyleBackColor = true;
             this.rdoDark.CheckedChanged += new System.EventHandler(this.rdoCheckedChanged);
@@ -564,6 +565,7 @@
             this.rdoLight.Name = "rdoLight";
             this.rdoLight.Size = new System.Drawing.Size(85, 17);
             this.rdoLight.TabIndex = 30;
+            this.rdoLight.Tag = "Light";
             this.rdoLight.Text = "Light Accent";
             this.rdoLight.UseVisualStyleBackColor = true;
             this.rdoLight.CheckedChanged += new System.EventHandler(this.rdoCheckedChanged);
@@ -577,6 +579,7 @@
             this.rdoNone.Size = new System.Drawing.Size(51, 17);
             this.rdoNone.TabIndex = 29;
             this.rdoNone.TabStop = true;
+            this.rdoNone.Tag = "None";
             this.rdoNone.Text = "None";
             this.rdoNone.UseVisualStyleBackColor = true;
             this.rdoNone.CheckedChanged += new System.EventHandler(this.rdoCheckedChanged);

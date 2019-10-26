@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
@@ -526,11 +527,16 @@ namespace epg123
 
             foreach (string country in countries)
             {
-                xml += string.Format("    <TvSignalSetupParams uid=\"tvss-{0}\" />\r\n", country);
+                if (country.Equals("ca"))
+                {
+                    // sneak this one in for our Canadian friends just north of the (contiguous) border to be able to tune ATSC stations from the USA
+                    xml += string.Format("    <TvSignalSetupParams uid=\"tvss-{0}\" atscSupported=\"true\" autoSetupLikelyAtscChannels=\"34, 35, 36, 43, 31, 39, 38, 32, 41, 27, 19, 51, 44, 42, 30, 28\" tvRatingSystem=\"US\" />\r\n", country);
+                }
+                else
+                {
+                    xml += string.Format("    <TvSignalSetupParams uid=\"tvss-{0}\" />\r\n", country);
+                }
             }
-
-            // sneak this one in for our Canadian friends just north of the (contiguous) border to be able to tune ATSC stations from the USA
-            xml += string.Format("  <TvSignalSetupParams uid=\"tvss-ca\" atscSupported=\"true\" autoSetupLikelyAtscChannels=\"34, 35, 36, 43, 31, 39, 38, 32, 41, 27, 19, 51, 44, 42, 30, 28\" tvRatingSystem=\"US\" />");
 
             xml += "  </With>\r\n";
             xml += "</MXF>";
@@ -569,39 +575,29 @@ namespace epg123
             Logger.WriteVerbose("Verifying tuner limit increases ...");
 
             int success = 0;
-            if (object_store != null)
+            using (UIds uids = new UIds(object_store))
             {
-                foreach (UId uid in object_store.UIds)
+                foreach (UId uid in uids.Where(arg => arg.GetFullName().StartsWith("!vss-")))
                 {
-                    if (!uid.GetFullName().StartsWith("!vss-")) continue;
-
                     foreach (string country in countries)
                     {
                         if (uid.GetFullName().Equals("!vss-" + country))
                         {
                             Type t = uid.Target.GetType();
-                            PropertyInfo[] props = t.GetProperties();
-                            foreach (var prop in props)
+                            PropertyInfo[] properties = t.GetProperties();
+                            foreach (var property in properties.Where(arg => arg.Name.StartsWith("MaxRecordersFor")))
                             {
-                                if (prop.Name.StartsWith("MaxRecordersFor"))
-                                {
-                                    var q = prop.GetValue(uid.Target, null);
-                                    if ((int)q != count) return false;
-                                }
+                                var q = property.GetValue(uid.Target, null);
+                                if ((int)q != count) return false;
                             }
                             ++success;
                             continue;
                         }
                     }
-                    if (success == countries.Length) break;
+                    if (success == countries.Length) return true;
                 }
-
-                // dispose of the objectstore
-                objectStore_.Dispose();
-                while (!objectStore_.IsDisposed) ;
-                objectStore_ = null;
             }
-            return (success == countries.Length);
+            return false;
         }
         #endregion
 

@@ -80,6 +80,14 @@ namespace epg123
         }
         private void ConfigForm_Load(object sender, EventArgs e)
         {
+            // copy over window size and location from previous version if needed
+            if (Settings.Default.UpgradeRequired)
+            {
+                Settings.Default.Upgrade();
+                Settings.Default.UpgradeRequired = false;
+                Settings.Default.Save();
+            }
+
             // initialize the schedules direct api
             sdAPI.Initialize("EPG123", grabberVersion);
 
@@ -314,7 +322,7 @@ namespace epg123
                 }
 
                 // verify task configuration with respect to this executable
-                if (epg123Index >= 0 && !task.actions[epg123Index].Path.ToLower().Equals(Helper.Epg123ExePath.ToLower()))
+                if (epg123Index >= 0 && !task.actions[epg123Index].Path.ToLower().Replace("\"", "").Equals(Helper.Epg123ExePath.ToLower()))
                 {
                     MessageBox.Show(string.Format("The location of this program file is not the same location configured in the Scheduled Task.\n\nThis program:\n{0}\n\nTask program:\n{1}",
                                                   Helper.Epg123ExePath, task.actions[epg123Index].Path), "Configuration Warning", MessageBoxButtons.OK);

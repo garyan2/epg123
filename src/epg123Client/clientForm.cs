@@ -120,6 +120,14 @@ namespace epg123
         }
         private void clientForm_Load(object sender, EventArgs e)
         {
+            // copy over window size and location from previous version if needed
+            if (Settings.Default.UpgradeRequired)
+            {
+                Settings.Default.Upgrade();
+                Settings.Default.UpgradeRequired = false;
+                Settings.Default.Save();
+            }
+
             // check to see if program started with elevated rights
             checkForElevatedRights();
 
@@ -1307,7 +1315,7 @@ namespace epg123
             }
 
             // verify task configuration with respect to this executable
-            if (clientIndex >= 0 && !task.actions[clientIndex].Path.ToLower().Equals(Helper.Epg123ClientExePath.ToLower()))
+            if (clientIndex >= 0 && !task.actions[clientIndex].Path.ToLower().Replace("\"", "").Equals(Helper.Epg123ClientExePath.ToLower()))
             {
                 MessageBox.Show(string.Format("The location of this program file is not the same location configured in the Scheduled Task.\n\nThis program:\n{0}\n\nTask program:\n{1}",
                                               Helper.Epg123ExePath, task.actions[clientIndex].Path), "Configuration Warning", MessageBoxButtons.OK);
