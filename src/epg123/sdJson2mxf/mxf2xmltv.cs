@@ -365,7 +365,7 @@ namespace epg123
 
         private static List<XmltvText> buildSportTeams(MxfProgram program)
         {
-            if (!string.IsNullOrEmpty(program.IsSports) && program.jsonProgramData.EventDetails.Teams != null)
+            if (!string.IsNullOrEmpty(program.IsSports) && program.jsonProgramData.EventDetails?.Teams != null)
             {
                 List<XmltvText> ret = new List<XmltvText>();
                 foreach (sdProgramEventDetailsTeam team in program.jsonProgramData.EventDetails.Teams)
