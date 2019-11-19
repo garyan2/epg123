@@ -1351,7 +1351,7 @@ namespace epg123
             return false;
 
             int success = 0;
-            using (UIds uids = new UIds(clientForm.object_store))
+            using (UIds uids = new UIds(Store.objectStore))
             {
                 foreach (UId uid in uids.Where(arg => arg.IdValue.StartsWith("vss-")))
                 {

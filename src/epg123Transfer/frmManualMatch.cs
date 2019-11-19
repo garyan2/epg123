@@ -38,7 +38,12 @@ namespace epg123Transfer
 
                 foreach (tvdbSeriesSearchData data in search)
                 {
-                    cmbTvdbTitles.Items.Add(tvdbApi.tvdbGetSeriesData(data.Id));
+                    try
+                    {
+                        cmbTvdbTitles.Items.Add(tvdbApi.tvdbGetSeriesData(data.Id));
+                        if (cmbTvdbTitles.Items.Count == 7) break;
+                    }
+                    catch { }
                 }
                 cmbTvdbTitles.SelectedIndex = 0;
             }

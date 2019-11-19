@@ -5,8 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Security.Cryptography;
-using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using Microsoft.Win32;
@@ -54,24 +52,6 @@ namespace epg123
                 return (DateTime.Now > (procMcupdate.StartTime + TimeSpan.FromSeconds(90)));
             }
         }
-
-        private static ObjectStore objectStore_;
-        private static ObjectStore object_store
-        {
-            get
-            {
-                if (objectStore_ == null)
-                {
-                    SHA256Managed sha256Man = new SHA256Managed();
-                    string clientId = ObjectStore.GetClientId(true);
-                    string providerName = @"Anonymous!User";
-                    string password = Convert.ToBase64String(sha256Man.ComputeHash(Encoding.Unicode.GetBytes(clientId)));
-                    objectStore_ = ObjectStore.Open(null, providerName, password, true);
-                }
-                return objectStore_;
-            }
-        }
-
         public bool shouldBackup;
 
         public frmClientSetup()
@@ -89,6 +69,7 @@ namespace epg123
             statusLabel.Text = text;
             this.Refresh();
         }
+
         private void button_Click(object sender, EventArgs e)
         {
             if (taskWorking) return;
@@ -266,10 +247,11 @@ namespace epg123
                 }
             }
         }
+
         private bool PerformBackup()
         {
             if (!string.IsNullOrEmpty(backupZipFile)) return true;
-            if (DialogResult.Cancel == MessageBox.Show("This procedure will delete all contents of your eHome folder. Current tuner configurations, recording schedules, favorite lineups, and logos will be removed.\n\nClick 'OK' to proceed.", "EPG Clean Start", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning)) return false;
+            if (DialogResult.Cancel == MessageBox.Show("This procedure will delete all WMC databases in your eHome folder. Current tuner configurations, recording schedules, favorite lineups, and logos will be removed.\n\nClick 'OK' to proceed.", "EPG Clean Start", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning)) return false;
 
             if (shouldBackup)
             {
@@ -292,12 +274,13 @@ namespace epg123
             updateStatusText(string.Empty);
             return !string.IsNullOrEmpty(backupZipFile);
         }
+
         private bool cleanStart()
         {
             // stop all programs and services that access the database and delete the eHome folder
             if (!cleaneHomeFolder())
             {
-                MessageBox.Show("Failed to delete all contents of the eHome folder. Try again or consider trying in Safe Mode.", "Failed Operation", MessageBoxButtons.OK);
+                MessageBox.Show("Failed to delete the database contents in the eHome folder. Try again or consider trying in Safe Mode.", "Failed Operation", MessageBoxButtons.OK);
                 updateStatusText("Click the 'Step 1' button to try again.");
                 return false;
             }
@@ -447,6 +430,7 @@ namespace epg123
 
             return ret;
         }
+
         private bool cleaneHomeFolder()
         {
             bool ret = true;
@@ -505,6 +489,7 @@ namespace epg123
 
             return ret;
         }
+
         private bool tweakMediaCenterTunerCount(int count)
         {
             updateStatusText("Increasing tuner limits ...");
@@ -575,7 +560,7 @@ namespace epg123
             Logger.WriteVerbose("Verifying tuner limit increases ...");
 
             int success = 0;
-            using (UIds uids = new UIds(object_store))
+            using (UIds uids = new UIds(Store.objectStore))
             {
                 foreach (UId uid in uids.Where(arg => arg.GetFullName().StartsWith("!vss-")))
                 {
@@ -597,6 +582,7 @@ namespace epg123
                     if (success == countries.Length) return true;
                 }
             }
+            Store.Close(true);
             return false;
         }
         #endregion

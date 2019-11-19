@@ -3,15 +3,12 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
-using System.Text;
 using System.Threading;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Security.Cryptography;
 using System.Windows.Forms;
 using Microsoft.MediaCenter.Guide;
 using Microsoft.MediaCenter.Pvr;
-using Microsoft.MediaCenter.Store;
 using Microsoft.Win32;
 
 namespace epg123
@@ -92,37 +89,12 @@ namespace epg123
             ES_CONTINUOUS = 0x80000000
         }
 
-        private static string epg123ClientVersion
-        {
-            get
-            {
-                return Assembly.GetEntryAssembly().GetName().Version.ToString();
-            }
-        }
-
         private static string appGuid = "{CD7E6857-7D92-4A2F-B3AB-ED8CB42C6F65}";
         private static string guiGuid = "{0BA29D22-8BB1-4C33-919A-330D5DBA1FF0}";
         private static string impGuid = "{B7CEFF32-CD68-4094-BD1B-A541D246372E}";
         private const string lu_name = "EPG123 Lineups with Schedules Direct";
         private static string filename = string.Empty;
         private static bool showProgress = false;
-
-        private static ObjectStore objectStore_;
-        public static ObjectStore object_store
-        {
-            get
-            {
-                if (objectStore_ == null)
-                {
-                    SHA256Managed sha256Man = new SHA256Managed();
-                    string clientId = ObjectStore.GetClientId(true);
-                    string providerName = @"Anonymous!User";
-                    string password = Convert.ToBase64String(sha256Man.ComputeHash(Encoding.Unicode.GetBytes(clientId)));
-                    objectStore_ = ObjectStore.Open(null, providerName, password, true);
-                }
-                return objectStore_;
-            }
-        }
 
         private static NotifyIcon notifyIcon;
 
@@ -319,7 +291,7 @@ namespace epg123
                     notifyIcon.Dispose();
 
                     // get lineup and configure lineup type and devices 
-                    if (import && !activateLineupAndGuide())
+                    if (import && !mxfImport.activateLineupAndGuide())
                     {
                         Logger.WriteError("Failed to locate any lineups from EPG123.");
                         Logger.Close();
@@ -347,7 +319,7 @@ namespace epg123
                     // refresh the lineups after import
                     if (import)
                     {
-                        refreshLineups();
+                        Store.mergedLineup.Refresh();
                         Logger.WriteInformation("Completed lineup refresh.");
                     }
 
@@ -392,7 +364,7 @@ namespace epg123
             {
                 active = false;
                 DateTime timeReady = DateTime.Now;
-                foreach (Recording recording in new Recordings(object_store))
+                foreach (Recording recording in new Recordings(Store.objectStore))
                 {
                     if ((recording.State == RecordingState.Initializing) || (recording.State == RecordingState.Recording))
                     {
@@ -430,16 +402,16 @@ namespace epg123
         public static bool importMxfFile(string filename)
         {
             // verify tuners are setup in WMC prior to importing
-            int devCount = 0;
-            foreach (Device dev in new Devices(object_store).ToArray())
+            int deviceCount = 0;
+            foreach (Device device in new Devices(Store.objectStore).ToArray())
             {
-                if (!dev.Name.ToLower().Contains("delete"))
+                if (!device.Name.ToLower().Contains("delete"))
                 {
-                    ++devCount;
+                    ++deviceCount;
                     break;
                 }
             }
-            if (devCount == 0)
+            if (deviceCount == 0)
             {
                 Logger.WriteError("There are no devices/tuners configured in the database store. Perform WMC TV Setup prior to importing guide lisitngs. Aborting Import.");
                 return false;
@@ -459,49 +431,10 @@ namespace epg123
         }
         #endregion
 
-        #region ========== Lineup ==========
-        public static bool activateLineupAndGuide()
-        {
-            int lineups = 0;
-            if (object_store != null)
-            {
-                foreach (Lineup lineup in new Lineups(object_store).ToArray())
-                {
-                    // only want to do this with EPG123 lineups
-                    if (!lineup.Provider.Name.Equals("EPG123") || lineup.Name.Equals(lu_name)) continue;
-
-                    // make sure the lineup type and language are set
-                    if (string.IsNullOrEmpty(lineup.LineupTypes) || string.IsNullOrEmpty(lineup.Language))
-                    {
-                        lineup.LineupTypes = "WMIS";
-                        lineup.Language = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
-                        lineup.Update();
-                    }
-
-                    // set registry setting to "activate" the guide if necessary
-                    using (RegistryKey key = Registry.LocalMachine.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Media Center\\Settings\\ProgramGuide", true))
-                    {
-                        try
-                        {
-                            if ((int)key.GetValue("fAgreeTOS") != 1) key.SetValue("fAgreeTOS", 1);
-                            if ((string)key.GetValue("strAgreedTOSVersion") != "1.0") key.SetValue("strAgreedTOSVersion", "1.0");
-                        }
-                        catch
-                        {
-                            Logger.WriteError("Could not write/verify the registry settings to activate the guide in WMC.");
-                        }
-                    }
-                    ++lineups;
-                }
-            }
-            return (lineups > 0);
-        }
-        #endregion
-
         #region ========== Remove Channel Logos ==========
         public static void clearLineupChannelLogos()
         {
-            foreach (Service service in new Services(object_store).ToArray())
+            foreach (Service service in new Services(Store.objectStore))
             {
                 if (service.LogoImage != null)
                 {
@@ -518,7 +451,7 @@ namespace epg123
         {
             // get all active channels in lineup(s) from EPG123
             List<Channel> epg123Channels = new List<Channel>();
-            foreach (Lineup lineup in new Lineups(object_store).ToArray())
+            foreach (Lineup lineup in new Lineups(Store.objectStore))
             {
                 if (lineup.Name.StartsWith("EPG123") && !lineup.Name.Equals(lu_name))
                 {
@@ -526,114 +459,103 @@ namespace epg123
                 }
             }
 
-            // scan down to the merged channels
-            using (MergedLineups mergedLineups = new MergedLineups(object_store))
+            // ensure there are channels to match to
+            if (epg123Channels.Count == 0)
             {
-                foreach (MergedLineup mergedLineup in mergedLineups)
+                Logger.WriteError("There are no EPG123 listings in the database to perform any mappings.");
+                return;
+            }
+
+            foreach (MergedChannel mergedChannel in Store.mergedLineup.GetChannels())
+            {
+                // using the mergedchannel channel number, determine whether to match&enable, unmatch&disable, disable, or nothing
+                Channel epg123Channel = null;
+                foreach (Lineup lineup in new Lineups(Store.objectStore))
                 {
-                    foreach (Channel channel in mergedLineup.GetChannels())
+                    if (!lineup.Name.StartsWith("EPG123") || lineup.Name.Equals(lu_name)) continue;
+
+                    while ((epg123Channel = lineup.GetChannelFromNumber(mergedChannel.OriginalNumber, mergedChannel.OriginalSubNumber)) != null)
                     {
-                        // cast as mergedchannel for evaluation
-                        MergedChannel mergedChannel;
-                        try
+                        if (channelsContain(ref epg123Channels, ref epg123Channel)) break;
+                        else
                         {
-                            mergedChannel = (MergedChannel)channel;
-                        }
-                        catch
-                        {
-                            continue;
-                        }
-
-                        // using the mergedchannel channel number, determine whether to match&enable, unmatch&disable, disable, or nothing
-                        Channel epg123Channel = null;
-                        foreach (Lineup lineup in new Lineups(object_store))
-                        {
-                            if (!lineup.Name.StartsWith("EPG123") || lineup.Name.Equals(lu_name)) continue;
-
-                            while ((epg123Channel = lineup.GetChannelFromNumber(mergedChannel.OriginalNumber, mergedChannel.OriginalSubNumber)) != null)
-                            {
-                                if (channelsContain(ref epg123Channels, ref epg123Channel)) break;
-                                else
-                                {
-                                    Logger.WriteVerbose(string.Format("Removing {0} from channel {1} in lineup {2}.", epg123Channel.CallSign, mergedChannel.ChannelNumber, lineup.Name));
-                                    lineup.RemoveChannel(epg123Channel);
-                                    lineup.Update();
-                                }
-                            }
-                            if (epg123Channel != null) break;
-                        }
-
-                        // perform match if not already primary channel
-                        if ((epg123Channel != null) && !mergedChannel.PrimaryChannel.IsSameAs(epg123Channel))
-                        {
-                            try
-                            {
-                                if (mergedChannel.PrimaryChannel.Lineup.Name.StartsWith("Scanned"))
-                                {
-                                    Logger.WriteVerbose(string.Format("Matching {0} to channel {1}", epg123Channel.CallSign, mergedChannel.ChannelNumber));
-
-                                    // copy current primary to secondary channels
-                                    if (!mergedChannel.SecondaryChannels.Contains(mergedChannel.PrimaryChannel))
-                                    {
-                                        mergedChannel.SecondaryChannels.Add(mergedChannel.PrimaryChannel);
-                                    }
-
-                                    // add this channel lineup to the device group if necessary
-                                    foreach (Device device in mergedChannel.Lineup.DeviceGroup.Devices)
-                                    {
-                                        try
-                                        {
-                                            if (!device.Name.ToLower().Contains("delete") &&
-                                                (device.ScannedLineup != null) && device.ScannedLineup.IsSameAs(mergedChannel.PrimaryChannel.Lineup) &&
-                                                ((device.WmisLineups == null) || !device.WmisLineups.Contains(epg123Channel.Lineup)))
-                                            {
-                                                device.SubscribeToWmisLineup(epg123Channel.Lineup);
-                                                device.Update();
-                                            }
-                                        }
-                                        catch (Exception ex)
-                                        {
-                                            Logger.WriteVerbose(string.Format("Failed to associate lineup {0} with device {1} ({2}). {3}", epg123Channel.Lineup,
-                                                                              device.Name ?? "NULL", (device.ScannedLineup == null) ? "NULL" : device.ScannedLineup.Name, ex.Message));
-                                        }
-                                    }
-
-                                    // update primary channel and service
-                                    mergedChannel.PrimaryChannel = epg123Channel;
-                                    mergedChannel.Service = epg123Channel.Service;
-                                    mergedChannel.UserBlockedState = UserBlockedState.Enabled;
-                                    mergedChannel.Update();
-                                }
-                                else
-                                {
-                                    Logger.WriteVerbose(string.Format("Skipped matching {0} to channel {1} due to channel already having an assigned listing.",
-                                                                      epg123Channel.CallSign, mergedChannel.ChannelNumber));
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                string prefix = string.Format("Error trying to match {0} to channel {1}.", epg123Channel.CallSign, mergedChannel.ChannelNumber);
-
-                                // report the channels that contain errors
-                                if (mergedChannel.PrimaryChannel == null) Logger.WriteError(string.Format("{0} PrimaryChannel is null. {1}", prefix, ex.Message));
-                                else if (mergedChannel.PrimaryChannel.Lineup == null) Logger.WriteError(string.Format("{0} PrimaryChannel.Lineup is null. {1}", prefix, ex.Message));
-                                else if (mergedChannel.PrimaryChannel.Lineup.Name == null) Logger.WriteError(string.Format("{0} PrimaryChannel.Lineup.Name is null. {1}", prefix, ex.Message));
-                                else Logger.WriteError(prefix + " " + ex.Message);
-                            }
-                        }
-                        else if ((mergedChannel.UserBlockedState < UserBlockedState.Blocked) && mergedChannel.PrimaryChannel.Lineup.Name.StartsWith("Scanned"))
-                        {
-                            // disable the channel in the guide
-                            mergedChannel.UserBlockedState = UserBlockedState.Blocked;
-                            mergedChannel.Update();
+                            Logger.WriteVerbose(string.Format("Removing {0} from channel {1} in lineup {2}.", epg123Channel.CallSign, mergedChannel.ChannelNumber, lineup.Name));
+                            lineup.RemoveChannel(epg123Channel);
+                            lineup.Update();
                         }
                     }
+                    if (epg123Channel != null) break;
+                }
 
-                    // finish it
-                    mergedLineup.FullMerge(false);
-                    mergedLineup.Update();
+                // perform match if not already primary channel
+                if ((epg123Channel != null) && !mergedChannel.PrimaryChannel.IsSameAs(epg123Channel))
+                {
+                    try
+                    {
+                        if (mergedChannel.PrimaryChannel.Lineup.Name.StartsWith("Scanned"))
+                        {
+                            Logger.WriteVerbose(string.Format("Matching {0} to channel {1}", epg123Channel.CallSign, mergedChannel.ChannelNumber));
+
+                            // copy current primary to secondary channels
+                            if (!mergedChannel.SecondaryChannels.Contains(mergedChannel.PrimaryChannel))
+                            {
+                                mergedChannel.SecondaryChannels.Add(mergedChannel.PrimaryChannel);
+                            }
+
+                            // add this channel lineup to the device group if necessary
+                            foreach (Device device in mergedChannel.Lineup.DeviceGroup.Devices)
+                            {
+                                try
+                                {
+                                    if (!device.Name.ToLower().Contains("delete") &&
+                                        (device.ScannedLineup != null) && device.ScannedLineup.IsSameAs(mergedChannel.PrimaryChannel.Lineup) &&
+                                        ((device.WmisLineups == null) || !device.WmisLineups.Contains(epg123Channel.Lineup)))
+                                    {
+                                        device.SubscribeToWmisLineup(epg123Channel.Lineup);
+                                        device.Update();
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    Logger.WriteVerbose(string.Format("Failed to associate lineup {0} with device {1} ({2}). {3}", epg123Channel.Lineup,
+                                                                      device.Name ?? "NULL", (device.ScannedLineup == null) ? "NULL" : device.ScannedLineup.Name, ex.Message));
+                                }
+                            }
+
+                            // update primary channel and service
+                            mergedChannel.PrimaryChannel = epg123Channel;
+                            mergedChannel.Service = epg123Channel.Service;
+                            mergedChannel.UserBlockedState = UserBlockedState.Enabled;
+                            mergedChannel.Update();
+                        }
+                        else
+                        {
+                            Logger.WriteVerbose(string.Format("Skipped matching {0} to channel {1} due to channel already having an assigned listing.",
+                                                              epg123Channel.CallSign, mergedChannel.ChannelNumber));
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        string prefix = string.Format("Error trying to match {0} to channel {1}.", epg123Channel.CallSign, mergedChannel.ChannelNumber);
+
+                        // report the channels that contain errors
+                        if (mergedChannel.PrimaryChannel == null) Logger.WriteError(string.Format("{0} PrimaryChannel is null. {1}", prefix, ex.Message));
+                        else if (mergedChannel.PrimaryChannel.Lineup == null) Logger.WriteError(string.Format("{0} PrimaryChannel.Lineup is null. {1}", prefix, ex.Message));
+                        else if (mergedChannel.PrimaryChannel.Lineup.Name == null) Logger.WriteError(string.Format("{0} PrimaryChannel.Lineup.Name is null. {1}", prefix, ex.Message));
+                        else Logger.WriteError(prefix + " " + ex.Message);
+                    }
+                }
+                else if ((mergedChannel.UserBlockedState < UserBlockedState.Blocked) && mergedChannel.PrimaryChannel.Lineup.Name.StartsWith("Scanned"))
+                {
+                    // disable the channel in the guide
+                    mergedChannel.UserBlockedState = UserBlockedState.Blocked;
+                    mergedChannel.Update();
                 }
             }
+
+            // finish it
+            Store.mergedLineup.FullMerge(false);
+            Store.mergedLineup.Update();
         }
         private static bool channelsContain(ref List<Channel> channels, ref Channel channel)
         {
@@ -643,23 +565,13 @@ namespace epg123
             }
             return false;
         }
-        private static void refreshLineups()
-        {
-            using (MergedLineups mergedLineups = new MergedLineups(object_store))
-            {
-                foreach (MergedLineup mergedLineup in mergedLineups)
-                {
-                    mergedLineup.Refresh();
-                }
-            }
-        }
         #endregion
 
         #region ========== Set Recording Request Languages ==========
         private static bool setSeriesRecordingRequestAnyLanguage()
         {
             bool ret = false;
-            foreach (Request request in new SeriesRequests(object_store))
+            foreach (Request request in new SeriesRequests(Store.objectStore))
             {
                 if (!request.Complete && !request.AnyLanguage)
                 {

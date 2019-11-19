@@ -56,7 +56,7 @@ namespace epg123
                             .Where(arg => arg.Name.LocalName == "Provider")
                             .Where(arg => arg.Attribute("name") != null)
                             .Where(arg => arg.Attribute("name").Value == "EPG123")
-                            .Single();
+                            .SingleOrDefault();
                         if (provider != null)
                         {
                             // look at the age of the file to determine if there should be a warning

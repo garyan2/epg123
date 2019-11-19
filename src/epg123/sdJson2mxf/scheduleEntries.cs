@@ -264,7 +264,7 @@ namespace epg123
             string lastProgramID = string.Empty;
             foreach (sdSchedProgram program in schedule.Programs)
             {
-                // determine whether to populate StartTime attribue
+                // determine whether to populate StartTime attribute
                 string startTime = program.AirDateTime.TrimEnd('Z');
                 DateTime dtStart = DateTime.Parse(startTime);
                 if (dtStart == mxfService.mxfScheduleEntries.endTime)

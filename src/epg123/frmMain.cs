@@ -4,8 +4,6 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
-using System.Reflection;
-using System.Security.Principal;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
@@ -32,12 +30,11 @@ namespace epg123
         {
             get
             {
-                string[] temp = Assembly.GetEntryAssembly().GetName().Version.ToString().Split('.');
+                string[] temp = Helper.epg123Version.Split('.');
                 return (string.Format("{0}.{1}.{2}", temp[0], temp[1], temp[2]));
             }
         }
         private bool newLogin = true;
-        private bool forceExit = false;
 
         public epgConfig config = new epgConfig();
         private epgConfig xmltvConfig = new epgConfig();
@@ -91,7 +88,7 @@ namespace epg123
             // initialize the schedules direct api
             sdAPI.Initialize("EPG123", grabberVersion);
 
-            // complete the title bar label with version number and log it
+            // complete the title bar label with version number
             this.Text += " v" + grabberVersion;
 
             // check for updates
@@ -100,9 +97,6 @@ namespace epg123
             {
                 lblUpdate.Text = string.Format("UPDATE AVAILABLE (v{0})", veresp.Version);
             }
-
-            // check to see if program started with elevated rights
-            checkForElevatedRights();
 
             // update the task panel
             updateTaskPanel();
@@ -169,10 +163,6 @@ namespace epg123
                     XmltvAddFillerData = config.XmltvAddFillerData
                 };
             }
-            catch (IOException ex)
-            {
-                Logger.WriteError(ex.Message);
-            }
             catch (Exception ex)
             {
                 Logger.WriteError(ex.Message);
@@ -182,18 +172,6 @@ namespace epg123
 
         private void frmMain_FormClosing(object sender, FormClosingEventArgs e)
         {
-            // check to make sure a scheduled task has been created
-            //if (!forceExit && !task.exist && !task.existNoAccess)
-            //{
-            //    updateTaskPanel();
-            //    if (DialogResult.No == MessageBox.Show("There is no scheduled task to continually update the guide data. Are you sure you want to exit?", "Scheduled Task Missing", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation))
-            //    {
-            //        Execute = false;
-            //        e.Cancel = true;
-            //        return;
-            //    }
-            //}
-
             // save the windows size and location
             if (WindowState == FormWindowState.Normal)
             {
@@ -210,13 +188,6 @@ namespace epg123
         }
 
         #region ========== Elevated Rights, Registry, and Event Log =========
-        private bool hasElevatedRights;
-        private void checkForElevatedRights()
-        {
-            WindowsIdentity identity = WindowsIdentity.GetCurrent();
-            WindowsPrincipal principal = new WindowsPrincipal(identity);
-            hasElevatedRights = principal.IsInRole(WindowsBuiltInRole.Administrator);
-        }
         private void elevateRights()
         {
             // save current settings
@@ -238,7 +209,6 @@ namespace epg123
                 Process proc = Process.Start(startInfo);
 
                 // close original process
-                forceExit = true;
                 Application.Exit();
             }
             catch (System.ComponentModel.Win32Exception ex)
@@ -302,12 +272,12 @@ namespace epg123
             task.queryTask();
 
             // update scheduled task run time
-            tbSchedTime.Enabled = (!task.exist && hasElevatedRights);
+            tbSchedTime.Enabled = (!task.exist && Helper.UserHasElevatedRights);
             tbSchedTime.Text = task.schedTime.ToString("HH:mm");
-            lblUpdateTime.Enabled = (!task.exist && hasElevatedRights);
+            lblUpdateTime.Enabled = (!task.exist && Helper.UserHasElevatedRights);
 
             // set sheduled task wake checkbox
-            cbTaskWake.Enabled = (!task.exist && hasElevatedRights);
+            cbTaskWake.Enabled = (!task.exist && Helper.UserHasElevatedRights);
             cbTaskWake.Checked = (task.exist && task.wake);
 
             // determine which action is the client action
@@ -376,7 +346,7 @@ namespace epg123
         private void btnTask_Click(object sender, EventArgs e)
         {
             // check for elevated rights and open new process if necessary
-            if (!hasElevatedRights)
+            if (!Helper.UserHasElevatedRights)
             {
                 elevateRights();
                 return;

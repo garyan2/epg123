@@ -410,12 +410,11 @@ namespace epg123
                             offsetY = (int)((max.X - min.X + 1) / tgtAspect - (max.Y - min.Y + 1) + 0.5) / 2;
                         }
 
-                        int border = 0;// (int)(cropRectangle.Height * 0.05 + 0.5);
-                        cropImg = new Bitmap(cropRectangle.Width + 2 * border, cropRectangle.Height + (offsetY + border) * 2);
+                        cropImg = new Bitmap(cropRectangle.Width, cropRectangle.Height + offsetY * 2);
                         cropImg.SetResolution(origImg.HorizontalResolution, origImg.VerticalResolution);
                         using (Graphics g = Graphics.FromImage(cropImg))
                         {
-                            g.DrawImage(origImg, border, offsetY + border, cropRectangle, GraphicsUnit.Pixel);
+                            g.DrawImage(origImg, 0, offsetY, cropRectangle, GraphicsUnit.Pixel);
                         }
 
                         // save image

@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Globalization;
+using Microsoft.MediaCenter.Guide;
+using Microsoft.Win32;
 
 namespace epg123
 {
@@ -182,6 +185,43 @@ namespace epg123
             {
                 Logger.WriteVerbose(data);
             }
+        }
+
+        public static bool activateLineupAndGuide()
+        {
+            int lineups = 0;
+            if (Store.objectStore != null)
+            {
+                foreach (Lineup lineup in new Lineups(Store.objectStore))
+                {
+                    // only want to do this with EPG123 lineups
+                    if (!lineup.Provider.Name.Equals("EPG123") && !lineup.Provider.Name.Equals("ZAP2MXF")) continue;
+
+                    // make sure the lineup type and language are set
+                    if (string.IsNullOrEmpty(lineup.LineupTypes) || string.IsNullOrEmpty(lineup.Language))
+                    {
+                        lineup.LineupTypes = "WMIS";
+                        lineup.Language = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+                        lineup.Update();
+                    }
+                    ++lineups;
+                }
+
+                // set registry setting to "activate" the guide if necessary
+                using (RegistryKey key = Registry.LocalMachine.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Media Center\\Settings\\ProgramGuide", true))
+                {
+                    try
+                    {
+                        if ((int)key.GetValue("fAgreeTOS") != 1) key.SetValue("fAgreeTOS", 1);
+                        if ((string)key.GetValue("strAgreedTOSVersion") != "1.0") key.SetValue("strAgreedTOSVersion", "1.0");
+                    }
+                    catch
+                    {
+                        Logger.WriteError("Could not write/verify the registry settings to activate the guide in WMC.");
+                    }
+                }
+            }
+            return (lineups > 0);
         }
     }
 }

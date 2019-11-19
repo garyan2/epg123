@@ -80,6 +80,9 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\epg123Client\Store.cs">
+      <Link>Store.cs</Link>
+    </Compile>
     <Compile Include="..\epg123\CompressXmlFiles.cs">
       <Link>CompressXmlFiles.cs</Link>
     </Compile>

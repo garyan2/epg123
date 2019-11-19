@@ -28,44 +28,6 @@ namespace epg123
         private epgTaskScheduler task = new epgTaskScheduler();
         private bool forceExit = false;
 
-        private static ObjectStore objectStore_;
-        public static ObjectStore object_store
-        {
-            get
-            {
-                if (objectStore_ == null)
-                {
-                    SHA256Managed sha256Man = new SHA256Managed();
-                    string clientId = ObjectStore.GetClientId(true);
-                    string providerName = @"Anonymous!User";
-                    string password = Convert.ToBase64String(sha256Man.ComputeHash(Encoding.Unicode.GetBytes(clientId)));
-                    objectStore_ = ObjectStore.Open(null, providerName, password, true);
-                }
-                return objectStore_;
-            }
-        }
-        public static MergedLineup mergedLineup_;
-        public static MergedLineup mergedLineup
-        {
-            get
-            {
-                if (mergedLineup_ == null)
-                {
-                    using (MergedLineups mergedLineups = new MergedLineups(object_store))
-                    {
-                        foreach (MergedLineup lineup in mergedLineups)
-                        {
-                            if (lineup.GetChannels().Length > 0)
-                            {
-                                mergedLineup_ = lineup;
-                            }
-                        }
-                    }
-                }
-                return mergedLineup_;
-            }
-        }
-
         bool initLvBuild = true;
         double dpiScaleFactor = 1.0;
         public clientForm(bool betaTools)
@@ -128,9 +90,6 @@ namespace epg123
                 Settings.Default.Save();
             }
 
-            // check to see if program started with elevated rights
-            checkForElevatedRights();
-
             // enable/disable the transfer tool button
             btnTransferTool.Enabled = File.Exists(Helper.Epg123TransferExePath);
 
@@ -169,7 +128,7 @@ namespace epg123
             updateTaskPanel();
 
             // populate listviews
-            if (object_store != null)
+            if (Store.objectStore != null)
             {
                 this.Refresh();
                 buildScannedLineupComboBox();
@@ -177,11 +136,10 @@ namespace epg123
                 buildLineupChannelListView();
                 this.Refresh();
                 buildMergedChannelListView();
+
+                btnImport.Enabled = true;
             }
             updateStatusBar();
-
-            // enable manual import button only if object store exists and there are more than 0 merged channels
-            btnImport.Enabled = (objectStore_ != null);
 
             Application.UseWaitCursor = false;
             initLvBuild = false;
@@ -213,65 +171,53 @@ namespace epg123
                     }
                 }
 
-                // check to make sure a scheduled task has been created
-                //if (!task.exist && !task.existNoAccess)
-                //{
-                //    updateTaskPanel();
-                //    if (DialogResult.No == MessageBox.Show("There is no scheduled task to continually update the guide data. Are you sure you want to exit?", "Scheduled Task Missing", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation))
-                //    {
-                //        e.Cancel = true;
-                //        return;
-                //    }
-                //}
             }
 
             // save the windows size and locations
-            if (this.WindowState == FormWindowState.Normal)
-            {
-                Settings.Default.WindowLocation = this.Location;
-                Settings.Default.WindowSize = this.Size;
-            }
-            else
-            {
-                Settings.Default.WindowLocation = RestoreBounds.Location;
-                Settings.Default.WindowSize = RestoreBounds.Size;
-            }
-            Settings.Default.WindowMaximized = (this.WindowState == FormWindowState.Maximized);
-            Settings.Default.SplitterDistance = splitContainer1.SplitterDistance;
-            Settings.Default.Save();
-
-            // ensure any changes to the merged channels are pushed to the object store
-            if ((objectStore_ != null) && !objectStore_.IsDisposed && (mergedLineup_ != null))
-            {
-                mergedLineup.FullMerge(false);
-                mergedLineup.Update();
-            }
-            //isolateEpgDatabase();
+            saveFormWindowParameters();
+            Store.Close();
         }
-
-        #region ========== Elevated Rights ==========
-        private bool hasElevatedRights;
-        private void checkForElevatedRights()
-        {
-            WindowsIdentity identity = WindowsIdentity.GetCurrent();
-            WindowsPrincipal principal = new WindowsPrincipal(identity);
-            hasElevatedRights = principal.IsInRole(WindowsBuiltInRole.Administrator);
-        }
-        private void elevateRights()
+        private void saveFormWindowParameters()
         {
             try
             {
+                if (this.WindowState == FormWindowState.Normal)
+                {
+                    Settings.Default.WindowLocation = this.Location;
+                    Settings.Default.WindowSize = this.Size;
+                }
+                else
+                {
+                    Settings.Default.WindowLocation = RestoreBounds.Location;
+                    Settings.Default.WindowSize = RestoreBounds.Size;
+                }
+                Settings.Default.WindowMaximized = (this.WindowState == FormWindowState.Maximized);
+                Settings.Default.SplitterDistance = splitContainer1.SplitterDistance;
+                Settings.Default.Save();
+            }
+            catch { }
+        }
+
+        #region ========== Elevated Rights ==========
+        private void restartClient(bool forceElevated = false)
+        {
+            try
+            {
+                // save the windows size and locations
+                saveFormWindowParameters();
+
+                // start a new process
                 ProcessStartInfo startInfo = new ProcessStartInfo()
                 {
                     FileName = Helper.Epg123ClientExePath,
                     WorkingDirectory = Helper.ExecutablePath,
                     UseShellExecute = true,
-                    Verb = "runas"
+                    Verb = Helper.UserHasElevatedRights || forceElevated ? "runas" : null
                 };
                 Process proc = Process.Start(startInfo);
-                forceExit = true;
 
-                // close original process
+                // close this process
+                forceExit = true;
                 Application.Exit();
             }
             catch (System.ComponentModel.Win32Exception ex)
@@ -500,7 +446,7 @@ namespace epg123
                 mergedChannelListView.Items[listViewIndex].Checked = true;
             }
         }
-        private void unsubscribeChannel(MergedChannel mergedChannel)
+        private bool unsubscribeChannel(MergedChannel mergedChannel)
         {
             // gather all scanned lineup channels from the merged channel
             HashSet<Channel> scannedChannels = new HashSet<Channel>();
@@ -510,7 +456,7 @@ namespace epg123
             }
             foreach (Channel channel in mergedChannel.SecondaryChannels)
             {
-                if ((channel.Lineup == null) || string.IsNullOrEmpty(channel.Lineup.Name)) continue;
+                if (string.IsNullOrEmpty(channel.Lineup?.Name)) continue;
                 if (channel.Lineup.Name.StartsWith("Scanned")) scannedChannels.Add(channel);
             }
 
@@ -540,6 +486,10 @@ namespace epg123
                         mergedChannel.SecondaryChannels.Add(scannedChannel);
                     }
                 }
+            }
+            else
+            {
+                return false;
             }
             //else // shouldn't be here
             //{
@@ -572,6 +522,7 @@ namespace epg123
             //    }
             //}
             mergedChannel.Update();
+            return true;
         }
         private void unsubscribeMenuItem_Click(object sender, EventArgs e)
         {
@@ -615,7 +566,7 @@ namespace epg123
             cmbObjectStoreLineups.Items.Clear();
 
             // populate with lineups in object_store
-            foreach (Lineup lineup in new Lineups(object_store).ToArray())
+            foreach (Lineup lineup in new Lineups(Store.objectStore))
             {
                 if (!lineup.LineupTypes.Equals("BB") &&
                     !string.IsNullOrEmpty(lineup.Name) &&
@@ -632,7 +583,7 @@ namespace epg123
                 }
                 else if (lineup.Name.Equals(lu_name))
                 {
-                    foreach (Device device in new Devices(object_store))
+                    foreach (Device device in new Devices(Store.objectStore))
                     {
                         if (device.WmisLineups.Contains(lineup))
                         {
@@ -714,7 +665,10 @@ namespace epg123
             isolateEpgDatabase();
 
             // open object store and repopulate the GUI
-            clientForm_Shown(null, null);
+            initLvBuild = true;
+            buildLineupChannelListView();
+            buildMergedChannelListView();
+            initLvBuild = false;
         }
         private void btnDeleteLineupClick(object sender, EventArgs e)
         {
@@ -727,7 +681,7 @@ namespace epg123
             }
 
             // unsubscribe any mergedChannels that are subscribed to any lineupToDelete channel
-            foreach (MergedChannel mergedChannel in mergedLineup.GetChannels())
+            foreach (MergedChannel mergedChannel in Store.mergedLineup.GetChannels())
             {
                 if (mergedChannel.PrimaryChannel.Lineup.IsSameAs(lineupToDelete))
                 {
@@ -744,7 +698,7 @@ namespace epg123
             lineupToDelete.Update();
 
             // remove the lineup from the devices
-            foreach (Device device in new Devices(object_store))
+            foreach (Device device in new Devices(Store.objectStore))
             {
                 if (device.WmisLineups.Contains(lineupToDelete))
                 {
@@ -770,7 +724,7 @@ namespace epg123
         {
             cmbSources.Items.Clear();
             cmbSources.Items.Add("All Scanned Sources");
-            foreach (Device device in new Devices(object_store))
+            foreach (Device device in new Devices(Store.objectStore))
             {
                 // user created channels will not have a scanned lineup
                 if (device.ScannedLineup == null) continue;
@@ -784,7 +738,8 @@ namespace epg123
         }
         private void buildMergedChannelListView()
         {
-            if (mergedLineup == null) return;
+            if (Store.mergedLineup == null) return;
+            mergedChannelListView.Items.Clear();
 
             // clear the totalMergedChannels count
             totalMergedChannels = 0;
@@ -797,7 +752,7 @@ namespace epg123
 
             // populate with new lineup channels
             List<ListViewItem> listViewItems = new List<ListViewItem>();
-            foreach (Channel channel in mergedLineup.GetChannels())
+            foreach (Channel channel in Store.mergedLineup.GetChannels())
             {
                 MergedChannel mergedChannel;
                 try
@@ -1117,7 +1072,19 @@ namespace epg123
         private bool deleteChannel(MergedChannel mergedChannel)
         {
             // unsubscribe all lineups except for scanned
-            unsubscribeChannel(mergedChannel);
+            if (!unsubscribeChannel(mergedChannel))
+            {
+                // remove the MergedChannel from the MergedLineup
+                MergedLineup mergedLineup = mergedChannel.Lineup as MergedLineup;
+                if (mergedLineup != null)
+                {
+                    mergedLineup.RemoveChannel(mergedChannel);
+                    mergedLineup.UncachedChannels.RemoveAllMatching(mergedChannel);
+                    mergedLineup.ClearChannelCache();
+                    mergedLineup.Update();
+                }
+                return true;
+            }
 
             try
             {
@@ -1203,7 +1170,7 @@ namespace epg123
             // resume listview drawing
             mergedChannelListView.EndUpdate();
             mergedChannelListView.Items.Clear();
-            mergedLineup_.Refresh();
+            Store.mergedLineup.Refresh();
             buildMergedChannelListView();
             this.Cursor = Cursors.Arrow;
         }
@@ -1285,13 +1252,15 @@ namespace epg123
             task.queryTask();
 
             // set .Enabled properties
-            rdoFullMode.Enabled = (!task.exist && hasElevatedRights && File.Exists(Helper.Epg123ExePath));
-            rdoClientMode.Enabled = (!task.exist && hasElevatedRights);
-            tbSchedTime.Enabled = (!task.exist && hasElevatedRights);
-            lblUpdateTime.Enabled = (!task.exist && hasElevatedRights);
-            cbTaskWake.Enabled = (!task.exist && hasElevatedRights);
-            cbAutomatch.Enabled = (!task.exist && hasElevatedRights);
-            tbTaskInfo.Enabled = (!task.exist && hasElevatedRights);
+            if (!task.exist && Helper.UserHasElevatedRights)
+            {
+                rdoFullMode.Enabled = File.Exists(Helper.Epg123ExePath);
+                rdoClientMode.Enabled = tbSchedTime.Enabled = lblUpdateTime.Enabled = cbTaskWake.Enabled = cbAutomatch.Enabled = tbTaskInfo.Enabled = true;
+            }
+            else
+            {
+                rdoFullMode.Enabled = rdoClientMode.Enabled = tbSchedTime.Enabled = lblUpdateTime.Enabled = cbTaskWake.Enabled = cbAutomatch.Enabled = tbTaskInfo.Enabled = false;
+            }
 
             // set radio button controls
             rdoFullMode.Checked = (task.exist && task.actions[0].Path.ToLower().Contains("epg123.exe")) ||
@@ -1322,7 +1291,7 @@ namespace epg123
             }
 
             // set automatch checkbox state
-            cbAutomatch.Checked = (clientIndex >= 0) && task.actions[clientIndex].Arguments.ToLower().Contains("-match");
+            cbAutomatch.Checked = !task.exist || ((clientIndex >= 0) && task.actions[clientIndex].Arguments.ToLower().Contains("-match"));
 
             // set task info text and label
             if (task.exist && rdoFullMode.Checked)
@@ -1386,9 +1355,9 @@ namespace epg123
         private void btnTask_Click(object sender, EventArgs e)
         {
             // check for elevated rights and open new process if necessary
-            if (!hasElevatedRights)
+            if (!Helper.UserHasElevatedRights)
             {
-                elevateRights();
+                restartClient(true);
                 return;
             }
 
@@ -1433,7 +1402,7 @@ namespace epg123
         private void tbTaskInfo_Click(object sender, EventArgs e)
         {
             // don't modify if text box is displaying current existing task
-            if (task.exist || !hasElevatedRights) return;
+            if (task.exist || !Helper.UserHasElevatedRights) return;
 
             // determine path to existing file
             if (tbTaskInfo.Text.StartsWith("***"))
@@ -1472,7 +1441,7 @@ namespace epg123
             }
 
             // check for recordings in progress
-            foreach (Microsoft.MediaCenter.Pvr.Recording recording in new Microsoft.MediaCenter.Pvr.Recordings(object_store))
+            foreach (Microsoft.MediaCenter.Pvr.Recording recording in new Microsoft.MediaCenter.Pvr.Recordings(Store.objectStore))
             {
                 if ((recording.State == Microsoft.MediaCenter.Pvr.RecordingState.Initializing) || (recording.State == Microsoft.MediaCenter.Pvr.RecordingState.Recording))
                 {
@@ -1532,7 +1501,7 @@ namespace epg123
             statusLogo.statusImage();
 
             // make sure guide is activated and background scanning is stopped
-            activateGuide();
+            mxfImport.activateLineupAndGuide();
             disableBackgroundScanning();
 
             // open object store and repopulate the GUI
@@ -1685,26 +1654,6 @@ namespace epg123
         #endregion
 
         #region ========== Registry Entries ==========
-        private bool activateGuide()
-        {
-            RegistryKey key = Registry.LocalMachine.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Media Center\\Settings\\ProgramGuide", true);
-            if (key != null)
-            {
-                try
-                {
-                    if ((int)key.GetValue("fAgreeTOS") != 1) key.SetValue("fAgreeTOS", 1);
-                    if ((string)key.GetValue("strAgreedTOSVersion") != "1.0") key.SetValue("strAgreedTOSVersion", "1.0");
-                    key.Close();
-                }
-                catch
-                {
-                    MessageBox.Show("Failed to open/edit registry to show the Guide in WMC.", "Registry Access", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    key.Close();
-                }
-                return true;
-            }
-            return false;
-        }
         private bool disableBackgroundScanning()
         {
             RegistryKey key = Registry.LocalMachine.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Media Center\\Service\\BackgroundScanner", true);
@@ -1763,7 +1712,7 @@ namespace epg123
             try
             {
                 // close and dispose the object store if necessary
-                if (objectStore_ != null)
+                if (Store.objectStore != null)
                 {
                     // clear the merged channels and lineup combobox
                     mergedChannelListView.Items.Clear();
@@ -1774,14 +1723,6 @@ namespace epg123
                     lineupChannels.Clear();
                     lineupChannelListView.Items.Clear();
                     lineupChannelListView.VirtualListSize = 0;
-
-                    // dispose of the objectstore
-                    objectStore_.Dispose();
-                    while (!objectStore_.IsDisposed) ;
-                    objectStore_ = null;
-
-                    // dispose of the mergedlineup
-                    mergedLineup_ = null;
 
                     // clear the status text
                     lblToolStripStatus.Text = "0 Merged Channels | 0 Lineups | 0 Services";
@@ -1911,7 +1852,7 @@ namespace epg123
                         {
                             if (deleteActiveDatabaseFile() == null) return;
                         }
-                        MxfImporter.Import(stream, object_store);
+                        MxfImporter.Import(stream, Store.objectStore);
                     }
                 }
             }
@@ -1947,15 +1888,15 @@ namespace epg123
         private void ebtnRestore_Click(object sender, EventArgs e)
         {
             // check for elevated rights and open new process if necessary
-            if (!hasElevatedRights)
+            if (!Helper.UserHasElevatedRights)
             {
-                elevateRights();
+                restartClient(true);
                 return;
             }
 
             this.Cursor = Cursors.WaitCursor;
             restoreBackupFiles();
-            activateGuide();
+            mxfImport.activateLineupAndGuide();
             disableBackgroundScanning();
             this.Cursor = Cursors.Arrow;
         }
@@ -1967,14 +1908,12 @@ namespace epg123
         }
         private void btnAddChannels_Click(object sender, EventArgs e)
         {
-            if (mergedLineup == null) return;
-
             using (frmAddChannel addChannelForm = new frmAddChannel())
             {
                 addChannelForm.ShowDialog();
                 if (addChannelForm.channelAdded)
                 {
-                    throw new Exception("Killing process to avoid crashing due to external PVR task throwing exception on object store after adding channel(s).");
+                    buildMergedChannelListView();
                 }
             }
         }
@@ -1984,9 +1923,9 @@ namespace epg123
         private void btnSetup_Click(object sender, EventArgs e)
         {
             // check for elevated rights and open new process if necessary
-            if (!hasElevatedRights)
+            if (!Helper.UserHasElevatedRights)
             {
-                elevateRights();
+                restartClient(true);
                 return;
             }
 
@@ -1994,7 +1933,9 @@ namespace epg123
             frmClientSetup frm = new frmClientSetup();
             frm.shouldBackup = mergedChannelListView.Items.Count > 0;
             isolateEpgDatabase();
+            Store.Close(true);
             frm.ShowDialog();
+            Store.Close(true);
 
             // refresh listviews
             btnRefreshLineups_Click(null, null);
@@ -2032,7 +1973,7 @@ namespace epg123
 
             // open a new object store which creates a fresh database
             // if that fails for some reason, open WMC to create a new database
-            if (object_store == null)
+            if (Store.objectStore == null)
             {
                 ProcessStartInfo startInfo = new ProcessStartInfo()
                 {
@@ -2049,9 +1990,9 @@ namespace epg123
         private void btnRebuild_Click(object sender, EventArgs e)
         {
             // check for elevated rights and open new process if necessary
-            if (!hasElevatedRights)
+            if (!Helper.UserHasElevatedRights)
             {
-                elevateRights();
+                restartClient(true);
                 return;
             }
 
@@ -2063,11 +2004,8 @@ namespace epg123
             string epg_db;
             if ((epg_db = deleteActiveDatabaseFile()) == null) return;
 
-            // import lineup, subscription, and recording backups ... try max 3 times each
-            bool success = true;
-            success = ((importBackupFile(epg_db, "lineup") || importBackupFile(epg_db, "lineup") || importBackupFile(epg_db, "lineup")) &&
-                      (importBackupFile(epg_db, "subscriptions") || importBackupFile(epg_db, "subscriptions") || importBackupFile(epg_db, "subscriptions")) &&
-                      (importBackupFile(epg_db, "recordings") || importBackupFile(epg_db, "recordings") || importBackupFile(epg_db, "recordings")));
+            // import lineup, subscription, and recording backups...
+            bool success = importBackupFile(epg_db, "lineup") && importBackupFile(epg_db, "subscriptions") && importBackupFile(epg_db, "recordings");
 
             // do not import the listings ... will confuse the user when there is no search ability (not indexed)
             if (success && (SystemInformation.BootMode != BootMode.Normal))
@@ -2120,7 +2058,7 @@ namespace epg123
 
             using (FileStream stream = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
-                MxfImporter.Import(stream, object_store);
+                MxfImporter.Import(stream, Store.objectStore);
             }
 
             return true;
@@ -2131,7 +2069,7 @@ namespace epg123
         private void btnTweakWmc_Click(object sender, EventArgs e)
         {
             // open the tweak gui
-            epg123.frmWmcTweak frm = new epg123.frmWmcTweak();
+            frmWmcTweak frm = new frmWmcTweak();
             frm.ShowDialog();
         }
         #endregion
@@ -2139,6 +2077,9 @@ namespace epg123
         #region ========== Advanced Functions ==========
         private void btnStoreExplorer_Click(object sender, EventArgs e)
         {
+            // close the store
+            Store.Close();
+
             // used code by glugalug (glugglug) and modified for epg123
             // https://github.com/glugalug/GuideEditingMisc/tree/master/StoreExplorer
 
@@ -2177,7 +2118,7 @@ namespace epg123
             XmlWriterSettings settings = new XmlWriterSettings() { Indent = true };
             using (XmlWriter writer = XmlWriter.Create(new StreamWriter(Helper.Epg123OutputFolder + "\\mxfExport.mxf"), settings))
             {
-                MxfExporter.Export(object_store, writer, false);
+                MxfExporter.Export(Store.objectStore, writer, false);
             }
 
             this.Cursor = Cursors.Arrow;

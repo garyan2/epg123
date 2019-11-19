@@ -2,8 +2,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using epg123.MxfXml;
 
@@ -207,7 +205,6 @@ namespace epg123
                     year = (DateTime.Now.Year - 1).ToString();
                 }
 
-                // search last year, current year, and previous last year
                 // return first finding
                 int yyyy = int.Parse(year);
                 int[] years = new int[] { yyyy, yyyy - 1, yyyy + 1 };

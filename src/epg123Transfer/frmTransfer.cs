@@ -17,23 +17,6 @@ namespace epg123Transfer
 {
     public partial class frmTransfer : Form
     {
-        private static ObjectStore objectStore_;
-        public static ObjectStore object_store
-        {
-            get
-            {
-                if (objectStore_ == null)
-                {
-                    SHA256Managed sha256Man = new SHA256Managed();
-                    string clientId = ObjectStore.GetClientId(true);
-                    string providerName = @"Anonymous!User";
-                    string password = Convert.ToBase64String(sha256Man.ComputeHash(Encoding.Unicode.GetBytes(clientId)));
-                    objectStore_ = ObjectStore.Open(null, providerName, password, true);
-                }
-                return objectStore_;
-            }
-        }
-
         private string oldWmcFile;
         MXF oldRecordings = new MXF()
         {
@@ -42,6 +25,7 @@ namespace epg123Transfer
             OneTimeRequest = new List<MxfRequest>(),
             WishListRequest = new List<MxfRequest>()
         };
+
         public frmTransfer(string file)
         {
             oldWmcFile = file;
@@ -306,7 +290,7 @@ namespace epg123Transfer
         private void populateWmcRecordings()
         {
             List<ListViewItem> listViewItems = new List<ListViewItem>();
-            foreach (SeriesRequest request in new SeriesRequests(object_store))
+            foreach (SeriesRequest request in new SeriesRequests(epg123.Store.objectStore))
             {
                 // do not display archived/completed entries
                 if (request.Complete) continue;
@@ -327,7 +311,7 @@ namespace epg123Transfer
                 wmcRecording.Add(request.Series.GetUIdValue());
             }
 
-            foreach (ManualRequest request in new ManualRequests(object_store))
+            foreach (ManualRequest request in new ManualRequests(epg123.Store.objectStore))
             {
                 // do not display archived/completed entries
                 if (request.Complete || (request.StartTime < DateTime.UtcNow)) continue;
@@ -348,7 +332,7 @@ namespace epg123Transfer
                 wmcRecording.Add(request.Title + " " + request.StartTime + " " + request.Channel.ChannelNumber.Number + "." + request.Channel.ChannelNumber.SubNumber);
             }
 
-            foreach (WishListRequest request in new WishListRequests(object_store))
+            foreach (WishListRequest request in new WishListRequests(epg123.Store.objectStore))
             {
                 // do not display archived/completed entries
                 if (request.Complete) continue;
@@ -369,7 +353,7 @@ namespace epg123Transfer
                 wmcRecording.Add(request.Keywords);
             }
 
-            foreach (OneTimeRequest request in new OneTimeRequests(object_store))
+            foreach (OneTimeRequest request in new OneTimeRequests(epg123.Store.objectStore))
             {
                 // do not display archived/completed entries
                 if (request.Complete || (request.StartTime < DateTime.UtcNow)) continue;
@@ -467,9 +451,12 @@ namespace epg123Transfer
             oldRecordings.Assembly[1].Version = "6.1.0.0";
 
             // populate the good stuff from the listview
+            int checkedItems = 0;
             foreach (ListViewItem item in lvMxfRecordings.Items)
             {
                 if (!item.Checked) continue;
+                else ++checkedItems;
+
                 switch (item.Text)
                 {
                     case "Series":
@@ -488,6 +475,7 @@ namespace epg123Transfer
                         break;
                 }
             }
+            if (checkedItems == 0) return;
 
             try
             {

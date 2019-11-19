@@ -13,7 +13,7 @@ namespace epg123
     {
         private string nonTunerText = "No Device Group";
         public bool channelAdded;
-        public List<KeyValuePair<Lineup, Channel>> scannedChannelsToAdd = new List<KeyValuePair<Lineup, Channel>>();
+        private List<Channel> channelsToAdd = new List<Channel>();
 
         public frmAddChannel()
         {
@@ -28,7 +28,7 @@ namespace epg123
         private void populateScannedLineups()
         {
             HashSet<Lineup> scannedLineups = new HashSet<Lineup>();
-            foreach (Device device in clientForm.mergedLineup.DeviceGroup.Devices)
+            foreach (Device device in Store.mergedLineup.DeviceGroup.Devices)
             {
                 if (device.ScannedLineup == null) continue;
                 scannedLineups.Add(device.ScannedLineup);
@@ -56,7 +56,7 @@ namespace epg123
                 return;
             }
 
-            foreach (Device device in clientForm.mergedLineup.DeviceGroup.Devices)
+            foreach (Device device in Store.mergedLineup.DeviceGroup.Devices)
             {
                 if (device.ScannedLineup == null) return;
                 if (device.ScannedLineup.IsSameAs((Lineup)cmbScannedLineups.SelectedItem))
@@ -239,7 +239,7 @@ namespace epg123
                     // scannedLineup.NotifyChannelAdded(channel);
 
                     // changed to do the notifies when form is closed until I find out why PVR task will crash 10 seconds after
-                    scannedChannelsToAdd.Add(new KeyValuePair<Lineup, Channel>(scannedLineup, channel));
+                    channelsToAdd.Add(channel);
                     rtbChannelAddHistory.Text += string.Format("Channel {0}({1}) {2} has been added to {3}.\n\n", channel.ChannelNumber.ToString(), chnTiPhysicalNumber.Value.ToString(), channel.CallSign.ToString(), scannedLineup.Name.ToString());
                 }
                 else
@@ -312,15 +312,10 @@ namespace epg123
 
         private void frmAddChannel_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (scannedChannelsToAdd.Count > 0)
+            if (channelsToAdd.Count > 0)
             {
-                MessageBox.Show("The main client form will close within 10 seconds after the new channels are added due to a PVR process triggering an exception on the database.", "Client Form Closing", MessageBoxButtons.OK);
-
-                Logger.WriteInformation("Starting lineup notification of added channels.");
-                foreach (KeyValuePair<Lineup, Channel> keyValuePair in scannedChannelsToAdd)
-                {
-                    keyValuePair.Key.NotifyChannelAdded(keyValuePair.Value);
-                }
+                Logger.WriteInformation(string.Format("Adding {0} channels to lineup {1}.", channelsToAdd.Count, Store.mergedLineup.Name));
+                channelsToAdd[0].Lineup.NotifyChannelsAdded(channelsToAdd);
             }
         }
     }

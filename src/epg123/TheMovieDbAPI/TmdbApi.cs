@@ -231,7 +231,7 @@ namespace epg123
         public static int SearchCatalog(string title, int year, string lang)
         {
             string uri = String.Format("search/movie?api_key={0}&language={1}&query={2}&include_adult={3}{4}",
-                                       Properties.Resources.tmdbAPIKey, lang, Escape(title), incAdult.ToString().ToLower(),
+                                       Properties.Resources.tmdbAPIKey, lang, Uri.EscapeDataString(title), incAdult.ToString().ToLower(),
                                        (year == 0) ? string.Empty : string.Format("&primary_release_year={0}", year));
             try
             {
@@ -250,12 +250,6 @@ namespace epg123
                 Logger.WriteError(ex.Message);
             }
             return -1;
-        }
-
-        private static string Escape(string s)
-        {
-            s = s.Replace("&", "and");
-            return Regex.Replace(s, "[" + Regex.Escape(new String(Path.GetInvalidFileNameChars())) + "]", "-");
         }
     }
 }

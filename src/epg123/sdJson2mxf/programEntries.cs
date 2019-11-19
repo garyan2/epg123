@@ -286,7 +286,8 @@ namespace epg123
             prg.IsSports = Helper.stringContains(sd.ShowType, "Sports event");
 
             // set isGeneric flag if programID starts with "SH", is a series, is not a miniseries, and is not paid programming
-            if (prg.tmsId.StartsWith("SH") && !string.IsNullOrEmpty(prg.IsSeries) && string.IsNullOrEmpty(prg.IsMiniseries) && string.IsNullOrEmpty(prg.IsPaidProgramming))
+            if (prg.tmsId.StartsWith("SH") && ((!string.IsNullOrEmpty(prg.IsSports) && string.IsNullOrEmpty(Helper.stringContains(sd.EntityType, "Sports"))) ||
+                                               (!string.IsNullOrEmpty(prg.IsSeries) && string.IsNullOrEmpty(prg.IsMiniseries) && string.IsNullOrEmpty(prg.IsPaidProgramming))))
             {
                 prg.IsGeneric = "true";
             }
@@ -350,10 +351,20 @@ namespace epg123
                 // now add the real categories
                 if (sd.Genres != null)
                 {
-                    for (int i = 0; i < sd.Genres.Length; ++i)
+                    foreach (string genre in sd.Genres)
                     {
-                        prg.Keywords += "," + sdMxf.With[0].KeywordGroups[(int)group].getKeywordId(sd.Genres[i]);
+                        string key = sdMxf.With[0].KeywordGroups[(int)group].getKeywordId(genre);
+                        List<string> keys = prg.Keywords.Split(',').ToList();
+                        if (!keys.Contains(key))
+                        {
+                            prg.Keywords += "," + key;
+                        }
                     }
+                }
+                if (prg.Keywords.Length < 5)
+                {
+                    string key = sdMxf.With[0].KeywordGroups[(int)group].getKeywordId("Uncategorized");
+                    prg.Keywords += "," + key;
                 }
             }
         }

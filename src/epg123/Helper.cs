@@ -82,7 +82,7 @@ namespace epg123
             }
             catch
             {
-                if (!UserHasElevatedRights())
+                if (!UserHasElevatedRights)
                 {
                     MessageBox.Show(string.Format("EPG123 did not have sufficient priveleges to edit the folder \"{0}\" permissions. Please run this GUI with elevated rights (as Administrator) to make the necessary changes.", folder),
                                     "Folder Permissions Error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
@@ -96,11 +96,14 @@ namespace epg123
         /// Determines whether program is run with elevated rights
         /// </summary>
         /// <returns></returns>
-        public static bool UserHasElevatedRights()
+        public static bool UserHasElevatedRights
         {
-            WindowsIdentity identity = WindowsIdentity.GetCurrent();
-            WindowsPrincipal principal = new WindowsPrincipal(identity);
-            return principal.IsInRole(WindowsBuiltInRole.Administrator);
+            get
+            {
+                WindowsIdentity identity = WindowsIdentity.GetCurrent();
+                WindowsPrincipal principal = new WindowsPrincipal(identity);
+                return principal.IsInRole(WindowsBuiltInRole.Administrator);
+            }
         }
 
         public static string tableContains(string[] table, string text, bool exactMatch = false)

@@ -4,7 +4,6 @@ using System.IO;
 using System.Net;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using Newtonsoft.Json;
 
 namespace epg123
@@ -58,7 +57,6 @@ namespace epg123
             }
             return string.Empty;
         }
-
 
         public static void Initialize(string agent, string version)
         {
@@ -235,18 +233,10 @@ namespace epg123
                         maxLineups = ret.Account.MaxLineups;
 
                         TimeSpan expires = DateTime.Parse(ret.Account.Expires) - DateTime.Now;
-                        if (expires < TimeSpan.FromDays(14.0))
+                        if (expires < TimeSpan.FromDays(7.0))
                         {
-                            if (expires.Days <= 3)
-                            {
-                                Logger.WriteError(string.Format("Your Schedules Direct account expires in {0:D2} days {1:D2} hours {2:D2} minutes.",
-                                    expires.Days, expires.Hours, expires.Minutes));
-                            }
-                            else
-                            {
-                                Logger.WriteWarning(string.Format("Your Schedules Direct account expires in {0:D2} days {1:D2} hours {2:D2} minutes.",
-                                    expires.Days, expires.Hours, expires.Minutes));
-                            }
+                            Logger.WriteWarning(string.Format("Your Schedules Direct account expires in {0:D2} days {1:D2} hours {2:D2} minutes.",
+                                expires.Days, expires.Hours, expires.Minutes));
                         }
                         return ret;
                     default:
