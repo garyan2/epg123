@@ -315,7 +315,7 @@ namespace epg123
             if (channelsToAdd.Count > 0)
             {
                 Logger.WriteInformation(string.Format("Adding {0} channels to lineup {1}.", channelsToAdd.Count, Store.mergedLineup.Name));
-                channelsToAdd[0].Lineup.NotifyChannelsAdded(channelsToAdd);
+                channelsToAdd[0].Lineup.NotifyChannelsAdded(channelsToAdd);              
             }
         }
     }

@@ -248,7 +248,7 @@
             this.unsubscribeMenuItem.Name = "unsubscribeMenuItem";
             this.unsubscribeMenuItem.Size = new System.Drawing.Size(139, 22);
             this.unsubscribeMenuItem.Text = "Unsubscribe";
-            this.unsubscribeMenuItem.Click += new System.EventHandler(this.unsubscribeMenuItem_Click);
+            this.unsubscribeMenuItem.Click += new System.EventHandler(this.subscribeMenuItem_Click);
             // 
             // toolStripSeparator2
             // 
@@ -660,7 +660,7 @@
             this.ebtnRestore.TabIndex = 16;
             this.ebtnRestore.Text = "Restore";
             this.ebtnRestore.UseVisualStyleBackColor = true;
-            this.ebtnRestore.Click += new System.EventHandler(this.ebtnRestore_Click);
+            this.ebtnRestore.Click += new System.EventHandler(this.btnRestore_Click);
             // 
             // ebtnRebuild
             // 

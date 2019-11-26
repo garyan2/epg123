@@ -7,7 +7,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
-using System.Security.Principal;
 using System.Text;
 using System.Windows.Forms;
 using System.Xml;
@@ -146,6 +145,8 @@ namespace epg123
         }
         private void clientForm_FormClosing(object sender, FormClosingEventArgs e)
         {
+            Application.UseWaitCursor = true;
+
             // check to see if any EPG123 lineups are in the database
             if (!forceExit)
             {
@@ -170,12 +171,11 @@ namespace epg123
                         }
                     }
                 }
-
             }
 
             // save the windows size and locations
             saveFormWindowParameters();
-            Store.Close();
+            isolateEpgDatabase(!forceExit);
         }
         private void saveFormWindowParameters()
         {
@@ -329,6 +329,8 @@ namespace epg123
         #region ========== Channel/Station Subscribing Methods ==========
         private void subscribeMenuItem_Click(object sender, EventArgs e)
         {
+            bool unsubscribe = unsubscribeMenuItem.Equals((ToolStripMenuItem)sender);
+
             // suspend listview drawing
             mergedChannelListView.BeginUpdate();
             mergedChannelColumnSorter.Suspend = true;
@@ -337,9 +339,10 @@ namespace epg123
             // subscribe selected channels to station
             foreach (ListViewItem mergedItem in mergedChannelListView.SelectedItems)
             {
-                subscribeChannel(mergedItem.Index, (MergedChannel)mergedItem.Tag, (Channel)lineupChannelListView.Items[lineupChannelListView.SelectedIndices[0]].Tag);
+                subscribeChannel(mergedItem.Index, (MergedChannel)mergedItem.Tag,
+                                 unsubscribe ? null : (Channel)lineupChannelListView.Items[lineupChannelListView.SelectedIndices[0]].Tag);
             }
-
+            
             // adjust column widths
             adjustColumnWidths(mergedChannelListView);
 
@@ -402,159 +405,33 @@ namespace epg123
         }
         private void subscribeChannel(int listViewIndex, MergedChannel mergedChannel, Channel lineupChannel)
         {
-            if (!mergedChannel.PrimaryChannel.IsSameAs(lineupChannel))
+            if (Store.singletonStore != null)
             {
-                // unsubscribe any previous lineup before adding new lineup
-                if (!mergedChannel.PrimaryChannel.Lineup.Name.StartsWith("Scanned"))
+                Channel listings = null;
+                MergedChannel channel = Store.singletonStore.Fetch(mergedChannel.Id) as MergedChannel;
+                if (lineupChannel != null)
                 {
-                    unsubscribeMenuItem_Click(unsubscribeMenuItem, null);
+                    listings = Store.singletonStore.Fetch(lineupChannel.Id) as Channel;
                 }
 
-                if (mergedChannel.PrimaryChannel.Lineup.Name.StartsWith("Scanned"))
+                try
                 {
-                    // copy scanned lineup to secondary channels
-                    mergedChannel.SecondaryChannels.Add(mergedChannel.PrimaryChannel);
-
-                    // add this channel lineup to the device group if necessary
-                    foreach (Device device in mergedChannel.Lineup.DeviceGroup.Devices)
-                    {
-                        try
-                        {
-                            if (!device.Name.ToLower().Contains("delete") &&
-                                (device.ScannedLineup != null) && device.ScannedLineup.IsSameAs(mergedChannel.PrimaryChannel.Lineup) &&
-                                ((device.WmisLineups == null) || !device.WmisLineups.Contains(lineupChannel.Lineup)))
-                            {
-                                device.SubscribeToWmisLineup(lineupChannel.Lineup);
-                                device.Update();
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.WriteVerbose(string.Format("Failed to associate lineup {0} with device {1} ({2}). {3}", lineupChannel.Lineup,
-                                                                device.Name ?? "NULL", (device.ScannedLineup == null) ? "NULL" : device.ScannedLineup.Name, ex.Message));
-                        }
-                    }
+                    channel.AddChannelListings(listings);
                 }
+                catch { }
+            }
+            mergedChannel.Refresh();
 
-                // update primary channel
-                mergedChannel.PrimaryChannel = lineupChannel;
-                mergedChannel.Service = lineupChannel.Service;
-                mergedChannel.Update();
-
-                // update listviewitem with new information and enable channel
+            // update listviewitem with new information and enable channel
+            if (listViewIndex >= 0)
+            {
                 mergedChannelListView.Items[listViewIndex] = buildMergedChannelLvi(mergedChannel);
-                mergedChannelListView.Items[listViewIndex].Checked = true;
+                mergedChannelListView.Items[listViewIndex].Checked = (lineupChannel != null) ? true : false;
             }
         }
-        private bool unsubscribeChannel(MergedChannel mergedChannel)
+        private void unsubscribeChannel(MergedChannel mergedChannel)
         {
-            // gather all scanned lineup channels from the merged channel
-            HashSet<Channel> scannedChannels = new HashSet<Channel>();
-            if ((mergedChannel.PrimaryChannel.Lineup != null) && mergedChannel.PrimaryChannel.Lineup.Name.StartsWith("Scanned"))
-            {
-                scannedChannels.Add(mergedChannel.PrimaryChannel);
-            }
-            foreach (Channel channel in mergedChannel.SecondaryChannels)
-            {
-                if (string.IsNullOrEmpty(channel.Lineup?.Name)) continue;
-                if (channel.Lineup.Name.StartsWith("Scanned")) scannedChannels.Add(channel);
-            }
-
-            // clear the secondary
-            List<Channel> secondaryChannels = mergedChannel.SecondaryChannels.ToList();
-            foreach (Channel secondaryChannel in secondaryChannels)
-            {
-                mergedChannel.SecondaryChannels.RemoveAllMatching(secondaryChannel);
-            }
-
-            if (scannedChannels.Count > 0)
-            {
-                bool first = true;
-                foreach (Channel scannedChannel in scannedChannels)
-                {
-                    if (first)
-                    {
-                        // set the primary and service
-                        mergedChannel.PrimaryChannel = scannedChannel;
-                        mergedChannel.Service = mergedChannel.PrimaryChannel.Service;
-
-                        // remaining channels to be populated in secondary
-                        first = false;
-                    }
-                    else
-                    {
-                        mergedChannel.SecondaryChannels.Add(scannedChannel);
-                    }
-                }
-            }
-            else
-            {
-                return false;
-            }
-            //else // shouldn't be here
-            //{
-            //    // find all the scanned lineups for the devices of this mergedchannel
-            //    HashSet<Lineup> scannedLineups = new HashSet<Lineup>();
-            //    foreach (Device device in mergedChannel.Lineup.DeviceGroup.Devices)
-            //    {
-            //        if (device.ScannedLineup == null) continue;
-            //        scannedLineups.Add(device.ScannedLineup);
-            //    }
-
-            //    // build the primary and secondary channels
-            //    bool first = true;
-            //    foreach (Lineup scannedLineup in scannedLineups)
-            //    {
-            //        Channel channel = scannedLineup.GetChannelFromNumber(mergedChannel.ChannelNumber.Number, mergedChannel.ChannelNumber.SubNumber);
-            //        if (first && (channel != null))
-            //        {
-            //            // set the primary and service
-            //            mergedChannel.PrimaryChannel = channel;
-            //            mergedChannel.Service = mergedChannel.PrimaryChannel.Service;
-
-            //            // all secondary to be populated
-            //            first = false;
-            //        }
-            //        else if (channel != null)
-            //        {
-            //            mergedChannel.SecondaryChannels.Add(channel);
-            //        }
-            //    }
-            //}
-            mergedChannel.Update();
-            return true;
-        }
-        private void unsubscribeMenuItem_Click(object sender, EventArgs e)
-        {
-            // suspend listview drawing
-            mergedChannelListView.BeginUpdate();
-            mergedChannelColumnSorter.Suspend = true;
-            this.Cursor = Cursors.WaitCursor;
-
-            foreach (ListViewItem lvi in mergedChannelListView.SelectedItems)
-            {
-                // grab MergedChannel and record current enable state
-                MergedChannel mergedChannel = (MergedChannel)lvi.Tag;
-                bool enabled = (mergedChannel.UserBlockedState <= UserBlockedState.Enabled);
-
-                // unsubscribe channel
-                unsubscribeChannel(mergedChannel);
-
-                // update the ListViewItem and determine final enable state
-                int index = lvi.Index;
-                mergedChannelListView.Items[index] = buildMergedChannelLvi(mergedChannel);
-                mergedChannelListView.Items[index].Checked = (enabled && !mergedChannel.PrimaryChannel.Lineup.Name.StartsWith("Scanned"));
-            }
-
-            // adjust column widths
-            adjustColumnWidths(mergedChannelListView);
-
-            // resume listview drawing and clear selections
-            mergedChannelListView.SelectedItems.Clear();
-            mergedChannelListView.EndUpdate();
-            mergedChannelColumnSorter.Suspend = false;
-            mergedChannelListView.Sort();
-            this.Cursor = Cursors.Arrow;
+            subscribeChannel(-1, mergedChannel, null);
         }
         #endregion
 
@@ -661,11 +538,9 @@ namespace epg123
         }
         private void btnRefreshLineups_Click(object sender, EventArgs e)
         {
-            // close all object store items
-            isolateEpgDatabase();
-
             // open object store and repopulate the GUI
             initLvBuild = true;
+            buildScannedLineupComboBox();
             buildLineupChannelListView();
             buildMergedChannelListView();
             initLvBuild = false;
@@ -736,22 +611,10 @@ namespace epg123
             }
             cmbSources.SelectedIndex = 0;
         }
-        private void buildMergedChannelListView()
+        private List<MergedChannel> GetMergedChannels()
         {
-            if (Store.mergedLineup == null) return;
-            mergedChannelListView.Items.Clear();
-
-            // clear the totalMergedChannels count
-            totalMergedChannels = 0;
-
-            // attach lineup sorter to listview
-            mergedChannelListView.ListViewItemSorter = mergedChannelColumnSorter;
-
-            // pause listview drawing
-            mergedChannelListView.BeginUpdate();
-
-            // populate with new lineup channels
-            List<ListViewItem> listViewItems = new List<ListViewItem>();
+            // gather valid merged channels from the merged lineup
+            List<MergedChannel> mergedChannels = new List<MergedChannel>();
             foreach (Channel channel in Store.mergedLineup.GetChannels())
             {
                 MergedChannel mergedChannel;
@@ -761,15 +624,16 @@ namespace epg123
                 }
                 catch
                 {
+                    Logger.WriteInformation(string.Format("Channel \"{0}\" could not be cast to a MergedChannel.", channel.ToString()));
                     continue;
                 }
 
                 try
                 {
                     // ignore the channels we don't care about
-                    if ((!string.IsNullOrEmpty(mergedChannel.CallSign) && mergedChannel.CallSign.StartsWith("Deleted")) ||
-                            mergedChannel.PrimaryChannel.Lineup.Name.StartsWith("FINAL") || (mergedChannel.ChannelType == ChannelType.UserHidden) ||
-                            mergedChannel.PrimaryChannel.Lineup.LineupTypes.Equals("BB"))
+                    if ((!string.IsNullOrEmpty(mergedChannel.CallSign) && mergedChannel.CallSign.StartsWith("Deleted")) ||  // deleted channel
+                         mergedChannel.ChannelType == ChannelType.UserHidden ||                                             // probably tuner override for combined channels
+                         mergedChannel.PrimaryChannel.Lineup.LineupTypes.Equals("BB"))                                      // broadband channel
                     {
                         continue;
                     }
@@ -797,21 +661,43 @@ namespace epg123
                     else
                     {
                         // certainly ignore the channels that don't have a primary channel
+                        Logger.WriteInformation(string.Format("{0} has no primary channel or the primary channel has no lineup.", mergedChannel.ToString()));
                         continue;
                     }
                 }
-                ++totalMergedChannels;
+                mergedChannels.Add(mergedChannel);
+            }
+            totalMergedChannels = mergedChannels.Count;
+            return mergedChannels;
+        }
 
+        private void buildMergedChannelListView()
+        {
+            if (Store.mergedLineup == null) return;
+            else mergedChannelListView.Items.Clear();
+
+            // attach lineup sorter to listview
+            mergedChannelListView.ListViewItemSorter = mergedChannelColumnSorter;
+
+            // pause listview drawing
+            mergedChannelListView.BeginUpdate();
+
+            // populate with new lineup channels
+            List<ListViewItem> listViewItems = new List<ListViewItem>();
+            foreach (MergedChannel mergedChannel in GetMergedChannels())
+            {
+                // hide disabled channels based on selection
                 if (enabledChannelsOnly && (mergedChannel.UserBlockedState > UserBlockedState.Enabled))
                 {
                     continue;
                 }
 
+                // only show tuners based on scanned lineup selection
                 if (cmbSources.SelectedIndex > 0)
                 {
                     bool source = false;
                     if (mergedChannel.PrimaryChannel.Lineup.Equals((Lineup)cmbSources.SelectedItem)) source = true;
-                    else
+                    else if (mergedChannel.SecondaryChannels != null)
                     {
                         foreach (Channel ch2 in mergedChannel.SecondaryChannels)
                         {
@@ -822,7 +708,6 @@ namespace epg123
                             }
                         }
                     }
-
                     if (!source) continue;
                 }
 
@@ -834,9 +719,10 @@ namespace epg123
                     lvi.Checked = (mergedChannel.UserBlockedState <= UserBlockedState.Enabled);
                     listViewItems.Add(lvi);
                 }
-                catch
+                catch (Exception e)
                 {
                     Logger.WriteError("Exception caught when trying to add a ListViewItem to the MergedChannelListView.");
+                    Logger.WriteError(e.Message);
                 }
             }
 
@@ -862,8 +748,8 @@ namespace epg123
             bool scanned = mergedChannel.PrimaryChannel.Lineup.Name.StartsWith("Scanned");
 
             // collect all unique channel sources
-            List<Lineup> sources = new List<Lineup>();
-            if ((mergedChannel.PrimaryChannel.Lineup != null) && mergedChannel.PrimaryChannel.Lineup.Name.StartsWith("Scanned"))
+            HashSet<Lineup> sources = new HashSet<Lineup>();
+            if (scanned)
             {
                 sources.Add(mergedChannel.PrimaryChannel.Lineup);
             }
@@ -871,7 +757,7 @@ namespace epg123
             {
                 foreach (Channel ch2 in mergedChannel.SecondaryChannels)
                 {
-                    if ((ch2.Lineup != null) && (ch2.Lineup.Name != null) && ch2.Lineup.Name.StartsWith("Scanned") && !sources.Contains(ch2.Lineup))
+                    if ((ch2.Lineup != null) && (ch2.Lineup.Name != null) && ch2.Lineup.Name.StartsWith("Scanned"))
                     {
                         sources.Add(ch2.Lineup);
                     }
@@ -895,12 +781,7 @@ namespace epg123
             }
             if (string.IsNullOrEmpty(source))
             {
-                Logger.WriteInformation(string.Format("There are no scanned lineups associated with MergedChannel \"{0}\". Deleting channel.", mergedChannel.ToString()));
-                if (!deleteChannel(mergedChannel))
-                {
-                    Logger.WriteError(string.Format("   Failed to delete MergedChannel \"{0}\".", mergedChannel.ToString()));
-                }
-                return null;
+                Logger.WriteInformation(string.Format("There are no scanned lineups associated with MergedChannel \"{0}\".", mergedChannel.ToString()));
             }
 
             // build original channel number string
@@ -1020,12 +901,7 @@ namespace epg123
 
             if (tuningInfos.Count == 0)
             {
-                Logger.WriteInformation(string.Format("There are no tuners associated with \"{0}\". Deleting channel.", mergedChannel.ToString()));
-                if (!deleteChannel(mergedChannel))
-                {
-                    Logger.WriteError(string.Format("   Failed to delete MergedChannel \"{0}\".", mergedChannel.ToString()));
-                }
-                return null;
+                Logger.WriteInformation(string.Format("There are no tuners associated with \"{0}\".", mergedChannel.ToString()));
             }
 
             // sort the hashset into a new array
@@ -1071,71 +947,14 @@ namespace epg123
         }
         private bool deleteChannel(MergedChannel mergedChannel)
         {
-            // unsubscribe all lineups except for scanned
-            if (!unsubscribeChannel(mergedChannel))
+            if (Store.singletonStore != null)
             {
-                // remove the MergedChannel from the MergedLineup
-                MergedLineup mergedLineup = mergedChannel.Lineup as MergedLineup;
-                if (mergedLineup != null)
+                try
                 {
-                    mergedLineup.RemoveChannel(mergedChannel);
-                    mergedLineup.UncachedChannels.RemoveAllMatching(mergedChannel);
-                    mergedLineup.ClearChannelCache();
-                    mergedLineup.Update();
+                    Channel channel = Store.singletonStore.Fetch(mergedChannel.Id) as Channel;
+                    Store.singletonLineup.RemoveChannel(channel);
                 }
-                return true;
-            }
-
-            try
-            {
-                do
-                {
-                    // clear some channel fields
-                    Channel channel = mergedChannel.PrimaryChannel;
-                    channel.Service = null;
-                    channel.TuningInfos.Clear();
-                    foreach (UId id in channel.UIds)
-                    {
-                        id.Target = null;
-                        id.Update();
-                    }
-                    channel.Update();
-
-                    // remove the Channel from the scanned lineup
-                    Lineup scannedLineup = mergedChannel.PrimaryChannel.Lineup;
-                    if (scannedLineup != null)
-                    {
-                        scannedLineup.RemoveChannel(channel);
-                        scannedLineup.UncachedChannels.RemoveAllMatching(channel);
-                        scannedLineup.ClearChannelCache();
-                        scannedLineup.Update();
-                    }
-
-                    // clear some MergedChannel fields
-                    mergedChannel.PrimaryChannel = mergedChannel.SecondaryChannels.Empty ? null : mergedChannel.SecondaryChannels.First;
-                    if (mergedChannel.PrimaryChannel != null)
-                    {
-                        mergedChannel.SecondaryChannels.RemoveAllMatching(mergedChannel.PrimaryChannel);
-                    }
-                    mergedChannel.Service = null;
-                    mergedChannel.TuningInfos.Clear();
-                    mergedChannel.Update();
-
-                    // remove the MergedChannel from the MergedLineup
-                    MergedLineup mergedLineup = mergedChannel.Lineup as MergedLineup;
-                    if (mergedLineup != null)
-                    {
-                        mergedLineup.RemoveChannel(mergedChannel);
-                        mergedLineup.UncachedChannels.RemoveAllMatching(mergedChannel);
-                        mergedLineup.ClearChannelCache();
-                        mergedLineup.Update();
-                    }
-                } while (mergedChannel.PrimaryChannel != null);
-            }
-            catch (Exception ex)
-            {
-                string errMsg = ex.Message;
-                return false;
+                catch { }
             }
             return true;
         }
@@ -1166,12 +985,10 @@ namespace epg123
                     Logger.WriteError(string.Format("Failed to delete MergedChannel \"{0}\".", ((MergedChannel)lvi.Tag).ToString()));
                 }
             }
+            Store.mergedLineup.FullMerge(false);
 
             // resume listview drawing
             mergedChannelListView.EndUpdate();
-            mergedChannelListView.Items.Clear();
-            Store.mergedLineup.Refresh();
-            buildMergedChannelListView();
             this.Cursor = Cursors.Arrow;
         }
         private void btnChannelDisplay_Click(object sender, EventArgs e)
@@ -1214,32 +1031,36 @@ namespace epg123
         {
             if (initLvBuild) return;
 
+            // toggle userblockedstate
             MergedChannel mergedChannel = (MergedChannel)mergedChannelListView.Items[e.Item.Index].Tag;
+            switch (mergedChannel.UserBlockedState)
+            {
+                case UserBlockedState.Unknown:
+                case UserBlockedState.Enabled:
+                    if (!e.Item.Checked)
+                    {
+                        mergedChannel.UserBlockedState = UserBlockedState.Blocked;
+                        mergedChannel.Update();
+                    }
+                    break;
+                case UserBlockedState.Blocked:
+                case UserBlockedState.Disabled:
+                default:
+                    if (e.Item.Checked)
+                    {
+                        mergedChannel.UserBlockedState = UserBlockedState.Enabled;
+                        mergedChannel.Update();
+                    }
+                    break;
+            }
 
-            // if new value is checked, enable merged channel
-            if (e.Item.Checked)
-            {
-                if (mergedChannel.UserBlockedState != UserBlockedState.Enabled)
-                {
-                    mergedChannel.UserBlockedState = UserBlockedState.Enabled;
-                    mergedChannel.Update();
-                }
-            }
-            // if new value is unchecked, block merged channel
-            else
-            {
-                if (mergedChannel.UserBlockedState <= UserBlockedState.Enabled)
-                {
-                    mergedChannel.UserBlockedState = UserBlockedState.Blocked;
-                    mergedChannel.Update();
-                }
-            }
+            // immediate update
+            Store.mergedLineup.FullMerge(false);
         }
         private void cmbSources_SelectedIndexChanged(object sender, EventArgs e)
         {
             if ((cmbSources.SelectedIndex < 0) || initLvBuild) return;
 
-            mergedChannelListView.Items.Clear();
             buildMergedChannelListView();
             updateStatusBar();
         }
@@ -1479,9 +1300,6 @@ namespace epg123
             // open the dialog
             if (openFileDialog1.ShowDialog() != DialogResult.OK) return;
 
-            // close all object store items
-            isolateEpgDatabase();
-
             // perform the file import with progress form
             Logger.eventID = 0;
             statusLogo.mxfFile = openFileDialog1.FileName;
@@ -1707,33 +1525,27 @@ namespace epg123
         #region ========== Database Utilities ==========
         private string[] regKeysDelete = new string[] { @"Service\Epg" };
         private string[] regKeysCreate = new string[] { @"Service\Epg" };
-        private void isolateEpgDatabase()
+        private void isolateEpgDatabase(bool disposeStore = false)
         {
-            try
+            // close and dispose the object store if necessary
+            if (Store.objectStore != null)
             {
-                // close and dispose the object store if necessary
-                if (Store.objectStore != null)
-                {
-                    // clear the merged channels and lineup combobox
-                    mergedChannelListView.Items.Clear();
-                    cmbObjectStoreLineups.Items.Clear();
-                    cmbSources.Items.Clear();
+                // clear the merged channels and lineup combobox
+                cmbSources.Items.Clear();
+                mergedChannelListView.Items.Clear();
 
-                    // clear the lineups
-                    lineupChannels.Clear();
-                    lineupChannelListView.Items.Clear();
-                    lineupChannelListView.VirtualListSize = 0;
+                // clear the lineups
+                cmbObjectStoreLineups.Items.Clear();
+                lineupChannels = new List<Channel>();
+                lineupChannelListView.Items.Clear();
+                lineupChannelListView.VirtualListSize = 0;
 
-                    // clear the status text
-                    lblToolStripStatus.Text = "0 Merged Channels | 0 Lineups | 0 Services";
-                }
+                // close store
+                Store.Close(disposeStore);
+
+                // clear the status text
+                lblToolStripStatus.Text = "0 Merged Channels | 0 Lineups | 0 Services";
             }
-            catch (Exception ex)
-            {
-                Logger.WriteError(ex.Message);
-                return;
-            }
-            return;
         }
         private static string getDatabaseName()
         {
@@ -1885,7 +1697,7 @@ namespace epg123
             }
             return false;
         }
-        private void ebtnRestore_Click(object sender, EventArgs e)
+        private void btnRestore_Click(object sender, EventArgs e)
         {
             // check for elevated rights and open new process if necessary
             if (!Helper.UserHasElevatedRights)
@@ -1913,7 +1725,9 @@ namespace epg123
                 addChannelForm.ShowDialog();
                 if (addChannelForm.channelAdded)
                 {
-                    buildMergedChannelListView();
+                    Logger.WriteInformation("Restarting EPG123 Client to avoid an external process crashing EPG123 10 seconds after adding channels.");
+                    isolateEpgDatabase();
+                    restartClient();
                 }
             }
         }
@@ -1932,10 +1746,9 @@ namespace epg123
             this.Cursor = Cursors.WaitCursor;
             frmClientSetup frm = new frmClientSetup();
             frm.shouldBackup = mergedChannelListView.Items.Count > 0;
-            isolateEpgDatabase();
-            Store.Close(true);
+            isolateEpgDatabase(true);
             frm.ShowDialog();
-            Store.Close(true);
+            frm.Dispose();
 
             // refresh listviews
             btnRefreshLineups_Click(null, null);
@@ -2030,7 +1843,7 @@ namespace epg123
         private bool deleteeHomeFile(string filename)
         {
             // disconnect from store prior to deleting it
-            isolateEpgDatabase();
+            isolateEpgDatabase(true);
 
             // delete the database file
             string path = string.Format("{0}\\Microsoft\\eHome\\{1}.db", Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), filename);
@@ -2078,7 +1891,7 @@ namespace epg123
         private void btnStoreExplorer_Click(object sender, EventArgs e)
         {
             // close the store
-            Store.Close();
+            isolateEpgDatabase(true);
 
             // used code by glugalug (glugglug) and modified for epg123
             // https://github.com/glugalug/GuideEditingMisc/tree/master/StoreExplorer

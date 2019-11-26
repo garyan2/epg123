@@ -582,7 +582,7 @@ namespace epg123
                     if (success == countries.Length) return true;
                 }
             }
-            Store.Close(true);
+            Store.Close();
             return false;
         }
         #endregion

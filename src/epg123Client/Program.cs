@@ -217,8 +217,9 @@ namespace epg123
                         Logger.WriteMessage("===============================================================================");
                         clientForm client = new clientForm(advanced);
                         client.ShowDialog();
-                        Logger.Close();
                         mutex2.ReleaseMutex();
+                        Logger.Close();
+                        client.Dispose();
                         return 0;
                     }
                 }
@@ -346,6 +347,8 @@ namespace epg123
                     Logger.WriteVerbose(string.Format("EPG123 client execution time was {0}.", DateTime.UtcNow - startTime));
                     Logger.Close();
                     mutex3.ReleaseMutex();
+
+                    Store.Close(true);
                 }
 
                 NativeMethods.SetThreadExecutionState(prevThreadState | (uint)ExecutionFlags.ES_CONTINUOUS);
@@ -468,6 +471,8 @@ namespace epg123
 
             foreach (MergedChannel mergedChannel in Store.mergedLineup.GetChannels())
             {
+                if (mergedChannel.ChannelType == ChannelType.UserHidden) continue;
+
                 // using the mergedchannel channel number, determine whether to match&enable, unmatch&disable, disable, or nothing
                 Channel epg123Channel = null;
                 foreach (Lineup lineup in new Lineups(Store.objectStore))
@@ -496,12 +501,6 @@ namespace epg123
                         {
                             Logger.WriteVerbose(string.Format("Matching {0} to channel {1}", epg123Channel.CallSign, mergedChannel.ChannelNumber));
 
-                            // copy current primary to secondary channels
-                            if (!mergedChannel.SecondaryChannels.Contains(mergedChannel.PrimaryChannel))
-                            {
-                                mergedChannel.SecondaryChannels.Add(mergedChannel.PrimaryChannel);
-                            }
-
                             // add this channel lineup to the device group if necessary
                             foreach (Device device in mergedChannel.Lineup.DeviceGroup.Devices)
                             {
@@ -523,9 +522,8 @@ namespace epg123
                             }
 
                             // update primary channel and service
-                            mergedChannel.PrimaryChannel = epg123Channel;
-                            mergedChannel.Service = epg123Channel.Service;
                             mergedChannel.UserBlockedState = UserBlockedState.Enabled;
+                            mergedChannel.AddChannelListings(epg123Channel);
                             mergedChannel.Update();
                         }
                         else
@@ -552,10 +550,6 @@ namespace epg123
                     mergedChannel.Update();
                 }
             }
-
-            // finish it
-            Store.mergedLineup.FullMerge(false);
-            Store.mergedLineup.Update();
         }
         private static bool channelsContain(ref List<Channel> channels, ref Channel channel)
         {
