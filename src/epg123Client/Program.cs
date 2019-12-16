@@ -1,14 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Text;
 using System.Threading;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using Microsoft.MediaCenter.Guide;
 using Microsoft.MediaCenter.Pvr;
+using Microsoft.MediaCenter.Store;
 using Microsoft.Win32;
 
 namespace epg123
@@ -320,7 +323,13 @@ namespace epg123
                     // refresh the lineups after import
                     if (import)
                     {
-                        Store.mergedLineup.Refresh();
+                        using (MergedLineups mergedLineups = new MergedLineups(Store.objectStore))
+                        {
+                            foreach (MergedLineup mergedLineup in mergedLineups)
+                            {
+                                mergedLineup.Refresh();
+                            }
+                        }
                         Logger.WriteInformation("Completed lineup refresh.");
                     }
 
@@ -347,8 +356,6 @@ namespace epg123
                     Logger.WriteVerbose(string.Format("EPG123 client execution time was {0}.", DateTime.UtcNow - startTime));
                     Logger.Close();
                     mutex3.ReleaseMutex();
-
-                    Store.Close(true);
                 }
 
                 NativeMethods.SetThreadExecutionState(prevThreadState | (uint)ExecutionFlags.ES_CONTINUOUS);
@@ -367,19 +374,22 @@ namespace epg123
             {
                 active = false;
                 DateTime timeReady = DateTime.Now;
-                foreach (Recording recording in new Recordings(Store.objectStore))
+                using (Recordings recordings = new Recordings(Store.objectStore))
                 {
-                    if ((recording.State == RecordingState.Initializing) || (recording.State == RecordingState.Recording))
+                    foreach (Recording recording in recordings)
                     {
-                        active = true;
-                        Logger.WriteInformation(string.Format("Recording in progress: {0:hh:mm tt} - {1:hh:mm tt} on channel {2}{3} -> {4} - {5}",
-                                                          recording.ScheduleEntry.StartTime.ToLocalTime(),
-                                                          recording.ScheduleEntry.EndTime.ToLocalTime(),
-                                                          recording.Channel.ChannelNumber,
-                                                          (recording.ScheduleEntry.Service != null) ? " " + recording.ScheduleEntry.Service.CallSign : string.Empty,
-                                                          (recording.ScheduleEntry.Program != null) ? recording.ScheduleEntry.Program.Title : "unknown program title",
-                                                          (recording.ScheduleEntry.Program != null) ? recording.ScheduleEntry.Program.EpisodeTitle : string.Empty));
-                        if (recording.RequestedEndTime.ToLocalTime() > timeReady) timeReady = recording.RequestedEndTime.ToLocalTime();
+                        if ((recording.State == RecordingState.Initializing) || (recording.State == RecordingState.Recording))
+                        {
+                            active = true;
+                            Logger.WriteInformation(string.Format("Recording in progress: {0:hh:mm tt} - {1:hh:mm tt} on channel {2}{3} -> {4} - {5}",
+                                                              recording.ScheduleEntry.StartTime.ToLocalTime(),
+                                                              recording.ScheduleEntry.EndTime.ToLocalTime(),
+                                                              recording.Channel.ChannelNumber,
+                                                              (recording.ScheduleEntry.Service != null) ? " " + recording.ScheduleEntry.Service.CallSign : string.Empty,
+                                                              (recording.ScheduleEntry.Program != null) ? recording.ScheduleEntry.Program.Title : "unknown program title",
+                                                              (recording.ScheduleEntry.Program != null) ? recording.ScheduleEntry.Program.EpisodeTitle : string.Empty));
+                            if (recording.RequestedEndTime.ToLocalTime() > timeReady) timeReady = recording.RequestedEndTime.ToLocalTime();
+                        }
                     }
                 }
 
@@ -406,12 +416,15 @@ namespace epg123
         {
             // verify tuners are setup in WMC prior to importing
             int deviceCount = 0;
-            foreach (Device device in new Devices(Store.objectStore).ToArray())
+            using (Devices devices = new Devices(Store.objectStore))
             {
-                if (!device.Name.ToLower().Contains("delete"))
+                foreach (Device device in devices)
                 {
-                    ++deviceCount;
-                    break;
+                    if (!device.Name.ToLower().Contains("delete"))
+                    {
+                        ++deviceCount;
+                        break;
+                    }
                 }
             }
             if (deviceCount == 0)
@@ -437,12 +450,15 @@ namespace epg123
         #region ========== Remove Channel Logos ==========
         public static void clearLineupChannelLogos()
         {
-            foreach (Service service in new Services(Store.objectStore))
+            using (Services services = new Services(Store.objectStore))
             {
-                if (service.LogoImage != null)
+                foreach (Service service in services)
                 {
-                    service.LogoImage = null;
-                    service.Update();
+                    if (service.LogoImage != null)
+                    {
+                        service.LogoImage = null;
+                        service.Update();
+                    }
                 }
             }
             Logger.WriteInformation("Completed clearing all station logos.");
@@ -454,11 +470,14 @@ namespace epg123
         {
             // get all active channels in lineup(s) from EPG123
             List<Channel> epg123Channels = new List<Channel>();
-            foreach (Lineup lineup in new Lineups(Store.objectStore))
+            using (Lineups lineups = new Lineups(Store.objectStore))
             {
-                if (lineup.Name.StartsWith("EPG123") && !lineup.Name.Equals(lu_name))
+                foreach (Lineup lineup in lineups)
                 {
-                    epg123Channels.AddRange(lineup.GetChannels());
+                    if (lineup.Name.StartsWith("EPG123") && !lineup.Name.Equals(lu_name))
+                    {
+                        epg123Channels.AddRange(lineup.GetChannels());
+                    }
                 }
             }
 
@@ -469,27 +488,39 @@ namespace epg123
                 return;
             }
 
-            foreach (MergedChannel mergedChannel in Store.mergedLineup.GetChannels())
+            foreach (Channel channel in Store.mergedLineup.GetChannels())
             {
+                MergedChannel mergedChannel;
+                try
+                {
+                    mergedChannel = (MergedChannel)channel;
+                }
+                catch
+                {
+                    continue;
+                }
                 if (mergedChannel.ChannelType == ChannelType.UserHidden) continue;
 
                 // using the mergedchannel channel number, determine whether to match&enable, unmatch&disable, disable, or nothing
                 Channel epg123Channel = null;
-                foreach (Lineup lineup in new Lineups(Store.objectStore))
+                using (Lineups lineups = new Lineups(Store.objectStore))
                 {
-                    if (!lineup.Name.StartsWith("EPG123") || lineup.Name.Equals(lu_name)) continue;
-
-                    while ((epg123Channel = lineup.GetChannelFromNumber(mergedChannel.OriginalNumber, mergedChannel.OriginalSubNumber)) != null)
+                    foreach (Lineup lineup in lineups)
                     {
-                        if (channelsContain(ref epg123Channels, ref epg123Channel)) break;
-                        else
+                        if (!lineup.Name.StartsWith("EPG123") || lineup.Name.Equals(lu_name)) continue;
+
+                        while ((epg123Channel = lineup.GetChannelFromNumber(mergedChannel.OriginalNumber, mergedChannel.OriginalSubNumber)) != null)
                         {
-                            Logger.WriteVerbose(string.Format("Removing {0} from channel {1} in lineup {2}.", epg123Channel.CallSign, mergedChannel.ChannelNumber, lineup.Name));
-                            lineup.RemoveChannel(epg123Channel);
-                            lineup.Update();
+                            if (channelsContain(ref epg123Channels, ref epg123Channel)) break;
+                            else
+                            {
+                                Logger.WriteVerbose(string.Format("Removing {0} from channel {1} in lineup {2}.", epg123Channel.CallSign, mergedChannel.ChannelNumber, lineup.Name));
+                                lineup.RemoveChannel(epg123Channel);
+                                lineup.Update();
+                            }
                         }
+                        if (epg123Channel != null) break;
                     }
-                    if (epg123Channel != null) break;
                 }
 
                 // perform match if not already primary channel
@@ -517,19 +548,24 @@ namespace epg123
                                 catch (Exception ex)
                                 {
                                     Logger.WriteVerbose(string.Format("Failed to associate lineup {0} with device {1} ({2}). {3}", epg123Channel.Lineup,
-                                                                      device.Name ?? "NULL", (device.ScannedLineup == null) ? "NULL" : device.ScannedLineup.Name, ex.Message));
+                                                                        device.Name ?? "NULL", (device.ScannedLineup == null) ? "NULL" : device.ScannedLineup.Name, ex.Message));
                                 }
                             }
 
                             // update primary channel and service
+                            if (!mergedChannel.SecondaryChannels.Contains(mergedChannel.PrimaryChannel))
+                            {
+                                mergedChannel.SecondaryChannels.Add(mergedChannel.PrimaryChannel);
+                            }
+                            mergedChannel.PrimaryChannel = epg123Channel;
+                            mergedChannel.Service = epg123Channel.Service;
                             mergedChannel.UserBlockedState = UserBlockedState.Enabled;
-                            mergedChannel.AddChannelListings(epg123Channel);
                             mergedChannel.Update();
                         }
                         else
                         {
                             Logger.WriteVerbose(string.Format("Skipped matching {0} to channel {1} due to channel already having an assigned listing.",
-                                                              epg123Channel.CallSign, mergedChannel.ChannelNumber));
+                                                                epg123Channel.CallSign, mergedChannel.ChannelNumber));
                         }
                     }
                     catch (Exception ex)
@@ -549,6 +585,10 @@ namespace epg123
                     mergedChannel.UserBlockedState = UserBlockedState.Blocked;
                     mergedChannel.Update();
                 }
+
+                // finish it
+                Store.mergedLineup.FullMerge(false);
+                Store.mergedLineup.Update();
             }
         }
         private static bool channelsContain(ref List<Channel> channels, ref Channel channel)
@@ -565,15 +605,18 @@ namespace epg123
         private static bool setSeriesRecordingRequestAnyLanguage()
         {
             bool ret = false;
-            foreach (Request request in new SeriesRequests(Store.objectStore))
+            using (SeriesRequests seriesRequests = new SeriesRequests(Store.objectStore))
             {
-                if (!request.Complete && !request.AnyLanguage)
+                foreach (Request request in seriesRequests)
                 {
-                    request.AnyLanguage = true;
-                    request.Update();
-                    Logger.WriteVerbose(string.Format("Changed \"{0}\" series recording request's 'anyLanguage' setting to TRUE.",
-                        request.Title));
-                    ret = true;
+                    if (!request.Complete && !request.AnyLanguage)
+                    {
+                        request.AnyLanguage = true;
+                        request.Update();
+                        Logger.WriteVerbose(string.Format("Changed \"{0}\" series recording request's 'anyLanguage' setting to TRUE.",
+                            request.Title));
+                        ret = true;
+                    }
                 }
             }
             return ret;
@@ -582,7 +625,10 @@ namespace epg123
 
         static void MyUnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
-            Logger.WriteError(string.Format("Unhandled exception caught from {0}. message: {1}", AppDomain.CurrentDomain.FriendlyName, (e.ExceptionObject as Exception).Message));
+            if (!(e.ExceptionObject as Exception).Message.Equals("access denied"))
+            {
+                Logger.WriteError(string.Format("Unhandled exception caught from {0}. message: {1}", AppDomain.CurrentDomain.FriendlyName, (e.ExceptionObject as Exception).Message));
+            }
             Process currentProcess = Process.GetCurrentProcess();
             currentProcess.Kill();
         }

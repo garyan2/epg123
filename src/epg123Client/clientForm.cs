@@ -8,6 +8,7 @@ using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 using System.Windows.Forms;
 using System.Xml;
 using Microsoft.Win32;
@@ -126,19 +127,38 @@ namespace epg123
             // update task panel
             updateTaskPanel();
 
+            // if client was started as elevated to perform an action
+            if (Helper.UserHasElevatedRights && File.Exists(Helper.EButtonPath))
+            {
+                Application.UseWaitCursor = false;
+                initLvBuild = false;
+
+                using (StreamReader sr = new StreamReader(Helper.EButtonPath))
+                {
+                    string line = sr.ReadLine();
+                    if (line.Contains("setup")) btnSetup_Click(null, null);
+                    else if (line.Contains("restore")) btnRestore_Click(null, null);
+                    else if (line.Contains("rebuild")) btnRebuild_Click(null, null);
+                    sr.Close();
+                }
+                File.Delete(Helper.EButtonPath);
+                return;
+            }
+
             // populate listviews
             if (Store.objectStore != null)
             {
                 this.Refresh();
                 buildScannedLineupComboBox();
                 this.Refresh();
-                buildLineupChannelListView();
-                this.Refresh();
                 buildMergedChannelListView();
+                this.Refresh();
+                buildLineupChannelListView();
 
-                btnImport.Enabled = true;
+                btnImport.Enabled = mergedChannelListViewItems.Count > 0;
             }
             updateStatusBar();
+            splitContainer1.Enabled = splitContainer2.Enabled = true;
 
             Application.UseWaitCursor = false;
             initLvBuild = false;
@@ -411,7 +431,28 @@ namespace epg123
                 MergedChannel channel = Store.singletonStore.Fetch(mergedChannel.Id) as MergedChannel;
                 if (lineupChannel != null)
                 {
+                    // grab the listings
                     listings = Store.singletonStore.Fetch(lineupChannel.Id) as Channel;
+
+                    // add this channel lineup to the device group if necessary
+                    foreach (Device device in mergedChannel.Lineup.DeviceGroup.Devices)
+                    {
+                        try
+                        {
+                            if (!device.Name.ToLower().Contains("delete") &&
+                                (device.ScannedLineup != null) && device.ScannedLineup.IsSameAs(mergedChannel.PrimaryChannel.Lineup) &&
+                                ((device.WmisLineups == null) || !device.WmisLineups.Contains(lineupChannel.Lineup)))
+                            {
+                                device.SubscribeToWmisLineup(lineupChannel.Lineup);
+                                device.Update();
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.WriteVerbose(string.Format("Failed to associate lineup {0} with device {1} ({2}). {3}", lineupChannel.Lineup,
+                                                                device.Name ?? "NULL", (device.ScannedLineup == null) ? "NULL" : device.ScannedLineup.Name, ex.Message));
+                        }
+                    }
                 }
 
                 try
@@ -441,6 +482,7 @@ namespace epg123
         {
             // clear the pulldown list
             cmbObjectStoreLineups.Items.Clear();
+            lineupChannelListView.Refresh();
 
             // populate with lineups in object_store
             foreach (Lineup lineup in new Lineups(Store.objectStore))
@@ -535,15 +577,40 @@ namespace epg123
                 lineup.Language = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
                 lineup.Update();
             }
+
+            // ensure guide is available in WMC
+            RegistryKey key = Registry.LocalMachine.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Media Center\\Settings\\ProgramGuide", true);
+            if (key != null)
+            {
+                try
+                {
+                    if ((int)key.GetValue("fAgreeTOS") != 1) key.SetValue("fAgreeTOS", 1);
+                    if ((string)key.GetValue("strAgreeTOSVersion") != "1.0") key.SetValue("strAgreedTOSVersion", "1.0");
+                    key.Close();
+                }
+                catch
+                {
+                    Logger.WriteError("Failed to open/edit registry to show the Guide in WMC.");
+                    key.Close();
+                }
+            }
         }
         private void btnRefreshLineups_Click(object sender, EventArgs e)
         {
+            mergedChannelListViewItems.Clear();
+
             // open object store and repopulate the GUI
             initLvBuild = true;
+            Application.UseWaitCursor = true;
+
             buildScannedLineupComboBox();
-            buildLineupChannelListView();
             buildMergedChannelListView();
+            buildLineupChannelListView();
+            btnImport.Enabled = mergedChannelListViewItems.Count > 0;
+
+            Application.UseWaitCursor = false;
             initLvBuild = false;
+            updateStatusBar();
         }
         private void btnDeleteLineupClick(object sender, EventArgs e)
         {
@@ -592,6 +659,7 @@ namespace epg123
         #endregion
 
         #region ========== Merged Channel ListView Management ==========
+        List<ListViewItem> mergedChannelListViewItems = new List<ListViewItem>();
         private bool enabledChannelsOnly = false;
         private bool customLabelsOnly = true;
         private int totalMergedChannels;
@@ -611,12 +679,36 @@ namespace epg123
             }
             cmbSources.SelectedIndex = 0;
         }
+        private void IncrementProgressBar(ToolStripProgressBar bar, bool reset = false)
+        {
+            if (reset)
+            {
+                lblToolStripStatus.Text = string.Empty;
+                getChannelsProgressBar.Value = lvItemsProgressBar.Value = mergedLineupProgressBar.Value = 0;
+                statusStrip1.Refresh();
+            }
+            else
+            {
+                bar.Value = Math.Min(bar.Value + 2, bar.Maximum);
+                --bar.Value;
+                Application.DoEvents();
+            }
+            getChannelsProgressBar.Width = lvItemsProgressBar.Width = mergedLineupProgressBar.Width = mergedChannelListView.Parent.Width / 3 - 1;
+        }
         private List<MergedChannel> GetMergedChannels()
         {
             // gather valid merged channels from the merged lineup
             List<MergedChannel> mergedChannels = new List<MergedChannel>();
-            foreach (Channel channel in Store.mergedLineup.GetChannels())
+
+            // use the progress bar
+            Channel[] lineupChannels = Store.mergedLineup.GetChannels();
+            getChannelsProgressBar.Maximum = lineupChannels.Length;
+
+            foreach (Channel channel in lineupChannels)
             {
+                // increment progress bar
+                IncrementProgressBar(getChannelsProgressBar);
+
                 MergedChannel mergedChannel;
                 try
                 {
@@ -670,11 +762,11 @@ namespace epg123
             totalMergedChannels = mergedChannels.Count;
             return mergedChannels;
         }
-
         private void buildMergedChannelListView()
         {
             if (Store.mergedLineup == null) return;
             else mergedChannelListView.Items.Clear();
+            mergedChannelListView.Refresh();
 
             // attach lineup sorter to listview
             mergedChannelListView.ListViewItemSorter = mergedChannelColumnSorter;
@@ -682,12 +774,47 @@ namespace epg123
             // pause listview drawing
             mergedChannelListView.BeginUpdate();
 
+            // prep progress bars
+            IncrementProgressBar(null, true);
+
             // populate with new lineup channels
             List<ListViewItem> listViewItems = new List<ListViewItem>();
-            foreach (MergedChannel mergedChannel in GetMergedChannels())
+
+            // add all merged channels to list
+            if (mergedChannelListViewItems.Count == 0)
             {
+                List<MergedChannel> mergedChannels = GetMergedChannels();
+                lvItemsProgressBar.Maximum = mergedChannels.Count;
+
+                foreach (MergedChannel channel in mergedChannels)
+                {
+                    // increment progress bar
+                    IncrementProgressBar(lvItemsProgressBar);
+
+                    // create the listviewitem
+                    ListViewItem lvi;
+                    if ((lvi = buildMergedChannelLvi(channel)) == null) continue;
+                    lvi.Checked = (channel.UserBlockedState <= UserBlockedState.Enabled);
+                    mergedChannelListViewItems.Add(lvi);
+                }
+            }
+            else
+            {
+                getChannelsProgressBar.Value = getChannelsProgressBar.Maximum;
+                lvItemsProgressBar.Value = lvItemsProgressBar.Maximum;
+                getChannelsProgressBar.Value = getChannelsProgressBar.Maximum -1;
+                lvItemsProgressBar.Value = lvItemsProgressBar.Maximum -1;
+            }
+            mergedLineupProgressBar.Maximum = mergedChannelListViewItems.Count;
+
+            // pick which items to display
+            foreach (ListViewItem listViewItem in mergedChannelListViewItems)
+            {
+                // increment progress bar
+                IncrementProgressBar(mergedLineupProgressBar);
+
                 // hide disabled channels based on selection
-                if (enabledChannelsOnly && (mergedChannel.UserBlockedState > UserBlockedState.Enabled))
+                if (enabledChannelsOnly && ((listViewItem.Tag as MergedChannel).UserBlockedState > UserBlockedState.Enabled))
                 {
                     continue;
                 }
@@ -696,10 +823,10 @@ namespace epg123
                 if (cmbSources.SelectedIndex > 0)
                 {
                     bool source = false;
-                    if (mergedChannel.PrimaryChannel.Lineup.Equals((Lineup)cmbSources.SelectedItem)) source = true;
-                    else if (mergedChannel.SecondaryChannels != null)
+                    if ((listViewItem.Tag as MergedChannel).PrimaryChannel.Lineup.Equals((Lineup)cmbSources.SelectedItem)) source = true;
+                    else if ((listViewItem.Tag as MergedChannel).SecondaryChannels != null)
                     {
-                        foreach (Channel ch2 in mergedChannel.SecondaryChannels)
+                        foreach (Channel ch2 in (listViewItem.Tag as MergedChannel).SecondaryChannels)
                         {
                             if (ch2.Lineup != null && ch2.Lineup.Equals((Lineup)cmbSources.SelectedItem))
                             {
@@ -713,11 +840,7 @@ namespace epg123
 
                 try
                 {
-                    // create the listviewitem
-                    ListViewItem lvi;
-                    if ((lvi = buildMergedChannelLvi(mergedChannel)) == null) continue;
-                    lvi.Checked = (mergedChannel.UserBlockedState <= UserBlockedState.Enabled);
-                    listViewItems.Add(lvi);
+                    listViewItems.Add(listViewItem);
                 }
                 catch (Exception e)
                 {
@@ -730,6 +853,8 @@ namespace epg123
             {
                 mergedChannelListView.Items.AddRange(listViewItems.ToArray());
             }
+            getChannelsProgressBar.Width = lvItemsProgressBar.Width = mergedLineupProgressBar.Width = 0;
+            getChannelsProgressBar.Value = lvItemsProgressBar.Value = mergedLineupProgressBar.Value = 0;
 
             // adjust column widths
             adjustColumnWidths(mergedChannelListView);
@@ -1075,7 +1200,7 @@ namespace epg123
             // set .Enabled properties
             if (!task.exist && Helper.UserHasElevatedRights)
             {
-                rdoFullMode.Enabled = File.Exists(Helper.Epg123ExePath);
+                rdoFullMode.Enabled = File.Exists(Helper.Epg123ExePath) || File.Exists(Helper.Hdhr2mxfExePath);
                 rdoClientMode.Enabled = tbSchedTime.Enabled = lblUpdateTime.Enabled = cbTaskWake.Enabled = cbAutomatch.Enabled = tbTaskInfo.Enabled = true;
             }
             else
@@ -1084,8 +1209,8 @@ namespace epg123
             }
 
             // set radio button controls
-            rdoFullMode.Checked = (task.exist && task.actions[0].Path.ToLower().Contains("epg123.exe")) ||
-                                  (!task.exist && File.Exists(Helper.Epg123ExePath));
+            rdoFullMode.Checked = (task.exist && (task.actions[0].Path.ToLower().Contains("epg123.exe") || task.actions[0].Path.ToLower().Contains("hdhr2mxf.exe"))) ||
+                                  (!task.exist && (File.Exists(Helper.Epg123ExePath) || File.Exists(Helper.Hdhr2mxfExePath)));
             rdoClientMode.Checked = !rdoFullMode.Checked;
 
             // update scheduled task run time
@@ -1155,6 +1280,10 @@ namespace epg123
                 if (File.Exists(Helper.Epg123ExePath))
                 {
                     tbTaskInfo.Text = Helper.Epg123ExePath;
+                }
+                else if (File.Exists(Helper.Hdhr2mxfExePath))
+                {
+                    tbTaskInfo.Text = Helper.Hdhr2mxfExePath;
                 }
                 else
                 {
@@ -1288,7 +1417,7 @@ namespace epg123
             };
 
             // determine initial path
-            if (Directory.Exists(Helper.Epg123OutputFolder) && tbTaskInfo.Text.Equals(Helper.Epg123ExePath))
+            if (Directory.Exists(Helper.Epg123OutputFolder) && (tbTaskInfo.Text.Equals(Helper.Epg123ExePath) || tbTaskInfo.Text.Equals(Helper.Hdhr2mxfExePath)))
             {
                 openFileDialog1.InitialDirectory = Helper.Epg123OutputFolder;
             }
@@ -1533,6 +1662,7 @@ namespace epg123
                 // clear the merged channels and lineup combobox
                 cmbSources.Items.Clear();
                 mergedChannelListView.Items.Clear();
+                mergedChannelListViewItems.Clear();
 
                 // clear the lineups
                 cmbObjectStoreLineups.Items.Clear();
@@ -1541,10 +1671,14 @@ namespace epg123
                 lineupChannelListView.VirtualListSize = 0;
 
                 // close store
-                Store.Close(disposeStore);
+                if (disposeStore)
+                {
+                    Store.Close(disposeStore);
+                }
 
                 // clear the status text
-                lblToolStripStatus.Text = "0 Merged Channels | 0 Lineups | 0 Services";
+                lblToolStripStatus.Text = string.Empty;
+                statusStrip1.Refresh();
             }
         }
         private static string getDatabaseName()
@@ -1613,7 +1747,7 @@ namespace epg123
 
             return latest;
         }
-        public static string backupBackupFiles()
+        public static void backupBackupFiles()
         {
             string[] backupFolders = { "lineup", "recordings", "subscriptions" };
             Dictionary<string, string> backups = new Dictionary<string, string>();
@@ -1636,27 +1770,19 @@ namespace epg123
 
             if (backups.Count > 0)
             {
-                return CompressXmlFiles.CreatePackage(backups, "backups");
+                Helper.backupZipFile = CompressXmlFiles.CreatePackage(backups, "backups");
             }
-            return string.Empty;
+            else
+            {
+                Helper.backupZipFile = string.Empty;
+            }
         }
         private void restoreBackupFiles()
         {
-            // determine path to existing  backup file
-            openFileDialog1.InitialDirectory = Helper.Epg123BackupFolder;
-            openFileDialog1.Filter = "Compressed File|*.zip";
-            openFileDialog1.Title = "Select the Compressed Backup ZIP File";
-            openFileDialog1.Multiselect = false;
-            openFileDialog1.FileName = string.Empty;
-            if (openFileDialog1.ShowDialog() != DialogResult.OK)
-            {
-                return;
-            }
-
             string[] backups = { "lineup.mxf", "recordings.mxf", "subscriptions.mxf" };
             foreach (string backup in backups)
             {
-                using (Stream stream = CompressXmlFiles.GetBackupFileStream(backup, openFileDialog1.FileName))
+                using (Stream stream = CompressXmlFiles.GetBackupFileStream(backup, Helper.backupZipFile))
                 {
                     if (stream != null)
                     {
@@ -1668,7 +1794,6 @@ namespace epg123
                     }
                 }
             }
-            btnRefreshLineups_Click(null, null);
         }
         private static bool initDatabaseUpdate()
         {
@@ -1702,20 +1827,76 @@ namespace epg123
             // check for elevated rights and open new process if necessary
             if (!Helper.UserHasElevatedRights)
             {
+                Helper.WriteEButtonFile("restore");
                 restartClient(true);
                 return;
             }
 
+            // determine path to existing backup file
+            openFileDialog1.InitialDirectory = Helper.Epg123BackupFolder;
+            openFileDialog1.Filter = "Compressed File|*.zip";
+            openFileDialog1.Title = "Select the Compressed Backup ZIP File";
+            openFileDialog1.Multiselect = false;
+            openFileDialog1.FileName = string.Empty;
+            if (openFileDialog1.ShowDialog() != DialogResult.OK || string.IsNullOrEmpty(openFileDialog1.FileName))
+            {
+                return;
+            }
+            Helper.backupZipFile = openFileDialog1.FileName;
+
+            // set cursor and disable the containers so no buttons can be clicked
             this.Cursor = Cursors.WaitCursor;
-            restoreBackupFiles();
+            splitContainer1.Enabled = splitContainer2.Enabled = false;
+
+            // clear all listviews and comboboxes
+            isolateEpgDatabase();
+
+            // start the thread and wait for it to complete
+            Thread restoreThread = new Thread(restoreBackupFiles);
+            restoreThread.Start();
+            while (!restoreThread.IsAlive) ;
+            while (restoreThread.IsAlive)
+            {
+                Application.DoEvents();
+                Thread.Sleep(100);
+            }
+
+            // build the listviews and make sure registries are good
+            btnRefreshLineups_Click(null, null);
             mxfImport.activateLineupAndGuide();
             disableBackgroundScanning();
+
+            // reenable the containers and restore the cursor
+            splitContainer1.Enabled = splitContainer2.Enabled = true;
             this.Cursor = Cursors.Arrow;
         }
         private void btnBackup_Click(object sender, EventArgs e)
         {
+            // set cursor and disable the containers so no buttons can be clicked
             this.Cursor = Cursors.WaitCursor;
-            backupBackupFiles();
+            splitContainer1.Enabled = splitContainer2.Enabled = false;
+
+            // start the thread and wait for it to complete
+            Thread backupThread = new Thread(backupBackupFiles);
+            backupThread.Start();
+            while (!backupThread.IsAlive) ;
+            while (backupThread.IsAlive)
+            {
+                Application.DoEvents();
+                Thread.Sleep(100);
+            }
+
+            if (!string.IsNullOrEmpty(Helper.backupZipFile))
+            {
+                MessageBox.Show("A database backup has been successful. Location of backup file is " + Helper.backupZipFile, "Database Backup", MessageBoxButtons.OK);
+            }
+            else
+            {
+                MessageBox.Show("A database backup not successful.", "Database Backup", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+
+            // reenable the containers and restore the cursor
+            splitContainer1.Enabled = splitContainer2.Enabled = true;
             this.Cursor = Cursors.Arrow;
         }
         private void btnAddChannels_Click(object sender, EventArgs e)
@@ -1739,24 +1920,44 @@ namespace epg123
             // check for elevated rights and open new process if necessary
             if (!Helper.UserHasElevatedRights)
             {
+                Helper.WriteEButtonFile("setup");
                 restartClient(true);
                 return;
             }
 
+            // set cursor and disable the containers so no buttons can be clicked
             this.Cursor = Cursors.WaitCursor;
+            splitContainer1.Enabled = splitContainer2.Enabled = false;
+
+            // prep the client setup form
             frmClientSetup frm = new frmClientSetup();
             frm.shouldBackup = mergedChannelListView.Items.Count > 0;
+
+            // clear everything out
             isolateEpgDatabase(true);
+
+            // open the form
             frm.ShowDialog();
             frm.Dispose();
 
-            // refresh listviews
+            // build the listviews and make sure registries are good
             btnRefreshLineups_Click(null, null);
+
+            // reenable the containers and restore the cursor
+            splitContainer1.Enabled = splitContainer2.Enabled = true;
             this.Cursor = Cursors.Arrow;
         }
         private void btnTransferTool_Click(object sender, EventArgs e)
         {
+            // set cursor and disable the containers so no buttons can be clicked
+            this.Cursor = Cursors.WaitCursor;
+            splitContainer1.Enabled = splitContainer2.Enabled = false;
+
             Process.Start("epg123Transfer.exe").WaitForExit();
+
+            // reenable the containers and restore the cursor
+            splitContainer1.Enabled = splitContainer2.Enabled = true;
+            this.Cursor = Cursors.Arrow;
         }
         #endregion
 
@@ -1805,39 +2006,49 @@ namespace epg123
             // check for elevated rights and open new process if necessary
             if (!Helper.UserHasElevatedRights)
             {
+                Helper.WriteEButtonFile("rebuild");
                 restartClient(true);
                 return;
             }
 
             // give warning
             if (MessageBox.Show("You are about to delete and rebuild the WMC EPG database. All tuners, recording schedules, favorite lineups, and logos will be restored. The Guide Listings will be empty until an MXF file is imported.\n\nClick 'OK' to continue.", "Database Rebuild", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) == DialogResult.Cancel) return;
+
+            // set cursor and disable the containers so no buttons can be clicked
             this.Cursor = Cursors.WaitCursor;
-            initDatabaseUpdate();
+            splitContainer1.Enabled = splitContainer2.Enabled = false;
 
-            string epg_db;
-            if ((epg_db = deleteActiveDatabaseFile()) == null) return;
-
-            // import lineup, subscription, and recording backups...
-            bool success = importBackupFile(epg_db, "lineup") && importBackupFile(epg_db, "subscriptions") && importBackupFile(epg_db, "recordings");
-
-            // do not import the listings ... will confuse the user when there is no search ability (not indexed)
-            if (success && (SystemInformation.BootMode != BootMode.Normal))
+            // start the thread and wait for it to complete
+            Thread backupThread = new Thread(backupBackupFiles);
+            backupThread.Start();
+            while (!backupThread.IsAlive) ;
+            while (backupThread.IsAlive)
             {
-                this.Cursor = Cursors.Arrow;
-                MessageBox.Show("Successfully deleted and rebuilt the database file with tuner configuration and scheduled recordings. Please reboot into Normal Mode and manually import the MXF file to complete the rebuild.", "Safe Mode Detected", MessageBoxButtons.OK);
-                return;
+                Application.DoEvents();
+                Thread.Sleep(100);
             }
 
-            // bring up prompt for loading guide mxf file
+            // clear all listviews and comboboxes
+            isolateEpgDatabase();
+
+            // start the thread and wait for it to complete
+            Thread restoreThread = new Thread(restoreBackupFiles);
+            restoreThread.Start();
+            while (!restoreThread.IsAlive) ;
+            while (restoreThread.IsAlive)
+            {
+                Application.DoEvents();
+                Thread.Sleep(100);
+            }
+
+            // build the listviews
             btnRefreshLineups_Click(null, null);
-            if (!success)
-            {
-                this.Cursor = Cursors.Arrow;
-                MessageBox.Show("Error occurred during database rebuild. Extended information is recorded in the trace.log file.", "Database Rebuild Failure", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
 
+            // reenable the containers and restore the cursor
+            splitContainer1.Enabled = splitContainer2.Enabled = true;
             this.Cursor = Cursors.Arrow;
+
+            // initialize an import
             btnImport_Click(null, null);
         }
         private bool deleteeHomeFile(string filename)

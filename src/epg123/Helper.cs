@@ -16,6 +16,8 @@ namespace epg123
                 return Assembly.GetEntryAssembly().GetName().Version.ToString();
             }
         }
+        
+        public static string backupZipFile { get; set; }
 
         public static bool CreateAndSetFolderAcl(string folder)
         {
@@ -128,6 +130,15 @@ namespace epg123
             return null;
         }
 
+        public static void WriteEButtonFile(string action)
+        {
+            using (StreamWriter sw = new StreamWriter(EButtonPath, false))
+            {
+                sw.WriteLine(action);
+                sw.Close();
+            }
+        }
+
         #region ========== Folder and File Paths ==========
         /// <summary>
         /// Folder location where the executables are located
@@ -142,6 +153,17 @@ namespace epg123
             get
             {
                 return (ExecutablePath + "\\epg123.exe");
+            }
+        }
+
+        /// <summary>
+        /// The file path for the hdhr2mxf.exe executable
+        /// </summary>
+        public static string Hdhr2mxfExePath
+        {
+            get
+            {
+                return (ExecutablePath + "\\hdhr2mxf.exe");
             }
         }
 
@@ -348,6 +370,17 @@ namespace epg123
             get
             {
                 return Epg123ProgramDataFolder + "\\epg123Task.xml";
+            }
+        }
+
+        /// <summary>
+        /// The file to define what action to perform when starting elevated
+        /// </summary>
+        public static string EButtonPath
+        {
+            get
+            {
+                return Epg123ProgramDataFolder + "\\ebutton.txt";
             }
         }
 

@@ -25,10 +25,17 @@ namespace epg123
                     Programs = new List<XmltvProgramme>()
                 };
 
+                foreach (MxfLineup lineup in sdMxf.With[0].Lineups)
+                {
+                    foreach (MxfChannel channel in lineup.channels)
+                    {
+                        xmltv.Channels.Add(buildXmltvChannel(channel));
+                    }
+                }
+
                 foreach (MxfService service in sdMxf.With[0].Services)
                 {
                     DateTime startTime = new DateTime();
-                    xmltv.Channels.Add(buildXmltvChannel(service));
                     if (service.mxfScheduleEntries.ScheduleEntry.Count == 0 && config.XmltvAddFillerData)
                     {
                         // add a program specific for this service
@@ -77,48 +84,44 @@ namespace epg123
         }
 
         #region ========== XMLTV Channels and Functions ==========
-        public static XmltvChannel buildXmltvChannel(MxfService mxfService)
+        public static XmltvChannel buildXmltvChannel(MxfChannel mxfChannel)
         {
+            // determine what service this channel belongs to
+            MxfService mxfService = sdMxf.With[0].Services.Where(arg => arg.Id.Equals(mxfChannel.Service)).Single();
+
+            // initialize the return channel
             XmltvChannel ret = new XmltvChannel()
             {
                 Id = "EPG123." + mxfService.StationID + ".schedulesdirect.org",
                 DisplayNames = new List<XmltvText>()
             };
 
+            // minimum display names
+            // 5MAXHD
+            // 5 StarMAX HD East
             ret.DisplayNames.Add(new XmltvText() { Text = mxfService.CallSign });
-            ret.DisplayNames.Add(new XmltvText() { Text = mxfService.Name });
+            if (!mxfService.Name.Equals(mxfService.CallSign))
+            {
+                ret.DisplayNames.Add(new XmltvText() { Text = mxfService.Name });
+            }
+            
+            // add channel number if requested
             if (config.XmltvIncludeChannelNumbers)
             {
-                foreach (MxfLineup mxfLineup in sdMxf.With[0].Lineups)
+                if (mxfChannel.Number > 0)
                 {
-                    foreach (MxfChannel mxfChannel in mxfLineup.channels)
-                    {
-                        if (mxfChannel.Service.Equals(mxfService.Id) && (mxfChannel.Number > 0))
-                        {
-                            string num = mxfChannel.Number.ToString();
-                            num += (mxfChannel.SubNumber > 0) ? "." + mxfChannel.SubNumber.ToString() : string.Empty;
+                    string num = mxfChannel.Number.ToString();
+                    num += (mxfChannel.SubNumber > 0) ? "." + mxfChannel.SubNumber.ToString() : string.Empty;
 
-                            bool duplicate = false;
-                            foreach (XmltvText xmltvText in ret.DisplayNames)
-                            {
-                                if (xmltvText.Text.Equals(num + " " + mxfService.CallSign))
-                                {
-                                    duplicate = true;
-                                    break;
-                                }
-                            }
-
-                            if (!duplicate)
-                            {
-                                ret.DisplayNames.Add(new XmltvText() { Text = num + " " + mxfService.CallSign });
-                                ret.DisplayNames.Add(new XmltvText() { Text = num });
-                            }
-                        }
-                    }
+                    ret.DisplayNames.Add(new XmltvText() { Text = num + " " + mxfService.CallSign });
+                    ret.DisplayNames.Add(new XmltvText() { Text = num });
                 }
             }
+
+            // add affiliate if present
             if (!string.IsNullOrEmpty(mxfService.Affiliate)) ret.DisplayNames.Add(new XmltvText() { Text = mxfService.Affiliate.Substring(11) });
 
+            // add logo if available
             if (mxfService.logoImage != null)
             {
                 ret.Icons = new List<XmltvIcon>()

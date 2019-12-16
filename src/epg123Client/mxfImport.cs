@@ -195,7 +195,7 @@ namespace epg123
                 foreach (Lineup lineup in new Lineups(Store.objectStore))
                 {
                     // only want to do this with EPG123 lineups
-                    if (!lineup.Provider.Name.Equals("EPG123") && !lineup.Provider.Name.Equals("ZAP2MXF")) continue;
+                    if (!lineup.Provider.Name.Equals("EPG123") && !lineup.Provider.Name.Equals("HDHR2MXF")) continue;
 
                     // make sure the lineup type and language are set
                     if (string.IsNullOrEmpty(lineup.LineupTypes) || string.IsNullOrEmpty(lineup.Language))

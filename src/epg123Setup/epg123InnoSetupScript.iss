@@ -62,6 +62,7 @@ Name: "custom"; Description: "Custom Install"; Flags: IsCustom
 [Components]
 Name: "main1"; Description: "Server Files"; Types: full server; Flags: disablenouninstallwarning
 Name: "main2"; Description: "Client Files"; Types: full client; MinVersion: 6.1; Flags: disablenouninstallwarning
+Name: "hdhr"; Description: "HDHR2MXF for SiliconDust HDHR Tuners"; Types: custom; Flags: disablenouninstallwarning
 Name: "help"; Description: "Help File"; Types: full server client; Flags: disablenouninstallwarning
 
 [Languages]
@@ -73,6 +74,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 [Files]
 Source: "misc\dotNetFx40_Full_setup.exe"; DestDir: "{tmp}"; Flags: dontcopy
 Source: "..\..\bin\Release\epg123.exe"; DestDir: "{app}"; Flags: ignoreversion; Components: main1
+Source: "..\..\bin\Release\hdhr2mxf.exe"; DestDir: "{app}"; Flags: ignoreversion; Components: hdhr
 Source: "..\..\bin\Release\Newtonsoft.Json.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\bin\Release\epg123Client.exe"; DestDir: "{app}"; Flags: ignoreversion; Components: main2
 Source: "..\..\bin\Release\epg123Client.exe.config"; DestDir: "{app}"; Flags: ignoreversion; Attribs: hidden; MinVersion: 6.1; OnlyBelowVersion: 6.2; Components: main2
@@ -110,12 +112,19 @@ Type: files; Name: "{app}\tweakmediacenter.reg"; Components: main1 main2 help
 Type: files; Name: "{app}\epg123utility.exe"; Components: main1 main2 help
 Type: files; Name: "{app}\epg123UtilityReadme.pdf"; Components: main1 main2 help
 Type: files; Name: "{app}\epg123.exe"; Components: not main1
+Type: files; Name: "{app}\hdhr2mxf.exe"; Components: not hdhr
 Type: files; Name: "{app}\epg123Client.exe"; Components: not main2
 Type: files; Name: "{app}\epg123Client.exe.config"; Components: not main2
 Type: files; Name: "{app}\epg123Transfer.exe"; Components: not main2
 Type: files; Name: "{app}\epg123Transfer.exe.config"; Components: not main2
 Type: files; Name: "{app}\epg123_Guide.pdf"; Components: not help
 Type: files; Name: "{app}\customLineup.xml.example"; Components: not main1
+Type: files; Name: "{commondesktop}\{#MyAppName}.lnk"; Components: not main1
+Type: files; Name: "{commondesktop}\{#MyClientName}.lnk"; Components: not main2
+Type: files; Name: "{commonprograms}\{#MyAppName}\{#MyAppName}.lnk"; Components: not main1
+Type: files; Name: "{commonprograms}\{#MyAppName}\{#MyClientName}.lnk"; Components: not main2
+Type: files; Name: "{commonprograms}\{#MyAppName}\EPG123 Transfer Tool.lnk"; Components: not main2
+Type: files; Name: "{commonprograms}\{#MyAppName}\EPG123 Guide.lnk"; Components: not help
 
 [Code]
 // determine whether .NET Framework is installed

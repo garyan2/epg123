@@ -29,7 +29,25 @@ namespace epg123
             {
                 foreach (MxfProgram mxfProgram in moviePrograms)
                 {
-                    movieImageQueue.Add(mxfProgram.tmsId);
+                    var oldImage = oldImageLibrary.Images.Where(arg => arg.Zap2itId.Equals(mxfProgram.tmsId.Substring(0, 10))).SingleOrDefault();
+                    if (oldImage != null)
+                    {
+                        mxfProgram.GuideImage = sdMxf.With[0].getGuideImage(oldImage.Url).Id;
+                        ++processedObjects; reportProgress();
+
+                        newImageLibrary.Images.Add(new archiveImage()
+                        {
+                            Title = oldImage.Title,
+                            Url = oldImage.Url,
+                            Zap2itId = oldImage.Zap2itId,
+                            Height = oldImage.Height,
+                            Width = oldImage.Width
+                        });
+                    }
+                    else
+                    {
+                        movieImageQueue.Add(mxfProgram.tmsId);
+                    }
                 }
             }
 
@@ -81,9 +99,8 @@ namespace epg123
                 ++processedObjects; reportProgress();
                 movieStaple = null;
 
-                // determine which program this belongs to and check archive
+                // determine which program this belongs to
                 MxfProgram mxfProgram = sdMxf.With[0].getProgram(response.ProgramID);
-                var oldImage = oldImageLibrary.Images.Where(arg => arg.Zap2itId.Equals(mxfProgram.tmsId.Substring(0, 10))).SingleOrDefault();
 
                 // first choice is return from Schedules Direct
                 if (response.Data != null)
@@ -92,22 +109,9 @@ namespace epg123
                 }
 
                 // second choice is from TMDb if allowed and available
-                if (mxfProgram.programImages.Count == 0)
+                if (mxfProgram.programImages.Count == 0 && config.TMDbCoverArt && tmdbAPI.isAlive)
                 {
-                    // if image for movie already exists in archive file, use it
-                    if ((oldImage == null) && config.TMDbCoverArt && tmdbAPI.isAlive)
-                    {
-                        mxfProgram.programImages = getMoviePosterId(mxfProgram.Title, mxfProgram.Year, mxfProgram.Language);
-                    }
-                    else if ((oldImage != null) && !string.IsNullOrEmpty(oldImage.Url)) // this will be a tmdb image
-                    {
-                        mxfProgram.programImages.Add(new sdImage()
-                        {
-                            Height = oldImage.Height,
-                            Uri = oldImage.Url,
-                            Width = oldImage.Width
-                        });
-                    }
+                    mxfProgram.programImages = getMoviePosterId(mxfProgram.Title, mxfProgram.Year, mxfProgram.Language);
                 }
 
                 // regardless if image is found or not, store the final result in xml file

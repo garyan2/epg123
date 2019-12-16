@@ -31,7 +31,6 @@ namespace epg123
 
         private string[] countries = { /*"default", */"au", "be", "br", "ca", "ch", "cn", "cz", "de", "dk", "es", "fi", "fr", "gb", "hk", "hu", "ie", "in",/* "it",*/ "jp", "kr", "mx", "nl", "no", "nz", "pl",/* "pt",*/ "ru", "se", "sg", "sk",/* "tr", "tw",*/ "us", "za" };
         private IntPtr wmcPtr = IntPtr.Zero;
-        private string backupZipFile = string.Empty;
         private string BYPASSED = "BACKUP_BYPASSED";
         private bool colossusInstalled = false;
         private bool epg123Installed = false;
@@ -59,7 +58,7 @@ namespace epg123
             InitializeComponent();
 
             colossusInstalled = isColossusInstalled();
-            if (!(epg123Installed = File.Exists(Helper.Epg123ExePath))) { lblConfig.Text = "Not Installed"; }
+            if (!(epg123Installed = File.Exists(Helper.Epg123ExePath) || File.Exists(Helper.Hdhr2mxfExePath))) { lblConfig.Text = "Not Installed"; }
 
             updateStatusText("Click the 'Step 1' button to begin.");
         }
@@ -98,7 +97,7 @@ namespace epg123
             // STEP 2: WMC TV Setup
             else if (sender.Equals(btnTvSetup) && configureHdPvrTuners() && openWmc() && activateGuide() && disableBackgroundScanning())
             {
-                if (!isTunerCountTweaked(TUNERLIMIT) && MessageBox.Show("It appears the tuner limit increase did not stick. Do you wish to apply the tweak and perform a TV Setup in WMC again?", "Tuner Limit Increase Failed", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                if (!isTunerCountTweaked(TUNERLIMIT) && MessageBox.Show("It appears the tuner limit increase did not stick. Do you wish to apply the tweak and perform a TV Setup in WMC again?\n\nNOTE: This only affects users with more than 4 tuners of any tuner type (i.e. ATSC, Digital Cable, DVB-T, etc). If this does not affect you, click [NO].", "Tuner Limit Increase Failed", MessageBoxButtons.YesNo) == DialogResult.Yes)
                 {
                     tweakMediaCenterTunerCount(TUNERLIMIT);
                 }
@@ -138,7 +137,7 @@ namespace epg123
                     ProcessStartInfo startInfo = new ProcessStartInfo()
                     {
                         FileName = "epg123Transfer.exe",
-                        Arguments = backupZipFile
+                        Arguments = Helper.backupZipFile
                     };
                     Process.Start(startInfo).WaitForExit();
                     updateStatusText(string.Empty);
@@ -250,29 +249,29 @@ namespace epg123
 
         private bool PerformBackup()
         {
-            if (!string.IsNullOrEmpty(backupZipFile)) return true;
+            if (!string.IsNullOrEmpty(Helper.backupZipFile)) return true;
             if (DialogResult.Cancel == MessageBox.Show("This procedure will delete all WMC databases in your eHome folder. Current tuner configurations, recording schedules, favorite lineups, and logos will be removed.\n\nClick 'OK' to proceed.", "EPG Clean Start", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning)) return false;
 
             if (shouldBackup)
             {
                 updateStatusText("Backing up WMC configurations ...");
                 Logger.WriteVerbose("Backing up WMC configurations ...");
-                backupZipFile = clientForm.backupBackupFiles();
+                clientForm.backupBackupFiles();
 
-                if (string.IsNullOrEmpty(backupZipFile))
+                if (string.IsNullOrEmpty(Helper.backupZipFile))
                 {
                     if (DialogResult.Yes == MessageBox.Show("Failed to create a backup of the current WMC configurations and scheduled recording requests.\n\nDo you wish to continue without performing a backup?", "Backup Failure", MessageBoxButtons.YesNo, MessageBoxIcon.Error))
                     {
-                        backupZipFile = BYPASSED;
+                        Helper.backupZipFile = BYPASSED;
                     }
                 }
             }
             else
             {
-                backupZipFile = BYPASSED;
+                Helper.backupZipFile = BYPASSED;
             }
             updateStatusText(string.Empty);
-            return !string.IsNullOrEmpty(backupZipFile);
+            return !string.IsNullOrEmpty(Helper.backupZipFile);
         }
 
         private bool cleanStart()
@@ -776,6 +775,26 @@ namespace epg123
         #region ========== EPG123 Configurator ==========
         private bool openEpg123Configuration()
         {
+            string text = "You have both the EPG123 executable for guide listings from Schedules Direct and the HDHR2MXF executable for guide listings from SiliconDust.\n\nDo you wish to proceed with HDHR2MXF?";
+            string caption = "Multiple Guide Sources";
+            if ((File.Exists(Helper.Epg123ExePath) && File.Exists(Helper.Hdhr2mxfExePath) && DialogResult.Yes == MessageBox.Show(text, caption, MessageBoxButtons.YesNo, MessageBoxIcon.Question)) ||
+                 File.Exists(Helper.Hdhr2mxfExePath))
+            {
+                updateStatusText("Running HDHR2MXF to import guide ...");
+                Logger.WriteVerbose("Running HDHR2MXF to import guide ...");
+
+                ProcessStartInfo startInfo = new ProcessStartInfo()
+                {
+                    FileName = Helper.Hdhr2mxfExePath,
+                    Arguments = "-update -import",
+                };
+                Process hdhr2mxf = Process.Start(startInfo);
+                hdhr2mxf.WaitForExit();
+
+                if (hdhr2mxf.ExitCode == 0) return true;
+                else return false;
+            }
+
             updateStatusText("Opening EPG123 Configuration GUI ...");
             Logger.WriteVerbose("Opening EPG123 Configuration GUI ...");
             Process procEpg123;

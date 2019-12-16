@@ -12,7 +12,6 @@ namespace epg123
         private static MergedLineup mergedLineup_;
         private static ObjectStore singletonStore_;
         private static MergedLineup singletonLineup_;
-        //private static bool blocking_background_threads_ = false;
 
         public static ObjectStore objectStore
         {
@@ -20,12 +19,6 @@ namespace epg123
             {
                 if (objectStore_ == null)
                 {
-                    //if (!blocking_background_threads_)
-                    //{
-                    //    ObjectStore.WaitForThenBlockBackgroundThreads(0x7ffffff);
-                    //    blocking_background_threads_ = true;
-                    //}
-
                     SHA256Managed sha256Man = new SHA256Managed();
                     string clientId = ObjectStore.GetClientId(true);
                     string providerName = @"Anonymous!User";
@@ -97,11 +90,6 @@ namespace epg123
 
             if (objectStore_ != null)
             {
-                //if (blocking_background_threads_)
-                //{
-                //    ObjectStore.UnblockBackgroundThreads();
-                //    blocking_background_threads_ = false;
-                //}
             }
             if (dispose)
             {

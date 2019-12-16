@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.572
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29424.173
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "epg123", "epg123\epg123.csproj", "{8885750E-6175-4115-8CE0-50FBCE5EF888}"
 EndProject
@@ -14,6 +14,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "epg123Client", "epg123Client\epg123Client.csproj", "{12FE1EA6-F6D3-4B06-8707-D3C06663FBAC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "epg123Transfer", "epg123Transfer\epg123Transfer.csproj", "{E9000EE1-C0D6-4532-9A0C-D70A20B0F16A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "hdhr2mxf", "hdhr2mxf\hdhr2mxf.csproj", "{619C0F4F-9335-402F-8CE1-24D64917F74A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -47,6 +49,14 @@ Global
 		{E9000EE1-C0D6-4532-9A0C-D70A20B0F16A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{E9000EE1-C0D6-4532-9A0C-D70A20B0F16A}.Release|x86.ActiveCfg = Release|Any CPU
 		{E9000EE1-C0D6-4532-9A0C-D70A20B0F16A}.Release|x86.Build.0 = Release|Any CPU
+		{619C0F4F-9335-402F-8CE1-24D64917F74A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{619C0F4F-9335-402F-8CE1-24D64917F74A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{619C0F4F-9335-402F-8CE1-24D64917F74A}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{619C0F4F-9335-402F-8CE1-24D64917F74A}.Debug|x86.Build.0 = Debug|Any CPU
+		{619C0F4F-9335-402F-8CE1-24D64917F74A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{619C0F4F-9335-402F-8CE1-24D64917F74A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{619C0F4F-9335-402F-8CE1-24D64917F74A}.Release|x86.ActiveCfg = Release|Any CPU
+		{619C0F4F-9335-402F-8CE1-24D64917F74A}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

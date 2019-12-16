@@ -25,18 +25,29 @@ namespace epg123
             // scan through each series in the mxf
             foreach (MxfSeriesInfo series in sdMxf.With[0].SeriesInfos)
             {
-                string url;
                 // if image for series already exists in archive file, use it
-                // v1.2.8 - stopped using cached series images
-                if (false)
+                // cycle images for a refresh based on day of month and seriesid
+                var oldImage = oldImageLibrary.Images.Where(arg => arg.Zap2itId.Equals(series.tmsSeriesId)).SingleOrDefault();
+                bool refresh = ((int.Parse(series.tmsSeriesId) * config.ExpectedServicecount) % DateTime.DaysInMonth(DateTime.Now.Year, DateTime.Now.Month)) == DateTime.Now.Day + 1;
+
+                if (oldImage != null && !string.IsNullOrEmpty(oldImage.Height))
+                {
+                    double oldAspect = double.Parse(oldImage.Width) / double.Parse(oldImage.Height);
+                    if (config.SeriesPosterArt && oldAspect > 1.0) refresh = true;
+                    else if (!config.SeriesPosterArt && oldAspect < 1.0) refresh = true;
+                }
+
+                if (oldImage != null && !refresh && !config.CreateXmltv)
                 {
                     ++processedObjects; reportProgress();
-                    series.GuideImage = sdMxf.With[0].getGuideImage(url).Id;
+                    series.GuideImage = sdMxf.With[0].getGuideImage(oldImage.Url).Id;
                     newImageLibrary.Images.Add(new archiveImage()
                     {
                         Title = series.Title,
-                        Url = url,
-                        Zap2itId = series.tmsSeriesId
+                        Url = oldImage.Url,
+                        Zap2itId = series.tmsSeriesId,
+                        Height = oldImage.Height,
+                        Width = oldImage.Width
                     });
                 }
                 else if (!series.tmsSeriesId.StartsWith("SP"))

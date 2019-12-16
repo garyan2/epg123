@@ -1,0 +1,104 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{619C0F4F-9335-402F-8CE1-24D64917F74A}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>hdhr2mxf</RootNamespace>
+    <AssemblyName>hdhr2mxf</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\..\bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>..\..\bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>hdhr123.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.10.0.3\lib\net40\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\epg123\Helper.cs">
+      <Link>Helper.cs</Link>
+    </Compile>
+    <Compile Include="HDHR\HDHRAPI.cs" />
+    <Compile Include="HDHR\HDHRJson.cs" />
+    <Compile Include="Common.cs" />
+    <Compile Include="MXF\MXF.cs" />
+    <Compile Include="MXF\MxfAffiliate.cs" />
+    <Compile Include="MXF\MxfChannel.cs" />
+    <Compile Include="MXF\MxfGuideImage.cs" />
+    <Compile Include="MXF\MxfKeyword.cs" />
+    <Compile Include="MXF\MxfKeywordGroup.cs" />
+    <Compile Include="MXF\MxfLineup.cs" />
+    <Compile Include="MXF\MxfPerson.cs" />
+    <Compile Include="MXF\MxfPersonRank.cs" />
+    <Compile Include="MXF\MxfProgram.cs" />
+    <Compile Include="MXF\MxfProvider.cs" />
+    <Compile Include="MXF\MxfScheduleEntry.cs" />
+    <Compile Include="MXF\MxfSeason.cs" />
+    <Compile Include="MXF\MxfSeriesInfo.cs" />
+    <Compile Include="MXF\MxfService.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SliceMxf.cs" />
+    <Compile Include="XmltvMxf.cs" />
+    <Compile Include="XMLTV\XMLTV.cs" />
+    <Compile Include="XMLTV\XmltvActor.cs" />
+    <Compile Include="XMLTV\XmltvAudio.cs" />
+    <Compile Include="XMLTV\XmltvChannel.cs" />
+    <Compile Include="XMLTV\XmltvCredit.cs" />
+    <Compile Include="XMLTV\XmltvEpisodeNum.cs" />
+    <Compile Include="XMLTV\XmltvIcon.cs" />
+    <Compile Include="XMLTV\XmltvLength.cs" />
+    <Compile Include="XMLTV\XmltvPreviouslyShown.cs" />
+    <Compile Include="XMLTV\XmltvProgramme.cs" />
+    <Compile Include="XMLTV\XmltvRating.cs" />
+    <Compile Include="XMLTV\XmltvReview.cs" />
+    <Compile Include="XMLTV\XmltvSubtitles.cs" />
+    <Compile Include="XMLTV\XmltvText.cs" />
+    <Compile Include="XMLTV\XmltvVideo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="hdhr123.ico" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

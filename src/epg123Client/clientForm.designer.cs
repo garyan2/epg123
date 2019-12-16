@@ -76,9 +76,13 @@
             this.toolStripSeparator5 = new System.Windows.Forms.ToolStripSeparator();
             this.btnDeleteLineup = new System.Windows.Forms.ToolStripButton();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
+            this.getChannelsProgressBar = new System.Windows.Forms.ToolStripProgressBar();
+            this.lvItemsProgressBar = new System.Windows.Forms.ToolStripProgressBar();
+            this.mergedLineupProgressBar = new System.Windows.Forms.ToolStripProgressBar();
             this.lblToolStripStatus = new System.Windows.Forms.ToolStripStatusLabel();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.grpClientConfig = new System.Windows.Forms.GroupBox();
+            this.btnViewLog = new System.Windows.Forms.Button();
             this.btnTransferTool = new System.Windows.Forms.Button();
             this.lblDatabaseUtilities = new System.Windows.Forms.Label();
             this.btnTweakWmc = new System.Windows.Forms.Button();
@@ -98,7 +102,6 @@
             this.tbSchedTime = new System.Windows.Forms.MaskedTextBox();
             this.lblUpdateTime = new System.Windows.Forms.Label();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
-            this.btnViewLog = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -126,6 +129,7 @@
             // splitContainer1
             // 
             this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitContainer1.Enabled = false;
             this.splitContainer1.FixedPanel = System.Windows.Forms.FixedPanel.Panel2;
             this.splitContainer1.Location = new System.Drawing.Point(0, 0);
             this.splitContainer1.Name = "splitContainer1";
@@ -557,6 +561,9 @@
             // statusStrip1
             // 
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.getChannelsProgressBar,
+            this.lvItemsProgressBar,
+            this.mergedLineupProgressBar,
             this.lblToolStripStatus});
             this.statusStrip1.Location = new System.Drawing.Point(0, 539);
             this.statusStrip1.Name = "statusStrip1";
@@ -564,15 +571,33 @@
             this.statusStrip1.TabIndex = 1;
             this.statusStrip1.Text = "statusStrip1";
             // 
+            // getChannelsProgressBar
+            // 
+            this.getChannelsProgressBar.AutoSize = false;
+            this.getChannelsProgressBar.Name = "getChannelsProgressBar";
+            this.getChannelsProgressBar.Size = new System.Drawing.Size(0, 16);
+            // 
+            // lvItemsProgressBar
+            // 
+            this.lvItemsProgressBar.AutoSize = false;
+            this.lvItemsProgressBar.Name = "lvItemsProgressBar";
+            this.lvItemsProgressBar.Size = new System.Drawing.Size(0, 16);
+            // 
+            // mergedLineupProgressBar
+            // 
+            this.mergedLineupProgressBar.AutoSize = false;
+            this.mergedLineupProgressBar.Name = "mergedLineupProgressBar";
+            this.mergedLineupProgressBar.Size = new System.Drawing.Size(0, 16);
+            // 
             // lblToolStripStatus
             // 
             this.lblToolStripStatus.Name = "lblToolStripStatus";
-            this.lblToolStripStatus.Size = new System.Drawing.Size(228, 17);
-            this.lblToolStripStatus.Text = "0 Merged Channels | 0 Lineups | 0 Services";
+            this.lblToolStripStatus.Size = new System.Drawing.Size(0, 17);
             // 
             // splitContainer2
             // 
             this.splitContainer2.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitContainer2.Enabled = false;
             this.splitContainer2.FixedPanel = System.Windows.Forms.FixedPanel.Panel1;
             this.splitContainer2.IsSplitterFixed = true;
             this.splitContainer2.Location = new System.Drawing.Point(0, 0);
@@ -610,6 +635,16 @@
             this.grpClientConfig.TabIndex = 6;
             this.grpClientConfig.TabStop = false;
             this.grpClientConfig.Text = "Client Configuration && Actions";
+            // 
+            // btnViewLog
+            // 
+            this.btnViewLog.Location = new System.Drawing.Point(105, 44);
+            this.btnViewLog.Name = "btnViewLog";
+            this.btnViewLog.Size = new System.Drawing.Size(93, 23);
+            this.btnViewLog.TabIndex = 24;
+            this.btnViewLog.Text = "View Log";
+            this.btnViewLog.UseVisualStyleBackColor = true;
+            this.btnViewLog.Click += new System.EventHandler(this.btnViewLog_Click);
             // 
             // btnTransferTool
             // 
@@ -812,16 +847,6 @@
             // 
             this.openFileDialog1.FileName = "openFileDialog1";
             // 
-            // btnViewLog
-            // 
-            this.btnViewLog.Location = new System.Drawing.Point(105, 44);
-            this.btnViewLog.Name = "btnViewLog";
-            this.btnViewLog.Size = new System.Drawing.Size(93, 23);
-            this.btnViewLog.TabIndex = 24;
-            this.btnViewLog.Text = "View Log";
-            this.btnViewLog.UseVisualStyleBackColor = true;
-            this.btnViewLog.Click += new System.EventHandler(this.btnViewLog_Click);
-            // 
             // clientForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
@@ -946,5 +971,8 @@
         private System.Windows.Forms.ToolStripButton btnDeleteLineup;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator5;
         private System.Windows.Forms.Button btnViewLog;
+        private System.Windows.Forms.ToolStripProgressBar mergedLineupProgressBar;
+        private System.Windows.Forms.ToolStripProgressBar getChannelsProgressBar;
+        private System.Windows.Forms.ToolStripProgressBar lvItemsProgressBar;
     }
 }
