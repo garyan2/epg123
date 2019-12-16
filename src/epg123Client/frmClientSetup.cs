@@ -780,19 +780,34 @@ namespace epg123
             if ((File.Exists(Helper.Epg123ExePath) && File.Exists(Helper.Hdhr2mxfExePath) && DialogResult.Yes == MessageBox.Show(text, caption, MessageBoxButtons.YesNo, MessageBoxIcon.Question)) ||
                  File.Exists(Helper.Hdhr2mxfExePath))
             {
-                updateStatusText("Running HDHR2MXF to import guide ...");
-                Logger.WriteVerbose("Running HDHR2MXF to import guide ...");
+                updateStatusText("Running HDHR2MXF to create the guide ...");
+                Logger.WriteVerbose("Running HDHR2MXF to create the guide ...");
 
                 ProcessStartInfo startInfo = new ProcessStartInfo()
                 {
                     FileName = Helper.Hdhr2mxfExePath,
-                    Arguments = "-update -import",
+                    Arguments = "-update",
                 };
                 Process hdhr2mxf = Process.Start(startInfo);
                 hdhr2mxf.WaitForExit();
+                if (hdhr2mxf.ExitCode != 0) return false;
 
-                if (hdhr2mxf.ExitCode == 0) return true;
-                else return false;
+                // use the client to import the mxf file
+                frmImport importForm = new frmImport(Helper.Epg123MxfPath);
+                importForm.ShowDialog();
+
+                // kick off the reindex
+                if (importForm.success)
+                {
+                    mxfImport.reindexDatabase();
+                    mxfImport.reindexPvrSchedule();
+                }
+                else
+                {
+                    MessageBox.Show("There was an error importing the MXF file.", "Import Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return false;
+                }
+                return true;
             }
 
             updateStatusText("Opening EPG123 Configuration GUI ...");
