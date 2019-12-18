@@ -81,6 +81,7 @@ namespace hdhr2mxf
             {
                 Console.WriteLine("Exception Thrown:");
                 Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.StackTrace);
             }
 
             Console.WriteLine(string.Format("\nGenerated .mxf file contains {5} lineups, {0} services, {1} series, {2} programs, and {3} people with {4} image links.",

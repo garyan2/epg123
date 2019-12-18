@@ -238,15 +238,18 @@ namespace hdhr2mxf
                     mxfProgram.GuideImage = Common.mxf.With[0].getGuideImage(program.PosterURL).Id;
                 }
 
-                Match m = Regex.Match(program.Synopsis, @"\d\.\d/\d\.\d");
-                if (m != null)
+                if (!string.IsNullOrEmpty(program.Synopsis))
                 {
-                    string[] nums = m.Value.Split('/');
-                    if (double.TryParse(nums[0], out double numerator) && double.TryParse(nums[1], out double denominator))
+                    Match m = Regex.Match(program.Synopsis, @"\d\.\d/\d\.\d");
+                    if (m != null)
                     {
-                        int halfstars = (int)((numerator / denominator) * 8);
-                        mxfProgram.HalfStars = halfstars.ToString();
-                        mxfProgram.Description = mxfProgram.Description.Replace(string.Format(" ({0})", m.Value), "");
+                        string[] nums = m.Value.Split('/');
+                        if (double.TryParse(nums[0], out double numerator) && double.TryParse(nums[1], out double denominator))
+                        {
+                            int halfstars = (int)((numerator / denominator) * 8);
+                            mxfProgram.HalfStars = halfstars.ToString();
+                            mxfProgram.Description = mxfProgram.Description.Replace(string.Format(" ({0})", m.Value), "");
+                        }
                     }
                 }
             }

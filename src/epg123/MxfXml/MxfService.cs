@@ -17,6 +17,19 @@ namespace epg123.MxfXml
         [XmlIgnore]
         public SdStationImage logoImage;
 
+        [XmlIgnore]
+        public string xmltvChannelID
+        {
+            get
+            {
+                if (!string.IsNullOrEmpty(StationID))
+                {
+                    return "EPG123." + StationID + ".schedulesdirect.org";
+                }
+                return null;
+            }
+        }
+
         /// <summary>
         /// A content provider.
         /// Example: KOMO

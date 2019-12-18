@@ -71,7 +71,7 @@ namespace epg123
                         {
                             startTime = DateTime.Parse(scheduleEntry.StartTime + "Z").ToUniversalTime();
                         }
-                        xmltv.Programs.Add(buildXmltvProgram(scheduleEntry, startTime, xmltv.Channels[xmltv.Channels.Count - 1].Id, out startTime));
+                        xmltv.Programs.Add(buildXmltvProgram(scheduleEntry, startTime, service.xmltvChannelID, out startTime));
                     }
                 }
                 return true;
@@ -92,7 +92,7 @@ namespace epg123
             // initialize the return channel
             XmltvChannel ret = new XmltvChannel()
             {
-                Id = "EPG123." + mxfService.StationID + ".schedulesdirect.org",
+                Id = mxfService.xmltvChannelID,
                 DisplayNames = new List<XmltvText>()
             };
 
