@@ -35,6 +35,16 @@ namespace epg123
                         mxfProgram.GuideImage = sdMxf.With[0].getGuideImage(oldImage.Url).Id;
                         ++processedObjects; reportProgress();
 
+                        mxfProgram.programImages = new List<sdImage>
+                        {
+                            new sdImage()
+                            {
+                                Uri = oldImage.Url,
+                                Height = oldImage.Height,
+                                Width = oldImage.Width
+                            }
+                        };
+
                         newImageLibrary.Images.Add(new archiveImage()
                         {
                             Title = oldImage.Title,
