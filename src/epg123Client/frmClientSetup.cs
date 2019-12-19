@@ -790,23 +790,31 @@ namespace epg123
                 };
                 Process hdhr2mxf = Process.Start(startInfo);
                 hdhr2mxf.WaitForExit();
-                if (hdhr2mxf.ExitCode != 0) return false;
 
-                // use the client to import the mxf file
-                frmImport importForm = new frmImport(Helper.Epg123MxfPath);
-                importForm.ShowDialog();
-
-                // kick off the reindex
-                if (importForm.success)
+                if (hdhr2mxf.ExitCode == 0)
                 {
-                    mxfImport.reindexDatabase();
-                    mxfImport.reindexPvrSchedule();
+                    // use the client to import the mxf file
+                    frmImport importForm = new frmImport(Helper.Epg123MxfPath);
+                    importForm.ShowDialog();
+
+                    // kick off the reindex
+                    if (importForm.success)
+                    {
+                        mxfImport.reindexDatabase();
+                        mxfImport.reindexPvrSchedule();
+                    }
+                    else
+                    {
+                        MessageBox.Show("There was an error importing the MXF file.", "Import Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return cbAutostep.Checked = false;
+                    }
                 }
                 else
                 {
-                    MessageBox.Show("There was an error importing the MXF file.", "Import Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return false;
+                    MessageBox.Show("There was an error using HDHR2MXF to create the MXF file.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return cbAutostep.Checked = false;
                 }
+
                 return true;
             }
 
