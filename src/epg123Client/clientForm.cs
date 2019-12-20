@@ -139,10 +139,19 @@ namespace epg123
                     if (line.Contains("setup")) btnSetup_Click(null, null);
                     else if (line.Contains("restore")) btnRestore_Click(null, null);
                     else if (line.Contains("rebuild")) btnRebuild_Click(null, null);
+                    else if (line.Contains("createTask") || line.Contains("deleteTask"))
+                    {
+                        btnTask_Click(null, null);
+                        Application.UseWaitCursor = initLvBuild = true;
+                    }
                     sr.Close();
                 }
                 File.Delete(Helper.EButtonPath);
-                return;
+
+                if (!initLvBuild)
+                {
+                    return;
+                }
             }
 
             // populate listviews
@@ -1198,7 +1207,7 @@ namespace epg123
             task.queryTask();
 
             // set .Enabled properties
-            if (!task.exist && Helper.UserHasElevatedRights)
+            if (!task.exist && !task.existNoAccess)
             {
                 rdoFullMode.Enabled = File.Exists(Helper.Epg123ExePath) || File.Exists(Helper.Hdhr2mxfExePath);
                 rdoClientMode.Enabled = tbSchedTime.Enabled = lblUpdateTime.Enabled = cbTaskWake.Enabled = cbAutomatch.Enabled = tbTaskInfo.Enabled = true;
@@ -1256,7 +1265,7 @@ namespace epg123
             }
 
             // set task create/delete button text and update status string
-            btnTask.Text = (task.exist) ? "Delete" : "Create";
+            btnTask.Text = (task.exist || task.existNoAccess) ? "Delete" : "Create";
             if (task.exist && (clientIndex >= 0))
             {
                 lblSchedStatus.Text = task.statusString;
@@ -1304,55 +1313,68 @@ namespace epg123
         }
         private void btnTask_Click(object sender, EventArgs e)
         {
+            if (sender != null) // null sender means we restarted to finish in administrator mode
+            {
+                // missing information
+                if (!task.exist && tbTaskInfo.Text.StartsWith("***"))
+                {
+                    tbTaskInfo_Click(null, null);
+                }
+
+                // create new task if file location is valid
+                if ((!task.exist) && !tbTaskInfo.Text.StartsWith("***"))
+                {
+                    // create task using epg123.exe & epg123Client.exe
+                    if (rdoFullMode.Checked)
+                    {
+                        epgTaskScheduler.TaskActions[] actions = new epgTaskScheduler.TaskActions[2];
+                        actions[0].Path = tbTaskInfo.Text;
+                        actions[0].Arguments = "-update";
+                        actions[1].Path = Helper.Epg123ClientExePath;
+                        actions[1].Arguments = string.Format("-i \"{0}\"", Helper.Epg123MxfPath) + ((cbAutomatch.Checked) ? " -match" : null);
+                        task.createTask(cbTaskWake.Checked, tbSchedTime.Text, actions);
+                    }
+                    // create task using epg123Client.exe
+                    else
+                    {
+                        epgTaskScheduler.TaskActions[] actions = new epgTaskScheduler.TaskActions[1];
+                        actions[0].Path = Helper.Epg123ClientExePath;
+                        actions[0].Arguments = string.Format("-i \"{0}\"", tbTaskInfo.Text) + ((cbAutomatch.Checked) ? " -match" : null);
+                        task.createTask(cbTaskWake.Checked, tbSchedTime.Text, actions);
+                    }
+                }
+            }
+
             // check for elevated rights and open new process if necessary
             if (!Helper.UserHasElevatedRights)
             {
+                if (task.exist || task.existNoAccess)
+                {
+                    Helper.WriteEButtonFile("deleteTask");
+                }
+                else
+                {
+                    Helper.WriteEButtonFile("createTask");
+                }
                 restartClient(true);
                 return;
             }
-
-            // missing information
-            if (!task.exist && tbTaskInfo.Text.StartsWith("***"))
-            {
-                tbTaskInfo_Click(null, null);
-            }
-
-            // create new task if file location is valid
-            if ((!task.exist) && !tbTaskInfo.Text.StartsWith("***"))
-            {
-                // create task using epg123.exe & epg123Client.exe
-                if (rdoFullMode.Checked)
-                {
-                    epgTaskScheduler.TaskActions[] actions = new epgTaskScheduler.TaskActions[2];
-                    actions[0].Path = tbTaskInfo.Text;
-                    actions[0].Arguments = "-update";
-                    actions[1].Path = Helper.Epg123ClientExePath;
-                    actions[1].Arguments = string.Format("-i \"{0}\"", Helper.Epg123MxfPath) + ((cbAutomatch.Checked) ? " -match" : null);
-                    task.createTask(cbTaskWake.Checked, tbSchedTime.Text, actions);
-                }
-                // create task using epg123Client.exe
-                else
-                {
-                    epgTaskScheduler.TaskActions[] actions = new epgTaskScheduler.TaskActions[1];
-                    actions[0].Path = Helper.Epg123ClientExePath;
-                    actions[0].Arguments = string.Format("-i \"{0}\"", tbTaskInfo.Text) + ((cbAutomatch.Checked) ? " -match" : null);
-                    task.createTask(cbTaskWake.Checked, tbSchedTime.Text, actions);
-                }
-
-                // update panel with current information
-                updateTaskPanel();
-            }
-            // delete current scheduled task
             else if (task.exist)
             {
                 task.deleteTask();
-                updateTaskPanel();
             }
+            else
+            {
+                task.importTask();
+            }
+
+            // update panel with current information
+            updateTaskPanel();
         }
         private void tbTaskInfo_Click(object sender, EventArgs e)
         {
             // don't modify if text box is displaying current existing task
-            if (task.exist || !Helper.UserHasElevatedRights) return;
+            if (task.exist || task.existNoAccess) return;
 
             // determine path to existing file
             if (tbTaskInfo.Text.StartsWith("***"))

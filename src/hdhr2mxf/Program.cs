@@ -29,11 +29,17 @@ namespace hdhr2mxf
                     switch (args[i].ToLower())
                     {
                         case "-o":
-                            if ((i + 1) < args.Length)
+                            if ((i + 1) < args.Length && string.IsNullOrEmpty(epg123.Helper.outputPathOverride))
                             {
-                                outputFile = args[++i];
+                                outputFile = args[++i].Replace("\"", "");
+                                string path = Path.GetDirectoryName(outputFile);
+                                if (!string.IsNullOrEmpty(path))
+                                {
+                                    epg123.Helper.outputPathOverride = path;
+                                    if (!Directory.Exists(path)) Directory.CreateDirectory(path);
+                                }
                             }
-                            else
+                            else if ((i + 1) >= args.Length)
                             {
                                 Console.WriteLine("Missing output filename and path.");
                                 return -1;
@@ -46,6 +52,7 @@ namespace hdhr2mxf
                             automaticallyImport = true;
                             break;
                         case "-update":
+                            epg123.Helper.outputPathOverride = epg123.Helper.Epg123OutputFolder;
                             outputFile = epg123.Helper.Epg123MxfPath;
                             xmltvOnly = true;
                             
@@ -59,6 +66,10 @@ namespace hdhr2mxf
                             break;
                     }
                 }
+            }
+            if (string.IsNullOrEmpty(epg123.Helper.outputPathOverride))
+            {
+                epg123.Helper.outputPathOverride = epg123.Helper.ExecutablePath;
             }
 
             // initialize keyword groups
@@ -99,6 +110,20 @@ namespace hdhr2mxf
                 Arguments = "-i " + outputFile,
                 FileName = @"c:\windows\ehome\loadmxf.exe",
                 CreateNoWindow = true
+            };
+            Process.Start(startInfo).WaitForExit();
+
+            startInfo = new ProcessStartInfo()
+            {
+                FileName = "schtasks.exe",
+                Arguments = "/run /tn \"Microsoft\\Windows\\Media Center\\ReindexSearchRoot\"",
+            };
+            Process.Start(startInfo).WaitForExit();
+
+            startInfo = new ProcessStartInfo()
+            {
+                FileName = "schtasks.exe",
+                Arguments = "/run /tn \"Microsoft\\Windows\\Media Center\\PvrScheduleTask\"",
             };
             Process.Start(startInfo).WaitForExit();
         }

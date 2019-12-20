@@ -245,6 +245,7 @@ namespace epg123
                     XmlSerializer serializer = new XmlSerializer(typeof(taskType));
                     TextWriter writer = stream;
                     serializer.Serialize(writer, newTask);
+                    return true;
                 }
             }
             catch (Exception ex)
@@ -252,6 +253,11 @@ namespace epg123
                 Logger.WriteError(string.Format("Failed to create a {0} daily update task XML file. message: {1}", startTime, ex.Message));
             }
 
+            return false;
+        }
+
+        public bool importTask()
+        {
             // create the scheduled task from the created xml file
             try
             {
@@ -267,7 +273,7 @@ namespace epg123
                 proc.WaitForExit();
                 if (proc.ExitCode == 0)
                 {
-                    Logger.WriteInformation(string.Format("Successfully created the daily update task in Task Scheduler for {0}.", startTime));
+                    Logger.WriteInformation("Successfully created the daily update task in Task Scheduler.");
                     return true;
                 }
                 else
@@ -277,7 +283,7 @@ namespace epg123
             }
             catch (Exception ex)
             {
-                Logger.WriteError(string.Format("Failed to create a {0} daily update task in Task Scheduler. message: {1}", startTime, ex.Message));
+                Logger.WriteError(string.Format("Failed to create a daily update task in Task Scheduler. message: {0}", ex.Message));
             }
             return false;
         }

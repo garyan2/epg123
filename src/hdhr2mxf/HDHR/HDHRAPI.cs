@@ -109,7 +109,16 @@ namespace HDHomeRunTV
                 {
                     XmlSerializer serializer = new XmlSerializer(typeof(XMLTV));
                     string firstLine = sr.ReadLine();
-                    TextReader reader = new StringReader((firstLine.StartsWith("<?") ? string.Empty : firstLine) + sr.ReadToEnd());
+                    string xmltv = (firstLine.StartsWith("<?") ? string.Empty : firstLine) + sr.ReadToEnd();
+
+                    // save the xmltv file
+                    using (StreamWriter sw = new StreamWriter(epg123.Helper.outputPathOverride + "\\hdhr2mxf.xmltv", false, Encoding.UTF8))
+                    {
+                        sw.Write(firstLine + "\n" + xmltv);
+                        sw.Close();
+                    }
+
+                    TextReader reader = new StringReader(xmltv);
                     return (XMLTV)serializer.Deserialize(reader);
                 }
             }

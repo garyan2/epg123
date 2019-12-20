@@ -18,6 +18,7 @@ namespace epg123
         }
         
         public static string backupZipFile { get; set; }
+        public static string outputPathOverride { get; set; }
 
         public static bool CreateAndSetFolderAcl(string folder)
         {

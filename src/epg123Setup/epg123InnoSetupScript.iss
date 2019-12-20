@@ -62,7 +62,7 @@ Name: "custom"; Description: "Custom Install"; Flags: IsCustom
 [Components]
 Name: "main1"; Description: "Server Files"; Types: full server; Flags: disablenouninstallwarning
 Name: "main2"; Description: "Client Files"; Types: full client; MinVersion: 6.1; Flags: disablenouninstallwarning
-Name: "hdhr"; Description: "HDHR2MXF for SiliconDust HDHR Tuners"; Types: custom; Flags: disablenouninstallwarning
+Name: "hdhr"; Description: "HDHR2MXF for SiliconDust HDHR DVR Service"; Types: custom; Flags: disablenouninstallwarning
 Name: "help"; Description: "Help File"; Types: full server client; Flags: disablenouninstallwarning
 
 [Languages]
@@ -75,7 +75,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Source: "misc\dotNetFx40_Full_setup.exe"; DestDir: "{tmp}"; Flags: dontcopy
 Source: "..\..\bin\Release\epg123.exe"; DestDir: "{app}"; Flags: ignoreversion; Components: main1
 Source: "..\..\bin\Release\hdhr2mxf.exe"; DestDir: "{app}"; Flags: ignoreversion; Components: hdhr
-Source: "..\..\bin\Release\Newtonsoft.Json.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\..\bin\Release\Newtonsoft.Json.dll"; DestDir: "{app}"; Flags: ignoreversion; Components: main1 hdhr
 Source: "..\..\bin\Release\epg123Client.exe"; DestDir: "{app}"; Flags: ignoreversion; Components: main2
 Source: "..\..\bin\Release\epg123Client.exe.config"; DestDir: "{app}"; Flags: ignoreversion; Attribs: hidden; MinVersion: 6.1; OnlyBelowVersion: 6.2; Components: main2
 Source: "..\..\bin\Release\epg123Transfer.exe"; DestDir: "{app}"; Flags: ignoreversion; Components: main2
@@ -90,6 +90,7 @@ Name: "{commonprograms}\{#MyAppName}\{#MyAppName}"; Filename: "{app}\{#MyAppExeN
 Name: "{commonprograms}\{#MyAppName}\{#MyClientName}"; Filename: "{app}\{#MyClientExeName}"; Components: main2
 Name: "{commonprograms}\{#MyAppName}\EPG123 Transfer Tool"; Filename: "{app}\epg123Transfer.exe"; Components: main2
 Name: "{commonprograms}\{#MyAppName}\EPG123 Guide"; Filename: "{app}\epg123_Guide.pdf"; Components: help
+Name: "{commonprograms}\{#MyAppName}\HDHR2MXF Update"; Filename: "{app}\hdhr2mxf.exe"; Parameters: "-update -import"; Components: hdhr
 Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon; Components: main1
 Name: "{commondesktop}\{#MyClientName}"; Filename: "{app}\{#MyClientExeName}"; Tasks: desktopicon; Components: main2
 
@@ -106,7 +107,7 @@ Filename: "{app}\{#MyClientExeName}"; Description: "{cm:LaunchProgram,{#StringCh
 ; Name: {code:GetRootDataFolder}; Permissions: everyone-full
 
 [InstallDelete]
-Type: files; Name: "{app}\Newtonsoft.json.dll"; Components: main1 main2 help
+Type: files; Name: "{app}\Newtonsoft.json.dll"; Components: main1 main2 hdhr help
 Type: files; Name: "{app}\tweakmediacenter.mxf"; Components: main1 main2 help
 Type: files; Name: "{app}\tweakmediacenter.reg"; Components: main1 main2 help
 Type: files; Name: "{app}\epg123utility.exe"; Components: main1 main2 help
@@ -125,6 +126,7 @@ Type: files; Name: "{commonprograms}\{#MyAppName}\{#MyAppName}.lnk"; Components:
 Type: files; Name: "{commonprograms}\{#MyAppName}\{#MyClientName}.lnk"; Components: not main2
 Type: files; Name: "{commonprograms}\{#MyAppName}\EPG123 Transfer Tool.lnk"; Components: not main2
 Type: files; Name: "{commonprograms}\{#MyAppName}\EPG123 Guide.lnk"; Components: not help
+Type: files; Name: "{commonprograms}\{#MyAppName}\HDHR2MXF Update.lnk"; Components: not hdhr
 
 [Code]
 // determine whether .NET Framework is installed

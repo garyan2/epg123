@@ -426,17 +426,20 @@ namespace hdhr2mxf
                 {
                     mxfProgram.HalfStars = GetStarRating(program.StarRating);
                 }
-                //else
+                else if (program.Descriptions.Count > 0)
                 {
                     Match m = Regex.Match(program.Descriptions[0].Text, @"\d\.\d/\d\.\d");
                     if (m != null)
                     {
                         string[] nums = m.Value.Split('/');
-                        if (double.TryParse(nums[0], out double numerator) && double.TryParse(nums[1], out double denominator))
+                        if (nums.Length == 2)
                         {
-                            int halfstars = (int)((numerator / denominator) * 8);
-                            mxfProgram.HalfStars = halfstars.ToString();
-                            mxfProgram.Description = mxfProgram.Description.Replace(string.Format(" ({0})", m.Value), "");
+                            if (double.TryParse(nums[0], out double numerator) && double.TryParse(nums[1], out double denominator))
+                            {
+                                int halfstars = (int)((numerator / denominator) * 8);
+                                mxfProgram.HalfStars = halfstars.ToString();
+                                mxfProgram.Description = mxfProgram.Description.Replace(string.Format(" ({0})", m.Value), "");
+                            }
                         }
                     }
                 }

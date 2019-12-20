@@ -98,11 +98,7 @@ namespace epg123
                 lblUpdate.Text = string.Format("UPDATE AVAILABLE (v{0})", veresp.Version);
             }
 
-            // update the task panel
-            updateTaskPanel();
-
             // set registry and check if registered for event log
-            activateGuide();
             createEventLogSource();
 
             // set imagelist for listviews
@@ -166,6 +162,24 @@ namespace epg123
             catch (Exception ex)
             {
                 Logger.WriteError(ex.Message);
+            }
+
+            // update the task panel
+            updateTaskPanel();
+
+            // if client was started as elevated to perform an action
+            if (Helper.UserHasElevatedRights && File.Exists(Helper.EButtonPath))
+            {
+                using (StreamReader sr = new StreamReader(Helper.EButtonPath))
+                {
+                    string line = sr.ReadLine();
+                    if (line.Contains("createTask") || line.Contains("deleteTask"))
+                    {
+                        btnTask_Click(null, null);
+                    }
+                    sr.Close();
+                }
+                File.Delete(Helper.EButtonPath);
             }
             this.Cursor = Cursors.Arrow;
         }
@@ -271,14 +285,17 @@ namespace epg123
             // get status
             task.queryTask();
 
+            // set task create/delete button text
+            btnTask.Text = (task.exist || task.existNoAccess) ? "Delete" : "Create";
+
             // update scheduled task run time
-            tbSchedTime.Enabled = (!task.exist && Helper.UserHasElevatedRights);
+            tbSchedTime.Enabled = (!task.exist && !task.existNoAccess);
             tbSchedTime.Text = task.schedTime.ToString("HH:mm");
-            lblUpdateTime.Enabled = (!task.exist && Helper.UserHasElevatedRights);
+            lblUpdateTime.Enabled = (!task.exist && !task.existNoAccess);
 
             // set sheduled task wake checkbox
-            cbTaskWake.Enabled = (!task.exist && Helper.UserHasElevatedRights);
-            cbTaskWake.Checked = (task.exist && task.wake);
+            cbTaskWake.Enabled = (!task.exist && !task.existNoAccess);
+            cbTaskWake.Checked = task.wake;
 
             // determine which action is the client action
             int clientIndex = -1;
@@ -307,14 +324,13 @@ namespace epg123
             }
             else
             {
-                cbImport.Enabled = !task.exist;
+                cbImport.Enabled = !task.exist && !task.existNoAccess;
                 cbImport.Checked = (clientIndex >= 0) || (!task.exist && config.AutoImport);
-                cbAutomatch.Enabled = !task.exist && cbImport.Checked;
+                cbAutomatch.Enabled = !task.exist && !task.existNoAccess && cbImport.Checked;
                 cbAutomatch.Checked = ((clientIndex >= 0) && task.actions[clientIndex].Arguments.ToLower().Contains("-match")) || (!task.exist && config.Automatch);
             }
 
-            // set task create/delete button text and update status string
-            btnTask.Text = (task.exist) ? "Delete" : "Create";
+            // update status string
             if (task.exist && (epg123Index >= 0))
             {
                 lblSchedStatus.Text = task.statusString;
@@ -345,44 +361,58 @@ namespace epg123
         }
         private void btnTask_Click(object sender, EventArgs e)
         {
+            if (sender != null) // null sender means we restarted to finish in administrator mode
+            {
+                // create new task if file location is valid
+                if (!task.exist)
+                {
+                    // create task using epg123.exe & epg123Client.exe
+                    if (cbImport.Checked)
+                    {
+                        epgTaskScheduler.TaskActions[] actions = new epgTaskScheduler.TaskActions[2];
+                        actions[0].Path = Helper.Epg123ExePath;
+                        actions[0].Arguments = "-update";
+                        actions[1].Path = Helper.Epg123ClientExePath;
+                        actions[1].Arguments = "-i \"" + Helper.Epg123MxfPath + "\"" + ((cbAutomatch.Checked) ? " -match" : null);
+                        task.createTask(cbTaskWake.Checked, tbSchedTime.Text, actions);
+                    }
+                    // create task using epg123.exe
+                    else
+                    {
+                        epgTaskScheduler.TaskActions[] actions = new epgTaskScheduler.TaskActions[1];
+                        actions[0].Path = Helper.Epg123ExePath;
+                        actions[0].Arguments = "-update";
+                        task.createTask(cbTaskWake.Checked, tbSchedTime.Text, actions);
+                    }
+                    btnSave_Click(null, null);
+                }
+            }
+
             // check for elevated rights and open new process if necessary
             if (!Helper.UserHasElevatedRights)
             {
+                if (task.exist || task.existNoAccess)
+                {
+                    Helper.WriteEButtonFile("deleteTask");
+                }
+                else
+                {
+                    Helper.WriteEButtonFile("createTask");
+                }
                 elevateRights();
                 return;
             }
-
-            // create new task if file location is valid
-            if (!task.exist)
-            {
-                // create task using epg123.exe & epg123Client.exe
-                if (cbImport.Checked)
-                {
-                    epgTaskScheduler.TaskActions[] actions = new epgTaskScheduler.TaskActions[2];
-                    actions[0].Path = Helper.Epg123ExePath;
-                    actions[0].Arguments = "-update";
-                    actions[1].Path = Helper.Epg123ClientExePath;
-                    actions[1].Arguments = "-i \"" + Helper.Epg123MxfPath + "\"" + ((cbAutomatch.Checked) ? " -match" : null);
-                    task.createTask(cbTaskWake.Checked, tbSchedTime.Text, actions);
-                }
-                // create task using epg123.exe
-                else
-                {
-                    epgTaskScheduler.TaskActions[] actions = new epgTaskScheduler.TaskActions[1];
-                    actions[0].Path = Helper.Epg123ExePath;
-                    actions[0].Arguments = "-update";
-                    task.createTask(cbTaskWake.Checked, tbSchedTime.Text, actions);
-                }
-
-                // update panel with current information
-                updateTaskPanel();
-            }
-            // delete current scheduled task
             else if (task.exist)
             {
                 task.deleteTask();
-                updateTaskPanel();
             }
+            else
+            {
+                task.importTask();
+            }
+
+            // update panel with current information
+            updateTaskPanel();
         }
         #endregion
 
@@ -483,12 +513,12 @@ namespace epg123
                 }
 
                 // get persistent cfg values
-                if (!task.exist && File.Exists(Helper.Epg123ClientExePath) && File.Exists(Helper.Epg123CfgPath))
+                if (!task.exist && !task.existNoAccess && File.Exists(Helper.Epg123ClientExePath) && File.Exists(Helper.Epg123CfgPath))
                 {
                     cbImport.Checked = cbAutomatch.Enabled = config.AutoImport;
                     cbAutomatch.Checked = config.Automatch;
                 }
-                else if (!task.exist && File.Exists(Helper.Epg123ClientExePath) && !File.Exists(Helper.Epg123CfgPath))
+                else if (!task.exist && !task.existNoAccess && File.Exists(Helper.Epg123ClientExePath) && !File.Exists(Helper.Epg123CfgPath))
                 {
                     cbImport.Checked = cbAutomatch.Enabled = true;
                     cbAutomatch.Checked = true;

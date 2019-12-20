@@ -778,7 +778,7 @@ namespace epg123
             string text = "You have both the EPG123 executable for guide listings from Schedules Direct and the HDHR2MXF executable for guide listings from SiliconDust.\n\nDo you wish to proceed with HDHR2MXF?";
             string caption = "Multiple Guide Sources";
             if ((File.Exists(Helper.Epg123ExePath) && File.Exists(Helper.Hdhr2mxfExePath) && DialogResult.Yes == MessageBox.Show(text, caption, MessageBoxButtons.YesNo, MessageBoxIcon.Question)) ||
-                 File.Exists(Helper.Hdhr2mxfExePath))
+                (File.Exists(Helper.Hdhr2mxfExePath) && !File.Exists(Helper.Epg123ExePath)))
             {
                 updateStatusText("Running HDHR2MXF to create the guide ...");
                 Logger.WriteVerbose("Running HDHR2MXF to create the guide ...");
