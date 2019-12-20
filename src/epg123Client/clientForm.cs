@@ -879,7 +879,11 @@ namespace epg123
         private ListViewItem buildMergedChannelLvi(MergedChannel mergedChannel)
         {
             // determine whether primary channel is the scanned channel
-            bool scanned = mergedChannel.PrimaryChannel.Lineup.Name.StartsWith("Scanned");
+            bool scanned = false;
+            if (mergedChannel.PrimaryChannel?.Lineup?.Name != null)
+            {
+                scanned = mergedChannel.PrimaryChannel.Lineup.Name.StartsWith("Scanned");
+            }
 
             // collect all unique channel sources
             HashSet<Lineup> sources = new HashSet<Lineup>();
@@ -891,7 +895,7 @@ namespace epg123
             {
                 foreach (Channel ch2 in mergedChannel.SecondaryChannels)
                 {
-                    if ((ch2.Lineup != null) && (ch2.Lineup.Name != null) && ch2.Lineup.Name.StartsWith("Scanned"))
+                    if ((ch2.Lineup?.Name != null) && ch2.Lineup.Name.StartsWith("Scanned"))
                     {
                         sources.Add(ch2.Lineup);
                     }
@@ -1953,7 +1957,7 @@ namespace epg123
 
             // prep the client setup form
             frmClientSetup frm = new frmClientSetup();
-            frm.shouldBackup = mergedChannelListView.Items.Count > 0;
+            frm.shouldBackup = (Store.objectStore != null);// mergedChannelListView.Items.Count > 0;
 
             // clear everything out
             isolateEpgDatabase(true);
