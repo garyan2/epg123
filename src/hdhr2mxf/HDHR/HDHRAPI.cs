@@ -11,14 +11,33 @@ namespace HDHomeRunTV
 {
     public class HDHRAPI
     {
+        private string UserAgent
+        {
+            get
+            {
+                Version version = System.Reflection.Assembly.GetEntryAssembly().GetName().Version;
+                return string.Format("HDHR2MXF/{0}.{1}.{2}", version.Major, version.Minor, version.Build);
+            }
+        }
+
+        private StreamReader GetRequestResponse(string url, int timeout = 0)
+        {
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+            request.UserAgent = UserAgent;
+            request.AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip;
+            if (timeout > 0)
+            {
+                request.Timeout = timeout;
+            }
+            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+            return new StreamReader(response.GetResponseStream(), Encoding.UTF8);
+        }
+
         public List<HDHRDiscover> DiscoverDevices()
         {
             try
             {
-                HttpWebRequest request = (HttpWebRequest)WebRequest.Create("http://my.hdhomerun.com/discover");
-                request.AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip;
-                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-                using (StreamReader sr = new StreamReader(response.GetResponseStream(), Encoding.UTF8))
+                using (StreamReader sr = GetRequestResponse("http://my.hdhomerun.com/discover"))
                 {
                     return JsonConvert.DeserializeObject<List<HDHRDiscover>>(sr.ReadToEnd());
                 }
@@ -34,11 +53,7 @@ namespace HDHomeRunTV
         {
             try
             {
-                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-                request.AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip;
-                request.Timeout = 1000;
-                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-                using (StreamReader sr = new StreamReader(response.GetResponseStream(), Encoding.UTF8))
+                using (StreamReader sr = GetRequestResponse(url, 1000))
                 {
                     return JsonConvert.DeserializeObject<HDHRDevice>(sr.ReadToEnd());
                 }
@@ -54,10 +69,7 @@ namespace HDHomeRunTV
         {
             try
             {
-                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url + "?tuning");
-                request.AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip;
-                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-                using (StreamReader sr = new StreamReader(response.GetResponseStream(), Encoding.UTF8))
+                using (StreamReader sr = GetRequestResponse(url + "?tuning"))
                 {
                     return JsonConvert.DeserializeObject<List<HDHRChannel>>(sr.ReadToEnd());
                 }
@@ -75,10 +87,8 @@ namespace HDHomeRunTV
             {
                 string url = "http://my.hdhomerun.com/api/guide.php?DeviceAuth=";
                 url += auth + "&Channel=" + channel + ((startTime > 0) ? "&Start=" + startTime.ToString() : string.Empty);
-                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-                request.AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip;
-                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-                using (StreamReader sr = new StreamReader(response.GetResponseStream(), Encoding.UTF8))
+
+                using (StreamReader sr = GetRequestResponse(url))
                 {
                     return JsonConvert.DeserializeObject<List<HDHRChannelGuide>>(sr.ReadToEnd());
                 }
@@ -101,11 +111,7 @@ namespace HDHomeRunTV
                 //    return (XMLTV)serializer.Deserialize(reader);
                 //}
 
-                string url = "http://my.hdhomerun.com/api/xmltv.php?DeviceAuth=" + auth;
-                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-                request.AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip;
-                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-                using (StreamReader sr = new StreamReader(response.GetResponseStream(), Encoding.UTF8))
+                using (StreamReader sr = GetRequestResponse("http://my.hdhomerun.com/api/xmltv.php?DeviceAuth=" + auth))
                 {
                     XmlSerializer serializer = new XmlSerializer(typeof(XMLTV));
                     string firstLine = sr.ReadLine();
@@ -133,11 +139,7 @@ namespace HDHomeRunTV
         {
             try
             {
-                string url = "http://api.hdhomerun.com/api/account?DeviceAuth=" + deviceAuth;
-                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-                request.AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip;
-                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-                using (StreamReader sr = new StreamReader(response.GetResponseStream(), Encoding.UTF8))
+                using (StreamReader sr = GetRequestResponse("http://api.hdhomerun.com/api/account?DeviceAuth=" + deviceAuth))
                 {
                     HDHRAccount account = JsonConvert.DeserializeObject<HDHRAccount>(sr.ReadToEnd());
                     return account.DvrActive;

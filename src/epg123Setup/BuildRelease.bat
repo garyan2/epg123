@@ -3,7 +3,7 @@ CLS
 
 REM Enable command extensions
 SETLOCAL ENABLEEXTENSIONS
-SET VER="1.3.2.10"
+SET VER="1.3.2.30"
 SET COMPILER=C:\Program Files (x86)\Inno Setup 5\compil32.exe
 SET BASE=..\..\bin\output
 SET PORTABLE=%BASE%\portable

@@ -367,7 +367,7 @@ namespace epg123
         private static bool programRecording()
         {
             bool active = false;
-            DateTime expireTime = DateTime.Now + TimeSpan.FromHours(5);
+            DateTime expireTime = DateTime.Now + TimeSpan.FromHours(23);
             int intervalMinutes = 60;
 
             do

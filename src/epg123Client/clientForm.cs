@@ -1152,7 +1152,7 @@ namespace epg123
             int totalServices = 0;
             foreach (Lineup lineup in cmbObjectStoreLineups.Items)
             {
-                totalServices += lineup.GetChannels().Length;
+                totalServices += lineup.UncachedChannels.Count();
             }
             lblToolStripStatus.Text = string.Format("{4} Merged Channel(s) with {0} shown  |  {1} Lineup(s)  |  {2} Service(s) with {3} shown", mergedChannelListView.Items.Count, cmbObjectStoreLineups.Items.Count, totalServices, lineupChannelListView.Items.Count, totalMergedChannels);
             statusStrip1.Refresh();
@@ -1396,6 +1396,15 @@ namespace epg123
             if (openFileDialog1.ShowDialog() == DialogResult.OK)
             {
                 tbTaskInfo.Text = openFileDialog1.FileName;
+
+                // if directed to a MXF file, ask if user wants to import immediately
+                if (!rdoFullMode.Checked)
+                {
+                    if (DialogResult.Yes == MessageBox.Show("Do you wish to import the guide listings now? If not, you can click the [Manual Import] button later or allow the scheduled task to perform the import.", "Import MXF File", MessageBoxButtons.YesNo, MessageBoxIcon.Question))
+                    {
+                        btnImport_Click(null, null);
+                    }
+                }
             }
         }
         #endregion

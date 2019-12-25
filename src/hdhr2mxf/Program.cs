@@ -108,8 +108,7 @@ namespace hdhr2mxf
             ProcessStartInfo startInfo = new ProcessStartInfo()
             {
                 Arguments = "-i " + outputFile,
-                FileName = @"c:\windows\ehome\loadmxf.exe",
-                CreateNoWindow = true
+                FileName = Environment.GetEnvironmentVariable("systemroot") + @"\ehome\loadmxf.exe",
             };
             Process.Start(startInfo).WaitForExit();
 
@@ -155,7 +154,7 @@ namespace hdhr2mxf
                 Console.WriteLine("Using available 14-day XMLTV file from SiliconDust.");
                 return XmltvMxf.BuildMxfFromXmltvGuide(homeruns.ToList());
             }
-            else if (!xmltvOnly)
+            else if (false)// (!xmltvOnly)
             {
                 Console.WriteLine("Using available 24-hour slice guide data from SiliconDust.");
                 return SliceMxf.BuildMxfFromSliceGuide(homeruns.ToList());

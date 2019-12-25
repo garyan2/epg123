@@ -29,7 +29,7 @@ namespace MxfXml
         {
             get
             {
-                return ("!Channel" + lineupUid + "!" + stationId + "_" + Number + "_" + SubNumber);
+                return ("!Channel!" + lineupUid + "!" + stationId + "_" + Number + "_" + SubNumber);
             }
             set { }
         }
