@@ -806,12 +806,14 @@ namespace epg123
                     else
                     {
                         MessageBox.Show("There was an error importing the MXF file.", "Import Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        updateStatusText("Click the 'Step 3' button to try again.");
                         return cbAutostep.Checked = false;
                     }
                 }
                 else
                 {
                     MessageBox.Show("There was an error using HDHR2MXF to create the MXF file.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    updateStatusText("Click the 'Step 3' button to try again."); 
                     return cbAutostep.Checked = false;
                 }
 

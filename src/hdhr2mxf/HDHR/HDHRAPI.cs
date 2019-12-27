@@ -128,6 +128,16 @@ namespace HDHomeRunTV
                     return (XMLTV)serializer.Deserialize(reader);
                 }
             }
+            catch (WebException wex)
+            {
+                Console.WriteLine(wex.Message);
+                HttpWebResponse response = (HttpWebResponse)wex.Response;
+                using (StreamReader sr = new StreamReader(response.GetResponseStream(), Encoding.UTF8))
+                {
+                    string eee = sr.ReadToEnd();
+                    Console.WriteLine(eee);
+                }
+            }
             catch (Exception e)
             {
                 Console.WriteLine("GetHdhrXmltvGuide(): " + e.Message);

@@ -28,7 +28,11 @@ namespace epg123
                 // if image for series already exists in archive file, use it
                 // cycle images for a refresh based on day of month and seriesid
                 var oldImage = oldImageLibrary.Images.Where(arg => arg.Zap2itId.Equals(series.tmsSeriesId)).SingleOrDefault();
-                bool refresh = ((int.Parse(series.tmsSeriesId) * config.ExpectedServicecount) % DateTime.DaysInMonth(DateTime.Now.Year, DateTime.Now.Month)) == DateTime.Now.Day + 1;
+                bool refresh = false;
+                if (int.TryParse(series.tmsSeriesId, out int digits))
+                {
+                    refresh = ((digits * config.ExpectedServicecount) % DateTime.DaysInMonth(DateTime.Now.Year, DateTime.Now.Month)) == DateTime.Now.Day + 1;
+                }
 
                 if (oldImage != null && !string.IsNullOrEmpty(oldImage.Height))
                 {
