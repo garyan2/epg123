@@ -511,6 +511,7 @@ namespace epg123Transfer
                     CreateNoWindow = true
                 };
                 Process proc = Process.Start(startInfo);
+                proc.WaitForExit();
             }
             catch (Exception ex)
             {

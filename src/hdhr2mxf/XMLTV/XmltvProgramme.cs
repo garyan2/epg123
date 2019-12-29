@@ -92,6 +92,9 @@ namespace XmltvXml
         [XmlElement("team")]
         public List<XmltvText> Teams { get; set; }
 
+        [XmlElement("series-id")]
+        public XmltvEpisodeNum seriesid { get; set; }
+
         [XmlElement("episode-num")]
         public List<XmltvEpisodeNum> EpisodeNums { get; set; }
 

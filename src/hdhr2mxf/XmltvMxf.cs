@@ -21,7 +21,14 @@ namespace hdhr2mxf
             {
                 // connect to the device
                 HDHRDevice device = Common.api.ConnectDevice(homerun.DiscoverURL);
-                if (device == null || string.IsNullOrEmpty(device.LineupURL)) continue;
+                if (device == null || string.IsNullOrEmpty(device.LineupURL))
+                {
+                    if (!string.IsNullOrEmpty(device?.DeviceAuth))
+                    {
+                        concatenatedDeviceAuth += device.DeviceAuth;
+                    }
+                    continue;
+                }
 
                 // determine lineup
                 string model = device.ModelNumber.Split('-')[1];
@@ -110,8 +117,8 @@ namespace hdhr2mxf
             {
                 foreach (MxfChannel channel in lineup.channels)
                 {
-                    string match = string.Format("{0}{1} {2}", channel.Number, (channel.SubNumber > 0) ? "." + channel.SubNumber.ToString() : string.Empty, channel.MatchName.ToUpper());
-                    if (displayNameChannelIDs.TryGetValue(match, out string serviceid))
+                    string match = string.Format("{0}{1} {2}", channel.Number, (channel.SubNumber > 0) ? "." + channel.SubNumber.ToString() : string.Empty, channel.MatchName.ToUpper());                    
+                    if (displayNameChannelIDs.TryGetValue(match, out string serviceid) || displayNameChannelIDs.TryGetValue(match.Split(' ')[0], out serviceid))
                     {
                         channel.stationId = GetStationIdFromChannelId(serviceid);
                         MxfService service = Common.mxf.With[0].getService(channel.stationId);
@@ -138,12 +145,12 @@ namespace hdhr2mxf
                 // this makes the assumption that the callsign will be first
                 service.CallSign = channel.DisplayNames.First().Text;
 
-                // this makes the assumption that the affiliate will be last
-                string text = channel.DisplayNames.Last().Text.Split(' ')[0];
-                if (!int.TryParse(text, out int dummy1) && !double.TryParse(text, out double dummy2))
-                {
-                    service.Affiliate = Common.mxf.With[0].getAffiliateId(channel.DisplayNames.Last().Text);
-                }
+                //// this makes the assumption that the affiliate will be last
+                //string text = channel.DisplayNames.Last().Text.Split(' ')[0];
+                //if (!int.TryParse(text, out int dummy1) && !double.TryParse(text, out double dummy2))
+                //{
+                //    service.Affiliate = Common.mxf.With[0].getAffiliateId(channel.DisplayNames.Last().Text);
+                //}
             }
 
             // clean up the channels
@@ -181,10 +188,14 @@ namespace hdhr2mxf
                 switch (xmltvEpisodeNum.System.ToLower())
                 {
                     case "dd_progid":
-                        ret.TMSID = xmltvEpisodeNum.Text.ToUpper().Replace(".", "").Substring(0, 14);
-                        ret.Type = ret.TMSID.Substring(0, 2);
-                        ret.SeriesID = ret.TMSID.Substring(2, 8);
-                        ret.ProductionNumber = int.Parse(ret.TMSID.Substring(10, 4));
+                        Match m = Regex.Match(xmltvEpisodeNum.Text, @"(MV|SH|EP|SP)[0-9]{8}.[0-9]{4}");
+                        if (m.Length > 0)
+                        {
+                            ret.TMSID = xmltvEpisodeNum.Text.ToUpper().Replace(".", "").Substring(0, 14);
+                            ret.Type = ret.TMSID.Substring(0, 2);
+                            ret.SeriesID = ret.TMSID.Substring(2, 8);
+                            ret.ProductionNumber = int.Parse(ret.TMSID.Substring(10, 4));
+                        }
                         break;
                     case "xmltv_ns":
                         string[] se1 = xmltvEpisodeNum.Text.Split('.');
@@ -251,6 +262,9 @@ namespace hdhr2mxf
                     //IsSeriesFinale = ,
                 };
 
+                // if dd_progid is not valid, don't add it
+                if (string.IsNullOrEmpty(mxfProgram.episodeInfo.TMSID)) continue;
+
                 // populate the schedule entry and create program entry as required
                 mxfService.mxfScheduleEntries.ScheduleEntry.Add(new MxfScheduleEntry()
                 {
@@ -290,13 +304,7 @@ namespace hdhr2mxf
 
         private static string GetStationIdFromChannelId(string channelid)
         {
-            // just looking for a 5-6 digit number
-            Match match = Regex.Match(channelid, "[0-9]{5,6}");
-            if (match.Length > 0)
-            {
-                return match.Value;
-            }
-            return channelid;
+            return channelid.Split('.')[0];
         }
 
         #endregion
@@ -316,6 +324,8 @@ namespace hdhr2mxf
             mxfProgram.EpisodeTitle = (program.SubTitles.Count > 0) ? program.SubTitles[0].Text : null;
             mxfProgram.Description = (program.Descriptions.Count > 0) ? program.Descriptions[0].Text : null;
             mxfProgram.Language = program.Language?.Text ?? program.Titles[0].Language;
+            mxfProgram.SeasonNumber = (mxfProgram.episodeInfo.SeasonNumber > 0) ? mxfProgram.episodeInfo.SeasonNumber.ToString() : null;
+            mxfProgram.EpisodeNumber = (mxfProgram.episodeInfo.EpisodeNumber > 0) ? mxfProgram.episodeInfo.EpisodeNumber.ToString() : null;
 
             mxfProgram.IsAction = Common.ListContains(program.Categories, "Action");
             mxfProgram.IsComedy = Common.ListContains(program.Categories, "Comedy");
@@ -408,17 +418,14 @@ namespace hdhr2mxf
             else
             {
                 // grab the movie poster
-                foreach (XmltvIcon icon in program.Icons)
+                var icon = program.Icons.Where(arg => arg.src.Contains("/posters/")).SingleOrDefault();
+                if (icon != null)
                 {
-                    if (icon.src.Contains("/posters/"))
-                    {
-                        mxfProgram.GuideImage = Common.mxf.With[0].getGuideImage(icon.src)?.Id;
-                        break;
-                    }
-                    else if (string.IsNullOrEmpty(mxfProgram.GuideImage))
-                    {
-                        mxfProgram.GuideImage = Common.mxf.With[0].getGuideImage(icon.src)?.Id;
-                    }
+                    mxfProgram.GuideImage = Common.mxf.With[0].getGuideImage(icon.src).Id;
+                }
+                else if (program.Icons.Count > 0)
+                {
+                    mxfProgram.GuideImage = Common.mxf.With[0].getGuideImage(program.Icons[0].src).Id;
                 }
 
                 // get the star ratings

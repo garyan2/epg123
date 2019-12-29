@@ -1873,27 +1873,26 @@ namespace epg123
             openFileDialog1.Title = "Select the Compressed Backup ZIP File";
             openFileDialog1.Multiselect = false;
             openFileDialog1.FileName = string.Empty;
-            if (openFileDialog1.ShowDialog() != DialogResult.OK || string.IsNullOrEmpty(openFileDialog1.FileName))
+            if (openFileDialog1.ShowDialog() == DialogResult.OK && !string.IsNullOrEmpty(openFileDialog1.FileName))
             {
-                return;
-            }
-            Helper.backupZipFile = openFileDialog1.FileName;
+                Helper.backupZipFile = openFileDialog1.FileName;
 
-            // set cursor and disable the containers so no buttons can be clicked
-            this.Cursor = Cursors.WaitCursor;
-            splitContainer1.Enabled = splitContainer2.Enabled = false;
+                // set cursor and disable the containers so no buttons can be clicked
+                this.Cursor = Cursors.WaitCursor;
+                splitContainer1.Enabled = splitContainer2.Enabled = false;
 
-            // clear all listviews and comboboxes
-            isolateEpgDatabase();
+                // clear all listviews and comboboxes
+                isolateEpgDatabase();
 
-            // start the thread and wait for it to complete
-            Thread restoreThread = new Thread(restoreBackupFiles);
-            restoreThread.Start();
-            while (!restoreThread.IsAlive) ;
-            while (restoreThread.IsAlive)
-            {
-                Application.DoEvents();
-                Thread.Sleep(100);
+                // start the thread and wait for it to complete
+                Thread restoreThread = new Thread(restoreBackupFiles);
+                restoreThread.Start();
+                while (!restoreThread.IsAlive) ;
+                while (restoreThread.IsAlive)
+                {
+                    Application.DoEvents();
+                    Thread.Sleep(100);
+                }
             }
 
             // build the listviews and make sure registries are good

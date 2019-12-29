@@ -81,11 +81,11 @@ namespace hdhr2mxf
                 {
                     Common.buildKeywords();
                     writeMxf();
-                }
 
-                if (automaticallyImport)
-                {
-                    ImportMxfStream();
+                    if (automaticallyImport)
+                    {
+                        ImportMxfStream();
+                    }
                 }
             }
             catch (Exception ex)

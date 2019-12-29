@@ -73,7 +73,7 @@ namespace epg123
             string url = string.Format("{0}{1}{2}", jsonBaseUrl, jsonApi, uri);
 
             // send request and get response
-            int maxTries = 3;
+            int maxTries = 1;
             int cntTries = 0;
             int timeout = 300000;
             do
