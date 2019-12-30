@@ -1010,6 +1010,9 @@ namespace epg123
                                 ti.PhysicalNumber, (ti.SubNumber > 0) ? "." + ti.SubNumber.ToString() : null));
                             break;
                         case "{adb10da8-5286-4318-9ccb-cbedc854f0dc}":
+                            tuningInfos.Add(string.Format("IR {0}{1}",
+                                ti.PhysicalNumber, (ti.SubNumber > 0) ? "." + ti.SubNumber.ToString() : null));
+                            break;
                         case "AuxIn1":
                         case "Antenna":
                         case "ATSCCable":

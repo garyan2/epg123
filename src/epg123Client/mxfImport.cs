@@ -174,7 +174,7 @@ namespace epg123
             string data = e.Data.ToString();
             if (data.Length > 0)
             {
-                Logger.WriteError(data);
+                Logger.WriteInformation(data);
             }
         }
         private static void task_OutputDataReceived(object sender, DataReceivedEventArgs e)

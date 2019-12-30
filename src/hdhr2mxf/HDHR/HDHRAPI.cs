@@ -46,9 +46,12 @@ namespace HDHomeRunTV
             catch (WebException wex)
             {
                 Console.WriteLine("DiscoverDevices(): " + wex.Message);
-                using (StreamReader sr = new StreamReader(wex.Response.GetResponseStream(), Encoding.UTF8))
+                if (wex.Response != null)
                 {
-                    Console.WriteLine(sr.ReadToEnd());
+                    using (StreamReader sr = new StreamReader(wex.Response.GetResponseStream(), Encoding.UTF8))
+                    {
+                        Console.WriteLine(sr.ReadToEnd());
+                    }
                 }
             }
             catch (Exception e)
@@ -70,9 +73,12 @@ namespace HDHomeRunTV
             catch (WebException wex)
             {
                 Console.WriteLine("ConnectDevice(): " + wex.Message);
-                using (StreamReader sr = new StreamReader(wex.Response.GetResponseStream(), Encoding.UTF8))
+                if (wex.Response != null)
                 {
-                    Console.WriteLine(sr.ReadToEnd());
+                    using (StreamReader sr = new StreamReader(wex.Response.GetResponseStream(), Encoding.UTF8))
+                    {
+                        Console.WriteLine(sr.ReadToEnd());
+                    }
                 }
             }
             catch (Exception e)
@@ -94,9 +100,12 @@ namespace HDHomeRunTV
             catch (WebException wex)
             {
                 Console.WriteLine("GetDeviceChannels(): " + wex.Message);
-                using (StreamReader sr = new StreamReader(wex.Response.GetResponseStream(), Encoding.UTF8))
+                if (wex.Response != null)
                 {
-                    Console.WriteLine(sr.ReadToEnd());
+                    using (StreamReader sr = new StreamReader(wex.Response.GetResponseStream(), Encoding.UTF8))
+                    {
+                        Console.WriteLine(sr.ReadToEnd());
+                    }
                 }
             }
             catch (Exception e)
@@ -121,9 +130,12 @@ namespace HDHomeRunTV
             catch (WebException wex)
             {
                 Console.WriteLine("GetChannelGuide(): " + wex.Message);
-                using (StreamReader sr = new StreamReader(wex.Response.GetResponseStream(), Encoding.UTF8))
+                if (wex.Response != null)
                 {
-                    Console.WriteLine(sr.ReadToEnd());
+                    using (StreamReader sr = new StreamReader(wex.Response.GetResponseStream(), Encoding.UTF8))
+                    {
+                        Console.WriteLine(sr.ReadToEnd());
+                    }
                 }
             }
             catch (Exception e)
@@ -165,9 +177,12 @@ namespace HDHomeRunTV
             catch (WebException wex)
             {
                 Console.WriteLine("GetHdhrXmltvGuide(): " + wex.Message);
-                using (StreamReader sr = new StreamReader(wex.Response.GetResponseStream(), Encoding.UTF8))
+                if (wex.Response != null)
                 {
-                    Console.WriteLine(sr.ReadToEnd());
+                    using (StreamReader sr = new StreamReader(wex.Response.GetResponseStream(), Encoding.UTF8))
+                    {
+                        Console.WriteLine(sr.ReadToEnd());
+                    }
                 }
             }
             catch (Exception e)
@@ -191,9 +206,12 @@ namespace HDHomeRunTV
             catch (WebException wex)
             {
                 Console.WriteLine("IsDvrActive(): " + wex.Message);
-                using (StreamReader sr = new StreamReader(wex.Response.GetResponseStream(), Encoding.UTF8))
+                if (wex.Response != null)
                 {
-                    Console.WriteLine(sr.ReadToEnd());
+                    using (StreamReader sr = new StreamReader(wex.Response.GetResponseStream(), Encoding.UTF8))
+                    {
+                        Console.WriteLine(sr.ReadToEnd());
+                    }
                 }
             }
             catch (Exception e)

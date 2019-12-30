@@ -104,6 +104,7 @@ namespace epg123
                                 break;
                             case "Cable":                                   // Local Analog Cable
                             case "Digital Cable":                           // Local Digital Cable
+                            case "{adb10da8-5286-4318-9ccb-cbedc854f0dc}":  // Freestyle generic tuning space for STB
                                 tabTunerSpace.SelectTab(tabChannelTuningInfo);
                                 lblChnTiModulationType.Visible = chnTiModulationType.Visible = false;
                                 chnTiNumber.Minimum = getTuningSpacesRegistryValue(TuningSpaceName, "MinChannel");
@@ -133,7 +134,6 @@ namespace epg123
                                 break;
 
                             // the following are "ChannelTuningInfo"
-                            case "{adb10da8-5286-4318-9ccb-cbedc854f0dc}":  // Freestyle generic tuning space for STB
                             case "AuxIn1":                                  // Analog Auxiliary Input #1
                             case "Antenna":                                 // Local Analog Antenna
                             case "ATSCCable":                               // Local ATSC Digital Cable
@@ -214,6 +214,7 @@ namespace epg123
                             break;
                         case "Cable":
                         case "Digital Cable":
+                        case "{adb10da8-5286-4318-9ccb-cbedc854f0dc}":
                             success &= addChannelTuningInfo(new ChannelTuningInfo(item.Tag as Device, (int)chnTiNumber.Value, (int)chnTiSubnumber.Value, ModulationType.BDA_MOD_NOT_DEFINED), channel);
                             break;
                         case "dc65aa02-5cb0-4d6d-a020-68702a5b34b8":
@@ -224,7 +225,6 @@ namespace epg123
                                                                 "</tune:ChannelID>", channel.OriginalNumber);
                             success &= addChannelTuningInfo(new StringTuningInfo(item.Tag as Device, tuningString), channel);
                             break;
-                        case "{adb10da8-5286-4318-9ccb-cbedc854f0dc}":
                         case "AuxIn1":
                         case "Antenna":
                         case "ATSCCable":
