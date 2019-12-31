@@ -146,7 +146,12 @@ namespace epg123
                     }
                     sr.Close();
                 }
-                File.Delete(Helper.EButtonPath);
+
+                try
+                {
+                    File.Delete(Helper.EButtonPath);
+                }
+                catch { }
 
                 if (!initLvBuild)
                 {
@@ -612,9 +617,13 @@ namespace epg123
             initLvBuild = true;
             Application.UseWaitCursor = true;
 
+            splitContainer1.Enabled = splitContainer2.Enabled = false;
+            initLvBuild = true;
             buildScannedLineupComboBox();
             buildMergedChannelListView();
             buildLineupChannelListView();
+            initLvBuild = false;
+            splitContainer1.Enabled = splitContainer2.Enabled = true;
             btnImport.Enabled = mergedChannelListViewItems.Count > 0;
 
             Application.UseWaitCursor = false;
@@ -1006,7 +1015,7 @@ namespace epg123
                         case "Cable":
                         case "ClearQAM":
                         case "Digital Cable":
-                            tuningInfos.Add(string.Format("C{0}{1}",
+                            tuningInfos.Add(string.Format("{0}C{1}{2}", ti.IsEncrypted ? "\uD83D\uDD12" : string.Empty,
                                 ti.PhysicalNumber, (ti.SubNumber > 0) ? "." + ti.SubNumber.ToString() : null));
                             break;
                         case "{adb10da8-5286-4318-9ccb-cbedc854f0dc}":
@@ -1135,16 +1144,21 @@ namespace epg123
         private void btnChannelDisplay_Click(object sender, EventArgs e)
         {
             enabledChannelsOnly = !enabledChannelsOnly;
-            mergedChannelListView.Items.Clear();
+            splitContainer1.Enabled = splitContainer2.Enabled = false;
+            initLvBuild = true;
             buildMergedChannelListView();
+            initLvBuild = false;
+            splitContainer1.Enabled = splitContainer2.Enabled = true;
 
             if (!enabledChannelsOnly)
             {
                 btnChannelDisplay.BackColor = SystemColors.Control;
+                btnChannelDisplay.ToolTipText = "Display Enabled Channels only";
             }
             else
             {
                 btnChannelDisplay.BackColor = SystemColors.ControlDark;
+                btnChannelDisplay.ToolTipText = "Display All Channels";
             }
 
             // update the status bar
@@ -1195,6 +1209,11 @@ namespace epg123
                     break;
             }
 
+            if (mergedChannel.UserBlockedState == UserBlockedState.Blocked && enabledChannelsOnly)
+            {
+                mergedChannelListView.Items[e.Item.Index].Remove();
+            }
+
             // immediate update
             Store.mergedLineup.FullMerge(false);
         }
@@ -1202,7 +1221,11 @@ namespace epg123
         {
             if ((cmbSources.SelectedIndex < 0) || initLvBuild) return;
 
+            splitContainer1.Enabled = splitContainer2.Enabled = false;
+            initLvBuild = true;
             buildMergedChannelListView();
+            initLvBuild = false;
+            splitContainer1.Enabled = splitContainer2.Enabled = true;
             updateStatusBar();
         }
         #endregion
@@ -1883,6 +1906,7 @@ namespace epg123
                 // set cursor and disable the containers so no buttons can be clicked
                 this.Cursor = Cursors.WaitCursor;
                 splitContainer1.Enabled = splitContainer2.Enabled = false;
+                initLvBuild = true;
 
                 // clear all listviews and comboboxes
                 isolateEpgDatabase();
@@ -1904,6 +1928,7 @@ namespace epg123
             disableBackgroundScanning();
 
             // reenable the containers and restore the cursor
+            initLvBuild = false;
             splitContainer1.Enabled = splitContainer2.Enabled = true;
             this.Cursor = Cursors.Arrow;
         }
@@ -1912,6 +1937,7 @@ namespace epg123
             // set cursor and disable the containers so no buttons can be clicked
             this.Cursor = Cursors.WaitCursor;
             splitContainer1.Enabled = splitContainer2.Enabled = false;
+            initLvBuild = true;
 
             // start the thread and wait for it to complete
             Thread backupThread = new Thread(backupBackupFiles);
@@ -1933,6 +1959,7 @@ namespace epg123
             }
 
             // reenable the containers and restore the cursor
+            initLvBuild = false;
             splitContainer1.Enabled = splitContainer2.Enabled = true;
             this.Cursor = Cursors.Arrow;
         }
@@ -1965,6 +1992,7 @@ namespace epg123
             // set cursor and disable the containers so no buttons can be clicked
             this.Cursor = Cursors.WaitCursor;
             splitContainer1.Enabled = splitContainer2.Enabled = false;
+            initLvBuild = true;
 
             // prep the client setup form
             frmClientSetup frm = new frmClientSetup();
@@ -1981,6 +2009,7 @@ namespace epg123
             btnRefreshLineups_Click(null, null);
 
             // reenable the containers and restore the cursor
+            initLvBuild = false;
             splitContainer1.Enabled = splitContainer2.Enabled = true;
             this.Cursor = Cursors.Arrow;
         }
@@ -2054,6 +2083,7 @@ namespace epg123
             // set cursor and disable the containers so no buttons can be clicked
             this.Cursor = Cursors.WaitCursor;
             splitContainer1.Enabled = splitContainer2.Enabled = false;
+            initLvBuild = true;
 
             // start the thread and wait for it to complete
             Thread backupThread = new Thread(backupBackupFiles);
@@ -2082,6 +2112,7 @@ namespace epg123
             btnRefreshLineups_Click(null, null);
 
             // reenable the containers and restore the cursor
+            initLvBuild = false;
             splitContainer1.Enabled = splitContainer2.Enabled = true;
             this.Cursor = Cursors.Arrow;
 

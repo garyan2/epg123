@@ -381,7 +381,7 @@
             this.btnChannelDisplay.Name = "btnChannelDisplay";
             this.btnChannelDisplay.Size = new System.Drawing.Size(23, 20);
             this.btnChannelDisplay.Text = "toolStripButton1";
-            this.btnChannelDisplay.ToolTipText = "Display Only Enabled Channel(s)";
+            this.btnChannelDisplay.ToolTipText = "Display Enabled Channels Only";
             this.btnChannelDisplay.Click += new System.EventHandler(this.btnChannelDisplay_Click);
             // 
             // toolStripSeparator4

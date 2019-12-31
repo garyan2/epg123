@@ -264,7 +264,7 @@ namespace epg123
                 ProcessStartInfo startInfo = new ProcessStartInfo()
                 {
                     FileName = "schtasks.exe",
-                    Arguments = string.Format("/create /xml {0} /tn {1}", Helper.Epg123TaskXmlPath, taskName),
+                    Arguments = string.Format("/create /xml \"{0}\" /tn {1}", Helper.Epg123TaskXmlPath, taskName),
                     CreateNoWindow = true,
                     UseShellExecute = false
                 };
