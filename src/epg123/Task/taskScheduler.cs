@@ -10,6 +10,7 @@ namespace epg123
 {
     class epgTaskScheduler
     {
+        private Random random = new Random();
         const string taskName = "epg123_update";
         public DateTime schedTime;
         public string statusString;
@@ -25,6 +26,7 @@ namespace epg123
 
         public void queryTask()
         {
+            schedTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, random.Next(0, 23), random.Next(0, 59), 0);
             responseString = string.Empty;
             errorString = string.Empty;
             ProcessStartInfo startInfo = new ProcessStartInfo()

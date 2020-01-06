@@ -181,6 +181,8 @@ namespace epg123Transfer
                     if (!string.IsNullOrEmpty(request.SeriesAttribute)) request.SeriesAttribute = epgSeries;
                     else request.SeriesElement.Uid = epgSeries;
                     background = Color.LightGreen;
+
+                    if (!series.StartsWith("!Series!")) request.AnyChannel = "true";
                 }
 
                 // create ListViewItem

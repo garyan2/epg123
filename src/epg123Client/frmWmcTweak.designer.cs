@@ -811,6 +811,7 @@
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Tweak WMC";
             this.Load += new System.EventHandler(this.frmWmcTweak_Load);
+            this.Shown += new System.EventHandler(this.frmWmcTweak_Shown);
             ((System.ComponentModel.ISupportInitialize)(this.trackMinutes)).EndInit();
             this.grpMainEPG.ResumeLayout(false);
             this.grpMainEPG.PerformLayout();

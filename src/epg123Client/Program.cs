@@ -1,18 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Security.Cryptography;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
-using System.Text;
 using System.Threading;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using Microsoft.MediaCenter.Guide;
 using Microsoft.MediaCenter.Pvr;
-using Microsoft.MediaCenter.Store;
-using Microsoft.Win32;
 
 namespace epg123
 {
@@ -98,6 +94,7 @@ namespace epg123
         private const string lu_name = "EPG123 Lineups with Schedules Direct";
         private static string filename = string.Empty;
         private static bool showProgress = false;
+        private static int maximumRecordingWaitHours = 23;
 
         private static NotifyIcon notifyIcon;
 
@@ -265,7 +262,7 @@ namespace epg123
                     // ensure no recordings are active if importing
                     if (import && !force && programRecording())
                     {
-                        Logger.WriteError("A program recording is still in progress after 5 hours. Aborting the mxf file import.");
+                        Logger.WriteError(string.Format("A program recording is still in progress after {0} hours. Aborting the mxf file import.", maximumRecordingWaitHours));
                         Logger.Close();
                         NativeMethods.SetThreadExecutionState(prevThreadState | (uint)ExecutionFlags.ES_CONTINUOUS);
                         mutex3.ReleaseMutex();
@@ -367,7 +364,7 @@ namespace epg123
         private static bool programRecording()
         {
             bool active = false;
-            DateTime expireTime = DateTime.Now + TimeSpan.FromHours(23);
+            DateTime expireTime = DateTime.Now + TimeSpan.FromHours((double)maximumRecordingWaitHours);
             int intervalMinutes = 60;
 
             do

@@ -97,7 +97,7 @@ namespace epg123
             // STEP 2: WMC TV Setup
             else if (sender.Equals(btnTvSetup) && configureHdPvrTuners() && openWmc() && activateGuide() && disableBackgroundScanning())
             {
-                if (!isTunerCountTweaked(TUNERLIMIT) && MessageBox.Show("It appears the tuner limit increase did not stick. Do you wish to apply the tweak and perform a TV Setup in WMC again?\n\nNOTE: This only affects users with more than 4 tuners of any tuner type (i.e. ATSC, Digital Cable, DVB-T, etc). If this does not affect you, click [NO].", "Tuner Limit Increase Failed", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                if (!isTunerCountTweaked(TUNERLIMIT) && MessageBox.Show("If the tuner limit increase did not stick during TV Setup, you can try again. Do you wish to apply the tweak and perform a TV Setup in WMC again?\n\nNOTE: This only affects users with more than 4 tuners of any tuner type (i.e. ATSC, Digital Cable, DVB-T, etc). If this does not affect you, click [NO].", "Verify Tuner Limit Increase", MessageBoxButtons.YesNo) == DialogResult.Yes)
                 {
                     tweakMediaCenterTunerCount(TUNERLIMIT);
                 }
@@ -702,8 +702,8 @@ namespace epg123
                 };
                 procWmc = Process.Start(startInfo);
             }
-            updateStatusText("Waiting for user to close WMC ...");
-            Logger.WriteVerbose("Waiting for user to close WMC ...");
+            updateStatusText("Waiting for user to complete Step 2 ...");
+            Logger.WriteVerbose("Waiting for user to complete Step 2 ...");
 
             do
             {

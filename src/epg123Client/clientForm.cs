@@ -1066,24 +1066,30 @@ namespace epg123
             }
 
             // build ListViewItem
-            ListViewItem listViewItem = new ListViewItem(new string[]
+            try
             {
+                ListViewItem listViewItem = new ListViewItem(new string[]
+                {
                 (!customLabelsOnly) ? mergedChannel.PrimaryChannel.CallSign : mergedChannel.CallSign,
                 (!customLabelsOnly) ? originalChannelNumber : customChannelNumber,
                 (!scanned) ? (mergedChannel.Service.Name ?? null) : null,
                 (!scanned) ? (mergedChannel.PrimaryChannel.Lineup.Name ?? null) : null,
                 source, tuneInfos
-            })
-            {
-                Tag = mergedChannel
-            };
-            if (!originalChannelNumber.Equals(customChannelNumber) || !mergedChannel.PrimaryChannel.CallSign.Equals(mergedChannel.CallSign))
-            {
-                listViewItem.SubItems[0].BackColor = (mergedChannel.PrimaryChannel.CallSign.Equals(mergedChannel.CallSign)) ? SystemColors.Window : Color.Pink;
-                listViewItem.SubItems[1].BackColor = (originalChannelNumber.Equals(customChannelNumber)) ? SystemColors.Window : Color.Pink;
-                listViewItem.UseItemStyleForSubItems = false;
+                })
+                {
+                    Tag = mergedChannel
+                };
+                if (!originalChannelNumber.Equals(customChannelNumber) || !mergedChannel.PrimaryChannel.CallSign.Equals(mergedChannel.CallSign))
+                {
+                    listViewItem.SubItems[0].BackColor = (mergedChannel.PrimaryChannel.CallSign.Equals(mergedChannel.CallSign)) ? SystemColors.Window : Color.Pink;
+                    listViewItem.SubItems[1].BackColor = (originalChannelNumber.Equals(customChannelNumber)) ? SystemColors.Window : Color.Pink;
+                    listViewItem.UseItemStyleForSubItems = false;
+                }
+                return listViewItem;
             }
-            return listViewItem;
+            catch { }
+
+            return null;
         }
         private void mergedChannelListView_KeyDown(object sender, KeyEventArgs e)
         {

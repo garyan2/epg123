@@ -32,18 +32,20 @@ namespace epg123
                     var oldImage = oldImageLibrary.Images.Where(arg => arg.Zap2itId.Equals(mxfProgram.tmsId.Substring(0, 10))).SingleOrDefault();
                     if (oldImage != null)
                     {
-                        mxfProgram.GuideImage = sdMxf.With[0].getGuideImage(oldImage.Url).Id;
                         ++processedObjects; reportProgress();
-
-                        mxfProgram.programImages = new List<sdImage>
+                        if (!string.IsNullOrEmpty(oldImage.Url))
                         {
-                            new sdImage()
+                            mxfProgram.GuideImage = sdMxf.With[0].getGuideImage(oldImage.Url).Id;
+                            mxfProgram.programImages = new List<sdImage>
                             {
-                                Uri = oldImage.Url,
-                                Height = oldImage.Height,
-                                Width = oldImage.Width
-                            }
-                        };
+                                new sdImage()
+                                {
+                                    Uri = oldImage.Url,
+                                    Height = oldImage.Height,
+                                    Width = oldImage.Width
+                                }
+                            };
+                        }
 
                         newImageLibrary.Images.Add(new archiveImage()
                         {

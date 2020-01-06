@@ -96,7 +96,7 @@ namespace epg123
 
                                 lblChnTiSubnumber.Visible = chnTiSubnumber.Visible = true;
                                 chnTiSubnumber.Minimum = getTuningSpacesRegistryValue(TuningSpaceName, "Min Minor Channel");
-                                chnTiSubnumber.Maximum = getTuningSpacesRegistryValue(TuningSpaceName, "Max Minor Channel");
+                                chnTiSubnumber.Maximum = 10000; // getTuningSpacesRegistryValue(TuningSpaceName, "Max Minor Channel");
 
                                 lblChnTiPhysicalNumber.Visible = chnTiPhysicalNumber.Visible = false;
 
@@ -240,7 +240,8 @@ namespace epg123
 
                     // changed to do the notifies when form is closed until I find out why PVR task will crash 10 seconds after
                     channelsToAdd.Add(channel);
-                    rtbChannelAddHistory.Text += string.Format("Channel {0}({1}) {2} has been added to {3}.\n\n", channel.ChannelNumber.ToString(), chnTiPhysicalNumber.Value.ToString(), channel.CallSign.ToString(), scannedLineup.Name.ToString());
+                    rtbChannelAddHistory.Text += string.Format("Channel {0}{1} {2} has been added to {3}.\n\n", channel.ChannelNumber.ToString(),
+                        chnTiPhysicalNumber.Value > 0 ? string.Format(" ({0})", chnTiPhysicalNumber.Value) : string.Empty, channel.CallSign.ToString(), scannedLineup.Name.ToString());
                 }
                 else
                 {

@@ -81,14 +81,18 @@ namespace epg123
             cmbCountries.SelectedIndex = index;
 
             // automatically fetch the zipcode as entered during TV Setup and perform a fetch
-            using (RegistryKey key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Media Center\Settings\ProgramGuide", false))
+            try
             {
-                if ((key != null) && (!string.IsNullOrEmpty(key.GetValue("strLocation").ToString())))
+                using (RegistryKey key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Media Center\Settings\ProgramGuide", false))
                 {
-                    txtZipcode.Text = key.GetValue("strLocation").ToString().Split(' ')[0];
-                    btnFetch_Click(btnFetch, null);
+                    if ((key != null) && (!string.IsNullOrEmpty(key.GetValue("strLocation").ToString())))
+                    {
+                        txtZipcode.Text = key.GetValue("strLocation").ToString().Split(' ')[0];
+                        btnFetch_Click(btnFetch, null);
+                    }
                 }
             }
+            catch { }
         }
 
         private void cmbCountries_SelectedIndexChanged(object sender, EventArgs e)

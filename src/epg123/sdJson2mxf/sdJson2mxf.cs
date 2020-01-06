@@ -73,7 +73,10 @@ namespace epg123
                 }
 
                 // initialize tmdb api
-                tmdbAPI.Initialize(false);
+                if (config.TMDbCoverArt)
+                {
+                    tmdbAPI.Initialize(false);
+                }
 
                 // prepopulate keyword groups
                 initializeKeywordGroups();

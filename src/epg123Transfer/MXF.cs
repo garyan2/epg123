@@ -113,6 +113,7 @@ namespace epg123Transfer.MxfXml
             {
                 return "true";
             }
+            set { }
         }
 
         [XmlAttribute("contentQualityPreference")]

@@ -127,10 +127,15 @@ namespace epg123
 
             // populate current values
             readRegistries();
+        }
+        private void frmWmcTweak_Shown(object sender, EventArgs e)
+        {
+            this.Refresh();
 
             // determine if tuner limit tweak is in place
             lblTunerLimit.Enabled = btnTunerLimit.Enabled = !isTunerCountTweaked();
         }
+
         private void setNamePatternExampleText()
         {
             textBox2.Text = "HomeTown\r\n" +
@@ -462,7 +467,7 @@ namespace epg123
                 {
                     int width = 0;
                     if (key.GetValue("ChannelCellWidth") != null) width = (int)key.GetValue("ChannelCellWidth");
-                    trackColumnWidth.Value = safeTrackBarValue(width, trackColumnWidth);
+                    trackColumnWidth.Value = safeTrackBarValue(width == 0 ? 240 : width, trackColumnWidth);
 
                     cbAutoAdjustColumnWidth.Checked = (width == calculateColumnWidth());
                 }
@@ -948,13 +953,22 @@ namespace epg123
 
             // set guide visible columns
             var columns = shellDllResources[(int)SHELLRESOURCE.EPG_MCML].Descendants()
-                .Where(arg => arg.Name.LocalName == "Condition")
+                .Where(arg => arg.Name.LocalName == "Condition") // IsWidescreen
                 .Where(arg => arg.Attribute("Target") != null)
                 .Where(arg => arg.Attribute("Target").Value == "[Table.VisibleColumnCapacity]")
                 .Single();
             if (columns != null)
             {
                 columns.SetAttributeValue("Value", trackMinutes.Value.ToString()); // default is 120
+            }
+            columns = shellDllResources[(int)SHELLRESOURCE.EPG_MCML].Descendants()
+                .Where(arg => arg.Name.LocalName == "Default")
+                .Where(arg => arg.Attribute("Target") != null)
+                .Where(arg => arg.Attribute("Target").Value == "[Table.VisibleColumnCapacity]")
+                .Single();
+            if (columns != null)
+            {
+                columns.SetAttributeValue("Value", trackMinutes.Value.ToString()); // default is 90
             }
 
             // set program / movie details placement
@@ -1102,13 +1116,13 @@ namespace epg123
             if (((hModule = LoadLibrary(filePath)) != IntPtr.Zero) &&
                 ((hResource = FindResource(hModule, resourceName, resType)) != IntPtr.Zero) &&
                 ((resourceData = LoadResource(hModule, hResource)) != IntPtr.Zero) &&
-                ((memoryPointer = LockResource(resourceData)) != IntPtr.Zero) &&
-                ((resourceSize = SizeOfResource(hModule, hResource)) > 0))
+                ((resourceSize = SizeOfResource(hModule, hResource)) > 0) &&
+                ((memoryPointer = LockResource(resourceData)) != IntPtr.Zero))
             {
                 byte[] bytes = new byte[resourceSize];
-                Marshal.Copy(memoryPointer, bytes, 0, bytes.Length);
-                FreeLibrary(hModule);
-
+                Marshal.Copy(memoryPointer, bytes, 0, bytes.Length);                
+                while (FreeLibrary(hModule));
+                
                 // cleanup needed for MCE Reset Toolbox
                 string xml = Encoding.ASCII.GetString(bytes);
                 return XDocument.Parse(xml.Substring(xml.IndexOf('<')));
