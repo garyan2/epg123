@@ -117,6 +117,10 @@ namespace epg123
             {
                 splitContainer1.SplitterDistance = Settings.Default.SplitterDistance;
             }
+
+            // throw the version number into the title
+            string[] version = Helper.epg123Version.Split('.');
+            this.Text += string.Format(" v{0}.{1}.{2}", version[0], version[1], version[2]);
         }
         private void clientForm_Shown(object sender, EventArgs e)
         {
@@ -169,7 +173,7 @@ namespace epg123
                 this.Refresh();
                 buildLineupChannelListView();
 
-                btnImport.Enabled = mergedChannelListViewItems.Count > 0;
+                btnImport.Enabled = true;// mergedChannelListViewItems.Count > 0;
             }
             updateStatusBar();
             splitContainer1.Enabled = splitContainer2.Enabled = true;
@@ -353,6 +357,9 @@ namespace epg123
             unsubscribeMenuItem.Visible = mergedChannelMenuStrip;
             toolStripSeparator2.Visible = mergedChannelMenuStrip;
             renameMenuItem.Visible = mergedChannelMenuStrip;
+            renumberMenuItem.Visible = mergedChannelMenuStrip;
+            toolStripSeparator6.Visible = mergedChannelMenuStrip;
+            clipboardMenuItem.Visible = mergedChannelMenuStrip;
 
             // only enable rename menu item if a single channel has been selected
             renameMenuItem.Enabled = (mergedChannelListView.SelectedItems.Count == 1) && customLabelsOnly;
@@ -960,6 +967,9 @@ namespace epg123
                 }
                 if (!shown) continue;
 
+                // unfortunately the lock emoji didn't come into play until Unicode 6.0.0
+                // Windows 7 uses Unicode 5.x, it will just show an open block
+                string lockSymbol = "\uD83D\uDD12";
                 if (tuningInfo is DvbTuningInfo)
                 {
                     DvbTuningInfo ti = tuningInfo as DvbTuningInfo;
@@ -969,7 +979,7 @@ namespace epg123
                             // formula to convert channel (n) to frequency (fc) is fc = 8n + 306 (in MHz)
                             // offset is -167KHz, 0Hz, +167KHz => int offset = ti.Frequency - (channel * 8000) - 306000;
                             int channel = (ti.Frequency - 305833) / 8000;
-                            tuningInfos.Add(string.Format("UHF C{0}", channel));
+                            tuningInfos.Add(string.Format("{0}UHF C{1}", ti.IsEncrypted ? lockSymbol : string.Empty, channel));
                             break;
                         case "DVB-S":
                             DVBSLocator locator = ti.TuneRequest.Locator as DVBSLocator;
@@ -991,7 +1001,7 @@ namespace epg123
                                 default:
                                     break;
                             }
-                            tuningInfos.Add(string.Format("{0:F0}{1} ({2})", ti.Frequency / 1000.0, polarization, ti.Sid));
+                            tuningInfos.Add(string.Format("{0}{1:F0}{2} ({3})", ti.IsEncrypted ? lockSymbol : string.Empty, ti.Frequency / 1000.0, polarization, ti.Sid));
                             break;
                         case "DVB-C":
                         case "ISDB-T":
@@ -1015,7 +1025,7 @@ namespace epg123
                         case "Cable":
                         case "ClearQAM":
                         case "Digital Cable":
-                            tuningInfos.Add(string.Format("{0}C{1}{2}", ti.IsEncrypted ? "\uD83D\uDD12" : string.Empty,
+                            tuningInfos.Add(string.Format("{0}C{1}{2}", ti.IsEncrypted ? lockSymbol : string.Empty,
                                 ti.PhysicalNumber, (ti.SubNumber > 0) ? "." + ti.SubNumber.ToString() : null));
                             break;
                         case "{adb10da8-5286-4318-9ccb-cbedc854f0dc}":
@@ -1135,6 +1145,7 @@ namespace epg123
                 {
                     // update listview
                     mergedChannelListView.Items.Remove(lvi);
+                    mergedChannelListViewItems.Remove(lvi);
                 }
                 else
                 {
@@ -2229,6 +2240,21 @@ namespace epg123
             {
                 Process.Start(Helper.Epg123TraceLogPath);
             }
+        }
+
+        private void clipboardMenuItem_Click(object sender, EventArgs e)
+        {
+            string TextToAdd = "Call Sign\tNumber\tService Name\tSubscribed Lineup\tScanned Source(s)\tTuningInfo\r\n";
+            foreach (ListViewItem listViewItem in mergedChannelListView.Items)
+            {
+                TextToAdd += string.Format("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\r\n", listViewItem.SubItems[0].Text,
+                                                                               listViewItem.SubItems[1].Text,
+                                                                               listViewItem.SubItems[2].Text,
+                                                                               listViewItem.SubItems[3].Text,
+                                                                               listViewItem.SubItems[4].Text,
+                                                                               listViewItem.SubItems[5].Text);
+            }
+            Clipboard.SetText(TextToAdd);
         }
     }
 }

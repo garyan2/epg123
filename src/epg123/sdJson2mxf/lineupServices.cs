@@ -289,10 +289,55 @@ namespace epg123
                                 }
                             }
 
+                            string matchName = null;
+                            switch (clientLineup.Transport)
+                            {
+                                case "DVB-S":
+                                    Match m = Regex.Match(lineupMap.Metadata.Lineup, @"\d+\.\d+");
+                                    if (m.Success && map.FrequencyHz > 0 && map.NetworkID > 0 && map.TransportID > 0 && map.ServiceID > 0)
+                                    {
+                                        while (map.FrequencyHz > 13000)
+                                        {
+                                            map.FrequencyHz /= 1000;
+                                        }
+                                        matchName = string.Format("DVBS:{0}:{1}:{2}:{3}:{4}", m.Value.Replace(".", ""),
+                                                                                              map.FrequencyHz,
+                                                                                              map.NetworkID,
+                                                                                              map.TransportID,
+                                                                                              map.ServiceID);
+                                    }
+                                    number = -1;
+                                    subnumber = 0;
+                                    break;
+                                case "DVB-T":
+                                    if (map.NetworkID > 0 && map.TransportID > 0 && map.ServiceID > 0)
+                                    {
+                                        matchName = string.Format("DVBT:{0}:{1}:{2}", map.NetworkID, map.TransportID, map.ServiceID);
+                                    }
+                                    break;
+                                case "Antenna":
+                                    if (map.AtscMajor > 0 && map.AtscMinor > 0)
+                                    {
+                                        matchName = string.Format("OC:{0}:{1}", map.AtscMajor, map.AtscMinor);
+                                    }
+                                    break;
+                                default:
+                                    break;
+                            }
+
                             string channelNumber = number.ToString() + ((subnumber > 0) ? "." + subnumber.ToString() : null);
                             if (channelNumbers.Add(channelNumber + ":" + station.StationID))
                             {
-                                addLineupChannel(lineupMap.Metadata.Lineup, mxfService.StationID, mxfService.Id, number, subnumber, lineupIndex);
+                                sdMxf.With[0].Lineups[lineupIndex].channels.Add(new MxfChannel()
+                                {
+                                    Lineup = sdMxf.With[0].Lineups[lineupIndex].Id,
+                                    lineupUid = lineupMap.Metadata.Lineup,
+                                    stationId = mxfService.StationID,
+                                    Service = mxfService.Id,
+                                    Number = number,
+                                    SubNumber = subnumber,
+                                    MatchName = matchName
+                                });
                             }
                         }
                     }
@@ -352,20 +397,6 @@ namespace epg123
                     break;
                 }
             }
-        }
-
-        private static void addLineupChannel(string lineupid, string stationid, string service, int number, int subnumber, int lineupIndex = 0)
-        {
-            // new method with stationId
-            sdMxf.With[0].Lineups[lineupIndex].channels.Add(new MxfChannel()
-            {
-                Lineup = sdMxf.With[0].Lineups[lineupIndex].Id,
-                lineupUid = lineupid,
-                stationId = stationid,
-                Service = service,
-                Number = number,
-                SubNumber = subnumber
-            });
         }
 
         private static bool downloadSDLogo(string uri, string filepath)

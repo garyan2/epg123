@@ -66,6 +66,18 @@ namespace epg123
                         cmbCountries.Items.Add(country.FullName);
                     }
                 }
+
+                // add a manual option
+                countries.Add(null);
+                countries.Add(new sdCountry()
+                {
+                    FullName = "Manual lineup input...",
+                    OnePostalCode = false,
+                    PostalCode = "/[A-Z]+-[A-Z0-9]+-[A-Z0-9]+",
+                    PostalCodeExample = "USA-CA00053-DEFAULT",
+                    ShortName = "EPG123"
+                });
+                cmbCountries.Items.Add(string.Empty); cmbCountries.Items.Add("Manual lineup input...");
             }
 
             int index = 0;
@@ -149,6 +161,20 @@ namespace epg123
             if ((m.Length == 0) && (!string.IsNullOrEmpty(countries[cmbCountries.SelectedIndex].PostalCodeExample)))
             {
                 MessageBox.Show("Postal Code is in the wrong format for selected country.\nPlease correct entry and try again.\n", "Invalid Entry", MessageBoxButtons.OK);
+            }
+            else if (countries[cmbCountries.SelectedIndex].ShortName.Equals("EPG123"))
+            {
+                listBox1.Items.Clear();
+                listBox1.Items.Add(txtZipcode.Text);
+
+                headends = new List<SdLineup>();
+                headends.Add(new SdLineup()
+                {
+                    Transport = "unknown",
+                    Name = txtZipcode.Text,
+                    Location = "unknown",
+                    Lineup = txtZipcode.Text
+                });
             }
             else
             {
@@ -248,7 +274,7 @@ namespace epg123
             if ((e.Button == MouseButtons.Right) && (index != -1) && (index < listBox1.Items.Count))
             {
                 listBox1.SelectedIndex = listBox1.IndexFromPoint(e.Location);
-                frmPreview preview = new frmPreview(headends[index].Lineup);
+                frmPreview preview = new frmPreview(headends[index].Lineup.Trim());
                 preview.ShowDialog();
             }
         }

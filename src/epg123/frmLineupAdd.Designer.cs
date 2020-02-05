@@ -61,9 +61,10 @@
             // 
             // txtZipcode
             // 
+            this.txtZipcode.CharacterCasing = System.Windows.Forms.CharacterCasing.Upper;
             this.txtZipcode.Location = new System.Drawing.Point(85, 39);
             this.txtZipcode.Name = "txtZipcode";
-            this.txtZipcode.Size = new System.Drawing.Size(79, 20);
+            this.txtZipcode.Size = new System.Drawing.Size(160, 20);
             this.txtZipcode.TabIndex = 0;
             this.txtZipcode.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.txtZipcode_KeyPress);
             // 
@@ -78,8 +79,8 @@
             // 
             // listBox1
             // 
-            this.listBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.listBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.listBox1.FormattingEnabled = true;
             this.listBox1.Location = new System.Drawing.Point(15, 89);
@@ -92,7 +93,7 @@
             // 
             // btnFetch
             // 
-            this.btnFetch.Location = new System.Drawing.Point(170, 37);
+            this.btnFetch.Location = new System.Drawing.Point(251, 37);
             this.btnFetch.Name = "btnFetch";
             this.btnFetch.Size = new System.Drawing.Size(75, 23);
             this.btnFetch.TabIndex = 5;

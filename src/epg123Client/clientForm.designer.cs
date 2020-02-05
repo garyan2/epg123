@@ -102,6 +102,8 @@
             this.tbSchedTime = new System.Windows.Forms.MaskedTextBox();
             this.lblUpdateTime = new System.Windows.Forms.Label();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
+            this.toolStripSeparator6 = new System.Windows.Forms.ToolStripSeparator();
+            this.clipboardMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -235,41 +237,43 @@
             this.unsubscribeMenuItem,
             this.toolStripSeparator2,
             this.renameMenuItem,
-            this.renumberMenuItem});
+            this.renumberMenuItem,
+            this.toolStripSeparator6,
+            this.clipboardMenuItem});
             this.contextMenuStrip1.Name = "contextMenuStrip1";
-            this.contextMenuStrip1.Size = new System.Drawing.Size(140, 98);
+            this.contextMenuStrip1.Size = new System.Drawing.Size(181, 148);
             this.contextMenuStrip1.Opening += new System.ComponentModel.CancelEventHandler(this.contextMenuStrip1_Opening);
             // 
             // subscribeMenuItem
             // 
             this.subscribeMenuItem.Name = "subscribeMenuItem";
-            this.subscribeMenuItem.Size = new System.Drawing.Size(139, 22);
+            this.subscribeMenuItem.Size = new System.Drawing.Size(180, 22);
             this.subscribeMenuItem.Text = "Subscribe";
             this.subscribeMenuItem.Click += new System.EventHandler(this.subscribeMenuItem_Click);
             // 
             // unsubscribeMenuItem
             // 
             this.unsubscribeMenuItem.Name = "unsubscribeMenuItem";
-            this.unsubscribeMenuItem.Size = new System.Drawing.Size(139, 22);
+            this.unsubscribeMenuItem.Size = new System.Drawing.Size(180, 22);
             this.unsubscribeMenuItem.Text = "Unsubscribe";
             this.unsubscribeMenuItem.Click += new System.EventHandler(this.subscribeMenuItem_Click);
             // 
             // toolStripSeparator2
             // 
             this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(136, 6);
+            this.toolStripSeparator2.Size = new System.Drawing.Size(177, 6);
             // 
             // renameMenuItem
             // 
             this.renameMenuItem.Name = "renameMenuItem";
-            this.renameMenuItem.Size = new System.Drawing.Size(139, 22);
+            this.renameMenuItem.Size = new System.Drawing.Size(180, 22);
             this.renameMenuItem.Text = "Rename";
             this.renameMenuItem.Click += new System.EventHandler(this.renameMenuItem_Click);
             // 
             // renumberMenuItem
             // 
             this.renumberMenuItem.Name = "renumberMenuItem";
-            this.renumberMenuItem.Size = new System.Drawing.Size(139, 22);
+            this.renumberMenuItem.Size = new System.Drawing.Size(180, 22);
             this.renumberMenuItem.Text = "Renumber";
             this.renumberMenuItem.Click += new System.EventHandler(this.renumberMenuItem_Click);
             // 
@@ -847,6 +851,18 @@
             // 
             this.openFileDialog1.FileName = "openFileDialog1";
             // 
+            // toolStripSeparator6
+            // 
+            this.toolStripSeparator6.Name = "toolStripSeparator6";
+            this.toolStripSeparator6.Size = new System.Drawing.Size(177, 6);
+            // 
+            // clipboardMenuItem
+            // 
+            this.clipboardMenuItem.Name = "clipboardMenuItem";
+            this.clipboardMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.clipboardMenuItem.Text = "Copy to clipboard...";
+            this.clipboardMenuItem.Click += new System.EventHandler(this.clipboardMenuItem_Click);
+            // 
             // clientForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
@@ -974,5 +990,7 @@
         private System.Windows.Forms.ToolStripProgressBar mergedLineupProgressBar;
         private System.Windows.Forms.ToolStripProgressBar getChannelsProgressBar;
         private System.Windows.Forms.ToolStripProgressBar lvItemsProgressBar;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator6;
+        private System.Windows.Forms.ToolStripMenuItem clipboardMenuItem;
     }
 }

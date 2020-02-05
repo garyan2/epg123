@@ -385,10 +385,10 @@ namespace epg123
                 prg.Year = prg.OriginalAirdate.Substring(0, 4);
             }
 
-            prg.HasExtendedCastAndCrew = "true";
-            prg.HasExtendedSynopsis = "true";
-            prg.HasReview = "true";
-            prg.HasSimilarPrograms = "true";
+            //prg.HasExtendedCastAndCrew = "true";
+            //prg.HasExtendedSynopsis = "true";
+            //prg.HasReview = "true";
+            //prg.HasSimilarPrograms = "true";
         }
 
         private static void DetermineSeriesInfo(ref MxfProgram mxfProgram, sdProgram sdProgram)
@@ -396,7 +396,7 @@ namespace epg123
             // do not extend cast and crew for paid programming
             if (string.IsNullOrEmpty(mxfProgram.IsPaidProgramming))
             {
-                mxfProgram.HasExtendedCastAndCrew = "true";
+                //mxfProgram.HasExtendedCastAndCrew = "true";
             }
 
             // for sports programs that start with "SP", create a series entry based on program title
