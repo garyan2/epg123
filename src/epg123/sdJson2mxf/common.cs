@@ -34,7 +34,7 @@ namespace epg123
                                            "TASK: Build movie posters ...",
                                            "TASK: Build series images ...",
                                            "TASK: Saving files ...",
-                                           "TASK: Clean cache folder ..." };
+                                           "TASK: Clean and save cache file ..." };
 
         private static void reportProgress()
         {

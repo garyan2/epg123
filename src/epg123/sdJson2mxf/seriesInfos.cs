@@ -32,12 +32,21 @@ namespace epg123
                 }
 
                 // import the cached description if exists, otherwise queue it up
-                string filepath = string.Format("{0}\\SH{1}0000", Helper.Epg123CacheFolder, series.tmsSeriesId);
+                string seriesId = string.Format("SH{0}0000", series.tmsSeriesId);
+                string filepath = string.Format("{0}\\{1}", Helper.Epg123CacheFolder, seriesId);
                 FileInfo file = new FileInfo(filepath);
-                if (file.Exists && (file.Length > 0))
+                if (file.Exists && (file.Length > 0) && !epgCache.JsonFiles.ContainsKey(seriesId))
+                {
+                    using (StreamReader reader = File.OpenText(filepath))
+                    {
+                        epgCache.AddAsset(seriesId, reader.ReadToEnd());
+                    }
+                }
+
+                if (epgCache.JsonFiles.ContainsKey(seriesId))
                 {
                     ++processedObjects; reportProgress();
-                    using (StreamReader reader = File.OpenText(filepath))
+                    using (StringReader reader = new StringReader(epgCache.GetAsset(seriesId)))
                     {
                         JsonSerializer serializer = new JsonSerializer();
                         sdGenericDescriptions cached = (sdGenericDescriptions)serializer.Deserialize(reader, typeof(sdGenericDescriptions));
@@ -47,7 +56,10 @@ namespace epg123
                             series.Description = cached.Description1000;
                         }
                     }
-                    File.SetLastAccessTimeUtc(filepath, DateTime.UtcNow);
+                }
+                else if (!int.TryParse(series.tmsSeriesId, out int dummy))
+                {
+                    ++processedObjects; reportProgress();
                 }
                 else
                 {
@@ -115,13 +127,13 @@ namespace epg123
                 mxfSeriesInfo.Description = description.Description1000;
 
                 // serialize JSON directly to a file
-                string filepath = string.Format("{0}\\{1}", Helper.Epg123CacheFolder, series_id);
-                using (StreamWriter writer = File.CreateText(filepath))
+                using (StringWriter writer = new StringWriter())
                 {
                     try
                     {
                         JsonSerializer serializer = new JsonSerializer();
                         serializer.Serialize(writer, description);
+                        epgCache.AddAsset(series_id, writer.ToString());
                     }
                     catch { }
                 }

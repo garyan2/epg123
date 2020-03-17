@@ -135,15 +135,24 @@ namespace epg123
                         sdScheduleMd5DateResponse dayResponse;
                         if (stationResponse.TryGetValue(day, out dayResponse) && (dayResponse.Code == 0) && !string.IsNullOrEmpty(dayResponse.Md5))
                         {
-                            FileInfo file = new FileInfo(string.Format("{0}\\{1}", Helper.Epg123CacheFolder, safeFilename(dayResponse.Md5)));
-                            if (!file.Exists || (file.Length == 0))
+                            string filepath = string.Format("{0}\\{1}", Helper.Epg123CacheFolder, safeFilename(dayResponse.Md5));
+                            FileInfo file = new FileInfo(filepath);
+                            if (file.Exists && (file.Length > 0) && !epgCache.JsonFiles.ContainsKey(dayResponse.Md5))
                             {
-                                newDateRequests.Add(day);
+                                using (StreamReader reader = File.OpenText(filepath))
+                                {
+                                    epgCache.AddAsset(dayResponse.Md5, reader.ReadToEnd());
+                                }
                             }
-                            else
+
+                            if (epgCache.JsonFiles.ContainsKey(dayResponse.Md5))
                             {
                                 ++processedObjects; reportProgress();
                                 ++cachedSchedules;
+                            }
+                            else
+                            {
+                                newDateRequests.Add(day);
                             }
                             scheduleEntries.Add(dayResponse.Md5, new string[] { request.StationID, day });
                         }
@@ -190,13 +199,13 @@ namespace epg123
                     // serialize JSON directly to a file
                     if (scheduleEntries.TryGetValue(response.Metadata.Md5, out string[] serviceDate))
                     {
-                        string filepath = string.Format("{0}\\{1}", Helper.Epg123CacheFolder, safeFilename(response.Metadata.Md5));
-                        using (StreamWriter writer = File.CreateText(filepath))
+                        using (StringWriter writer = new StringWriter())
                         {
                             try
                             {
                                 JsonSerializer serializer = new JsonSerializer();
                                 serializer.Serialize(writer, response);
+                                epgCache.AddAsset(response.Metadata.Md5, writer.ToString());
                             }
                             catch
                             {
@@ -227,8 +236,7 @@ namespace epg123
         private static bool processMd5ScheduleEntry(string md5)
         {
             // ensure cached file exists
-            string filepath = string.Format("{0}\\{1}", Helper.Epg123CacheFolder, safeFilename(md5));
-            if (!File.Exists(filepath))
+            if (!epgCache.JsonFiles.ContainsKey(md5))
             {
                 return false;
             }
@@ -237,7 +245,7 @@ namespace epg123
             sdScheduleResponse schedule;
             try
             {
-                using (StreamReader reader = File.OpenText(filepath))
+                using (StringReader reader = new StringReader(epgCache.GetAsset(md5)))
                 {
                     JsonSerializer serializer = new JsonSerializer();
                     schedule = (sdScheduleResponse)serializer.Deserialize(reader, typeof(sdScheduleResponse));
@@ -247,11 +255,10 @@ namespace epg123
                         return false;
                     }
                 }
-                File.SetLastAccessTimeUtc(filepath, DateTime.UtcNow);
             }
             catch (Exception ex)
             {
-                Logger.WriteError("Error occurred when trying to read Md5Schedule file in cache directory. \"" + filepath + "\" Message: " + ex.Message);
+                Logger.WriteError("Error occurred when trying to read Md5Schedule file in cache directory. Message: " + ex.Message);
                 return false;
             }
 

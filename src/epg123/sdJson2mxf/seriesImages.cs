@@ -54,7 +54,7 @@ namespace epg123
                         Width = oldImage.Width
                     });
                 }
-                else if (!series.tmsSeriesId.StartsWith("SP"))
+                else if (int.TryParse(series.tmsSeriesId, out int dummy))
                 {
                     seriesImageQueue.Add("SH" + series.tmsSeriesId);
                 }

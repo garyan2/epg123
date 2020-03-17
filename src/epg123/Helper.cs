@@ -254,6 +254,17 @@ namespace epg123
         }
 
         /// <summary>
+        /// The file path for epg123cache.json file
+        /// </summary>
+        public static string Epg123CacheJsonPath
+        {
+            get
+            {
+                return Epg123CacheFolder + "\\epg123cache.json";
+            }
+        }
+
+        /// <summary>
         /// The folder used to store all the station logos
         /// </summary>
         public static string Epg123LogosFolder

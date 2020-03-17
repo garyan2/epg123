@@ -12,7 +12,7 @@ namespace epg123
     {
         public static System.ComponentModel.BackgroundWorker backgroundWorker;
         public static bool success = false;
-        private static DateTime startTime = DateTime.UtcNow - TimeSpan.FromMinutes(1.0);
+        public static DateTime startTime = DateTime.UtcNow;
 
         private static epgConfig config;
         public static MXF sdMxf = new MXF();
@@ -71,6 +71,7 @@ namespace epg123
                 {
                     Directory.CreateDirectory(Helper.Epg123CacheFolder);
                 }
+                epgCache.LoadCache();
 
                 // initialize tmdb api
                 if (config.TMDbCoverArt)
@@ -116,6 +117,7 @@ namespace epg123
 
                     // clean the cache folder of stale data
                     cleanCacheFolder();
+                    epgCache.WriteCache();
 
                     Logger.WriteVerbose(string.Format("Downloaded and processed {0} of data from Schedules Direct.", sdAPI.TotalDownloadBytes));
                     Logger.WriteVerbose(string.Format("Generated .mxf file contains {0} services, {1} series, {2} programs, and {3} people with {4} image links.",
@@ -206,7 +208,9 @@ namespace epg123
             foreach (string file in cacheFiles)
             {
                 ++processedObjects; reportProgress();
-                if (File.GetLastAccessTimeUtc(file) < startTime)
+                if (file.Equals(Helper.Epg123CacheJsonPath)) continue;
+
+                //if (File.GetLastAccessTimeUtc(file) < startTime)
                 {
                     try
                     {
@@ -216,7 +220,11 @@ namespace epg123
                     catch { }
                 }
             }
-            Logger.WriteInformation(string.Format("{0} files deleted from the cache directory during cleanup.", delCnt));
+
+            if (delCnt > 0)
+            {
+                Logger.WriteInformation(string.Format("{0} files deleted from the cache directory during cleanup.", delCnt));
+            }
         }
 
         private static bool writeXmltv()

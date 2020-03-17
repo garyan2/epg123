@@ -124,8 +124,14 @@ namespace epg123
                 }
                 if (add)
                 {
-                    sdAPI.addLineup((string)item.Tag);
-                    newLineups.Add((string)item.Tag);
+                    if (sdAPI.addLineup((string)item.Tag))
+                    {
+                        newLineups.Add((string)item.Tag);
+                    }
+                    else
+                    {
+                        MessageBox.Show(string.Format("Failed to add lineup \"{0}\" to your account. Check the log for more details.", (string)item.Tag));
+                    }
                 }
             }
             cancel = false;

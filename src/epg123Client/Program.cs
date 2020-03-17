@@ -394,6 +394,7 @@ namespace epg123
                 {
                     TimeSpan delay = TimeSpan.FromTicks(Math.Min((timeReady - DateTime.Now).Ticks + TimeSpan.FromMinutes(1).Ticks,
                                                                  TimeSpan.FromMinutes(intervalMinutes).Ticks));
+                    Logger.WriteInformation(string.Format("Delaying import while WMC is recording. Will check recording status again at {0:HH:mm:ss}", DateTime.Now + delay));
 
                     notifyIcon.Text = "EPG123\nDelaying import due to recording in progress...";
                     notifyIcon.Icon = epg123.Properties.Resources.EPG123_pause;

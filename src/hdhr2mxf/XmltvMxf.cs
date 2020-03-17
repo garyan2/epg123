@@ -137,7 +137,7 @@ namespace hdhr2mxf
                 MxfService service = Common.mxf.With[0].getService(GetStationIdFromChannelId(channel.Id));
 
                 // add guide image if available
-                if (channel.Icons != null && channel.Icons.Count > 0)
+                if (!Common.noLogos && channel.Icons != null && channel.Icons.Count > 0)
                 {
                     service.LogoImage = Common.mxf.With[0].getGuideImage(channel.Icons[0].src).Id;
                 }

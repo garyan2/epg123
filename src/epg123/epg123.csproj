@@ -95,6 +95,7 @@
   <ItemGroup>
     <Compile Include="CompressXmlFiles.cs" />
     <Compile Include="CustomLineups.cs" />
+    <Compile Include="epgCache.cs" />
     <Compile Include="frmDownloadLogos.cs">
       <SubType>Form</SubType>
     </Compile>

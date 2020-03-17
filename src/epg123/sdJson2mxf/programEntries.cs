@@ -29,16 +29,23 @@ namespace epg123
             {
                 string filepath = string.Format("{0}\\{1}", Helper.Epg123CacheFolder, safeFilename(sdMxf.With[0].Programs[i].md5));
                 FileInfo file = new FileInfo(filepath);
-                if (file.Exists && (file.Length > 0))
+                if (file.Exists && (file.Length > 0) && !epgCache.JsonFiles.ContainsKey(sdMxf.With[0].Programs[i].md5))
+                {
+                    using (StreamReader reader = File.OpenText(filepath))
+                    {
+                        epgCache.AddAsset(sdMxf.With[0].Programs[i].md5, reader.ReadToEnd());
+                    }
+                }
+
+                if (epgCache.JsonFiles.ContainsKey(sdMxf.With[0].Programs[i].md5))
                 {
                     ++processedObjects; reportProgress();
-                    using (StreamReader reader = File.OpenText(filepath))
+                    using (StringReader reader = new StringReader(epgCache.GetAsset(sdMxf.With[0].Programs[i].md5)))
                     {
                         JsonSerializer serializer = new JsonSerializer();
                         sdProgram program = (sdProgram)serializer.Deserialize(reader, typeof(sdProgram));
                         sdMxf.With[0].Programs[i] = buildMxfProgram(sdMxf.With[0].Programs[i], program);
                     }
-                    File.SetLastAccessTimeUtc(filepath, DateTime.UtcNow);
                 }
                 else
                 {
@@ -103,13 +110,13 @@ namespace epg123
                 // serialize JSON directly to a file
                 if (response.Md5 != null)
                 {
-                    string filepath = string.Format("{0}\\{1}", Helper.Epg123CacheFolder, safeFilename(response.Md5));
-                    using (StreamWriter writer = File.CreateText(filepath))
+                    using (StringWriter writer = new StringWriter())
                     {
                         try
                         {
                             JsonSerializer serializer = new JsonSerializer();
                             serializer.Serialize(writer, response);
+                            epgCache.AddAsset(response.Md5, writer.ToString());
                         }
                         catch { }
                     }
