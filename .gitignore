@@ -328,3 +328,5 @@ ASALocalRun/
 
 # MFractors (Xamarin productivity tool) working folder 
 .mfractor/
+web.resources/Thumbs.db
+mcupdate_arguments.xlsx

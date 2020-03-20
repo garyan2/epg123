@@ -131,7 +131,7 @@ namespace epg123
                     {
                         mxfSeriesInfo = sdMxf.With[0].getSeriesInfo(response.ProgramID.Substring(2, 8));
                     }
-                    if (mxfSeriesInfo == null || !string.IsNullOrEmpty(mxfSeriesInfo.GuideImage)) return;
+                    if (mxfSeriesInfo == null || !string.IsNullOrEmpty(mxfSeriesInfo.GuideImage)) continue;
 
                     // get series images
                     mxfSeriesInfo.seriesImages = getSeriesImages(response.Data);
