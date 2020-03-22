@@ -105,8 +105,15 @@ namespace epg123
                         ++processedObjects; reportProgress();
                     }
 
-                    // save the image links
-                    writeImageArchive();
+                    // remove the guide images xml file
+                    if (File.Exists(Helper.Epg123GuideImagesXmlPath))
+                    {
+                        try
+                        {
+                            File.Delete(Helper.Epg123GuideImagesXmlPath);
+                        }
+                        catch { }
+                    }
 
                     // create the ModernMedia UI+ json file if desired
                     if (config.ModernMediaUiPlusSupport)

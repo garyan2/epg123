@@ -8,8 +8,8 @@ namespace epg123
         [JsonProperty("programID")]
         public string ProgramID { get; set; }
 
-        [JsonProperty("resourceID")]
-        public string ResourceID { get; set; }
+        //[JsonProperty("resourceID")]
+        //public string ResourceID { get; set; }
 
         [JsonProperty("titles")]
         public IList<sdProgramTitle> Titles { get; set; }
@@ -26,8 +26,8 @@ namespace epg123
         [JsonProperty("genres")]
         public string[] Genres { get; set; }
 
-        [JsonProperty("officialURL")]
-        public string OfficialURL { get; set; }
+        //[JsonProperty("officialURL")]
+        //public string OfficialURL { get; set; }
 
         [JsonProperty("keyWords")]
         public sdProgramKeyWords KeyWords { get; set; }
@@ -59,23 +59,23 @@ namespace epg123
         [JsonProperty("showType")]
         public string ShowType { get; set; }
 
-        [JsonProperty("recommendations")]
-        public IList<sdProgramRecommendation> Recommendations { get; set; }
+        //[JsonProperty("recommendations")]
+        //public IList<sdProgramRecommendation> Recommendations { get; set; }
 
-        [JsonProperty("hasImageArtwork")]
-        public bool HasImageArtwork { get; set; }
+        //[JsonProperty("hasImageArtwork")]
+        //public bool HasImageArtwork { get; set; }
 
-        [JsonProperty("hasSeriesArtwork")]
-        public bool HasSeriesArtwork { get; set; }
+        //[JsonProperty("hasSeriesArtwork")]
+        //public bool HasSeriesArtwork { get; set; }
 
-        [JsonProperty("hasEpisodeArtwork")]
-        public bool HasEpisodeArtwork { get; set; }
+        //[JsonProperty("hasEpisodeArtwork")]
+        //public bool HasEpisodeArtwork { get; set; }
 
-        [JsonProperty("hasMovieArtwork")]
-        public bool HasMovieArtwork { get; set; }
+        //[JsonProperty("hasMovieArtwork")]
+        //public bool HasMovieArtwork { get; set; }
 
-        [JsonProperty("hasSportsArtwork")]
-        public bool HasSportsArtwork { get; set; }
+        //[JsonProperty("hasSportsArtwork")]
+        //public bool HasSportsArtwork { get; set; }
 
         [JsonProperty("md5")]
         public string Md5 { get; set; }
@@ -179,8 +179,8 @@ namespace epg123
         public int EpisodeNumber { get; set; }
 
         // Gracenote only
-        [JsonProperty("totalEpisodes")]
-        public int TotalEpisodes { get; set; }
+        //[JsonProperty("totalEpisodes")]
+        //public int TotalEpisodes { get; set; }
     }
 
     public class sdProgramContentRating
@@ -236,11 +236,11 @@ namespace epg123
         [JsonProperty("role")]
         public string Role { get; set; }
 
-        [JsonProperty("nameId")]
-        public string NameId { get; set; }
+        //[JsonProperty("nameId")]
+        //public string NameId { get; set; }
 
-        [JsonProperty("personId")]
-        public string PersonId { get; set; }
+        //[JsonProperty("personId")]
+        //public string PersonId { get; set; }
 
         [JsonProperty("name")]
         public string Name { get; set; }
@@ -251,10 +251,10 @@ namespace epg123
 
     public class sdProgramRecommendation
     {
-        [JsonProperty("programID")]
-        public string ProgramID { get; set; }
+        //[JsonProperty("programID")]
+        //public string ProgramID { get; set; }
 
-        [JsonProperty("title120")]
-        public string Title120 { get; set; }
+        //[JsonProperty("title120")]
+        //public string Title120 { get; set; }
     }
 }

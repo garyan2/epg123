@@ -66,6 +66,17 @@ namespace epg123
             isDirty = true;
         }
 
+        public static void UpdateAssetImages(string md5, string json)
+        {
+            // reduce the size of the string by removing nulls and empty strings
+            json = Regex.Replace(json, "\"\\w+?\":null,?", string.Empty);
+            json = Regex.Replace(json, "\"\\w+?\":\"\",?", string.Empty);
+
+            // store
+            JsonFiles[md5].Images = json;
+            isDirty = true;
+        }
+
         public static void CleanDictionary()
         {
             List<string> keysToDelete = new List<string>();
@@ -88,6 +99,9 @@ namespace epg123
     {
         [JsonProperty("jsonEntry")]
         public string JsonEntry { get; set; }
+
+        [JsonProperty("images")]
+        public string Images { get; set; }
 
         [JsonProperty("lastUsedDate")]
         public DateTime LastUsedDate { get; set; }

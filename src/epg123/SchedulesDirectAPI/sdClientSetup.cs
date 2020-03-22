@@ -23,8 +23,8 @@ namespace epg123
 
     public class sdHeadendResponse
     {
-        [JsonProperty("headend")]
-        public string Headend { get; set; }
+        //[JsonProperty("headend")]
+        //public string Headend { get; set; }
 
         [JsonProperty("transport")]
         public string Transport { get; set; }
@@ -44,7 +44,7 @@ namespace epg123
         [JsonProperty("lineup")]
         public string Lineup { get; set; }
 
-        [JsonProperty("uri")]
-        public string Uri { get; set; }
+        //[JsonProperty("uri")]
+        //public string Uri { get; set; }
     }
 }

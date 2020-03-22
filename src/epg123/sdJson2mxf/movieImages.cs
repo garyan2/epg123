@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using epg123.MxfXml;
 
 namespace epg123
@@ -25,43 +27,60 @@ namespace epg123
 
             // query all movies from Schedules Direct
             movieImageQueue = new List<string>();
-            if (moviePrograms != null)
+            foreach (MxfProgram mxfProgram in moviePrograms)
             {
-                foreach (MxfProgram mxfProgram in moviePrograms)
+                // use old image cache method if still exists.
+                var oldImage = oldImageLibrary.Images.Where(arg => arg.Zap2itId.Equals(mxfProgram.tmsId.Substring(0, 10))).SingleOrDefault();
+                if (oldImage != null)
                 {
-                    var oldImage = oldImageLibrary.Images.Where(arg => arg.Zap2itId.Equals(mxfProgram.tmsId.Substring(0, 10))).SingleOrDefault();
-                    if (oldImage != null)
+                    if (string.IsNullOrEmpty(oldImage.Url))
                     {
-                        ++processedObjects; reportProgress();
-                        if (!string.IsNullOrEmpty(oldImage.Url))
-                        {
-                            mxfProgram.GuideImage = sdMxf.With[0].getGuideImage(oldImage.Url).Id;
-                            mxfProgram.programImages = new List<sdImage>
-                            {
-                                new sdImage()
-                                {
-                                    Uri = oldImage.Url,
-                                    Height = oldImage.Height,
-                                    Width = oldImage.Width
-                                }
-                            };
-                        }
-
-                        newImageLibrary.Images.Add(new archiveImage()
-                        {
-                            Title = oldImage.Title,
-                            Url = oldImage.Url,
-                            Zap2itId = oldImage.Zap2itId,
-                            Height = oldImage.Height,
-                            Width = oldImage.Width
-                        });
+                        epgCache.JsonFiles[mxfProgram.md5].Images = "";
                     }
                     else
                     {
-                        movieImageQueue.Add(mxfProgram.tmsId);
+                        List<sdImage> images = new List<sdImage>()
+                        {
+                            new sdImage()
+                            {
+                                Uri = oldImage.Url,
+                                Height = oldImage.Height,
+                                Width = oldImage.Width
+                            }
+                        };
+
+                        using (StringWriter writer = new StringWriter())
+                        {
+                            JsonSerializer serializer = new JsonSerializer();
+                            serializer.Serialize(writer, images);
+                            epgCache.UpdateAssetImages(mxfProgram.md5, writer.ToString());
+                        }
                     }
                 }
+
+                // use the cached link if present
+                if (epgCache.JsonFiles[mxfProgram.md5].Images != null)
+                {
+                    ++processedObjects; reportProgress();
+                    if (string.IsNullOrEmpty(epgCache.JsonFiles[mxfProgram.md5].Images)) continue;
+
+                    using (StringReader reader = new StringReader(epgCache.JsonFiles[mxfProgram.md5].Images))
+                    {
+                        JsonSerializer serializer = new JsonSerializer();
+                        mxfProgram.programImages = (List<sdImage>)serializer.Deserialize(reader, typeof(List<sdImage>));
+                    }
+
+                    if (mxfProgram.programImages.Count > 0)
+                    {
+                        mxfProgram.GuideImage = sdMxf.With[0].getGuideImage(mxfProgram.programImages[0].Uri).Id;
+                    }
+                }
+                else
+                {
+                    movieImageQueue.Add(mxfProgram.tmsId);
+                }
             }
+            Logger.WriteVerbose(string.Format("Found {0} cached movie poster links.", processedObjects));
 
             // maximum 500 queries at a time
             if (movieImageQueue.Count > 0)
@@ -126,29 +145,28 @@ namespace epg123
                     mxfProgram.programImages = getMoviePosterId(mxfProgram.Title, mxfProgram.Year, mxfProgram.Language);
                 }
 
-                // regardless if image is found or not, store the final result in xml file
-                // this avoids hitting the tmdb server every update for every movie missing cover art
-                // do not include the staple image
-                sdImage sdImage = (mxfProgram.programImages.Count > 0) ? mxfProgram.programImages[0] : new sdImage() { Uri = string.Empty };
-                newImageLibrary.Images.Add(new archiveImage()
-                {
-                    Title = mxfProgram.Title,
-                    Url = sdImage.Uri,
-                    Zap2itId = mxfProgram.tmsId.Substring(0, 10),
-                    Height = sdImage.Height,
-                    Width = sdImage.Width
-                });
-
-                // final choice is the staple return from Schedules Direct
-                if ((mxfProgram.programImages.Count == 0) && (movieStaple != null))
+                // last choice is the staple image
+                if (mxfProgram.programImages.Count == 0 && movieStaple != null)
                 {
                     mxfProgram.programImages.Add(movieStaple);
                 }
 
-                // if an image is found, insert in the mxf file
+                // regardless if image is found or not, store the final result in xml file
+                // this avoids hitting the tmdb server every update for every movie missing cover art
                 if (mxfProgram.programImages.Count > 0)
                 {
+                    using (StringWriter writer = new StringWriter())
+                    {
+                        JsonSerializer serializer = new JsonSerializer();
+                        serializer.Serialize(writer, mxfProgram.programImages);
+                        epgCache.UpdateAssetImages(mxfProgram.md5, writer.ToString());
+                    }
+
                     mxfProgram.GuideImage = sdMxf.With[0].getGuideImage(mxfProgram.programImages[0].Uri).Id;
+                }
+                else if (config.TMDbCoverArt && tmdbAPI.isAlive)
+                {
+                    epgCache.UpdateAssetImages(mxfProgram.md5, string.Empty);
                 }
             }
         }

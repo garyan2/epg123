@@ -17,32 +17,32 @@ namespace epg123
         [JsonProperty("stationID")]
         public string StationID { get; set; }
 
-        [JsonProperty("serverID")]
-        public string ServerID { get; set; }
+        //[JsonProperty("serverID")]
+        //public string ServerID { get; set; }
 
-        [JsonProperty("code")]
-        public int Code { get; set; }
+        //[JsonProperty("code")]
+        //public int Code { get; set; }
 
-        [JsonProperty("response")]
-        public string Response { get; set; }
+        //[JsonProperty("response")]
+        //public string Response { get; set; }
 
-        [JsonProperty("message")]
-        public string Message { get; set; }
+        //[JsonProperty("message")]
+        //public string Message { get; set; }
 
-        [JsonProperty("datetime")]
-        public string DateTime { get; set; }
+        //[JsonProperty("datetime")]
+        //public string DateTime { get; set; }
 
-        [JsonProperty("retryTime")]
-        public string RetryTime { get; set; }
+        //[JsonProperty("retryTime")]
+        //public string RetryTime { get; set; }
 
-        [JsonProperty("minDate")]
-        public string MinDate { get; set; }
+        //[JsonProperty("minDate")]
+        //public string MinDate { get; set; }
 
-        [JsonProperty("maxDate")]
-        public string MaxDate { get; set; }
+        //[JsonProperty("maxDate")]
+        //public string MaxDate { get; set; }
 
-        [JsonProperty("requestedDate")]
-        public string RequestedDate { get; set; }
+        //[JsonProperty("requestedDate")]
+        //public string RequestedDate { get; set; }
 
         [JsonProperty("programs")]
         public IList<sdSchedProgram> Programs { get; set; }
@@ -56,11 +56,11 @@ namespace epg123
         [JsonProperty("code")]
         public int Code { get; set; }
 
-        [JsonProperty("message")]
-        public string Message { get; set; }
+        //[JsonProperty("message")]
+        //public string Message { get; set; }
 
-        [JsonProperty("lastModified")]
-        public string LastModified { get; set; }
+        //[JsonProperty("lastModified")]
+        //public string LastModified { get; set; }
 
         [JsonProperty("md5")]
         public string Md5 { get; set; }
@@ -86,29 +86,29 @@ namespace epg123
         [JsonProperty("cableInTheClassroom")]
         public bool CableInTheClassroom { get; set; }
 
-        [JsonProperty("catchup")]
-        public bool Catchup { get; set; }
+        //[JsonProperty("catchup")]
+        //public bool Catchup { get; set; }
 
-        [JsonProperty("continued")]
-        public bool Continued { get; set; }
+        //[JsonProperty("continued")]
+        //public bool Continued { get; set; }
 
-        [JsonProperty("educational")]
-        public bool Educational { get; set; }
+        //[JsonProperty("educational")]
+        //public bool Educational { get; set; }
 
         [JsonProperty("joinedInProgress")]
         public bool JoinedInProgress { get; set; }
 
-        [JsonProperty("leftInProgress")]
-        public bool LeftInProgress { get; set; }
+        //[JsonProperty("leftInProgress")]
+        //public bool LeftInProgress { get; set; }
 
         [JsonProperty("premiere")]
         public bool Premiere { get; set; }
 
-        [JsonProperty("programBreak")]
-        public bool ProgramBreak { get; set; }
+        //[JsonProperty("programBreak")]
+        //public bool ProgramBreak { get; set; }
 
-        [JsonProperty("repeat")]
-        public bool Repeat { get; set; }
+        //[JsonProperty("repeat")]
+        //public bool Repeat { get; set; }
 
         [JsonProperty("signed")]
         public bool Signed { get; set; }
@@ -116,8 +116,8 @@ namespace epg123
         [JsonProperty("subjectToBlackout")]
         public bool SubjectToBlackout { get; set; }
 
-        [JsonProperty("timeApproximate")]
-        public bool TimeApproximate { get; set; }
+        //[JsonProperty("timeApproximate")]
+        //public bool TimeApproximate { get; set; }
 
         [JsonProperty("liveTapeDelay")]
         public string LiveTapeDelay { get; set; }
@@ -140,11 +140,11 @@ namespace epg123
 
     public class sdSchedMetadata
     {
-        [JsonProperty("code")]
-        public int Code { get; set; }
+        //[JsonProperty("code")]
+        //public int Code { get; set; }
 
-        [JsonProperty("modified")]
-        public string Modified { get; set; }
+        //[JsonProperty("modified")]
+        //public string Modified { get; set; }
 
         [JsonProperty("md5")]
         public string Md5 { get; set; }

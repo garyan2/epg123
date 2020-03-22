@@ -208,13 +208,13 @@ namespace epg123
                 {
                     if (!GetExtendedSeriesDataForUiPlus(i))
                     {
-                        Logger.WriteError("Problem occurred during GetExtendedSeriesInfoDescriptions(). Exiting.");
+                        Logger.WriteError("Problem occurred during buildAllExtendedSeriesDataForUiPlus(). Exiting.");
                         return false;
                     }
                 }
             }
             Logger.WriteInformation(string.Format("Processed {0} extended series descriptions.", processedObjects));
-            Logger.WriteMessage("Exiting GetExtendedSeriesInfoDescriptions(). SUCCESS.");
+            Logger.WriteMessage("Exiting buildAllExtendedSeriesDataForUiPlus(). SUCCESS.");
             return true;
         }
         private static bool GetExtendedSeriesDataForUiPlus(int start = 0)

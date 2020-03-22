@@ -13,8 +13,8 @@ namespace epg123
 
     public class SdTokenResponse
     {
-        [JsonProperty("response")]
-        public string Response { get; set; }
+        //[JsonProperty("response")]
+        //public string Response { get; set; }
 
         [JsonProperty("code")]
         public int Code { get; set; }

@@ -35,11 +35,11 @@ namespace epg123
         [JsonProperty("category")]
         public string Category { get; set; }
 
-        [JsonProperty("text")]
-        public string Text { get; set; }
+        //[JsonProperty("text")]
+        //public string Text { get; set; }
 
-        [JsonProperty("primary")]
-        public string Primary { get; set; }
+        //[JsonProperty("primary")]
+        //public string Primary { get; set; }
 
         [JsonProperty("tier")]
         public string Tier { get; set; }

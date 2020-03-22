@@ -8,11 +8,11 @@ namespace epg123
         [JsonProperty("code")]
         public int Code { get; set; }
 
-        [JsonProperty("serverID")]
-        public string ServerID { get; set; }
+        //[JsonProperty("serverID")]
+        //public string ServerID { get; set; }
 
-        [JsonProperty("datetime")]
-        public string Datetime { get; set; }
+        //[JsonProperty("datetime")]
+        //public string Datetime { get; set; }
 
         [JsonProperty("lineups")]
         public IList<SdLineup> Lineups { get; set; }

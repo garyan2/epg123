@@ -32,20 +32,20 @@ namespace epg123
         [JsonProperty("frequencyHz")]
         public long FrequencyHz { get; set; }
 
-        [JsonProperty("polarization")]
-        public string Polarization { get; set; }
+        //[JsonProperty("polarization")]
+        //public string Polarization { get; set; }
 
-        [JsonProperty("deliverySystem")]
-        public string DeliverySystem { get; set; }
+        //[JsonProperty("deliverySystem")]
+        //public string DeliverySystem { get; set; }
 
-        [JsonProperty("modulationSystem")]
-        public string ModulationSystem { get; set; }
+        //[JsonProperty("modulationSystem")]
+        //public string ModulationSystem { get; set; }
 
-        [JsonProperty("symbolrate")]
-        public int Symbolrate { get; set; }
+        //[JsonProperty("symbolrate")]
+        //public int Symbolrate { get; set; }
 
-        [JsonProperty("fec")]
-        public string Fec { get; set; }
+        //[JsonProperty("fec")]
+        //public string Fec { get; set; }
 
         [JsonProperty("serviceID")]
         public int ServiceID { get; set; }
@@ -59,8 +59,8 @@ namespace epg123
         [JsonProperty("channel")]
         public string Channel { get; set; }
 
-        [JsonProperty("virtualChannel")]
-        public string VirtualChannel { get; set; }
+        //[JsonProperty("virtualChannel")]
+        //public string VirtualChannel { get; set; }
 
         [JsonProperty("channelMajor")]
         public int ChannelMajor { get; set; }
@@ -68,17 +68,17 @@ namespace epg123
         [JsonProperty("channelMinor")]
         public int ChannelMinor { get; set; }
 
-        [JsonProperty("providerChannel")]
-        public string ProvideChannel { get; set; }
+        //[JsonProperty("providerChannel")]
+        //public string ProvideChannel { get; set; }
 
-        [JsonProperty("providerCallsign")]
-        public string ProviderCallsign { get; set; }
+        //[JsonProperty("providerCallsign")]
+        //public string ProviderCallsign { get; set; }
 
-        [JsonProperty("logicalChannelNumber")]
-        public string LogicalChannelNumber { get; set; }
+        //[JsonProperty("logicalChannelNumber")]
+        //public string LogicalChannelNumber { get; set; }
 
-        [JsonProperty("matchType")]
-        public string MatchType { get; set; }
+        //[JsonProperty("matchType")]
+        //public string MatchType { get; set; }
     }
 
     public class SdLineupStation
@@ -98,14 +98,14 @@ namespace epg123
         [JsonProperty("broadcastLanguage")]
         public string[] BroadcastLanguage { get; set; }
 
-        [JsonProperty("descriptionLanguage")]
-        public string[] DescriptionLanguage { get; set; }
+        //[JsonProperty("descriptionLanguage")]
+        //public string[] DescriptionLanguage { get; set; }
 
-        [JsonProperty("broadcaster")]
-        public sdBroadcaster Broadcaster { get; set; }
+        //[JsonProperty("broadcaster")]
+        //public sdBroadcaster Broadcaster { get; set; }
 
-        [JsonProperty("isCommercialFree")]
-        public bool IsCommercialFree { get; set; }
+        //[JsonProperty("isCommercialFree")]
+        //public bool IsCommercialFree { get; set; }
 
         [JsonProperty("stationLogo")]
         public List<SdStationImage> StationLogos { get; set; }
@@ -125,26 +125,26 @@ namespace epg123
         [JsonProperty("width")]
         public int Width { get; set; }
 
-        [JsonProperty("md5")]
-        public string Md5 { get; set; }
+        //[JsonProperty("md5")]
+        //public string Md5 { get; set; }
 
-        [JsonProperty("source")]
-        public string Source { get; set; }
+        //[JsonProperty("source")]
+        //public string Source { get; set; }
     }
 
     public class sdBroadcaster
     {
-        [JsonProperty("city")]
-        public string City { get; set; }
+        //[JsonProperty("city")]
+        //public string City { get; set; }
 
-        [JsonProperty("state")]
-        public string State { get; set; }
+        //[JsonProperty("state")]
+        //public string State { get; set; }
 
-        [JsonProperty("postalcode")]
-        public string Postalcode { get; set; }
+        //[JsonProperty("postalcode")]
+        //public string Postalcode { get; set; }
 
-        [JsonProperty("country")]
-        public string Country { get; set; }
+        //[JsonProperty("country")]
+        //public string Country { get; set; }
     }
 
     public class sdMetadata
@@ -152,14 +152,14 @@ namespace epg123
         [JsonProperty("lineup")]
         public string Lineup { get; set; }
 
-        [JsonProperty("modified")]
-        public string Modified { get; set; }
+        //[JsonProperty("modified")]
+        //public string Modified { get; set; }
 
-        [JsonProperty("transport")]
-        public string Transport { get; set; }
+        //[JsonProperty("transport")]
+        //public string Transport { get; set; }
 
-        [JsonProperty("modulation")]
-        public string Modulation { get; set; }
+        //[JsonProperty("modulation")]
+        //public string Modulation { get; set; }
     }
 
     public class sdLineupPreviewChannel
@@ -173,7 +173,7 @@ namespace epg123
         [JsonProperty("callsign")]
         public string Callsign { get; set; }
 
-        [JsonProperty("affiliate")]
-        public string Affiliate { get; set; }
+        //[JsonProperty("affiliate")]
+        //public string Affiliate { get; set; }
     }
 }
