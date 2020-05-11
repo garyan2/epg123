@@ -219,12 +219,12 @@ namespace epg123
                     Logger.WriteVerbose("Successfully retrieved TMDb configurations.");
                     return JsonConvert.DeserializeObject<TmdbConfiguration>(sr.ReadToEnd());
                 }
-                Logger.WriteError("Failed to retrieve TMDb configurations.");
             }
             catch (Exception ex)
             {
-                Logger.WriteError(ex.Message);
+                Logger.WriteInformation(ex.Message);
             }
+            Logger.WriteInformation("Failed to retrieve TMDb configurations.");
             return null;
         }
 

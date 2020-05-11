@@ -7,6 +7,17 @@ namespace epg123
 {
     class CompressXmlFiles
     {
+        public static bool CompressSingleStreamToFile(Stream stream, string fileUri, string filePath, CompressionOption option = CompressionOption.Maximum)
+        {
+            using (var pack = ZipPackage.Open(filePath, FileMode.Create))
+            {
+                var part = pack.CreatePart(new Uri(fileUri, UriKind.Relative), 
+                    System.Net.Mime.MediaTypeNames.Text.Xml, CompressionOption.Normal);
+                CopyStream(stream, part.GetStream());
+            }
+            return true;
+        }
+
         /// <summary>
         /// Creates a compressed zip file in a subfolder called "backup"
         /// </summary>
@@ -62,6 +73,14 @@ namespace epg123
                 }
             }
             return null;
+        }
+
+        public static void ClosePackage()
+        {
+            if (package != null)
+            {
+                package.Close();
+            }
         }
 
         private static void CopyStream(Stream source, Stream target)

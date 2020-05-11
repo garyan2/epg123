@@ -14,6 +14,9 @@ namespace epg123
         [JsonProperty("titles")]
         public IList<sdProgramTitle> Titles { get; set; }
 
+        [JsonProperty("episodeTitle150")]
+        public string EpisodeTitle150 { get; set; }
+
         [JsonProperty("eventDetails")]
         public sdProgramEventDetails EventDetails { get; set; }
 
@@ -31,9 +34,6 @@ namespace epg123
 
         [JsonProperty("keyWords")]
         public sdProgramKeyWords KeyWords { get; set; }
-
-        [JsonProperty("episodeTitle150")]
-        public string EpisodeTitle150 { get; set; }
 
         [JsonProperty("metadata")]
         public IList<Dictionary<string, sdProgramMetadataProvider>> Metadata { get; set; }

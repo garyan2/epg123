@@ -96,7 +96,7 @@ namespace epg123
 
                                 lblChnTiSubnumber.Visible = chnTiSubnumber.Visible = true;
                                 chnTiSubnumber.Minimum = getTuningSpacesRegistryValue(TuningSpaceName, "Min Minor Channel");
-                                chnTiSubnumber.Maximum = 10000; // getTuningSpacesRegistryValue(TuningSpaceName, "Max Minor Channel");
+                                chnTiSubnumber.Maximum = 99999; // getTuningSpacesRegistryValue(TuningSpaceName, "Max Minor Channel");
 
                                 lblChnTiPhysicalNumber.Visible = chnTiPhysicalNumber.Visible = false;
 

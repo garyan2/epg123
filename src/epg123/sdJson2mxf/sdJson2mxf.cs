@@ -33,14 +33,7 @@ namespace epg123
                                 config.DaysToDownload, config.TheTVDBNumbers, config.PrefixEpisodeTitle, config.PrefixEpisodeDescription, config.AppendEpisodeDesc, config.OADOverride, config.TMDbCoverArt, config.IncludeSDLogos, config.AutoAddNew, config.CreateXmltv, config.ModernMediaUiPlusSupport));
 
             // populate station prefixes to suppress
-            if (config.SuppressStationEmptyWarnings == null)
-            {
-                suppressedPrefixes = new List<string>(defaultSuppressedPrefixes.Split(','));
-            }
-            else
-            {
-                suppressedPrefixes = new List<string>(config.SuppressStationEmptyWarnings.Split(','));
-            }
+            suppressedPrefixes = new List<string>(config.SuppressStationEmptyWarnings.Split(','));
 
             // login to Schedules Direct and build the mxf file
             if (sdAPI.sdGetToken(config.UserAccount.LoginName, config.UserAccount.PasswordHash, ref errString))
@@ -216,6 +209,7 @@ namespace epg123
             {
                 ++processedObjects; reportProgress();
                 if (file.Equals(Helper.Epg123CacheJsonPath)) continue;
+                if (file.Equals(Helper.Epg123CompressCachePath)) continue;
 
                 //if (File.GetLastAccessTimeUtc(file) < startTime)
                 {

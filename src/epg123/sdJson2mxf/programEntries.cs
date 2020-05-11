@@ -478,35 +478,26 @@ namespace epg123
             }
             else if (string.IsNullOrEmpty(prg.EpisodeTitle)) return;
 
+            string se = config.AlternateSEFormat ? "S{0}:E{1} " : "s{0:D2}e{1:D2} ";
+            if (!string.IsNullOrEmpty(prg.SeasonNumber))
+            {
+                se = string.Format(se, int.Parse(prg.SeasonNumber), int.Parse(prg.EpisodeNumber));
+            }
+            else if (!string.IsNullOrEmpty(prg.EpisodeNumber))
+            {
+                se = string.Format("#{0} ", int.Parse(prg.EpisodeNumber));
+            }
+            else se = string.Empty;
+
             // prefix episode title with season and episode numbers as configured
             if (config.PrefixEpisodeTitle)
             {
-                if (!string.IsNullOrEmpty(prg.SeasonNumber) && !string.IsNullOrEmpty(prg.EpisodeNumber))
-                {
-                    prg.EpisodeTitle = string.Format("s{0}e{1} {2}",
-                        int.Parse(prg.SeasonNumber).ToString("D2"),
-                        int.Parse(prg.EpisodeNumber).ToString("D2"),
-                        prg.EpisodeTitle);
-                }
-                else if (!string.IsNullOrEmpty(prg.EpisodeNumber))
-                {
-                    prg.EpisodeTitle = string.Format("#{0} {1}", prg.EpisodeNumber, prg.EpisodeTitle);
-                }
+                prg.EpisodeTitle = se + prg.EpisodeTitle;
             }
 
             // prefix episode description with season and episode numbers as configured
-            if ((config.PrefixEpisodeDescription) && !string.IsNullOrEmpty(prg.EpisodeNumber))
+            if (config.PrefixEpisodeDescription)
             {
-                string se = string.Empty;
-                if (!string.IsNullOrEmpty(prg.SeasonNumber))
-                {
-                    se = string.Format("s{0}e{1} ", int.Parse(prg.SeasonNumber).ToString("D2"), int.Parse(prg.EpisodeNumber).ToString("D2"));
-                }
-                else
-                {
-                    se = string.Format("#{0} ", int.Parse(prg.EpisodeNumber).ToString("D2"));
-                }
-
                 prg.Description = se + prg.Description;
                 if (!string.IsNullOrEmpty(prg.ShortDescription))
                 {
@@ -519,13 +510,12 @@ namespace epg123
             {
                 if (!string.IsNullOrEmpty(prg.SeasonNumber) && !string.IsNullOrEmpty(prg.EpisodeNumber))
                 {
-                    prg.Description += string.Format("  \n\nSeason {0}, Episode {1}",
-                        int.Parse(prg.SeasonNumber).ToString("D2"),
-                        int.Parse(prg.EpisodeNumber).ToString("D2"));
+                    prg.Description += string.Format("\u000D\u000ASeason {0}, Episode {1}",
+                        int.Parse(prg.SeasonNumber), int.Parse(prg.EpisodeNumber));
                 }
                 else if (!string.IsNullOrEmpty(prg.EpisodeNumber))
                 {
-                    prg.Description += string.Format("  \n\nEpisode #{0}", prg.EpisodeNumber);
+                    prg.Description += string.Format("\u000D\u000AProduction #{0}", prg.EpisodeNumber);
                 }
             }
 

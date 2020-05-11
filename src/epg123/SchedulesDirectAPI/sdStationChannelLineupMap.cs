@@ -130,6 +130,9 @@ namespace epg123
 
         //[JsonProperty("source")]
         //public string Source { get; set; }
+
+        [JsonProperty("category")]
+        public string Category { get; set; }
     }
 
     public class sdBroadcaster

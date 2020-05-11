@@ -148,6 +148,12 @@
     <Compile Include="frmImport.Designer.cs">
       <DependentUpon>frmImport.cs</DependentUpon>
     </Compile>
+    <Compile Include="frmUndelete.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmUndelete.Designer.cs">
+      <DependentUpon>frmUndelete.cs</DependentUpon>
+    </Compile>
     <Compile Include="frmWmcTweak.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -216,11 +222,14 @@
     <EmbeddedResource Include="frmImport.resx">
       <DependentUpon>frmImport.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="frmUndelete.resx">
+      <DependentUpon>frmUndelete.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="frmWmcTweak.resx">
       <DependentUpon>frmWmcTweak.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
+      <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Include="resImages.resx">

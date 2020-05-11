@@ -56,8 +56,8 @@ namespace epg123
         [JsonProperty("code")]
         public int Code { get; set; }
 
-        //[JsonProperty("message")]
-        //public string Message { get; set; }
+        [JsonProperty("message")]
+        public string Message { get; set; }
 
         //[JsonProperty("lastModified")]
         //public string LastModified { get; set; }

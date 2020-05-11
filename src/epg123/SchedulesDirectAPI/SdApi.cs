@@ -73,9 +73,9 @@ namespace epg123
             string url = string.Format("{0}{1}{2}", jsonBaseUrl, jsonApi, uri);
 
             // send request and get response
-            int maxTries = 1;
+            int maxTries = uri.Equals("token") ? 1 : 2;
             int cntTries = 0;
-            int timeout = 300000;
+            int timeout = uri.Equals("token") ? 3000 : 300000;
             do
             {
                 try
@@ -158,7 +158,7 @@ namespace epg123
                     Logger.WriteError(string.Format("SD API Unknown exception thrown. Message: {0}", ex.Message));
                     return null;
                 }
-            } while (cntTries <= maxTries);
+            } while (cntTries < maxTries);
 
             // failed miserably
             Logger.WriteError("Failed to complete request. Exiting");

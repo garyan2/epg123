@@ -9,6 +9,15 @@ namespace epg123
 {
     static class Helper
     {
+        public enum PreferredLogos
+        {
+            white,
+            gray,
+            dark,
+            light,
+            none
+        };
+
         public static string epg123Version
         {
             get
@@ -261,6 +270,14 @@ namespace epg123
             get
             {
                 return Epg123CacheFolder + "\\epg123cache.json";
+            }
+        }
+
+        public static string Epg123CompressCachePath
+        {
+            get
+            {
+                return Epg123CacheFolder + "\\epg123cache.zip";
             }
         }
 

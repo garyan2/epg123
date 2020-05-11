@@ -108,6 +108,7 @@ namespace epg123
             IList<sdScheduleRequest> newRequests = new List<sdScheduleRequest>();
             foreach (sdScheduleRequest request in requests)
             {
+                Dictionary<int, string> requestErrors = new Dictionary<int, string>();
                 Dictionary<string, sdScheduleMd5DateResponse> stationResponse;
                 if (stationResponses.TryGetValue(request.StationID, out stationResponse))
                 {
@@ -156,6 +157,10 @@ namespace epg123
                             }
                             scheduleEntries.Add(dayResponse.Md5, new string[] { request.StationID, day });
                         }
+                        else if ((dayResponse != null) && (dayResponse.Code != 0) && !requestErrors.ContainsKey(dayResponse.Code))
+                        {
+                            requestErrors.Add(dayResponse.Code, dayResponse.Message);
+                        }
                     }
 
                     // create the new request for the station
@@ -175,6 +180,15 @@ namespace epg123
                     Logger.WriteWarning(string.Format("Requested stationId {0} ({1}) was not present in schedule Md5 response.", mxfService.StationID, mxfService.CallSign));
                     processedObjects += dates.Length; reportProgress();
                     continue;
+                }
+
+                if (requestErrors.Count > 0)
+                {
+                    foreach (KeyValuePair<int, string> keyValuePair in requestErrors)
+                    {
+                        Logger.WriteError(string.Format("Requests for MD5 schedule entries of station {0} returned error code {1} , message: {2}",
+                            request.StationID, keyValuePair.Key, keyValuePair.Value));
+                    }
                 }
             }
             reportProgress();

@@ -129,8 +129,8 @@ namespace epg123
                     new XmltvIcon()
                     {
                         src = mxfService.logoImage.URL,
-                        height = mxfService.logoImage.Height.ToString(),
-                        width = mxfService.logoImage.Width.ToString()
+                        height = mxfService.logoImage.Height > 0 ? mxfService.logoImage.Height.ToString() : null,
+                        width = mxfService.logoImage.Width > 0 ? mxfService.logoImage.Width.ToString() : null
                     }
                 };
             }

@@ -339,7 +339,7 @@ namespace epg123
         {
             if (!initLvBuild) return;
 
-            int[] minWidths = { 100, 60, 100, 100, 100, 100 };
+            int[] minWidths = { 100, 60, 100, 100, 100, 100 , 150 };
             foreach (ColumnHeader header in listView.Columns)
             {
                 int currentWidth = header.Width;
@@ -1080,11 +1080,12 @@ namespace epg123
             {
                 ListViewItem listViewItem = new ListViewItem(new string[]
                 {
-                (!customLabelsOnly) ? mergedChannel.PrimaryChannel.CallSign : mergedChannel.CallSign,
-                (!customLabelsOnly) ? originalChannelNumber : customChannelNumber,
-                (!scanned) ? (mergedChannel.Service.Name ?? null) : null,
-                (!scanned) ? (mergedChannel.PrimaryChannel.Lineup.Name ?? null) : null,
-                source, tuneInfos
+                    (!customLabelsOnly) ? mergedChannel.PrimaryChannel.CallSign : mergedChannel.CallSign,
+                    (!customLabelsOnly) ? originalChannelNumber : customChannelNumber,
+                    (!scanned) ? (mergedChannel.Service.Name ?? null) : null,
+                    (!scanned) ? (mergedChannel.PrimaryChannel.Lineup.Name ?? null) : null,
+                    source, tuneInfos,
+                    (!scanned) ? mergedChannel.PrimaryChannel.Service.ScheduleEndTime.ToLocalTime().ToString() : null
                 })
                 {
                     Tag = mergedChannel
@@ -2255,6 +2256,18 @@ namespace epg123
                                                                                listViewItem.SubItems[5].Text);
             }
             Clipboard.SetText(TextToAdd);
+        }
+
+        private void btnUndelete_Click(object sender, EventArgs e)
+        {
+            frmUndelete frmUndelete = new frmUndelete();
+            frmUndelete.ShowDialog();
+            if (frmUndelete.channelAdded)
+            {
+                Logger.WriteInformation("Restarting EPG123 Client to avoid an external process crashing EPG123 10 seconds after adding channels.");
+                isolateEpgDatabase();
+                restartClient();
+            }
         }
     }
 }

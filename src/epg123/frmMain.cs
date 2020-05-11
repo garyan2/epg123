@@ -37,7 +37,7 @@ namespace epg123
         private bool newLogin = true;
 
         public epgConfig config = new epgConfig();
-        private epgConfig xmltvConfig = new epgConfig();
+        private epgConfig oldConfig = new epgConfig();
         public bool Execute = false;
         public bool import = false;
         public bool match = false;
@@ -139,6 +139,8 @@ namespace epg123
                     TextReader reader = new StringReader(stream.ReadToEnd());
                     config = (epgConfig)serializer.Deserialize(reader);
                     reader.Close();
+
+                    oldConfig = config.Clone();
                 }
 
                 if (!string.IsNullOrEmpty(config.UserAccount.LoginName) && !string.IsNullOrEmpty(config.UserAccount.PasswordHash))
@@ -149,15 +151,6 @@ namespace epg123
                     this.Refresh();
                     btnLogin_Click(null, null);
                 }
-
-                // duplicate config for tracking changes to xmltv config
-                xmltvConfig = new epgConfig()
-                {
-                    XmltvIncludeChannelLogos = config.XmltvIncludeChannelLogos ?? "false",
-                    XmltvIncludeChannelNumbers = config.XmltvIncludeChannelNumbers,
-                    XmltvLogoSubstitutePath = config.XmltvLogoSubstitutePath ?? string.Empty,
-                    XmltvAddFillerData = config.XmltvAddFillerData
-                };
             }
             catch (Exception ex)
             {
@@ -176,6 +169,7 @@ namespace epg123
                     if (line.Contains("createTask") || line.Contains("deleteTask"))
                     {
                         btnTask_Click(null, null);
+                        tabConfigs.SelectedTab = tabTask;
                     }
                     sr.Close();
                 }
@@ -229,26 +223,6 @@ namespace epg123
             {
                 Logger.WriteError(ex.Message);
             }
-        }
-        private bool activateGuide()
-        {
-            RegistryKey key = Registry.LocalMachine.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Media Center\\Settings\\ProgramGuide", true);
-            if (key != null)
-            {
-                try
-                {
-                    if ((int)key.GetValue("fAgreeTOS") != 1) key.SetValue("fAgreeTOS", 1);
-                    if ((string)key.GetValue("strAgreeTOSVersion") != "1.0") key.SetValue("strAgreedTOSVersion", "1.0");
-                    key.Close();
-                }
-                catch
-                {
-                    MessageBox.Show("Failed to open/edit registry to show the Guide in WMC.", "Registry Access", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    key.Close();
-                }
-                return true;
-            }
-            return false;
         }
         private bool createEventLogSource()
         {
@@ -347,18 +321,6 @@ namespace epg123
                 lblSchedStatus.ForeColor = Color.Red;
             }
         }
-        private void cbImport_CheckedChanged(object sender, EventArgs e)
-        {
-            if (cbImport.Checked && cbImport.Enabled)
-            {
-                cbAutomatch.Enabled = true;
-            }
-            else if (cbImport.Enabled)
-            {
-                cbAutomatch.Enabled = false;
-                cbAutomatch.Checked = false;
-            }
-        }
         private void btnTask_Click(object sender, EventArgs e)
         {
             if (sender != null) // null sender means we restarted to finish in administrator mode
@@ -440,7 +402,6 @@ namespace epg123
                         LoginName = txtLoginName.Text,
                         Password = txtPassword.Text
                     };
-                    newLogin = true;
                 }
                 else
                 {
@@ -504,12 +465,28 @@ namespace epg123
                     cbOadOverride.Checked = config.OADOverride;
                     cbTMDb.Checked = config.TMDbCoverArt;
                     cbSdLogos.Checked = config.IncludeSDLogos;
+                    
                     cbTVDB.Checked = config.TheTVDBNumbers;
                     cbPrefixDescription.Checked = config.PrefixEpisodeDescription;
+                    cbAlternateSEFormat.Checked = config.AlternateSEFormat;
                     cbAddNewStations.Checked = config.AutoAddNew;
-                    cbXmltv.Checked = config.CreateXmltv;
                     cbSeriesPosterArt.Checked = config.SeriesPosterArt;
                     cbModernMedia.Checked = config.ModernMediaUiPlusSupport;
+                    cmbPreferredLogos.SelectedIndex = (int)(Helper.PreferredLogos)Enum.Parse(typeof(Helper.PreferredLogos), config.PreferredLogoStyle, true);
+                    cmbAlternateLogos.SelectedIndex = (int)(Helper.PreferredLogos)Enum.Parse(typeof(Helper.PreferredLogos), config.AlternateLogoStyle, true);
+                    ckChannelNumbers.Checked = config.XmltvIncludeChannelNumbers;
+                    ckChannelLogos.Checked = !string.IsNullOrEmpty(config.XmltvIncludeChannelLogos) && (config.XmltvIncludeChannelLogos != "false");
+                    ckLocalLogos.Checked = (config.XmltvIncludeChannelLogos == "local") || (config.XmltvIncludeChannelLogos == "substitute");
+                    ckUrlLogos.Checked = (config.XmltvIncludeChannelLogos == "url") || !ckLocalLogos.Checked;
+                    ckSubstitutePath.Checked = (config.XmltvIncludeChannelLogos == "substitute");
+                    txtSubstitutePath.Text = config.XmltvLogoSubstitutePath;
+                    ckXmltvFillerData.Checked = config.XmltvAddFillerData;
+                    numFillerDuration.Value = config.XmltvFillerProgramLength;
+                    rtbFillerDescription.Text = config.XmltvFillerProgramDescription;
+                    tbXmltvOutput.Text = config.XmltvOutputFile ?? Helper.Epg123XmltvPath;
+                    cbBrandLogo.Checked = !config.BrandLogoImage.Equals("none");
+
+                    cbXmltv.Checked = config.CreateXmltv;
                 }
 
                 // get persistent cfg values
@@ -526,11 +503,16 @@ namespace epg123
 
                 // enable form controls
                 tabLineups.Enabled = true;
-                grpConfiguration.Enabled = true;
-                grpScheduledTask.Enabled = true;
+                tabConfigs.Enabled = true;
                 btnSave.Enabled = true;
                 btnExecute.Enabled = true;
                 btnClientLineups.Enabled = true;
+
+                // automatically save a .cfg file with account info if first login or password change
+                if (newLogin)
+                {
+                    btnSave_Click(null, null);
+                }
             }
             else
             {
@@ -567,8 +549,9 @@ namespace epg123
         #region ========== Setup Lineup ListViews and Tabs ==========
         private void buildLineupTabs()
         {
-            ListView[] listViews = { lvL1Lineup, lvL2Lineup, lvL3Lineup, lvL4Lineup };
+            ListView[] listViews = { lvL1Lineup, lvL2Lineup, lvL3Lineup, lvL4Lineup, lvL5Lineup };
             ToolStripLabel[] listViewLabels = { lblL1Lineup, lblL2Lineup, lblL3Lineup, lblL4Lineup };
+            ToolStrip[] toolStrips = { toolStrip1, toolStrip2, toolStrip3, toolStrip4, toolStrip5 };
 
             // focus on first tab
             tabLineups.SelectedIndex = 0;
@@ -581,7 +564,8 @@ namespace epg123
             {
                 listViews[i].Items.Clear();
                 listViews[i].ListViewItemSorter = null;
-                listViewLabels[i].Text = string.Empty;
+                if (i < 4) listViewLabels[i].Text = string.Empty;
+                toolStrips[i].Enabled = false;
                 ExcludeLineup(i);
             }
 
@@ -613,11 +597,13 @@ namespace epg123
                 {
                     btnCustomLineup.DropDownItems.Add(string.Format("{0} ({1})", lineup.Name, lineup.Location)).Tag = lineup;
                 }
+                toolStrip5.Enabled = true;
             }
             else
             {
                 btnCustomLineup.Text = "Click here to manage custom lineups.";
                 btnCustomLineup.Tag = string.Empty;
+                toolStrip5.Enabled = false;
             }
 
             if (btnCustomLineup.DropDownItems.Count > 0)
@@ -717,6 +703,7 @@ namespace epg123
             sdlogos = new Dictionary<string, string>();
             ListView[] listViews = { lvL1Lineup, lvL2Lineup, lvL3Lineup, lvL4Lineup };
             ToolStripLabel[] listViewLabels = { lblL1Lineup, lblL2Lineup, lblL3Lineup, lblL4Lineup };
+            ToolStrip[] toolStrips = { toolStrip1, toolStrip2, toolStrip3, toolStrip4 };
 
             // retrieve lineups from SD
             SdLineupResponse clientLineups = sdAPI.sdGetLineups();
@@ -841,6 +828,7 @@ namespace epg123
                     if (listViewItems.Count > 0 && processedLineup < listViews.Length)
                     {
                         listViews[processedLineup].Items.AddRange(listViewItems.ToArray());
+                        toolStrips[processedLineup].Enabled = true;
                     }
                 }
                 else if (processedLineup < listViews.Length)
@@ -943,21 +931,6 @@ namespace epg123
         }
         #endregion
 
-        #region ========== Schedules Direct Channel Logos ==========
-        Dictionary<string, string> sdlogos = new Dictionary<string, string>();
-        private void btnSdLogos_Click(object sender, EventArgs e)
-        {
-            Cursor = Cursors.WaitCursor;
-
-            // open form and handle the sd logo downloads and image crop/resize
-            frmDownloadLogos dl = new frmDownloadLogos(sdlogos);
-            dl.ShowDialog();
-
-            Cursor = Cursors.Arrow;
-            return;
-        }
-        #endregion
-
         #region ========== ListView Tab Widgets ==========
         bool disable_itemCheck = false;
         private void btnAll_Click(object sender, EventArgs e)
@@ -970,6 +943,9 @@ namespace epg123
             {
                 if (btn[i].Equals(sender))
                 {
+                    // escape if the listview is not enabled
+                    if (!lv[i].Enabled) break;
+
                     disable_itemCheck = true;
                     HashSet<string> addStations = new HashSet<string>();
 
@@ -1012,6 +988,9 @@ namespace epg123
             {
                 if (btn[i].Equals(sender))
                 {
+                    // escape if listview is not enabled
+                    if (!lv[i].Enabled) break;
+
                     disable_itemCheck = true;
                     HashSet<string> removeStations = new HashSet<string>();
 
@@ -1107,101 +1086,25 @@ namespace epg123
         #endregion
 
         #region ========== Buttons & Links ==========
-        private bool noChangeToConfiguration(epgConfig config1, epgConfig config2)
-        {
-            // check included lineups
-            if ((config1.IncludedLineup != null) && (config2.IncludedLineup != null))
-            {
-                foreach (string lineup in config1.IncludedLineup)
-                {
-                    if (!config2.IncludedLineup.Contains(lineup)) return false;
-                }
-                foreach (string lineup in config2.IncludedLineup)
-                {
-                    if (!config1.IncludedLineup.Contains(lineup)) return false;
-                }
-            }
-            else if ((config1.IncludedLineup == null) || (config2.IncludedLineup == null))
-            {
-                return false;
-            }
-
-            // check station IDs
-            if ((config1.StationID != null) && (config2.StationID != null))
-            {
-                HashSet<string> stations1 = new HashSet<string>();
-                HashSet<string> stations2 = new HashSet<string>();
-                foreach (SdChannelDownload station1 in config1.StationID)
-                {
-                    stations1.Add(station1.StationID);
-                }
-                foreach (SdChannelDownload station2 in config2.StationID)
-                {
-                    if (!stations1.Contains(station2.StationID)) return false;
-                    stations2.Add(station2.StationID);
-                }
-                foreach (SdChannelDownload station1 in config1.StationID)
-                {
-                    if (!stations2.Contains(station1.StationID)) return false;
-                }
-            }
-            else if ((config1.StationID == null) || (config2.StationID == null))
-            {
-                return false;
-            }
-
-            // check all the configurations
-            return ((config1.RatingsOrigin == config2.RatingsOrigin) &&
-                    (config1.version == config2.version) &&
-                    (config1.UserAccount.LoginName == config2.UserAccount.LoginName) &&
-                    (config1.UserAccount.PasswordHash == config2.UserAccount.PasswordHash) &&
-                    (config1.DaysToDownload == config2.DaysToDownload) &&
-                    (config1.PrefixEpisodeTitle == config2.PrefixEpisodeTitle) &&
-                    (config1.AppendEpisodeDesc == config2.AppendEpisodeDesc) &&
-                    (config1.AutoImport == config2.AutoImport) &&
-                    (config1.TMDbCoverArt == config2.TMDbCoverArt) &&
-                    (config1.OADOverride == config2.OADOverride) &&
-                    (config1.Automatch == config2.Automatch) &&
-                    (config1.AutoAddNew == config2.AutoAddNew) &&
-                    (config1.ExpectedServicecount == config2.ExpectedServicecount) &&
-                    (config1.IncludeSDLogos == config2.IncludeSDLogos) &&
-                    (config1.PrefixEpisodeDescription == config2.PrefixEpisodeDescription) &&
-                    (config1.TheTVDBNumbers == config2.TheTVDBNumbers) &&
-                    (config1.CreateXmltv == config2.CreateXmltv) &&
-                    (config1.XmltvIncludeChannelNumbers == config2.XmltvIncludeChannelNumbers) &&
-                    (config1.XmltvIncludeChannelLogos == config2.XmltvIncludeChannelLogos) &&
-                    (config1.XmltvLogoSubstitutePath == config2.XmltvLogoSubstitutePath) &&
-                    (config1.SeriesPosterArt == config2.SeriesPosterArt) &&
-                    (config1.ModernMediaUiPlusSupport == config2.ModernMediaUiPlusSupport) &&
-                    (config1.BrandLogoImage == config2.BrandLogoImage) &&
-                    (config1.XmltvAddFillerData == config2.XmltvAddFillerData));
-        }
         private void btnSave_Click(object sender, EventArgs e)
         {
             ToolStripMenuItem[] items = { L1includeToolStripMenuItem, L2includeToolStripMenuItem, L3includeToolStripMenuItem, L4includeToolStripMenuItem };
-            ListView[] listviews = { lvL1Lineup, lvL2Lineup, lvL3Lineup, lvL4Lineup };
+            ListView[] listViews = { lvL1Lineup, lvL2Lineup, lvL3Lineup, lvL4Lineup };
             HashSet<string> stations = new HashSet<string>();
             HashSet<string> expectedStationIds = new HashSet<string>();
-            epgConfig newConfig = new epgConfig();
 
-            newConfig.UserAccount = new SdUserAccount()
-            {
-                LoginName = config.UserAccount.LoginName,
-                PasswordHash = config.UserAccount.PasswordHash
-            };
-            newConfig.version = grabberVersion;
-            newConfig.IncludedLineup = new List<string>();
-            newConfig.StationID = new List<SdChannelDownload>();
-            newConfig.RatingsOrigin = config.RatingsOrigin ?? RegionInfo.CurrentRegion.ThreeLetterISORegionName;
+            // reset included lineups and stations
+            config.IncludedLineup = new List<string>();
+            config.StationID = new List<SdChannelDownload>();
 
             // add all station includes and excludes to configuration file
             for (int i = 0; i < items.Length; ++i)
             {
                 // flag that lineup is included for download and add to inluded lineups
                 bool included = items[i].Checked;
-                if (included) newConfig.IncludedLineup.Add(lineups[i]);
+                if (included) config.IncludedLineup.Add(lineups[i]);
 
-                foreach (ListViewItem listviewitem in listviews[i].Items)
+                foreach (ListViewItem listviewitem in listViews[i].Items)
                 {
                     SdChannelDownload station = (SdChannelDownload)listviewitem.Tag;
                     station.StationID = station.StationID.Replace("-", "");
@@ -1213,7 +1116,7 @@ namespace epg123
                         {
                             station.StationID = "-" + station.StationID;
                         }
-                        newConfig.StationID.Add(station);
+                        config.StationID.Add(station);
                     }
 
                     if (included && listviewitem.Checked && !expectedStationIds.Contains(station.StationID))
@@ -1224,40 +1127,15 @@ namespace epg123
             }
             if (L5includeToolStripMenuItem.Checked && (btnCustomLineup.DropDown.Items.Count > 0))
             {
-                newConfig.IncludedLineup.Add(btnCustomLineup.Tag as string);
+                config.IncludedLineup.Add((string)btnCustomLineup.Tag);
                 foreach (ListViewItem item in lvL5Lineup.Items)
                 {
                     if (item.Checked) expectedStationIds.Add(item.SubItems[(int)LineupColumn.StationID].Text);
                 }
             }
 
-            // set the configuration flags
-            newConfig.DaysToDownload = (int)numDays.Value;
-            newConfig.IncludeSDLogos = cbSdLogos.Checked;
-            newConfig.PrefixEpisodeTitle = cbPrefixTitle.Checked;
-            newConfig.AppendEpisodeDesc = cbAppendDescription.Checked;
-            newConfig.TMDbCoverArt = cbTMDb.Checked;
-            newConfig.SeriesPosterArt = cbSeriesPosterArt.Checked;
-            newConfig.OADOverride = cbOadOverride.Checked;
-            newConfig.AutoAddNew = cbAddNewStations.Checked;
-            newConfig.AutoImport = cbImport.Checked;
-            newConfig.Automatch = cbAutomatch.Checked;
-            newConfig.PrefixEpisodeDescription = cbPrefixDescription.Checked;
-            newConfig.TheTVDBNumbers = cbTVDB.Checked;
-            newConfig.ExpectedServicecount = expectedStationIds.Count;
-            newConfig.CreateXmltv = cbXmltv.Checked;
-            newConfig.XmltvIncludeChannelLogos = xmltvConfig.XmltvIncludeChannelLogos ?? "false";
-            newConfig.XmltvIncludeChannelNumbers = xmltvConfig.XmltvIncludeChannelNumbers;
-            newConfig.XmltvLogoSubstitutePath = xmltvConfig.XmltvLogoSubstitutePath;
-            newConfig.XmltvAddFillerData = xmltvConfig.XmltvAddFillerData;
-            newConfig.XmltvFillerProgramLength = (config.XmltvFillerProgramLength > 0) ? config.XmltvFillerProgramLength : 4;
-            newConfig.XmltvFillerProgramDescription = config.XmltvFillerProgramDescription ?? "This program was generated by EPG123 to provide filler data for stations that did not receive any guide listings from the upstream source.";
-            newConfig.ModernMediaUiPlusSupport = cbModernMedia.Checked;
-            newConfig.BrandLogoImage = config.BrandLogoImage ?? "none";
-            newConfig.SuppressStationEmptyWarnings = config.SuppressStationEmptyWarnings ?? sdJson2mxf.defaultSuppressedPrefixes;
-
             // sanity checks
-            if ((newConfig.ExpectedServicecount == 0) && (sender != null))
+            if (((config.ExpectedServicecount = expectedStationIds.Count) == 0) && (sender != null))
             {
                 if (MessageBox.Show("There are no INCLUDED lineups and/or no stations selected for download.\n\nDo you wish to commit these changes?",
                                     "No Stations to Download", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No)
@@ -1265,11 +1143,11 @@ namespace epg123
                     return;
                 }
             }
-            else if ((config.ExpectedServicecount != newConfig.ExpectedServicecount) && (config.ExpectedServicecount > 0))
+            else if ((config.ExpectedServicecount != oldConfig.ExpectedServicecount) && (config.ExpectedServicecount > 0))
             {
                 string prompt = string.Format("The number of stations to download has {0} from {1} to {2} from the previous configuration.\n\nDo you wish to commit these changes?",
-                                              (config.ExpectedServicecount > newConfig.ExpectedServicecount) ? "decreased" : "increased",
-                                              config.ExpectedServicecount, newConfig.ExpectedServicecount);
+                                              (oldConfig.ExpectedServicecount > config.ExpectedServicecount) ? "decreased" : "increased",
+                                              oldConfig.ExpectedServicecount, config.ExpectedServicecount);
                 if (MessageBox.Show(prompt, "Change in Expected Services Count", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No)
                 {
                     return;
@@ -1277,54 +1155,8 @@ namespace epg123
             }
 
             // commit the updated config file if there are changes
-            if (newLogin || !noChangeToConfiguration(config, newConfig))
+            if (newLogin || !config.Equals(oldConfig))
             {
-                config = new epgConfig()
-                {
-                    AppendEpisodeDesc = newConfig.AppendEpisodeDesc,
-                    AutoAddNew = newConfig.AutoAddNew,
-                    AutoImport = newConfig.AutoImport,
-                    Automatch = newConfig.Automatch,
-                    DaysToDownload = newConfig.DaysToDownload,
-                    ExpectedServicecount = newConfig.ExpectedServicecount,
-                    IncludedLineup = new List<string>(newConfig.IncludedLineup),
-                    IncludeSDLogos = newConfig.IncludeSDLogos,
-                    ModernMediaUiPlusSupport = newConfig.ModernMediaUiPlusSupport,
-                    OADOverride = newConfig.OADOverride,
-                    PrefixEpisodeTitle = newConfig.PrefixEpisodeTitle,
-                    PrefixEpisodeDescription = newConfig.PrefixEpisodeDescription,
-                    TheTVDBNumbers = newConfig.TheTVDBNumbers,
-                    SeriesPosterArt = newConfig.SeriesPosterArt,
-                    StationID = new List<SdChannelDownload>(),
-                    TMDbCoverArt = newConfig.TMDbCoverArt,
-                    CreateXmltv = newConfig.CreateXmltv,
-                    XmltvIncludeChannelLogos = xmltvConfig.XmltvIncludeChannelLogos ?? "false",
-                    XmltvIncludeChannelNumbers = xmltvConfig.XmltvIncludeChannelNumbers,
-                    XmltvLogoSubstitutePath = xmltvConfig.XmltvLogoSubstitutePath ?? string.Empty,
-                    XmltvAddFillerData = xmltvConfig.XmltvAddFillerData,
-                    XmltvFillerProgramLength = newConfig.XmltvFillerProgramLength,
-                    XmltvFillerProgramDescription = newConfig.XmltvFillerProgramDescription,
-                    BrandLogoImage = newConfig.BrandLogoImage ?? "none",
-                    SuppressStationEmptyWarnings = newConfig.SuppressStationEmptyWarnings,
-                    UserAccount = new SdUserAccount()
-                    {
-                        LoginName = newConfig.UserAccount.LoginName,
-                        PasswordHash = newConfig.UserAccount.PasswordHash
-                    },
-                    version = newConfig.version,
-                    RatingsOrigin = newConfig.RatingsOrigin
-                };
-                foreach (SdChannelDownload newStation in newConfig.StationID)
-                {
-                    config.StationID.Add(new SdChannelDownload()
-                    {
-                        CallSign = newStation.CallSign,
-                        HDOverride = newStation.HDOverride,
-                        SDOverride = newStation.SDOverride,
-                        StationID = newStation.StationID
-                    });
-                }
-
                 // save the file and determine flags for execution if selected
                 try
                 {
@@ -1345,6 +1177,7 @@ namespace epg123
                         TextWriter writer = stream;
                         serializer.Serialize(writer, config, ns);
                     }
+                    oldConfig = config.Clone();
 
                     newLogin = false;
                 }
@@ -1502,6 +1335,7 @@ namespace epg123
             ToolStripDropDownButton[] btns = { L1IncludeExclude, L2IncludeExclude, L3IncludeExclude, L4IncludeExclude, L5IncludeExclude };
             ToolStripMenuItem[] items = { L1includeToolStripMenuItem , L2includeToolStripMenuItem , L3includeToolStripMenuItem , L4includeToolStripMenuItem , L5includeToolStripMenuItem,
                                           L1excludeToolStripMenuItem , L2excludeToolStripMenuItem , L3excludeToolStripMenuItem , L4excludeToolStripMenuItem , L5excludeToolStripMenuItem };
+            ListView[] listViews = { lvL1Lineup, lvL2Lineup, lvL3Lineup, lvL4Lineup, lvL5Lineup };
             int mid = items.Length / 2;
             for (int i = 0; i < items.Length; ++i)
             {
@@ -1511,6 +1345,9 @@ namespace epg123
                     items[i].Checked = true;
                     items[(i + mid) % items.Length].Checked = false;
                     btns[i % mid].Image = stopLight[i / btns.Length];
+
+                    listViews[i % listViews.Length].Enabled = (i < 5);
+                    listViews[i % listViews.Length].ForeColor = (i < 5) ? Control.DefaultForeColor : Color.LightGray;
                     break;
                 }
             }
@@ -1520,33 +1357,223 @@ namespace epg123
             ToolStripDropDownButton[] btns = { L1IncludeExclude, L2IncludeExclude, L3IncludeExclude, L4IncludeExclude, L5IncludeExclude };
             ToolStripMenuItem[] items = { L1includeToolStripMenuItem , L2includeToolStripMenuItem , L3includeToolStripMenuItem , L4includeToolStripMenuItem , L5includeToolStripMenuItem,
                                           L1excludeToolStripMenuItem , L2excludeToolStripMenuItem , L3excludeToolStripMenuItem , L4excludeToolStripMenuItem , L5excludeToolStripMenuItem };
+            ListView[] listViews = { lvL1Lineup, lvL2Lineup, lvL3Lineup, lvL4Lineup, lvL5Lineup };
             if (lineup >= btns.Length) return;
 
             int mid = items.Length / 2;
             btns[lineup].Image = Properties.Resources.GreenLight.ToBitmap();
-            items[lineup].Checked = true;
+            listViews[lineup].Enabled = items[lineup].Checked = true;
             items[lineup + mid].Checked = false;
+            listViews[lineup].ForeColor = Control.DefaultForeColor;
         }
         private void ExcludeLineup(int lineup)
         {
             ToolStripDropDownButton[] btns = { L1IncludeExclude, L2IncludeExclude, L3IncludeExclude, L4IncludeExclude, L5IncludeExclude };
             ToolStripMenuItem[] items = { L1includeToolStripMenuItem , L2includeToolStripMenuItem , L3includeToolStripMenuItem , L4includeToolStripMenuItem , L5includeToolStripMenuItem,
                                           L1excludeToolStripMenuItem , L2excludeToolStripMenuItem , L3excludeToolStripMenuItem , L4excludeToolStripMenuItem , L5excludeToolStripMenuItem};
+            ListView[] listViews = { lvL1Lineup, lvL2Lineup, lvL3Lineup, lvL4Lineup, lvL5Lineup };
             if (lineup >= btns.Length) return;
 
             int mid = items.Length / 2;
             btns[lineup].Image = Properties.Resources.RedLight.ToBitmap();
-            items[lineup].Checked = false;
+            listViews[lineup].Enabled = items[lineup].Checked = false;
             items[lineup + mid].Checked = true;
+            listViews[lineup].ForeColor = Color.LightGray;
         }
         #endregion
 
-        private void btnXmltvConfigure_Click(object sender, EventArgs e)
+        #region ===== Configuration Tabs =====
+        #region ========== TAB: XMLTV ==========
+        private void ckXmltvConfigs_Changed(object sender, EventArgs e)
         {
-            if (xmltvConfig == null) xmltvConfig = config;
-            frmXmltvConfig xmltvForm = new frmXmltvConfig(ref xmltvConfig);
-            xmltvForm.ShowDialog();
+            if (sender.Equals(cbXmltv))
+            {
+                config.CreateXmltv = ckChannelNumbers.Enabled = ckChannelLogos.Enabled = ckXmltvFillerData.Enabled =
+                    lblXmltvOutput.Enabled = tbXmltvOutput.Enabled = btnXmltvOutput.Enabled = lblXmltvLogosNote.Enabled = cbXmltv.Checked;
+                if (!cbXmltv.Checked)
+                {
+                    ckUrlLogos.Enabled = ckLocalLogos.Enabled = ckSubstitutePath.Enabled = txtSubstitutePath.Enabled = false;
+                    numFillerDuration.Enabled = lblFillerDuration.Enabled = lblFillerDescription.Enabled = rtbFillerDescription.Enabled = false;
+                }
+                else
+                {
+                    ckUrlLogos.Enabled = ckLocalLogos.Enabled = ckChannelLogos.Checked;
+                    ckSubstitutePath.Enabled = (ckLocalLogos.Checked && ckChannelLogos.Checked);
+                    txtSubstitutePath.Enabled = (ckSubstitutePath.Checked && ckLocalLogos.Checked && ckChannelLogos.Checked);
+                    numFillerDuration.Enabled = lblFillerDuration.Enabled = lblFillerDescription.Enabled = rtbFillerDescription.Enabled = ckXmltvFillerData.Checked;
+                }
+            }
+            else if (sender.Equals(ckChannelNumbers))
+            {
+                config.XmltvIncludeChannelNumbers = ckChannelNumbers.Checked;
+            }
+            else if (sender.Equals(ckChannelLogos))
+            {
+                ckUrlLogos.Enabled = ckLocalLogos.Enabled = ckChannelLogos.Checked;
+                ckSubstitutePath.Enabled = ckLocalLogos.Checked && ckChannelLogos.Checked;
+                txtSubstitutePath.Enabled = ckSubstitutePath.Checked && ckLocalLogos.Checked && ckChannelLogos.Checked;
+
+                if (!ckChannelLogos.Checked) config.XmltvIncludeChannelLogos = "false";
+
+                config.XmltvIncludeChannelLogos = !ckChannelLogos.Checked ? "false" : ckUrlLogos.Checked ? "url" : !ckSubstitutePath.Checked ? "local" : "substitute";
+            }
+            else if (sender.Equals(ckUrlLogos))
+            {
+                ckLocalLogos.Checked = !ckUrlLogos.Checked;
+                config.XmltvIncludeChannelLogos = "url";
+            }
+            else if (sender.Equals(ckLocalLogos))
+            {
+                ckUrlLogos.Checked = !ckLocalLogos.Checked;
+                ckSubstitutePath.Enabled = ckLocalLogos.Checked && cbXmltv.Checked;
+                txtSubstitutePath.Enabled = ckSubstitutePath.Checked && ckLocalLogos.Checked && cbXmltv.Checked;
+                config.XmltvIncludeChannelLogos = (ckSubstitutePath.Checked && ckLocalLogos.Checked) ? "substitute" : "local";
+            }
+            else if (sender.Equals(ckSubstitutePath))
+            {
+                txtSubstitutePath.Enabled = ckSubstitutePath.Checked && cbXmltv.Checked;
+                config.XmltvIncludeChannelLogos = (ckSubstitutePath.Checked && ckLocalLogos.Checked) ? "substitute" : "local";
+            }
+            else if (sender.Equals(txtSubstitutePath))
+            {
+                config.XmltvLogoSubstitutePath = txtSubstitutePath.Text;
+            }
+            else if (sender.Equals(ckXmltvFillerData))
+            {
+                numFillerDuration.Enabled = lblFillerDuration.Enabled = lblFillerDescription.Enabled = rtbFillerDescription.Enabled = ckXmltvFillerData.Checked && cbXmltv.Checked;
+                config.XmltvAddFillerData = ckXmltvFillerData.Checked;
+            }
+            else if (sender.Equals(numFillerDuration))
+            {
+                config.XmltvFillerProgramLength = (int)numFillerDuration.Value;
+            }
+            else if (sender.Equals(rtbFillerDescription))
+            {
+                config.XmltvFillerProgramDescription = rtbFillerDescription.Text;
+            }
         }
+        private void btnXmltvOutput_Click(object sender, EventArgs e)
+        {
+            FileInfo fileInfo = new FileInfo(tbXmltvOutput.Text);
+            saveFileDialog1.InitialDirectory = fileInfo.DirectoryName;
+            saveFileDialog1.FileName = fileInfo.Name;
+
+            if (DialogResult.OK == saveFileDialog1.ShowDialog())
+            {
+                config.XmltvOutputFile = tbXmltvOutput.Text = saveFileDialog1.FileName;
+            }
+        }
+        #endregion
+        #region ========== TAB: Images ==========
+        Dictionary<string, string> sdlogos = new Dictionary<string, string>();
+        private void imageConfigs_Changed(object sender, EventArgs e)
+        {
+            if (sender.Equals(cbSeriesPosterArt))
+            {
+                config.SeriesPosterArt = cbSeriesPosterArt.Checked;
+            }
+            else if (sender.Equals(cbTMDb))
+            {
+                config.TMDbCoverArt = cbTMDb.Checked;
+            }
+            else if (sender.Equals(cbSdLogos))
+            {
+                config.IncludeSDLogos = lblPreferredLogos.Enabled = cmbPreferredLogos.Enabled = lblAlternateLogos.Enabled = cmbAlternateLogos.Enabled = cbSdLogos.Checked;
+            }
+            else if (sender.Equals(cmbPreferredLogos))
+            {
+                config.PreferredLogoStyle = ((Helper.PreferredLogos)cmbPreferredLogos.SelectedIndex).ToString();
+                if (config.PreferredLogoStyle.Equals("none"))
+                {
+                    cmbAlternateLogos.SelectedIndex = cmbAlternateLogos.Items.Count - 1;
+                }
+            }
+            else if (sender.Equals(cmbAlternateLogos))
+            {
+                config.AlternateLogoStyle = ((Helper.PreferredLogos)cmbAlternateLogos.SelectedIndex).ToString();
+            }
+        }
+        private void btnSdLogos_Click(object sender, EventArgs e)
+        {
+            Cursor = Cursors.WaitCursor;
+
+            // open form and handle the sd logo downloads and image crop/resize
+            frmDownloadLogos dl = new frmDownloadLogos(sdlogos);
+            dl.ShowDialog();
+
+            Cursor = Cursors.Arrow;
+            return;
+        }
+        #endregion
+        #region ========== TAB: Config ==========
+        private void configs_Changed(object sender, EventArgs e)
+        {
+            if (sender.Equals(numDays))
+            {
+                config.DaysToDownload = (int)numDays.Value;
+            }
+            else if (sender.Equals(cbTVDB))
+            {
+                config.TheTVDBNumbers = cbTVDB.Checked;
+            }
+            else if (sender.Equals(cbPrefixTitle))
+            {
+                config.PrefixEpisodeTitle = cbPrefixTitle.Checked;
+                cbAlternateSEFormat.Enabled = (config.PrefixEpisodeTitle || config.PrefixEpisodeDescription);
+            }
+            else if (sender.Equals(cbPrefixDescription))
+            {
+                config.PrefixEpisodeDescription = cbPrefixDescription.Checked;
+                cbAlternateSEFormat.Enabled = (config.PrefixEpisodeTitle || config.PrefixEpisodeDescription);
+            }
+            else if (sender.Equals(cbAlternateSEFormat))
+            {
+                config.AlternateSEFormat = cbAlternateSEFormat.Checked;
+            }
+            else if (sender.Equals(cbAppendDescription))
+            {
+                config.AppendEpisodeDesc = cbAppendDescription.Checked;
+            }
+            else if (sender.Equals(cbOadOverride))
+            {
+                config.OADOverride = cbOadOverride.Checked;
+            }
+            else if (sender.Equals(cbAddNewStations))
+            {
+                config.AutoAddNew = cbAddNewStations.Checked;
+            }
+            else if (sender.Equals(cbBrandLogo))
+            {
+                if (cbBrandLogo.Checked)
+                {
+                    if (!config.PreferredLogoStyle.Equals("light") && !config.AlternateLogoStyle.Equals("light"))
+                    {
+                        config.BrandLogoImage = "light";
+                    }
+                    else config.BrandLogoImage = "dark";
+                }
+                else config.BrandLogoImage = "none";
+            }
+            else if (sender.Equals(cbModernMedia))
+            {
+                config.ModernMediaUiPlusSupport = cbModernMedia.Checked;
+            }
+        }
+        #endregion
+        #region ========== TAB: Task ==========
+        private void configTask_Changed(object sender, EventArgs e)
+        {
+            if (sender.Equals(cbImport))
+            {
+                config.AutoImport = cbAutomatch.Enabled = cbImport.Checked;
+            }
+            else if (sender.Equals(cbAutomatch))
+            {
+                config.Automatch = cbAutomatch.Checked;
+            }
+        }
+        #endregion
+        #endregion
 
         private void lvL5Lineup_ItemCheck(object sender, ItemCheckEventArgs e)
         {

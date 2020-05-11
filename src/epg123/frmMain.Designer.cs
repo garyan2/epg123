@@ -31,29 +31,49 @@
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmMain));
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-            this.grpScheduledTask = new System.Windows.Forms.GroupBox();
+            this.tabConfigs = new System.Windows.Forms.TabControl();
+            this.tabConfig = new System.Windows.Forms.TabPage();
+            this.lblAlternateLogos = new System.Windows.Forms.Label();
+            this.cmbAlternateLogos = new System.Windows.Forms.ComboBox();
+            this.btnSdLogos = new System.Windows.Forms.Button();
+            this.lblPreferredLogos = new System.Windows.Forms.Label();
+            this.cmbPreferredLogos = new System.Windows.Forms.ComboBox();
+            this.cbSeriesPosterArt = new System.Windows.Forms.CheckBox();
+            this.cbTMDb = new System.Windows.Forms.CheckBox();
+            this.cbSdLogos = new System.Windows.Forms.CheckBox();
+            this.cbTVDB = new System.Windows.Forms.CheckBox();
+            this.cbPrefixTitle = new System.Windows.Forms.CheckBox();
+            this.cbPrefixDescription = new System.Windows.Forms.CheckBox();
+            this.cbAppendDescription = new System.Windows.Forms.CheckBox();
+            this.cbModernMedia = new System.Windows.Forms.CheckBox();
+            this.numDays = new System.Windows.Forms.NumericUpDown();
+            this.lblDaysDownload = new System.Windows.Forms.Label();
+            this.cbOadOverride = new System.Windows.Forms.CheckBox();
+            this.cbAddNewStations = new System.Windows.Forms.CheckBox();
+            this.tabXmltv = new System.Windows.Forms.TabPage();
+            this.lblXmltvLogosNote = new System.Windows.Forms.Label();
+            this.lblXmltvOutput = new System.Windows.Forms.Label();
+            this.btnXmltvOutput = new System.Windows.Forms.Button();
+            this.tbXmltvOutput = new System.Windows.Forms.TextBox();
+            this.rtbFillerDescription = new System.Windows.Forms.RichTextBox();
+            this.lblFillerDescription = new System.Windows.Forms.Label();
+            this.lblFillerDuration = new System.Windows.Forms.Label();
+            this.numFillerDuration = new System.Windows.Forms.NumericUpDown();
+            this.ckXmltvFillerData = new System.Windows.Forms.CheckBox();
+            this.txtSubstitutePath = new System.Windows.Forms.TextBox();
+            this.cbXmltv = new System.Windows.Forms.CheckBox();
+            this.ckSubstitutePath = new System.Windows.Forms.CheckBox();
+            this.ckLocalLogos = new System.Windows.Forms.CheckBox();
+            this.ckUrlLogos = new System.Windows.Forms.CheckBox();
+            this.ckChannelLogos = new System.Windows.Forms.CheckBox();
+            this.ckChannelNumbers = new System.Windows.Forms.CheckBox();
+            this.tabTask = new System.Windows.Forms.TabPage();
             this.cbAutomatch = new System.Windows.Forms.CheckBox();
+            this.lblSchedStatus = new System.Windows.Forms.Label();
             this.cbImport = new System.Windows.Forms.CheckBox();
             this.cbTaskWake = new System.Windows.Forms.CheckBox();
-            this.lblSchedStatus = new System.Windows.Forms.Label();
             this.tbSchedTime = new System.Windows.Forms.MaskedTextBox();
             this.lblUpdateTime = new System.Windows.Forms.Label();
-            this.grpConfiguration = new System.Windows.Forms.GroupBox();
-            this.cbModernMedia = new System.Windows.Forms.CheckBox();
-            this.cbSeriesPosterArt = new System.Windows.Forms.CheckBox();
-            this.btnXmltvConfigure = new System.Windows.Forms.Button();
-            this.cbXmltv = new System.Windows.Forms.CheckBox();
-            this.cbTVDB = new System.Windows.Forms.CheckBox();
-            this.cbPrefixDescription = new System.Windows.Forms.CheckBox();
-            this.cbSdLogos = new System.Windows.Forms.CheckBox();
-            this.cbAppendDescription = new System.Windows.Forms.CheckBox();
-            this.btnSdLogos = new System.Windows.Forms.Button();
-            this.cbAddNewStations = new System.Windows.Forms.CheckBox();
-            this.cbOadOverride = new System.Windows.Forms.CheckBox();
-            this.cbPrefixTitle = new System.Windows.Forms.CheckBox();
-            this.lblDaysDownload = new System.Windows.Forms.Label();
-            this.numDays = new System.Windows.Forms.NumericUpDown();
-            this.cbTMDb = new System.Windows.Forms.CheckBox();
             this.grpAccount = new System.Windows.Forms.GroupBox();
             this.btnClientLineups = new System.Windows.Forms.Button();
             this.txtAcctExpires = new System.Windows.Forms.TextBox();
@@ -137,14 +157,20 @@
             this.btnHelp = new System.Windows.Forms.Button();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.btnClearCache = new System.Windows.Forms.Button();
+            this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
+            this.cbAlternateSEFormat = new System.Windows.Forms.CheckBox();
+            this.cbBrandLogo = new System.Windows.Forms.CheckBox();
             this.btnTask = new epg123.ElevatedButton();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
-            this.grpScheduledTask.SuspendLayout();
-            this.grpConfiguration.SuspendLayout();
+            this.tabConfigs.SuspendLayout();
+            this.tabConfig.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numDays)).BeginInit();
+            this.tabXmltv.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numFillerDuration)).BeginInit();
+            this.tabTask.SuspendLayout();
             this.grpAccount.SuspendLayout();
             this.tabLineups.SuspendLayout();
             this.tabL1.SuspendLayout();
@@ -172,8 +198,7 @@
             // 
             // splitContainer1.Panel1
             // 
-            this.splitContainer1.Panel1.Controls.Add(this.grpScheduledTask);
-            this.splitContainer1.Panel1.Controls.Add(this.grpConfiguration);
+            this.splitContainer1.Panel1.Controls.Add(this.tabConfigs);
             this.splitContainer1.Panel1.Controls.Add(this.grpAccount);
             this.splitContainer1.Panel1.Cursor = System.Windows.Forms.Cursors.Default;
             this.splitContainer1.Panel1MinSize = 340;
@@ -186,243 +211,209 @@
             this.splitContainer1.SplitterDistance = 340;
             this.splitContainer1.TabIndex = 0;
             // 
-            // grpScheduledTask
+            // tabConfigs
             // 
-            this.grpScheduledTask.Controls.Add(this.cbAutomatch);
-            this.grpScheduledTask.Controls.Add(this.btnTask);
-            this.grpScheduledTask.Controls.Add(this.cbImport);
-            this.grpScheduledTask.Controls.Add(this.cbTaskWake);
-            this.grpScheduledTask.Controls.Add(this.lblSchedStatus);
-            this.grpScheduledTask.Controls.Add(this.tbSchedTime);
-            this.grpScheduledTask.Controls.Add(this.lblUpdateTime);
-            this.grpScheduledTask.Enabled = false;
-            this.grpScheduledTask.Location = new System.Drawing.Point(12, 408);
-            this.grpScheduledTask.Name = "grpScheduledTask";
-            this.grpScheduledTask.Size = new System.Drawing.Size(317, 111);
-            this.grpScheduledTask.TabIndex = 9;
-            this.grpScheduledTask.TabStop = false;
-            this.grpScheduledTask.Text = "Scheduled Task";
+            this.tabConfigs.Controls.Add(this.tabConfig);
+            this.tabConfigs.Controls.Add(this.tabXmltv);
+            this.tabConfigs.Controls.Add(this.tabTask);
+            this.tabConfigs.Enabled = false;
+            this.tabConfigs.HotTrack = true;
+            this.tabConfigs.Location = new System.Drawing.Point(12, 105);
+            this.tabConfigs.Multiline = true;
+            this.tabConfigs.Name = "tabConfigs";
+            this.tabConfigs.SelectedIndex = 0;
+            this.tabConfigs.Size = new System.Drawing.Size(317, 421);
+            this.tabConfigs.TabIndex = 10;
             // 
-            // cbAutomatch
+            // tabConfig
             // 
-            this.cbAutomatch.AutoSize = true;
-            this.cbAutomatch.Location = new System.Drawing.Point(21, 66);
-            this.cbAutomatch.Name = "cbAutomatch";
-            this.cbAutomatch.Size = new System.Drawing.Size(217, 17);
-            this.cbAutomatch.TabIndex = 17;
-            this.cbAutomatch.Text = "Automatically match stations to channels";
-            this.cbAutomatch.UseVisualStyleBackColor = true;
+            this.tabConfig.BackColor = System.Drawing.SystemColors.Control;
+            this.tabConfig.Controls.Add(this.cbBrandLogo);
+            this.tabConfig.Controls.Add(this.cbAlternateSEFormat);
+            this.tabConfig.Controls.Add(this.lblAlternateLogos);
+            this.tabConfig.Controls.Add(this.cmbAlternateLogos);
+            this.tabConfig.Controls.Add(this.btnSdLogos);
+            this.tabConfig.Controls.Add(this.lblPreferredLogos);
+            this.tabConfig.Controls.Add(this.cmbPreferredLogos);
+            this.tabConfig.Controls.Add(this.cbSeriesPosterArt);
+            this.tabConfig.Controls.Add(this.cbTMDb);
+            this.tabConfig.Controls.Add(this.cbSdLogos);
+            this.tabConfig.Controls.Add(this.cbTVDB);
+            this.tabConfig.Controls.Add(this.cbPrefixTitle);
+            this.tabConfig.Controls.Add(this.cbPrefixDescription);
+            this.tabConfig.Controls.Add(this.cbAppendDescription);
+            this.tabConfig.Controls.Add(this.cbModernMedia);
+            this.tabConfig.Controls.Add(this.numDays);
+            this.tabConfig.Controls.Add(this.lblDaysDownload);
+            this.tabConfig.Controls.Add(this.cbOadOverride);
+            this.tabConfig.Controls.Add(this.cbAddNewStations);
+            this.tabConfig.Location = new System.Drawing.Point(4, 22);
+            this.tabConfig.Name = "tabConfig";
+            this.tabConfig.Padding = new System.Windows.Forms.Padding(3);
+            this.tabConfig.Size = new System.Drawing.Size(309, 395);
+            this.tabConfig.TabIndex = 2;
+            this.tabConfig.Text = "Configuration";
             // 
-            // cbImport
+            // lblAlternateLogos
             // 
-            this.cbImport.AutoSize = true;
-            this.cbImport.Location = new System.Drawing.Point(6, 45);
-            this.cbImport.Name = "cbImport";
-            this.cbImport.Size = new System.Drawing.Size(222, 17);
-            this.cbImport.TabIndex = 16;
-            this.cbImport.Text = "Automatically import guide data into WMC";
-            this.cbImport.UseVisualStyleBackColor = true;
-            this.cbImport.CheckedChanged += new System.EventHandler(this.cbImport_CheckedChanged);
+            this.lblAlternateLogos.AutoSize = true;
+            this.lblAlternateLogos.Location = new System.Drawing.Point(15, 292);
+            this.lblAlternateLogos.Name = "lblAlternateLogos";
+            this.lblAlternateLogos.Size = new System.Drawing.Size(98, 13);
+            this.lblAlternateLogos.TabIndex = 35;
+            this.lblAlternateLogos.Text = "Alternate SD logos:";
             // 
-            // cbTaskWake
+            // cmbAlternateLogos
             // 
-            this.cbTaskWake.AutoSize = true;
-            this.cbTaskWake.Location = new System.Drawing.Point(175, 23);
-            this.cbTaskWake.Name = "cbTaskWake";
-            this.cbTaskWake.Size = new System.Drawing.Size(55, 17);
-            this.cbTaskWake.TabIndex = 5;
-            this.cbTaskWake.Text = "Wake";
-            this.cbTaskWake.UseVisualStyleBackColor = true;
-            // 
-            // lblSchedStatus
-            // 
-            this.lblSchedStatus.AutoSize = true;
-            this.lblSchedStatus.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblSchedStatus.Location = new System.Drawing.Point(6, 87);
-            this.lblSchedStatus.Name = "lblSchedStatus";
-            this.lblSchedStatus.Size = new System.Drawing.Size(64, 13);
-            this.lblSchedStatus.TabIndex = 4;
-            this.lblSchedStatus.Text = "Task Status";
-            // 
-            // tbSchedTime
-            // 
-            this.tbSchedTime.Location = new System.Drawing.Point(131, 21);
-            this.tbSchedTime.Mask = "00:00";
-            this.tbSchedTime.Name = "tbSchedTime";
-            this.tbSchedTime.Size = new System.Drawing.Size(38, 20);
-            this.tbSchedTime.TabIndex = 3;
-            this.tbSchedTime.TabStop = false;
-            this.tbSchedTime.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            this.tbSchedTime.ValidatingType = typeof(System.DateTime);
-            // 
-            // lblUpdateTime
-            // 
-            this.lblUpdateTime.AutoSize = true;
-            this.lblUpdateTime.Location = new System.Drawing.Point(6, 24);
-            this.lblUpdateTime.Name = "lblUpdateTime";
-            this.lblUpdateTime.Size = new System.Drawing.Size(119, 13);
-            this.lblUpdateTime.TabIndex = 2;
-            this.lblUpdateTime.Text = "Scheduled update time:";
-            // 
-            // grpConfiguration
-            // 
-            this.grpConfiguration.Controls.Add(this.cbModernMedia);
-            this.grpConfiguration.Controls.Add(this.cbSeriesPosterArt);
-            this.grpConfiguration.Controls.Add(this.btnXmltvConfigure);
-            this.grpConfiguration.Controls.Add(this.cbXmltv);
-            this.grpConfiguration.Controls.Add(this.cbTVDB);
-            this.grpConfiguration.Controls.Add(this.cbPrefixDescription);
-            this.grpConfiguration.Controls.Add(this.cbSdLogos);
-            this.grpConfiguration.Controls.Add(this.cbAppendDescription);
-            this.grpConfiguration.Controls.Add(this.btnSdLogos);
-            this.grpConfiguration.Controls.Add(this.cbAddNewStations);
-            this.grpConfiguration.Controls.Add(this.cbOadOverride);
-            this.grpConfiguration.Controls.Add(this.cbPrefixTitle);
-            this.grpConfiguration.Controls.Add(this.lblDaysDownload);
-            this.grpConfiguration.Controls.Add(this.numDays);
-            this.grpConfiguration.Controls.Add(this.cbTMDb);
-            this.grpConfiguration.Enabled = false;
-            this.grpConfiguration.Location = new System.Drawing.Point(12, 105);
-            this.grpConfiguration.Name = "grpConfiguration";
-            this.grpConfiguration.Size = new System.Drawing.Size(317, 297);
-            this.grpConfiguration.TabIndex = 3;
-            this.grpConfiguration.TabStop = false;
-            this.grpConfiguration.Text = "Configuration";
-            // 
-            // cbModernMedia
-            // 
-            this.cbModernMedia.AutoSize = true;
-            this.cbModernMedia.Location = new System.Drawing.Point(175, 261);
-            this.cbModernMedia.Name = "cbModernMedia";
-            this.cbModernMedia.Size = new System.Drawing.Size(131, 17);
-            this.cbModernMedia.TabIndex = 23;
-            this.cbModernMedia.Text = "Create UI+ support file";
-            this.cbModernMedia.UseVisualStyleBackColor = true;
-            // 
-            // cbSeriesPosterArt
-            // 
-            this.cbSeriesPosterArt.AutoSize = true;
-            this.cbSeriesPosterArt.Location = new System.Drawing.Point(6, 160);
-            this.cbSeriesPosterArt.Name = "cbSeriesPosterArt";
-            this.cbSeriesPosterArt.Size = new System.Drawing.Size(252, 17);
-            this.cbSeriesPosterArt.TabIndex = 22;
-            this.cbSeriesPosterArt.Text = "Use 2x3 posters for series images instead of 4x3";
-            this.cbSeriesPosterArt.UseVisualStyleBackColor = true;
-            // 
-            // btnXmltvConfigure
-            // 
-            this.btnXmltvConfigure.Location = new System.Drawing.Point(27, 257);
-            this.btnXmltvConfigure.Name = "btnXmltvConfigure";
-            this.btnXmltvConfigure.Size = new System.Drawing.Size(114, 23);
-            this.btnXmltvConfigure.TabIndex = 21;
-            this.btnXmltvConfigure.Text = "Create XMLTV file";
-            this.btnXmltvConfigure.UseVisualStyleBackColor = true;
-            this.btnXmltvConfigure.Click += new System.EventHandler(this.btnXmltvConfigure_Click);
-            // 
-            // cbXmltv
-            // 
-            this.cbXmltv.AutoSize = true;
-            this.cbXmltv.Location = new System.Drawing.Point(6, 262);
-            this.cbXmltv.Name = "cbXmltv";
-            this.cbXmltv.Size = new System.Drawing.Size(15, 14);
-            this.cbXmltv.TabIndex = 20;
-            this.cbXmltv.UseVisualStyleBackColor = true;
-            // 
-            // cbTVDB
-            // 
-            this.cbTVDB.AutoSize = true;
-            this.cbTVDB.Location = new System.Drawing.Point(6, 45);
-            this.cbTVDB.Name = "cbTVDB";
-            this.cbTVDB.Size = new System.Drawing.Size(289, 17);
-            this.cbTVDB.TabIndex = 18;
-            this.cbTVDB.Text = "Use TheTVDB season and episode numbers if provided";
-            this.cbTVDB.UseVisualStyleBackColor = true;
-            // 
-            // cbPrefixDescription
-            // 
-            this.cbPrefixDescription.AutoSize = true;
-            this.cbPrefixDescription.Location = new System.Drawing.Point(6, 91);
-            this.cbPrefixDescription.Name = "cbPrefixDescription";
-            this.cbPrefixDescription.Size = new System.Drawing.Size(281, 17);
-            this.cbPrefixDescription.TabIndex = 17;
-            this.cbPrefixDescription.Text = "Prefix episode desc with season and episode numbers";
-            this.cbPrefixDescription.UseVisualStyleBackColor = true;
-            // 
-            // cbSdLogos
-            // 
-            this.cbSdLogos.AutoSize = true;
-            this.cbSdLogos.Location = new System.Drawing.Point(6, 210);
-            this.cbSdLogos.Name = "cbSdLogos";
-            this.cbSdLogos.Size = new System.Drawing.Size(123, 17);
-            this.cbSdLogos.TabIndex = 16;
-            this.cbSdLogos.Text = "Include station logos";
-            this.cbSdLogos.UseVisualStyleBackColor = true;
-            // 
-            // cbAppendDescription
-            // 
-            this.cbAppendDescription.AutoSize = true;
-            this.cbAppendDescription.Location = new System.Drawing.Point(6, 114);
-            this.cbAppendDescription.Name = "cbAppendDescription";
-            this.cbAppendDescription.Size = new System.Drawing.Size(292, 17);
-            this.cbAppendDescription.TabIndex = 15;
-            this.cbAppendDescription.Text = "Append episode desc with season and episode numbers";
-            this.cbAppendDescription.UseVisualStyleBackColor = true;
+            this.cmbAlternateLogos.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbAlternateLogos.FormattingEnabled = true;
+            this.cmbAlternateLogos.Items.AddRange(new object[] {
+            "white logos",
+            "gray logos",
+            "logos for dark backgrounds",
+            "logos for light backgrounds",
+            "none"});
+            this.cmbAlternateLogos.Location = new System.Drawing.Point(119, 289);
+            this.cmbAlternateLogos.Name = "cmbAlternateLogos";
+            this.cmbAlternateLogos.Size = new System.Drawing.Size(160, 21);
+            this.cmbAlternateLogos.TabIndex = 34;
+            this.cmbAlternateLogos.SelectedIndexChanged += new System.EventHandler(this.imageConfigs_Changed);
             // 
             // btnSdLogos
             // 
             this.btnSdLogos.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.btnSdLogos.FlatAppearance.BorderSize = 2;
-            this.btnSdLogos.Location = new System.Drawing.Point(210, 206);
+            this.btnSdLogos.Location = new System.Drawing.Point(6, 316);
             this.btnSdLogos.Name = "btnSdLogos";
-            this.btnSdLogos.Size = new System.Drawing.Size(100, 23);
-            this.btnSdLogos.TabIndex = 13;
-            this.btnSdLogos.Text = "Collect SD Logos";
+            this.btnSdLogos.Size = new System.Drawing.Size(297, 23);
+            this.btnSdLogos.TabIndex = 33;
+            this.btnSdLogos.Text = "Collect all station logos for subscribed lineups from SD";
             this.toolTip1.SetToolTip(this.btnSdLogos, "Download all logos to .\\sdlogos folder");
             this.btnSdLogos.UseVisualStyleBackColor = true;
             this.btnSdLogos.Click += new System.EventHandler(this.btnSdLogos_Click);
             // 
-            // cbAddNewStations
+            // lblPreferredLogos
             // 
-            this.cbAddNewStations.AutoSize = true;
-            this.cbAddNewStations.Location = new System.Drawing.Point(6, 235);
-            this.cbAddNewStations.Name = "cbAddNewStations";
-            this.cbAddNewStations.Size = new System.Drawing.Size(246, 17);
-            this.cbAddNewStations.TabIndex = 13;
-            this.cbAddNewStations.Text = "Automatically download new stations in lineups";
-            this.cbAddNewStations.UseVisualStyleBackColor = true;
+            this.lblPreferredLogos.AutoSize = true;
+            this.lblPreferredLogos.Location = new System.Drawing.Point(14, 265);
+            this.lblPreferredLogos.Name = "lblPreferredLogos";
+            this.lblPreferredLogos.Size = new System.Drawing.Size(99, 13);
+            this.lblPreferredLogos.TabIndex = 32;
+            this.lblPreferredLogos.Text = "Preferred SD logos:";
             // 
-            // cbOadOverride
+            // cmbPreferredLogos
             // 
-            this.cbOadOverride.AutoSize = true;
-            this.cbOadOverride.Location = new System.Drawing.Point(6, 137);
-            this.cbOadOverride.Name = "cbOadOverride";
-            this.cbOadOverride.Size = new System.Drawing.Size(232, 17);
-            this.cbOadOverride.TabIndex = 12;
-            this.cbOadOverride.Text = "Allow NEW flag to override Original Air Date";
-            this.cbOadOverride.UseVisualStyleBackColor = true;
+            this.cmbPreferredLogos.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbPreferredLogos.FormattingEnabled = true;
+            this.cmbPreferredLogos.Items.AddRange(new object[] {
+            "white logos",
+            "gray logos",
+            "logos for dark backgrounds",
+            "logos for light backgrounds",
+            "do not download SD logos"});
+            this.cmbPreferredLogos.Location = new System.Drawing.Point(119, 262);
+            this.cmbPreferredLogos.Name = "cmbPreferredLogos";
+            this.cmbPreferredLogos.Size = new System.Drawing.Size(160, 21);
+            this.cmbPreferredLogos.TabIndex = 31;
+            this.cmbPreferredLogos.SelectedIndexChanged += new System.EventHandler(this.imageConfigs_Changed);
+            // 
+            // cbSeriesPosterArt
+            // 
+            this.cbSeriesPosterArt.AutoSize = true;
+            this.cbSeriesPosterArt.Location = new System.Drawing.Point(6, 193);
+            this.cbSeriesPosterArt.Name = "cbSeriesPosterArt";
+            this.cbSeriesPosterArt.Size = new System.Drawing.Size(252, 17);
+            this.cbSeriesPosterArt.TabIndex = 30;
+            this.cbSeriesPosterArt.Text = "Use 2x3 posters for series images instead of 4x3";
+            this.cbSeriesPosterArt.UseVisualStyleBackColor = true;
+            this.cbSeriesPosterArt.CheckedChanged += new System.EventHandler(this.imageConfigs_Changed);
+            // 
+            // cbTMDb
+            // 
+            this.cbTMDb.AutoSize = true;
+            this.cbTMDb.Location = new System.Drawing.Point(6, 216);
+            this.cbTMDb.Name = "cbTMDb";
+            this.cbTMDb.Size = new System.Drawing.Size(249, 17);
+            this.cbTMDb.TabIndex = 28;
+            this.cbTMDb.Text = "Use themoviedb.org for missing movie cover art";
+            this.cbTMDb.UseVisualStyleBackColor = true;
+            this.cbTMDb.CheckedChanged += new System.EventHandler(this.imageConfigs_Changed);
+            // 
+            // cbSdLogos
+            // 
+            this.cbSdLogos.AutoSize = true;
+            this.cbSdLogos.Checked = true;
+            this.cbSdLogos.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.cbSdLogos.Location = new System.Drawing.Point(6, 239);
+            this.cbSdLogos.Name = "cbSdLogos";
+            this.cbSdLogos.Size = new System.Drawing.Size(199, 17);
+            this.cbSdLogos.TabIndex = 29;
+            this.cbSdLogos.Text = "Include station logos in .\\logos folder";
+            this.cbSdLogos.UseVisualStyleBackColor = true;
+            this.cbSdLogos.CheckedChanged += new System.EventHandler(this.imageConfigs_Changed);
+            // 
+            // cbTVDB
+            // 
+            this.cbTVDB.AutoSize = true;
+            this.cbTVDB.Location = new System.Drawing.Point(6, 32);
+            this.cbTVDB.Name = "cbTVDB";
+            this.cbTVDB.Size = new System.Drawing.Size(289, 17);
+            this.cbTVDB.TabIndex = 27;
+            this.cbTVDB.Text = "Use TheTVDB season and episode numbers if provided";
+            this.cbTVDB.UseVisualStyleBackColor = true;
+            this.cbTVDB.CheckedChanged += new System.EventHandler(this.configs_Changed);
             // 
             // cbPrefixTitle
             // 
             this.cbPrefixTitle.AutoSize = true;
-            this.cbPrefixTitle.Location = new System.Drawing.Point(6, 68);
+            this.cbPrefixTitle.Location = new System.Drawing.Point(6, 55);
             this.cbPrefixTitle.Name = "cbPrefixTitle";
             this.cbPrefixTitle.Size = new System.Drawing.Size(274, 17);
-            this.cbPrefixTitle.TabIndex = 3;
+            this.cbPrefixTitle.TabIndex = 24;
             this.cbPrefixTitle.Text = "Prefix episode title with season and episode numbers";
             this.cbPrefixTitle.UseVisualStyleBackColor = true;
+            this.cbPrefixTitle.CheckedChanged += new System.EventHandler(this.configs_Changed);
             // 
-            // lblDaysDownload
+            // cbPrefixDescription
             // 
-            this.lblDaysDownload.AutoSize = true;
-            this.lblDaysDownload.Location = new System.Drawing.Point(52, 21);
-            this.lblDaysDownload.Name = "lblDaysDownload";
-            this.lblDaysDownload.Size = new System.Drawing.Size(172, 13);
-            this.lblDaysDownload.TabIndex = 2;
-            this.lblDaysDownload.Text = "days of schedule data to download";
+            this.cbPrefixDescription.AutoSize = true;
+            this.cbPrefixDescription.CheckAlign = System.Drawing.ContentAlignment.TopLeft;
+            this.cbPrefixDescription.Location = new System.Drawing.Point(6, 78);
+            this.cbPrefixDescription.Name = "cbPrefixDescription";
+            this.cbPrefixDescription.Size = new System.Drawing.Size(281, 17);
+            this.cbPrefixDescription.TabIndex = 26;
+            this.cbPrefixDescription.Text = "Prefix episode desc with season and episode numbers";
+            this.cbPrefixDescription.TextAlign = System.Drawing.ContentAlignment.TopLeft;
+            this.cbPrefixDescription.UseVisualStyleBackColor = true;
+            this.cbPrefixDescription.CheckedChanged += new System.EventHandler(this.configs_Changed);
+            // 
+            // cbAppendDescription
+            // 
+            this.cbAppendDescription.AutoSize = true;
+            this.cbAppendDescription.CheckAlign = System.Drawing.ContentAlignment.TopLeft;
+            this.cbAppendDescription.Location = new System.Drawing.Point(6, 124);
+            this.cbAppendDescription.Name = "cbAppendDescription";
+            this.cbAppendDescription.Size = new System.Drawing.Size(292, 17);
+            this.cbAppendDescription.TabIndex = 25;
+            this.cbAppendDescription.Text = "Append episode desc with season and episode numbers";
+            this.cbAppendDescription.TextAlign = System.Drawing.ContentAlignment.TopLeft;
+            this.cbAppendDescription.UseVisualStyleBackColor = true;
+            this.cbAppendDescription.CheckedChanged += new System.EventHandler(this.configs_Changed);
+            // 
+            // cbModernMedia
+            // 
+            this.cbModernMedia.AutoSize = true;
+            this.cbModernMedia.Location = new System.Drawing.Point(6, 368);
+            this.cbModernMedia.Name = "cbModernMedia";
+            this.cbModernMedia.Size = new System.Drawing.Size(199, 17);
+            this.cbModernMedia.TabIndex = 23;
+            this.cbModernMedia.Text = "Create ModernMedia UI+ support file";
+            this.cbModernMedia.UseVisualStyleBackColor = true;
+            this.cbModernMedia.CheckedChanged += new System.EventHandler(this.configs_Changed);
             // 
             // numDays
             // 
-            this.numDays.Location = new System.Drawing.Point(6, 19);
+            this.numDays.Location = new System.Drawing.Point(6, 6);
             this.numDays.Maximum = new decimal(new int[] {
             21,
             0,
@@ -442,16 +433,336 @@
             0,
             0,
             0});
+            this.numDays.ValueChanged += new System.EventHandler(this.configs_Changed);
             // 
-            // cbTMDb
+            // lblDaysDownload
             // 
-            this.cbTMDb.AutoSize = true;
-            this.cbTMDb.Location = new System.Drawing.Point(6, 183);
-            this.cbTMDb.Name = "cbTMDb";
-            this.cbTMDb.Size = new System.Drawing.Size(249, 17);
-            this.cbTMDb.TabIndex = 0;
-            this.cbTMDb.Text = "Use themoviedb.org for missing movie cover art";
-            this.cbTMDb.UseVisualStyleBackColor = true;
+            this.lblDaysDownload.AutoSize = true;
+            this.lblDaysDownload.Location = new System.Drawing.Point(52, 8);
+            this.lblDaysDownload.Name = "lblDaysDownload";
+            this.lblDaysDownload.Size = new System.Drawing.Size(172, 13);
+            this.lblDaysDownload.TabIndex = 2;
+            this.lblDaysDownload.Text = "days of schedule data to download";
+            // 
+            // cbOadOverride
+            // 
+            this.cbOadOverride.AutoSize = true;
+            this.cbOadOverride.Location = new System.Drawing.Point(6, 147);
+            this.cbOadOverride.Name = "cbOadOverride";
+            this.cbOadOverride.Size = new System.Drawing.Size(232, 17);
+            this.cbOadOverride.TabIndex = 12;
+            this.cbOadOverride.Text = "Allow NEW flag to override Original Air Date";
+            this.cbOadOverride.UseVisualStyleBackColor = true;
+            this.cbOadOverride.CheckedChanged += new System.EventHandler(this.configs_Changed);
+            // 
+            // cbAddNewStations
+            // 
+            this.cbAddNewStations.AutoSize = true;
+            this.cbAddNewStations.Location = new System.Drawing.Point(6, 170);
+            this.cbAddNewStations.Name = "cbAddNewStations";
+            this.cbAddNewStations.Size = new System.Drawing.Size(246, 17);
+            this.cbAddNewStations.TabIndex = 13;
+            this.cbAddNewStations.Text = "Automatically download new stations in lineups";
+            this.cbAddNewStations.UseVisualStyleBackColor = true;
+            this.cbAddNewStations.CheckedChanged += new System.EventHandler(this.configs_Changed);
+            // 
+            // tabXmltv
+            // 
+            this.tabXmltv.BackColor = System.Drawing.SystemColors.Control;
+            this.tabXmltv.Controls.Add(this.lblXmltvLogosNote);
+            this.tabXmltv.Controls.Add(this.lblXmltvOutput);
+            this.tabXmltv.Controls.Add(this.btnXmltvOutput);
+            this.tabXmltv.Controls.Add(this.tbXmltvOutput);
+            this.tabXmltv.Controls.Add(this.rtbFillerDescription);
+            this.tabXmltv.Controls.Add(this.lblFillerDescription);
+            this.tabXmltv.Controls.Add(this.lblFillerDuration);
+            this.tabXmltv.Controls.Add(this.numFillerDuration);
+            this.tabXmltv.Controls.Add(this.ckXmltvFillerData);
+            this.tabXmltv.Controls.Add(this.txtSubstitutePath);
+            this.tabXmltv.Controls.Add(this.cbXmltv);
+            this.tabXmltv.Controls.Add(this.ckSubstitutePath);
+            this.tabXmltv.Controls.Add(this.ckLocalLogos);
+            this.tabXmltv.Controls.Add(this.ckUrlLogos);
+            this.tabXmltv.Controls.Add(this.ckChannelLogos);
+            this.tabXmltv.Controls.Add(this.ckChannelNumbers);
+            this.tabXmltv.Location = new System.Drawing.Point(4, 22);
+            this.tabXmltv.Name = "tabXmltv";
+            this.tabXmltv.Padding = new System.Windows.Forms.Padding(3);
+            this.tabXmltv.Size = new System.Drawing.Size(309, 395);
+            this.tabXmltv.TabIndex = 3;
+            this.tabXmltv.Text = "XMLTV";
+            // 
+            // lblXmltvLogosNote
+            // 
+            this.lblXmltvLogosNote.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblXmltvLogosNote.Location = new System.Drawing.Point(6, 362);
+            this.lblXmltvLogosNote.Name = "lblXmltvLogosNote";
+            this.lblXmltvLogosNote.Size = new System.Drawing.Size(297, 30);
+            this.lblXmltvLogosNote.TabIndex = 28;
+            this.lblXmltvLogosNote.Text = "* The option to \'Include station logos in .\\logos folder\' must be enabled to incl" +
+    "ude channel logos in the XMLTV file.";
+            // 
+            // lblXmltvOutput
+            // 
+            this.lblXmltvOutput.AutoSize = true;
+            this.lblXmltvOutput.Location = new System.Drawing.Point(6, 309);
+            this.lblXmltvOutput.Name = "lblXmltvOutput";
+            this.lblXmltvOutput.Size = new System.Drawing.Size(58, 13);
+            this.lblXmltvOutput.TabIndex = 27;
+            this.lblXmltvOutput.Text = "Output file:";
+            // 
+            // btnXmltvOutput
+            // 
+            this.btnXmltvOutput.Location = new System.Drawing.Point(280, 325);
+            this.btnXmltvOutput.Name = "btnXmltvOutput";
+            this.btnXmltvOutput.Size = new System.Drawing.Size(26, 22);
+            this.btnXmltvOutput.TabIndex = 26;
+            this.btnXmltvOutput.Text = "...";
+            this.btnXmltvOutput.UseVisualStyleBackColor = true;
+            this.btnXmltvOutput.Click += new System.EventHandler(this.btnXmltvOutput_Click);
+            // 
+            // tbXmltvOutput
+            // 
+            this.tbXmltvOutput.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.tbXmltvOutput.Cursor = System.Windows.Forms.Cursors.Default;
+            this.tbXmltvOutput.Location = new System.Drawing.Point(6, 326);
+            this.tbXmltvOutput.Name = "tbXmltvOutput";
+            this.tbXmltvOutput.ReadOnly = true;
+            this.tbXmltvOutput.Size = new System.Drawing.Size(268, 20);
+            this.tbXmltvOutput.TabIndex = 25;
+            this.tbXmltvOutput.TabStop = false;
+            // 
+            // rtbFillerDescription
+            // 
+            this.rtbFillerDescription.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.rtbFillerDescription.Location = new System.Drawing.Point(24, 241);
+            this.rtbFillerDescription.Name = "rtbFillerDescription";
+            this.rtbFillerDescription.Size = new System.Drawing.Size(280, 65);
+            this.rtbFillerDescription.TabIndex = 24;
+            this.rtbFillerDescription.Text = "This program was generated by EPG123 to provide filler data for stations that did" +
+    " not receive any guide listings from the upstream source.";
+            this.rtbFillerDescription.TextChanged += new System.EventHandler(this.ckXmltvConfigs_Changed);
+            // 
+            // lblFillerDescription
+            // 
+            this.lblFillerDescription.AutoSize = true;
+            this.lblFillerDescription.Location = new System.Drawing.Point(21, 225);
+            this.lblFillerDescription.Name = "lblFillerDescription";
+            this.lblFillerDescription.Size = new System.Drawing.Size(126, 13);
+            this.lblFillerDescription.TabIndex = 23;
+            this.lblFillerDescription.Text = "Filler program description:";
+            // 
+            // lblFillerDuration
+            // 
+            this.lblFillerDuration.AutoSize = true;
+            this.lblFillerDuration.Location = new System.Drawing.Point(65, 195);
+            this.lblFillerDuration.Name = "lblFillerDuration";
+            this.lblFillerDuration.Size = new System.Drawing.Size(143, 13);
+            this.lblFillerDuration.TabIndex = 22;
+            this.lblFillerDuration.Text = "hour duration of filler program";
+            // 
+            // numFillerDuration
+            // 
+            this.numFillerDuration.Location = new System.Drawing.Point(24, 193);
+            this.numFillerDuration.Maximum = new decimal(new int[] {
+            24,
+            0,
+            0,
+            0});
+            this.numFillerDuration.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.numFillerDuration.Name = "numFillerDuration";
+            this.numFillerDuration.Size = new System.Drawing.Size(35, 20);
+            this.numFillerDuration.TabIndex = 21;
+            this.numFillerDuration.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.numFillerDuration.Value = new decimal(new int[] {
+            4,
+            0,
+            0,
+            0});
+            this.numFillerDuration.ValueChanged += new System.EventHandler(this.ckXmltvConfigs_Changed);
+            // 
+            // ckXmltvFillerData
+            // 
+            this.ckXmltvFillerData.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left)));
+            this.ckXmltvFillerData.AutoSize = true;
+            this.ckXmltvFillerData.Checked = true;
+            this.ckXmltvFillerData.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.ckXmltvFillerData.Location = new System.Drawing.Point(6, 170);
+            this.ckXmltvFillerData.Name = "ckXmltvFillerData";
+            this.ckXmltvFillerData.Size = new System.Drawing.Size(294, 17);
+            this.ckXmltvFillerData.TabIndex = 13;
+            this.ckXmltvFillerData.Text = "Create filler programs for stations that have no guide data";
+            this.ckXmltvFillerData.UseVisualStyleBackColor = true;
+            this.ckXmltvFillerData.CheckedChanged += new System.EventHandler(this.ckXmltvConfigs_Changed);
+            // 
+            // txtSubstitutePath
+            // 
+            this.txtSubstitutePath.Location = new System.Drawing.Point(41, 144);
+            this.txtSubstitutePath.Name = "txtSubstitutePath";
+            this.txtSubstitutePath.Size = new System.Drawing.Size(263, 20);
+            this.txtSubstitutePath.TabIndex = 12;
+            this.txtSubstitutePath.TextChanged += new System.EventHandler(this.ckXmltvConfigs_Changed);
+            // 
+            // cbXmltv
+            // 
+            this.cbXmltv.AutoSize = true;
+            this.cbXmltv.Checked = true;
+            this.cbXmltv.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.cbXmltv.Location = new System.Drawing.Point(6, 6);
+            this.cbXmltv.Name = "cbXmltv";
+            this.cbXmltv.Size = new System.Drawing.Size(112, 17);
+            this.cbXmltv.TabIndex = 20;
+            this.cbXmltv.Text = "Create XMLTV file";
+            this.cbXmltv.UseVisualStyleBackColor = true;
+            this.cbXmltv.CheckedChanged += new System.EventHandler(this.ckXmltvConfigs_Changed);
+            // 
+            // ckSubstitutePath
+            // 
+            this.ckSubstitutePath.AutoSize = true;
+            this.ckSubstitutePath.Checked = true;
+            this.ckSubstitutePath.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.ckSubstitutePath.Location = new System.Drawing.Point(41, 121);
+            this.ckSubstitutePath.Margin = new System.Windows.Forms.Padding(37, 3, 3, 3);
+            this.ckSubstitutePath.Name = "ckSubstitutePath";
+            this.ckSubstitutePath.Size = new System.Drawing.Size(191, 17);
+            this.ckSubstitutePath.TabIndex = 11;
+            this.ckSubstitutePath.Text = "Substitute path to logos folder with:";
+            this.ckSubstitutePath.UseVisualStyleBackColor = true;
+            this.ckSubstitutePath.CheckedChanged += new System.EventHandler(this.ckXmltvConfigs_Changed);
+            // 
+            // ckLocalLogos
+            // 
+            this.ckLocalLogos.AutoSize = true;
+            this.ckLocalLogos.Checked = true;
+            this.ckLocalLogos.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.ckLocalLogos.Location = new System.Drawing.Point(24, 98);
+            this.ckLocalLogos.Margin = new System.Windows.Forms.Padding(20, 3, 3, 3);
+            this.ckLocalLogos.Name = "ckLocalLogos";
+            this.ckLocalLogos.Size = new System.Drawing.Size(194, 17);
+            this.ckLocalLogos.TabIndex = 10;
+            this.ckLocalLogos.Text = "Use local images from .\\logos folder";
+            this.ckLocalLogos.UseVisualStyleBackColor = true;
+            this.ckLocalLogos.CheckedChanged += new System.EventHandler(this.ckXmltvConfigs_Changed);
+            // 
+            // ckUrlLogos
+            // 
+            this.ckUrlLogos.AutoSize = true;
+            this.ckUrlLogos.Location = new System.Drawing.Point(24, 75);
+            this.ckUrlLogos.Margin = new System.Windows.Forms.Padding(20, 3, 3, 3);
+            this.ckUrlLogos.Name = "ckUrlLogos";
+            this.ckUrlLogos.Size = new System.Drawing.Size(219, 17);
+            this.ckUrlLogos.TabIndex = 9;
+            this.ckUrlLogos.Text = "Use linked images from Schedules Direct";
+            this.ckUrlLogos.UseVisualStyleBackColor = true;
+            this.ckUrlLogos.CheckedChanged += new System.EventHandler(this.ckXmltvConfigs_Changed);
+            // 
+            // ckChannelLogos
+            // 
+            this.ckChannelLogos.AutoSize = true;
+            this.ckChannelLogos.Checked = true;
+            this.ckChannelLogos.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.ckChannelLogos.Location = new System.Drawing.Point(6, 52);
+            this.ckChannelLogos.Name = "ckChannelLogos";
+            this.ckChannelLogos.Size = new System.Drawing.Size(134, 17);
+            this.ckChannelLogos.TabIndex = 8;
+            this.ckChannelLogos.Text = "Include channel logos*";
+            this.ckChannelLogos.UseVisualStyleBackColor = true;
+            this.ckChannelLogos.CheckedChanged += new System.EventHandler(this.ckXmltvConfigs_Changed);
+            // 
+            // ckChannelNumbers
+            // 
+            this.ckChannelNumbers.AutoSize = true;
+            this.ckChannelNumbers.Location = new System.Drawing.Point(6, 29);
+            this.ckChannelNumbers.Name = "ckChannelNumbers";
+            this.ckChannelNumbers.Size = new System.Drawing.Size(145, 17);
+            this.ckChannelNumbers.TabIndex = 7;
+            this.ckChannelNumbers.Text = "Include channel numbers";
+            this.ckChannelNumbers.UseVisualStyleBackColor = true;
+            this.ckChannelNumbers.CheckedChanged += new System.EventHandler(this.ckXmltvConfigs_Changed);
+            // 
+            // tabTask
+            // 
+            this.tabTask.BackColor = System.Drawing.SystemColors.Control;
+            this.tabTask.Controls.Add(this.cbAutomatch);
+            this.tabTask.Controls.Add(this.lblSchedStatus);
+            this.tabTask.Controls.Add(this.btnTask);
+            this.tabTask.Controls.Add(this.cbImport);
+            this.tabTask.Controls.Add(this.cbTaskWake);
+            this.tabTask.Controls.Add(this.tbSchedTime);
+            this.tabTask.Controls.Add(this.lblUpdateTime);
+            this.tabTask.Location = new System.Drawing.Point(4, 22);
+            this.tabTask.Name = "tabTask";
+            this.tabTask.Padding = new System.Windows.Forms.Padding(3);
+            this.tabTask.Size = new System.Drawing.Size(309, 395);
+            this.tabTask.TabIndex = 4;
+            this.tabTask.Text = "Scheduled Task";
+            // 
+            // cbAutomatch
+            // 
+            this.cbAutomatch.AutoSize = true;
+            this.cbAutomatch.Location = new System.Drawing.Point(21, 51);
+            this.cbAutomatch.Name = "cbAutomatch";
+            this.cbAutomatch.Size = new System.Drawing.Size(217, 17);
+            this.cbAutomatch.TabIndex = 23;
+            this.cbAutomatch.Text = "Automatically match stations to channels";
+            this.cbAutomatch.UseVisualStyleBackColor = true;
+            this.cbAutomatch.CheckedChanged += new System.EventHandler(this.configTask_Changed);
+            // 
+            // lblSchedStatus
+            // 
+            this.lblSchedStatus.AutoSize = true;
+            this.lblSchedStatus.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblSchedStatus.Location = new System.Drawing.Point(6, 71);
+            this.lblSchedStatus.Name = "lblSchedStatus";
+            this.lblSchedStatus.Size = new System.Drawing.Size(64, 13);
+            this.lblSchedStatus.TabIndex = 4;
+            this.lblSchedStatus.Text = "Task Status";
+            // 
+            // cbImport
+            // 
+            this.cbImport.AutoSize = true;
+            this.cbImport.Location = new System.Drawing.Point(6, 30);
+            this.cbImport.Name = "cbImport";
+            this.cbImport.Size = new System.Drawing.Size(222, 17);
+            this.cbImport.TabIndex = 22;
+            this.cbImport.Text = "Automatically import guide data into WMC";
+            this.cbImport.UseVisualStyleBackColor = true;
+            this.cbImport.CheckedChanged += new System.EventHandler(this.configTask_Changed);
+            // 
+            // cbTaskWake
+            // 
+            this.cbTaskWake.AutoSize = true;
+            this.cbTaskWake.Location = new System.Drawing.Point(175, 8);
+            this.cbTaskWake.Name = "cbTaskWake";
+            this.cbTaskWake.Size = new System.Drawing.Size(55, 17);
+            this.cbTaskWake.TabIndex = 20;
+            this.cbTaskWake.Text = "Wake";
+            this.cbTaskWake.UseVisualStyleBackColor = true;
+            // 
+            // tbSchedTime
+            // 
+            this.tbSchedTime.Location = new System.Drawing.Point(131, 6);
+            this.tbSchedTime.Mask = "00:00";
+            this.tbSchedTime.Name = "tbSchedTime";
+            this.tbSchedTime.Size = new System.Drawing.Size(38, 20);
+            this.tbSchedTime.TabIndex = 19;
+            this.tbSchedTime.TabStop = false;
+            this.tbSchedTime.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.tbSchedTime.ValidatingType = typeof(System.DateTime);
+            // 
+            // lblUpdateTime
+            // 
+            this.lblUpdateTime.AutoSize = true;
+            this.lblUpdateTime.Location = new System.Drawing.Point(6, 9);
+            this.lblUpdateTime.Name = "lblUpdateTime";
+            this.lblUpdateTime.Size = new System.Drawing.Size(119, 13);
+            this.lblUpdateTime.TabIndex = 18;
+            this.lblUpdateTime.Text = "Scheduled update time:";
             // 
             // grpAccount
             // 
@@ -631,6 +942,7 @@
             // 
             // toolStrip1
             // 
+            this.toolStrip1.Enabled = false;
             this.toolStrip1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
             this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.L1IncludeExclude,
@@ -761,6 +1073,7 @@
             // 
             // toolStrip2
             // 
+            this.toolStrip2.Enabled = false;
             this.toolStrip2.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
             this.toolStrip2.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.L2IncludeExclude,
@@ -889,6 +1202,7 @@
             // 
             // toolStrip3
             // 
+            this.toolStrip3.Enabled = false;
             this.toolStrip3.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
             this.toolStrip3.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.L3IncludeExclude,
@@ -1016,6 +1330,7 @@
             // 
             // toolStrip4
             // 
+            this.toolStrip4.Enabled = false;
             this.toolStrip4.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
             this.toolStrip4.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.L4IncludeExclude,
@@ -1108,6 +1423,7 @@
             this.columnHeader19,
             this.columnHeader20});
             this.lvL5Lineup.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lvL5Lineup.Enabled = false;
             this.lvL5Lineup.FullRowSelect = true;
             this.lvL5Lineup.HideSelection = false;
             this.lvL5Lineup.Location = new System.Drawing.Point(3, 28);
@@ -1142,6 +1458,7 @@
             // 
             // toolStrip5
             // 
+            this.toolStrip5.Enabled = false;
             this.toolStrip5.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
             this.toolStrip5.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.L5IncludeExclude,
@@ -1277,13 +1594,36 @@
             this.btnClearCache.UseVisualStyleBackColor = true;
             this.btnClearCache.Click += new System.EventHandler(this.btnClearCache_Click);
             // 
+            // cbAlternateSEFormat
+            // 
+            this.cbAlternateSEFormat.AutoSize = true;
+            this.cbAlternateSEFormat.Enabled = false;
+            this.cbAlternateSEFormat.Location = new System.Drawing.Point(6, 101);
+            this.cbAlternateSEFormat.Name = "cbAlternateSEFormat";
+            this.cbAlternateSEFormat.Size = new System.Drawing.Size(295, 17);
+            this.cbAlternateSEFormat.TabIndex = 36;
+            this.cbAlternateSEFormat.Text = "Use season/episode format \"S1:E2\" instead of \"s01e02\"";
+            this.cbAlternateSEFormat.UseVisualStyleBackColor = true;
+            this.cbAlternateSEFormat.CheckedChanged += new System.EventHandler(this.configs_Changed);
+            // 
+            // cbBrandLogo
+            // 
+            this.cbBrandLogo.AutoSize = true;
+            this.cbBrandLogo.Location = new System.Drawing.Point(6, 345);
+            this.cbBrandLogo.Name = "cbBrandLogo";
+            this.cbBrandLogo.Size = new System.Drawing.Size(294, 17);
+            this.cbBrandLogo.TabIndex = 37;
+            this.cbBrandLogo.Text = "Add status logo in channel guide (viewable by extenders)";
+            this.cbBrandLogo.UseVisualStyleBackColor = true;
+            this.cbBrandLogo.CheckedChanged += new System.EventHandler(this.configs_Changed);
+            // 
             // btnTask
             // 
             this.btnTask.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.btnTask.Location = new System.Drawing.Point(236, 19);
+            this.btnTask.Location = new System.Drawing.Point(228, 87);
             this.btnTask.Name = "btnTask";
             this.btnTask.Size = new System.Drawing.Size(75, 23);
-            this.btnTask.TabIndex = 6;
+            this.btnTask.TabIndex = 21;
             this.btnTask.Text = "Create";
             this.btnTask.UseVisualStyleBackColor = true;
             this.btnTask.Click += new System.EventHandler(this.btnTask_Click);
@@ -1295,13 +1635,13 @@
             this.AutoScroll = true;
             this.ClientSize = new System.Drawing.Size(784, 561);
             this.Controls.Add(this.btnClearCache);
-            this.Controls.Add(this.lblUpdate);
             this.Controls.Add(this.btnHelp);
             this.Controls.Add(this.btnExecute);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.linkLabel1);
             this.Controls.Add(this.btnSave);
             this.Controls.Add(this.splitContainer1);
+            this.Controls.Add(this.lblUpdate);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MinimumSize = new System.Drawing.Size(800, 600);
             this.Name = "frmMain";
@@ -1314,11 +1654,15 @@
             this.splitContainer1.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
             this.splitContainer1.ResumeLayout(false);
-            this.grpScheduledTask.ResumeLayout(false);
-            this.grpScheduledTask.PerformLayout();
-            this.grpConfiguration.ResumeLayout(false);
-            this.grpConfiguration.PerformLayout();
+            this.tabConfigs.ResumeLayout(false);
+            this.tabConfig.ResumeLayout(false);
+            this.tabConfig.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numDays)).EndInit();
+            this.tabXmltv.ResumeLayout(false);
+            this.tabXmltv.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numFillerDuration)).EndInit();
+            this.tabTask.ResumeLayout(false);
+            this.tabTask.PerformLayout();
             this.grpAccount.ResumeLayout(false);
             this.grpAccount.PerformLayout();
             this.tabLineups.ResumeLayout(false);
@@ -1398,10 +1742,7 @@
         private System.Windows.Forms.LinkLabel linkLabel1;
         private System.Windows.Forms.TextBox txtAcctExpires;
         private System.Windows.Forms.Label lblExpiration;
-        private System.Windows.Forms.GroupBox grpConfiguration;
         private System.Windows.Forms.NumericUpDown numDays;
-        private System.Windows.Forms.CheckBox cbTMDb;
-        private System.Windows.Forms.CheckBox cbPrefixTitle;
         private System.Windows.Forms.Label lblDaysDownload;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Button btnExecute;
@@ -1411,7 +1752,6 @@
         private System.Windows.Forms.ColumnHeader columnHeader15;
         private System.Windows.Forms.ColumnHeader columnHeader16;
         private System.Windows.Forms.CheckBox cbOadOverride;
-        private System.Windows.Forms.Button btnSdLogos;
         private System.Windows.Forms.CheckBox cbAddNewStations;
         private System.Windows.Forms.Button btnHelp;
         private System.Windows.Forms.Label lblUpdate;
@@ -1427,24 +1767,9 @@
         private System.Windows.Forms.ToolStripDropDownButton L4IncludeExclude;
         private System.Windows.Forms.ToolStripMenuItem L4includeToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem L4excludeToolStripMenuItem;
-        private System.Windows.Forms.CheckBox cbAppendDescription;
-        private System.Windows.Forms.GroupBox grpScheduledTask;
-        private System.Windows.Forms.CheckBox cbTaskWake;
-        private System.Windows.Forms.Label lblSchedStatus;
-        private System.Windows.Forms.MaskedTextBox tbSchedTime;
-        private System.Windows.Forms.Label lblUpdateTime;
-        private ElevatedButton btnTask;
-        private System.Windows.Forms.CheckBox cbImport;
-        private System.Windows.Forms.CheckBox cbAutomatch;
         private System.Windows.Forms.ToolTip toolTip1;
         private System.Windows.Forms.Button btnClearCache;
-        private System.Windows.Forms.CheckBox cbSdLogos;
-        private System.Windows.Forms.CheckBox cbPrefixDescription;
-        private System.Windows.Forms.CheckBox cbTVDB;
         private System.Windows.Forms.CheckBox cbXmltv;
-        private System.Windows.Forms.Button btnXmltvConfigure;
-        private System.Windows.Forms.CheckBox cbSeriesPosterArt;
-        private System.Windows.Forms.CheckBox cbModernMedia;
         private System.Windows.Forms.TabPage tabPage1;
         private System.Windows.Forms.ListView lvL5Lineup;
         private System.Windows.Forms.ColumnHeader columnHeader17;
@@ -1458,5 +1783,47 @@
         private System.Windows.Forms.ToolStripSplitButton btnCustomLineup;
         private System.Windows.Forms.ContextMenuStrip lineupMenuStrip;
         private System.Windows.Forms.ToolStripMenuItem copyToClipboardMenuItem;
+        private System.Windows.Forms.TabControl tabConfigs;
+        private System.Windows.Forms.TabPage tabConfig;
+        private System.Windows.Forms.TabPage tabXmltv;
+        private System.Windows.Forms.CheckBox ckXmltvFillerData;
+        private System.Windows.Forms.TextBox txtSubstitutePath;
+        private System.Windows.Forms.CheckBox ckSubstitutePath;
+        private System.Windows.Forms.CheckBox ckLocalLogos;
+        private System.Windows.Forms.CheckBox ckUrlLogos;
+        private System.Windows.Forms.CheckBox ckChannelLogos;
+        private System.Windows.Forms.CheckBox ckChannelNumbers;
+        private System.Windows.Forms.CheckBox cbModernMedia;
+        private System.Windows.Forms.TabPage tabTask;
+        private System.Windows.Forms.CheckBox cbAutomatch;
+        private System.Windows.Forms.Label lblSchedStatus;
+        private ElevatedButton btnTask;
+        private System.Windows.Forms.CheckBox cbImport;
+        private System.Windows.Forms.CheckBox cbTaskWake;
+        private System.Windows.Forms.MaskedTextBox tbSchedTime;
+        private System.Windows.Forms.Label lblUpdateTime;
+        private System.Windows.Forms.RichTextBox rtbFillerDescription;
+        private System.Windows.Forms.Label lblFillerDescription;
+        private System.Windows.Forms.Label lblFillerDuration;
+        private System.Windows.Forms.NumericUpDown numFillerDuration;
+        private System.Windows.Forms.Label lblXmltvOutput;
+        private System.Windows.Forms.Button btnXmltvOutput;
+        private System.Windows.Forms.TextBox tbXmltvOutput;
+        private System.Windows.Forms.SaveFileDialog saveFileDialog1;
+        private System.Windows.Forms.CheckBox cbTVDB;
+        private System.Windows.Forms.CheckBox cbPrefixTitle;
+        private System.Windows.Forms.CheckBox cbPrefixDescription;
+        private System.Windows.Forms.CheckBox cbAppendDescription;
+        private System.Windows.Forms.Button btnSdLogos;
+        private System.Windows.Forms.Label lblPreferredLogos;
+        private System.Windows.Forms.ComboBox cmbPreferredLogos;
+        private System.Windows.Forms.CheckBox cbSeriesPosterArt;
+        private System.Windows.Forms.CheckBox cbTMDb;
+        private System.Windows.Forms.CheckBox cbSdLogos;
+        private System.Windows.Forms.Label lblAlternateLogos;
+        private System.Windows.Forms.ComboBox cmbAlternateLogos;
+        private System.Windows.Forms.Label lblXmltvLogosNote;
+        private System.Windows.Forms.CheckBox cbAlternateSEFormat;
+        private System.Windows.Forms.CheckBox cbBrandLogo;
     }
 }

@@ -19,7 +19,6 @@ namespace epg123
             }
         }
         
-        public static string defaultSuppressedPrefixes = "GOAC*,LOOR*,EDAC*,LEAC*,PEG*,LOAC*,PPV*,PUAC*,SPALT*,INFO*";
         private static List<string> suppressedPrefixes = new List<string>();
 
         private static int processedObjects = 0;

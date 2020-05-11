@@ -40,12 +40,15 @@
             this.columnSubscribedLineup = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnScannedSources = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnTuningInfo = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnGuideEndTime = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.subscribeMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.unsubscribeMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.renameMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.renumberMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator6 = new System.Windows.Forms.ToolStripSeparator();
+            this.clipboardMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.lblMergedChannelListView = new System.Windows.Forms.ToolStripLabel();
             this.btnLablesDisplay = new System.Windows.Forms.ToolStripButton();
@@ -62,6 +65,7 @@
             this.btnAddChannels = new System.Windows.Forms.ToolStripButton();
             this.btnStoreExplorer = new System.Windows.Forms.ToolStripButton();
             this.btnExportMxf = new System.Windows.Forms.ToolStripButton();
+            this.btnUndelete = new System.Windows.Forms.ToolStripButton();
             this.toolStripContainer2 = new System.Windows.Forms.ToolStripContainer();
             this.lineupChannelListView = new System.Windows.Forms.ListView();
             this.columnHeader4 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -102,8 +106,6 @@
             this.tbSchedTime = new System.Windows.Forms.MaskedTextBox();
             this.lblUpdateTime = new System.Windows.Forms.Label();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
-            this.toolStripSeparator6 = new System.Windows.Forms.ToolStripSeparator();
-            this.clipboardMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -188,7 +190,8 @@
             this.columnServiceName,
             this.columnSubscribedLineup,
             this.columnScannedSources,
-            this.columnTuningInfo});
+            this.columnTuningInfo,
+            this.columnGuideEndTime});
             this.mergedChannelListView.ContextMenuStrip = this.contextMenuStrip1;
             this.mergedChannelListView.Dock = System.Windows.Forms.DockStyle.Fill;
             this.mergedChannelListView.FullRowSelect = true;
@@ -230,6 +233,10 @@
             // 
             this.columnTuningInfo.Text = "TuningInfo";
             // 
+            // columnGuideEndTime
+            // 
+            this.columnGuideEndTime.Text = "Guide End Time";
+            // 
             // contextMenuStrip1
             // 
             this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -241,41 +248,53 @@
             this.toolStripSeparator6,
             this.clipboardMenuItem});
             this.contextMenuStrip1.Name = "contextMenuStrip1";
-            this.contextMenuStrip1.Size = new System.Drawing.Size(181, 148);
+            this.contextMenuStrip1.Size = new System.Drawing.Size(179, 126);
             this.contextMenuStrip1.Opening += new System.ComponentModel.CancelEventHandler(this.contextMenuStrip1_Opening);
             // 
             // subscribeMenuItem
             // 
             this.subscribeMenuItem.Name = "subscribeMenuItem";
-            this.subscribeMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.subscribeMenuItem.Size = new System.Drawing.Size(178, 22);
             this.subscribeMenuItem.Text = "Subscribe";
             this.subscribeMenuItem.Click += new System.EventHandler(this.subscribeMenuItem_Click);
             // 
             // unsubscribeMenuItem
             // 
             this.unsubscribeMenuItem.Name = "unsubscribeMenuItem";
-            this.unsubscribeMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.unsubscribeMenuItem.Size = new System.Drawing.Size(178, 22);
             this.unsubscribeMenuItem.Text = "Unsubscribe";
             this.unsubscribeMenuItem.Click += new System.EventHandler(this.subscribeMenuItem_Click);
             // 
             // toolStripSeparator2
             // 
             this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(177, 6);
+            this.toolStripSeparator2.Size = new System.Drawing.Size(175, 6);
             // 
             // renameMenuItem
             // 
             this.renameMenuItem.Name = "renameMenuItem";
-            this.renameMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.renameMenuItem.Size = new System.Drawing.Size(178, 22);
             this.renameMenuItem.Text = "Rename";
             this.renameMenuItem.Click += new System.EventHandler(this.renameMenuItem_Click);
             // 
             // renumberMenuItem
             // 
             this.renumberMenuItem.Name = "renumberMenuItem";
-            this.renumberMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.renumberMenuItem.Size = new System.Drawing.Size(178, 22);
             this.renumberMenuItem.Text = "Renumber";
             this.renumberMenuItem.Click += new System.EventHandler(this.renumberMenuItem_Click);
+            // 
+            // toolStripSeparator6
+            // 
+            this.toolStripSeparator6.Name = "toolStripSeparator6";
+            this.toolStripSeparator6.Size = new System.Drawing.Size(175, 6);
+            // 
+            // clipboardMenuItem
+            // 
+            this.clipboardMenuItem.Name = "clipboardMenuItem";
+            this.clipboardMenuItem.Size = new System.Drawing.Size(178, 22);
+            this.clipboardMenuItem.Text = "Copy to clipboard...";
+            this.clipboardMenuItem.Click += new System.EventHandler(this.clipboardMenuItem_Click);
             // 
             // toolStrip1
             // 
@@ -324,6 +343,7 @@
             this.toolStripSeparator4,
             this.btnDeleteChannel,
             this.btnAddChannels,
+            this.btnUndelete,
             this.btnStoreExplorer,
             this.btnExportMxf});
             this.mergedChannelToolStrip.Location = new System.Drawing.Point(0, 25);
@@ -433,6 +453,17 @@
             this.btnExportMxf.Size = new System.Drawing.Size(23, 20);
             this.btnExportMxf.Text = "Export Store to MXF";
             this.btnExportMxf.Click += new System.EventHandler(this.btnExportMxf_Click);
+            // 
+            // btnUndelete
+            // 
+            this.btnUndelete.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.btnUndelete.Image = ((System.Drawing.Image)(resources.GetObject("btnUndelete.Image")));
+            this.btnUndelete.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnUndelete.Name = "btnUndelete";
+            this.btnUndelete.Size = new System.Drawing.Size(23, 20);
+            this.btnUndelete.Text = "Undelete";
+            this.btnUndelete.ToolTipText = "Restore deleted scanned channels";
+            this.btnUndelete.Click += new System.EventHandler(this.btnUndelete_Click);
             // 
             // toolStripContainer2
             // 
@@ -851,18 +882,6 @@
             // 
             this.openFileDialog1.FileName = "openFileDialog1";
             // 
-            // toolStripSeparator6
-            // 
-            this.toolStripSeparator6.Name = "toolStripSeparator6";
-            this.toolStripSeparator6.Size = new System.Drawing.Size(177, 6);
-            // 
-            // clipboardMenuItem
-            // 
-            this.clipboardMenuItem.Name = "clipboardMenuItem";
-            this.clipboardMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.clipboardMenuItem.Text = "Copy to clipboard...";
-            this.clipboardMenuItem.Click += new System.EventHandler(this.clipboardMenuItem_Click);
-            // 
             // clientForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
@@ -992,5 +1011,7 @@
         private System.Windows.Forms.ToolStripProgressBar lvItemsProgressBar;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator6;
         private System.Windows.Forms.ToolStripMenuItem clipboardMenuItem;
+        private System.Windows.Forms.ColumnHeader columnGuideEndTime;
+        private System.Windows.Forms.ToolStripButton btnUndelete;
     }
 }

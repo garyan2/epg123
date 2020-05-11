@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Serialization;
@@ -20,7 +21,7 @@ namespace epg123
         private static Dictionary<string, SdLineupStation> allStations = new Dictionary<string, SdLineupStation>();
 
         public static System.ComponentModel.BackgroundWorker backgroundDownloader;
-        public static List<KeyValuePair<MxfService, string>> stationLogosToDownload = new List<KeyValuePair<MxfService, string>>();
+        public static List<KeyValuePair<MxfService, string[]>> stationLogosToDownload = new List<KeyValuePair<MxfService, string[]>>();
         public static volatile bool stationLogosDownloadComplete = true;
 
         private static bool buildLineupServices()
@@ -163,6 +164,9 @@ namespace epg123
                     MxfService mxfService = sdMxf.With[0].getService(station.StationID);
                     if (string.IsNullOrEmpty(mxfService.CallSign))
                     {
+                        // instantiate stationLogo
+                        SdStationImage stationLogo = null;
+
                         // add callsign and station name
                         mxfService.CallSign = station.Callsign;
                         mxfService.Name = station.Name;
@@ -186,57 +190,98 @@ namespace epg123
                                 Directory.CreateDirectory(Helper.Epg123LogosFolder);
                             }
 
+                            if (station.StationLogos != null)
+                            {
+                                stationLogo = station.StationLogos.Where(arg => arg.Category != null && arg.Category.Equals(config.PreferredLogoStyle)).FirstOrDefault() ??
+                                              station.StationLogos.Where(arg => arg.Category != null && arg.Category.Equals(config.AlternateLogoStyle)).FirstOrDefault();
+
+                                if (stationLogo != null)
+                                {
+                                    switch (stationLogo.Category)
+                                    {
+                                        case "dark":
+                                            logoPath = logoPath.Replace(".png", "_d.png");
+                                            break;
+                                        case "gray":
+                                            logoPath = logoPath.Replace(".png", "_g.png");
+                                            break;
+                                        case "light":
+                                            logoPath = logoPath.Replace(".png", "_l.png");
+                                            break;
+                                        case "white":
+                                            logoPath = logoPath.Replace(".png", "_w.png");
+                                            break;
+                                        default:
+                                            break;
+                                    }
+                                }
+                            }
+                            if (stationLogo == null && !config.PreferredLogoStyle.Equals("none") && !config.PreferredLogoStyle.Equals("none"))
+                            {
+                                stationLogo = station.Logo;
+                            }
+
                             // add the existing logo or download the new logo if available
                             if (File.Exists(logoPath))
                             {
                                 mxfService.LogoImage = sdMxf.With[0].getGuideImage("file://" + logoPath, getStringEncodedImage(logoPath)).Id;
                             }
-                            else
+                            else if (stationLogo != null)
                             {
-                                string url = string.Empty;
-                                if ((station.StationLogos != null) && (station.StationLogos.Count > 0))
-                                {
-                                    // the second station logo is typically the best contrast
-                                    url = station.StationLogos[Math.Min(station.StationLogos.Count - 1, 1)].URL;
-                                }
-                                else if (station.Logo != null)
-                                {
-                                    url = station.Logo.URL;
-                                }
+                                string url = stationLogo.URL;
 
                                 // download, crop & resize logo image, save and add
                                 if (!string.IsNullOrEmpty(url))
                                 {
-                                    stationLogosToDownload.Add(new KeyValuePair<MxfService, string>(mxfService, url));
+                                    stationLogosToDownload.Add(new KeyValuePair<MxfService, string[]>(mxfService, new string[] { logoPath, url }));
                                 }
                             }
                         }
 
                         // handle xmltv logos
-                        SdStationImage logoImage = (station.StationLogos != null) ? station.StationLogos[station.StationLogos.Count - 1] : station.Logo;
-                        if (config.XmltvIncludeChannelLogos.ToLower().Equals("url") && (logoImage != null))
+                        if (config.XmltvIncludeChannelLogos.Equals("url") && (stationLogo != null))
                         {
-                            mxfService.logoImage = logoImage;
+                            mxfService.logoImage = stationLogo;
                         }
-                        else if (config.XmltvIncludeChannelLogos.ToLower().Equals("local") && File.Exists(logoPath))
+                        else if (config.XmltvIncludeChannelLogos.Equals("local"))
                         {
-                            Image image = Image.FromFile(logoPath);
-                            mxfService.logoImage = new SdStationImage()
+                            if (File.Exists(logoPath))
                             {
-                                URL = logoPath,
-                                Height = image.Height,
-                                Width = image.Width
-                            };
+                                Image image = Image.FromFile(logoPath);
+                                mxfService.logoImage = new SdStationImage()
+                                {
+                                    URL = logoPath,
+                                    Height = image.Height,
+                                    Width = image.Width
+                                };
+                            }
+                            else if (stationLogo != null)
+                            {
+                                mxfService.logoImage = new SdStationImage()
+                                {
+                                    URL = logoPath
+                                };
+                            }
                         }
-                        else if (config.XmltvIncludeChannelLogos.ToLower().Equals("substitute") && File.Exists(logoPath))
+                        else if (config.XmltvIncludeChannelLogos.Equals("substitute"))
                         {
-                            Image image = Image.FromFile(logoPath);
-                            mxfService.logoImage = new SdStationImage()
+                            if (File.Exists(logoPath))
                             {
-                                URL = string.Format("{0}\\{1}.png", config.XmltvLogoSubstitutePath.TrimEnd('\\'), station.Callsign),
-                                Height = image.Height,
-                                Width = image.Width
-                            };
+                                Image image = Image.FromFile(logoPath);
+                                mxfService.logoImage = new SdStationImage()
+                                {
+                                    URL = string.Format("{0}\\{1}.png", config.XmltvLogoSubstitutePath.TrimEnd('\\'), station.Callsign),
+                                    Height = image.Height,
+                                    Width = image.Width
+                                };
+                            }
+                            else if (stationLogo != null)
+                            {
+                                mxfService.logoImage = new SdStationImage()
+                                {
+                                    URL = logoPath.Replace(Helper.Epg123LogosFolder, config.XmltvLogoSubstitutePath.TrimEnd('\\'))
+                                };
+                            }
                         }
                     }
 
@@ -383,10 +428,10 @@ namespace epg123
 
         private static void BackgroundDownloader_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
         {
-            foreach (KeyValuePair<MxfService, string> keyValuePair in stationLogosToDownload)
+            foreach (KeyValuePair<MxfService, string[]> keyValuePair in stationLogosToDownload)
             {
-                string logoPath = string.Format("{0}\\{1}.png", Helper.Epg123LogosFolder, keyValuePair.Key.CallSign);
-                if (downloadSDLogo(keyValuePair.Value, logoPath))
+                string logoPath = keyValuePair.Value[0];
+                if (downloadSDLogo(keyValuePair.Value[1], logoPath))
                 {
                     keyValuePair.Key.LogoImage = sdMxf.With[0].getGuideImage("file://" + logoPath, getStringEncodedImage(logoPath)).Id;
                 }
@@ -403,6 +448,10 @@ namespace epg123
         {
             try
             {
+                // set target image size
+                int tgtWidth = 360;
+                int tgtHeight = 270;
+
                 // set target aspect/image size
                 double tgtAspect = 3.0;
 
@@ -448,6 +497,28 @@ namespace epg123
                             g.DrawImage(origImg, 0, offsetY, cropRectangle, GraphicsUnit.Pixel);
                         }
 
+                        // resize image if needed
+                        if (tgtHeight < cropImg.Height)
+                        {
+                            int destWidth = Math.Min((int)((double)tgtHeight / (double)cropImg.Height * (double)cropImg.Width), tgtWidth);
+                            Bitmap destImg = new Bitmap(destWidth, tgtHeight);
+                            destImg.SetResolution(cropImg.HorizontalResolution, cropImg.VerticalResolution);
+                            using (Graphics g = Graphics.FromImage(destImg))
+                            {
+                                g.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceCopy;
+                                g.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
+                                g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+                                g.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
+
+                                using (var wrapMode = new System.Drawing.Imaging.ImageAttributes())
+                                {
+                                    wrapMode.SetWrapMode(System.Drawing.Drawing2D.WrapMode.TileFlipXY);
+                                    g.DrawImage(cropImg, new Rectangle(0, 0, destWidth, tgtHeight), 0, 0, cropImg.Width, cropImg.Height, GraphicsUnit.Pixel, wrapMode);
+                                }
+                            }
+                        }
+
                         // save image
                         cropImg.Save(filepath, System.Drawing.Imaging.ImageFormat.Png);
                     }
@@ -456,7 +527,7 @@ namespace epg123
             }
             catch (Exception ex)
             {
-                Logger.WriteVerbose(ex.Message);
+                Logger.WriteVerbose(string.Format("An exception occurred during downloadSDLogo(). {0}", ex.Message));
             }
             return false;
         }
