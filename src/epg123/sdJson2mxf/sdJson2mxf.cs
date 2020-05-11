@@ -234,7 +234,7 @@ namespace epg123
             {
                 try
                 {
-                    using (StreamWriter stream = new StreamWriter(Helper.Epg123XmltvPath, false, Encoding.UTF8))
+                    using (StreamWriter stream = new StreamWriter(config.XmltvOutputFile, false, Encoding.UTF8))
                     {
                         XmlSerializer serializer = new XmlSerializer(typeof(XMLTV));
                         XmlSerializerNamespaces ns = new XmlSerializerNamespaces();
