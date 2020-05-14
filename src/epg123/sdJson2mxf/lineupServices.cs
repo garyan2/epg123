@@ -216,7 +216,7 @@ namespace epg123
                                     }
                                 }
                             }
-                            if (stationLogo == null && !config.PreferredLogoStyle.Equals("none") && !config.PreferredLogoStyle.Equals("none"))
+                            if (stationLogo == null && !config.PreferredLogoStyle.Equals("none") && !config.AlternateLogoStyle.Equals("none"))
                             {
                                 stationLogo = station.Logo;
                             }
@@ -460,7 +460,7 @@ namespace epg123
                 {
                     // crop image
                     Bitmap cropImg;
-                    using (Bitmap origImg = Image.FromStream(stream) as Bitmap)
+                    using (Bitmap origImg = Bitmap.FromStream(stream) as Bitmap)
                     {
                         // Find the min/max non-transparent pixels
                         Point min = new Point(int.MaxValue, int.MaxValue);
@@ -471,7 +471,7 @@ namespace epg123
                             for (int y = 0; y < origImg.Height; ++y)
                             {
                                 Color pixelColor = origImg.GetPixel(x, y);
-                                if (pixelColor.A == 255)
+                                if (pixelColor.A > 0) //== 255)
                                 {
                                     if (x < min.X) min.X = x;
                                     if (y < min.Y) min.Y = y;

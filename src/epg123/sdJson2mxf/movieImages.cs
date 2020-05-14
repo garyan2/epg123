@@ -59,25 +59,32 @@ namespace epg123
                 }
 
                 // use the cached link if present
-                if (epgCache.JsonFiles[mxfProgram.md5].Images != null)
+                try
                 {
-                    ++processedObjects; reportProgress();
-                    if (string.IsNullOrEmpty(epgCache.JsonFiles[mxfProgram.md5].Images)) continue;
-
-                    using (StringReader reader = new StringReader(epgCache.JsonFiles[mxfProgram.md5].Images))
+                    if (epgCache.JsonFiles[mxfProgram.md5].Images != null)
                     {
-                        JsonSerializer serializer = new JsonSerializer();
-                        mxfProgram.programImages = (List<sdImage>)serializer.Deserialize(reader, typeof(List<sdImage>));
+                        ++processedObjects; reportProgress();
+                        if (string.IsNullOrEmpty(epgCache.JsonFiles[mxfProgram.md5].Images)) continue;
+
+                        using (StringReader reader = new StringReader(epgCache.JsonFiles[mxfProgram.md5].Images))
+                        {
+                            JsonSerializer serializer = new JsonSerializer();
+                            mxfProgram.programImages = (List<sdImage>)serializer.Deserialize(reader, typeof(List<sdImage>));
+                        }
+
+                        if (mxfProgram.programImages.Count > 0)
+                        {
+                            mxfProgram.GuideImage = sdMxf.With[0].getGuideImage(mxfProgram.programImages[0].Uri).Id;
+                        }
                     }
-
-                    if (mxfProgram.programImages.Count > 0)
+                    else
                     {
-                        mxfProgram.GuideImage = sdMxf.With[0].getGuideImage(mxfProgram.programImages[0].Uri).Id;
+                        movieImageQueue.Add(mxfProgram.tmsId);
                     }
                 }
-                else
+                catch (Exception ex)
                 {
-                    movieImageQueue.Add(mxfProgram.tmsId);
+                    Logger.WriteInformation(string.Format("Could not find expected program with MD5 hash {0}. Continuing.", mxfProgram.md5));
                 }
             }
             Logger.WriteVerbose(string.Format("Found {0} cached movie poster links.", processedObjects));
