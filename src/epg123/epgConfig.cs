@@ -200,7 +200,7 @@ namespace epg123
         public string PreferredLogoStyle { get; set; } = "dark";
 
         [XmlElement("AlternateLogoStyle")]
-        public string AlternateLogoStyle { get; set; } = "gray";
+        public string AlternateLogoStyle { get; set; } = "white";
 
         [XmlElement("AutoAddNew")]
         public bool AutoAddNew { get; set; } = true;

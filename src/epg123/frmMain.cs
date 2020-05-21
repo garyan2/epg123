@@ -477,7 +477,7 @@ namespace epg123
                     ckChannelNumbers.Checked = config.XmltvIncludeChannelNumbers;
                     ckChannelLogos.Checked = !string.IsNullOrEmpty(config.XmltvIncludeChannelLogos) && (config.XmltvIncludeChannelLogos != "false");
                     ckLocalLogos.Checked = (config.XmltvIncludeChannelLogos == "local") || (config.XmltvIncludeChannelLogos == "substitute");
-                    ckUrlLogos.Checked = (config.XmltvIncludeChannelLogos == "url") || !ckLocalLogos.Checked;
+                    ckUrlLogos.Checked = (config.XmltvIncludeChannelLogos == "url");
                     ckSubstitutePath.Checked = (config.XmltvIncludeChannelLogos == "substitute");
                     txtSubstitutePath.Text = config.XmltvLogoSubstitutePath;
                     ckXmltvFillerData.Checked = config.XmltvAddFillerData;
@@ -1427,12 +1427,18 @@ namespace epg123
                 ckUrlLogos.Checked = !ckLocalLogos.Checked;
                 ckSubstitutePath.Enabled = ckLocalLogos.Checked && cbXmltv.Checked;
                 txtSubstitutePath.Enabled = ckSubstitutePath.Checked && ckLocalLogos.Checked && cbXmltv.Checked;
-                config.XmltvIncludeChannelLogos = (ckSubstitutePath.Checked && ckLocalLogos.Checked) ? "substitute" : "local";
+                if (!ckUrlLogos.Checked)
+                {
+                    config.XmltvIncludeChannelLogos = (ckSubstitutePath.Checked && ckLocalLogos.Checked) ? "substitute" : "local";
+                }
             }
             else if (sender.Equals(ckSubstitutePath))
             {
-                txtSubstitutePath.Enabled = ckSubstitutePath.Checked && cbXmltv.Checked;
-                config.XmltvIncludeChannelLogos = (ckSubstitutePath.Checked && ckLocalLogos.Checked) ? "substitute" : "local";
+                txtSubstitutePath.Enabled = ckSubstitutePath.Checked && ckLocalLogos.Checked && cbXmltv.Checked;
+                if (!config.XmltvIncludeChannelLogos.Equals("url") && !config.XmltvIncludeChannelLogos.Equals("false"))
+                {
+                    config.XmltvIncludeChannelLogos = (ckSubstitutePath.Checked && ckLocalLogos.Checked) ? "substitute" : "local";
+                }
             }
             else if (sender.Equals(txtSubstitutePath))
             {
