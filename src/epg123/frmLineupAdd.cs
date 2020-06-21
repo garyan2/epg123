@@ -156,6 +156,10 @@ namespace epg123
 
         private void btnFetch_Click(object sender, EventArgs e)
         {
+            this.Enabled = false;
+            this.UseWaitCursor = true;
+            Application.DoEvents();
+
             // evaluate the zipcode format
             Match m = Regex.Match(txtZipcode.Text.ToUpper(), mask);
             if ((m.Length == 0) && (!string.IsNullOrEmpty(countries[cmbCountries.SelectedIndex].PostalCodeExample)))
@@ -213,6 +217,9 @@ namespace epg123
                     }
                 }
             }
+
+            this.UseWaitCursor = false;
+            this.Enabled = true;
         }
         private void getSatellites()
         {

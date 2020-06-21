@@ -482,7 +482,7 @@ namespace epg123
         // Previously Shown
         private static XmltvPreviouslyShown buildProgramPreviouslyShown(MxfProgram mxfProgram, MxfScheduleEntry mxfScheduleEntry)
         {
-            if (!string.IsNullOrEmpty(mxfScheduleEntry.IsRepeat))
+            if (!string.IsNullOrEmpty(mxfScheduleEntry.IsRepeat) && string.IsNullOrEmpty(mxfProgram.IsMovie))
             {
                 //if (!string.IsNullOrEmpty(mxfProgram.OriginalAirdate))
                 //{

@@ -155,8 +155,7 @@ namespace epg123
                 }
                 catch (Exception ex)
                 {
-                    Logger.WriteError(string.Format("SD API Unknown exception thrown. Message: {0}", ex.Message));
-                    return null;
+                    Logger.WriteVerbose(string.Format("SD API Unknown exception thrown. Message: {0}", ex.Message));
                 }
             } while (cntTries < maxTries);
 

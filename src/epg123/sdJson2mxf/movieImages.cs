@@ -198,13 +198,13 @@ namespace epg123
 
                     switch (image.Category.ToLower())
                     {
-                        case "box art":     // DVD box art, for movies only
+                        case "poster art":  // theatrical movie poster, standard sizes
                             if (links[0] == null) links[0] = image;
                             break;
-                        case "vod art":     // undocumented, but looks like box art for video on demand
+                        case "box art":     // DVD box art, for movies only
                             if (links[1] == null) links[1] = image;
                             break;
-                        case "poster art":  // theatrical movie poster, standard sizes
+                        case "vod art":     // undocumented, but looks like box art for video on demand
                             if (links[2] == null) links[2] = image;
                             break;
                         case "staple":      // the staple image is intended to cover programs which do not have a unique banner image

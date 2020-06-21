@@ -508,14 +508,15 @@ namespace epg123
             // append season and episode numbers to the program description as configured
             if (config.AppendEpisodeDesc)
             {
+                // add space before appending season and episode numbers in case there is no short description
                 if (!string.IsNullOrEmpty(prg.SeasonNumber) && !string.IsNullOrEmpty(prg.EpisodeNumber))
                 {
-                    prg.Description += string.Format("\u000D\u000ASeason {0}, Episode {1}",
+                    prg.Description += string.Format(" \u000D\u000ASeason {0}, Episode {1}",
                         int.Parse(prg.SeasonNumber), int.Parse(prg.EpisodeNumber));
                 }
                 else if (!string.IsNullOrEmpty(prg.EpisodeNumber))
                 {
-                    prg.Description += string.Format("\u000D\u000AProduction #{0}", prg.EpisodeNumber);
+                    prg.Description += string.Format(" \u000D\u000AProduction #{0}", prg.EpisodeNumber);
                 }
             }
 

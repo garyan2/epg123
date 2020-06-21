@@ -223,7 +223,7 @@ namespace epg123
                     ProcessStartInfo startInfo = new ProcessStartInfo()
                     {
                         FileName = "epg123Client.exe",
-                        Arguments = "-i \"" + Helper.Epg123MxfPath + "\"" + (match ? " -match" : string.Empty) + (showGui ? " -p" : string.Empty),
+                        Arguments = "-i \"" + Helper.Epg123MxfPath + "\"" + (match ? " -match" : string.Empty) + (showGui ? " -p" : string.Empty + " -nogc"),
                         RedirectStandardOutput = true,
                         RedirectStandardError = true,
                         UseShellExecute = false,

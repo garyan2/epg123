@@ -738,6 +738,17 @@ namespace epg123
                         if (station.BroadcastLanguage != null)
                         {
                             stationLanguage = station.BroadcastLanguage[0];
+                            if (station.BroadcastLanguage.Length > 1)
+                            {
+                                foreach (string lang in station.BroadcastLanguage)
+                                {
+                                    if (!lang.Equals("en", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        stationLanguage = lang;
+                                        break;
+                                    }
+                                }
+                            }
                         }
 
                         // use hashset to make sure we don't duplicate channel entries
@@ -1160,13 +1171,13 @@ namespace epg123
                 // save the file and determine flags for execution if selected
                 try
                 {
-                    // backup the existing config file
-                    if (File.Exists(Helper.Epg123CfgPath))
-                    {
-                        Dictionary<string, string> backup = new Dictionary<string, string>();
-                        backup.Add(Helper.Epg123CfgPath, Path.GetFileName(Helper.Epg123CfgPath));
-                        CompressXmlFiles.CreatePackage(backup, "config");
-                    }
+                    //// backup the existing config file
+                    //if (File.Exists(Helper.Epg123CfgPath))
+                    //{
+                    //    Dictionary<string, string> backup = new Dictionary<string, string>();
+                    //    backup.Add(Helper.Epg123CfgPath, Path.GetFileName(Helper.Epg123CfgPath));
+                    //    CompressXmlFiles.CreatePackage(backup, "config");
+                    //}
 
                     // save configuration file
                     using (StreamWriter stream = new StreamWriter(Helper.Epg123CfgPath, false, Encoding.UTF8))

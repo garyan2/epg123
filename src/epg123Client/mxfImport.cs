@@ -53,6 +53,95 @@ namespace epg123
             Logger.WriteMessage("Exiting importMxfFile(). FAILURE.");
             return false;
         }
+
+        public static void PerformGarbageCleanup()
+        {
+            string epg123NextRunTime = "dbgc:next run time";
+            DateTime nextRunTime = DateTime.Now + TimeSpan.FromDays(4.5);
+            bool runDbgc = true;
+
+            using (RegistryKey key = Registry.LocalMachine.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Media Center\\Service\\EPG", true))
+            {
+                try
+                {
+                    if ((int)key.GetValue("dl") != 0) key.SetValue("dl", 0);
+                }
+                catch
+                {
+                    key.SetValue("dl", 0);
+                }
+
+                try
+                {
+                    string nextRun;
+                    if ((nextRun = (string)key.GetValue(epg123NextRunTime)) != null)
+                    {
+                        if (DateTime.Parse(nextRun) > DateTime.Now)
+                        {
+                            runDbgc = false;
+                        }
+                    }
+                }
+                catch
+                {
+                    Logger.WriteError("Could not verify when garbage cleanup was last run.");
+                }
+            }
+
+            if (runDbgc)
+            {
+                Logger.WriteMessage("Entering PerformGarbageCleanup().");
+                try
+                {
+                    // establish program to run and environment
+                    ProcessStartInfo startInfo = new ProcessStartInfo()
+                    {
+                        FileName = Environment.ExpandEnvironmentVariables("%WINDIR%") + @"\ehome\mcupdate.exe",
+                        Arguments = "-dbgc",
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    };
+
+                    // begin import
+                    Process proc = Process.Start(startInfo);
+                    proc.OutputDataReceived += task_OutputDataReceived;
+                    proc.BeginOutputReadLine();
+                    proc.ErrorDataReceived += task_ErrorDataReceived;
+                    proc.BeginErrorReadLine();
+
+                    // wait for exit and process exit code
+                    proc.WaitForExit();
+                    if (proc.ExitCode == 0)
+                    {
+                        using (RegistryKey key = Registry.LocalMachine.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Media Center\\Service\\EPG", true))
+                        {
+                            try
+                            {
+                                key.SetValue(epg123NextRunTime, nextRunTime.ToString());
+                            }
+                            catch
+                            {
+                                Logger.WriteError("Could not set next garbage cleanup time in registry.");
+                            }
+                        }
+
+                        Logger.WriteInformation("Successfully complete garbage cleanup. Exit code: 0");
+                        Logger.WriteMessage("Exiting PerformGarbageCleanup(). SUCCESS.");
+                    }
+                    else
+                    {
+                        Logger.WriteError(string.Format("Error using mcupdate.exe to perform database garbage cleanup. Exit code: {0}", proc.ExitCode));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.WriteError(string.Format("Exception thrown trying to perform garbage cleanup using mcupdate.exe. Message: {0}", ex.Message));
+                }
+            }
+        }
+
         private static void load_OutputDataReceived(object sender, DataReceivedEventArgs e)
         {
             if (e.Data == null) return;

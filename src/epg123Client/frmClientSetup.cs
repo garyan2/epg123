@@ -130,6 +130,7 @@ namespace epg123
 
             if (!(btnCleanStart.Enabled || btnTvSetup.Enabled || btnConfig.Enabled))
             {
+                // restore recording requests if the tool is available
                 if (File.Exists("epg123Transfer.exe"))
                 {
                     updateStatusText("Waiting for user to close the Transfer Tool...");
@@ -141,6 +142,12 @@ namespace epg123
                     };
                     Process.Start(startInfo).WaitForExit();
                     updateStatusText(string.Empty);
+                }
+
+                // create a backup of the new WMC configuration
+                if (shouldBackup = (Store.objectStore != null))
+                {
+                    PerformBackup();
                 }
                 MessageBox.Show("Setup is complete. Be sure to create a Scheduled Task to perform daily updates and keep your guide up to date!", "Setup Complete", MessageBoxButtons.OK);
                 Logger.WriteVerbose("Setup is complete.  Be sure to create a Scheduled Task to perform daily updates and keep your guide up to date!");
@@ -207,6 +214,30 @@ namespace epg123
                             Logger.WriteError(ex.Message);
                         }
                     }
+                }
+            }
+
+            // reset date/time for garbage cleanup
+            using (RegistryKey key = Registry.LocalMachine.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Media Center\\Service\\EPG", true))
+            {
+                string epg123NextRunTime = "dbgc:next run time";
+                DateTime nextRunTime = DateTime.Now + TimeSpan.FromDays(4.5);
+                try
+                {
+                    key.SetValue(epg123NextRunTime, nextRunTime.ToString());
+                }
+                catch
+                {
+                    Logger.WriteError("Could not set next garbage cleanup time in registry.");
+                }
+
+                try
+                {
+                    key.SetValue("dl", 0);
+                }
+                catch
+                {
+                    Logger.WriteInformation("Could not disable WMC downloading with registry key.");
                 }
             }
 
