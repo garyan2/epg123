@@ -508,7 +508,7 @@ namespace epg123Transfer
                 startInfo = new ProcessStartInfo()
                 {
                     FileName = Environment.ExpandEnvironmentVariables(@"%WINDIR%\ehome\mcupdate.exe"),
-                    Arguments = "-PvrSchedule",
+                    Arguments = "-PvrSchedule -nogc",
                     UseShellExecute = false,
                     CreateNoWindow = true
                 };

@@ -133,6 +133,7 @@ namespace epg123
             switch (accent)
             {
                 case "Light":
+                case "Light_ns":
                     switch (status)
                     {
                         case EPG123STATUS.SUCCESS:
@@ -149,6 +150,7 @@ namespace epg123
                     }
                     break;
                 case "Dark":
+                case "Dark_ns":
                     switch (status)
                     {
                         case EPG123STATUS.SUCCESS:
@@ -232,7 +234,15 @@ namespace epg123
             {
                 try
                 {
-                    key.SetValue("OEMLogoUri", "file://" + Helper.Epg123StatusLogoPath);
+                    // if selected, do not display SUCCESS logo
+                    if (accent.Contains("_ns") && status == EPG123STATUS.SUCCESS)
+                    {
+                        key.SetValue("OEMLogoUri", string.Empty);
+                    }
+                    else
+                    {
+                        key.SetValue("OEMLogoUri", "file://" + Helper.Epg123StatusLogoPath);
+                    }
                 }
                 catch { }
             }
@@ -242,6 +252,8 @@ namespace epg123
 
         public static void adjustImageOpacity(Bitmap image, double opacity)
         {
+            if (image == null) return;
+
             try
             {
                 // lock bitmap and return bitmap data with 32-bits per pixel color (ARGB)

@@ -180,6 +180,13 @@ namespace epg123
 
         private void frmMain_FormClosing(object sender, FormClosingEventArgs e)
         {
+            // give option to save if there were changes
+            RefreshConfiguration();
+            if (!config.Equals(oldConfig) && DialogResult.Yes == MessageBox.Show("There have been changes made to your configuration. Do you wish to save changes before exiting?", "Configuration Change", MessageBoxButtons.YesNo, MessageBoxIcon.Question))
+            {
+                btnSave_Click(sender, null);
+            }
+
             // save the windows size and location
             if (WindowState == FormWindowState.Normal)
             {
@@ -1097,7 +1104,7 @@ namespace epg123
         #endregion
 
         #region ========== Buttons & Links ==========
-        private void btnSave_Click(object sender, EventArgs e)
+        private void RefreshConfiguration()
         {
             ToolStripMenuItem[] items = { L1includeToolStripMenuItem, L2includeToolStripMenuItem, L3includeToolStripMenuItem, L4includeToolStripMenuItem };
             ListView[] listViews = { lvL1Lineup, lvL2Lineup, lvL3Lineup, lvL4Lineup };
@@ -1144,9 +1151,14 @@ namespace epg123
                     if (item.Checked) expectedStationIds.Add(item.SubItems[(int)LineupColumn.StationID].Text);
                 }
             }
+            config.ExpectedServicecount = expectedStationIds.Count;
+        }
+        private void btnSave_Click(object sender, EventArgs e)
+        {
+            RefreshConfiguration();
 
             // sanity checks
-            if (((config.ExpectedServicecount = expectedStationIds.Count) == 0) && (sender != null))
+            if ((config.ExpectedServicecount  == 0) && (sender != null))
             {
                 if (MessageBox.Show("There are no INCLUDED lineups and/or no stations selected for download.\n\nDo you wish to commit these changes?",
                                     "No Stations to Download", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No)

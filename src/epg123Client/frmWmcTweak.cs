@@ -103,8 +103,16 @@ namespace epg123
                         case "Light":
                             rdoLight.Checked = true;
                             break;
+                        case "Light_ns":
+                            rdoLight.Checked = true;
+                            cbNoSuccess.Checked = true;
+                            break;
                         case "Dark":
                             rdoDark.Checked = true;
+                            break;
+                        case "Dark_ns":
+                            rdoDark.Checked = true;
+                            cbNoSuccess.Checked = true;
                             break;
                         default:
                             rdoNone.Checked = true;
@@ -1553,13 +1561,43 @@ namespace epg123
                     {
                         imagePath = string.Empty;
                     }
-                    key.SetValue("OEMLogoAccent", btn.Tag as string, RegistryValueKind.String);
+                    key.SetValue("OEMLogoAccent", $"{btn.Tag as string}" + (cbNoSuccess.Checked ? "_ns" : string.Empty), RegistryValueKind.String);
                     key.SetValue("OEMLogoUri", imagePath);
                 }
                 catch { }
             }
 
             setStatusLogoImage();
+        }
+
+        private void cbNoSuccess_CheckedChanged(object sender, EventArgs e)
+        {
+            CheckBox checkBox = (CheckBox)sender;
+            using (RegistryKey key = Registry.LocalMachine.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Media Center\\Start Menu", true))
+            {
+                try
+                {
+                    string val = string.Empty;
+                    if (rdoLight.Checked)
+                    {
+                        val = "Light";
+                    }
+                    else if (rdoDark.Checked)
+                    {
+                        val = "Dark";
+                    }
+
+                    if (!string.IsNullOrEmpty(val))
+                    {
+                        key.SetValue("OEMLogoAccent", val + (checkBox.Checked ? "_ns" : string.Empty), RegistryValueKind.String);
+                        if (!checkBox.Checked)
+                        {
+                            key.SetValue("OEMLogoUri", "file://" + Helper.Epg123StatusLogoPath);
+                        }
+                    }
+                }
+                catch { }
+            }
         }
 
         private void trkOpacityChanged(object sender, EventArgs e)

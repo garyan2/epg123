@@ -62,14 +62,8 @@ namespace epg123
 
             using (RegistryKey key = Registry.LocalMachine.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Media Center\\Service\\EPG", true))
             {
-                try
-                {
-                    if ((int)key.GetValue("dl") != 0) key.SetValue("dl", 0);
-                }
-                catch
-                {
-                    key.SetValue("dl", 0);
-                }
+                // verify periodic downloads are not enabled
+                if ((int)key.GetValue("dl", 1) != 0) key.SetValue("dl", 0);
 
                 try
                 {
@@ -79,6 +73,12 @@ namespace epg123
                         if (DateTime.Parse(nextRun) > DateTime.Now)
                         {
                             runDbgc = false;
+                        }
+                        else
+                        {
+                            // write a last index time in the future to avoid the dbgc kicking off a reindex while importing the mxf file
+                            DateTime lastFullReindex = Convert.ToDateTime(key.GetValue("LastFullReindex") as string, CultureInfo.InvariantCulture);
+                            key.SetValue("LastFullReindex", Convert.ToString(nextRunTime, CultureInfo.InvariantCulture));
                         }
                     }
                 }
@@ -97,7 +97,7 @@ namespace epg123
                     ProcessStartInfo startInfo = new ProcessStartInfo()
                     {
                         FileName = Environment.ExpandEnvironmentVariables("%WINDIR%") + @"\ehome\mcupdate.exe",
-                        Arguments = "-dbgc",
+                        Arguments = "-dbgc -updateTrigger",
                         RedirectStandardOutput = true,
                         RedirectStandardError = true,
                         UseShellExecute = false,
@@ -119,7 +119,7 @@ namespace epg123
                         {
                             try
                             {
-                                key.SetValue(epg123NextRunTime, nextRunTime.ToString());
+                                key.SetValue(epg123NextRunTime, Convert.ToString(nextRunTime, CultureInfo.InvariantCulture));
                             }
                             catch
                             {
@@ -171,7 +171,7 @@ namespace epg123
 
         public static void reindexPvrSchedule()
         {
-            runWmcIndexTask("PvrScheduleTask", "mcupdate.exe", "-PvrSchedule");
+            runWmcIndexTask("PvrScheduleTask", "mcupdate.exe", "-PvrSchedule -nogc");
         }
 
         private static bool runWmcIndexTask(string task, string program, string argument)

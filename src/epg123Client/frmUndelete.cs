@@ -280,8 +280,15 @@ namespace epg123
         {
             foreach (ListViewItem item in listView1.SelectedItems)
             {
-                Channel channel = (Channel)item.Tag;
-                channel.Lineup.NotifyChannelAdded(channel);
+                try
+                {
+                    Channel channel = (Channel)item.Tag;
+                    channel.Lineup.NotifyChannelAdded(channel);
+                }
+                catch (Exception ex)
+                {
+                    Logger.WriteInformation(ex.Message);
+                }
             }
             channelAdded = true;
             this.Close();

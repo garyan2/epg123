@@ -1880,7 +1880,7 @@ namespace epg123
             ProcessStartInfo startInfo = new ProcessStartInfo()
             {
                 FileName = Environment.ExpandEnvironmentVariables("%WINDIR%") + @"\ehome\mcupdate.exe",
-                Arguments = "-b",
+                Arguments = "-b -nogc",
                 UseShellExecute = false,
                 CreateNoWindow = true
             };

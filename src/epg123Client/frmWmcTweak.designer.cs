@@ -87,6 +87,7 @@
             this.label9 = new System.Windows.Forms.Label();
             this.btnRemoveLogos = new System.Windows.Forms.Button();
             this.lblTunerLimit = new System.Windows.Forms.Label();
+            this.cbNoSuccess = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.trackMinutes)).BeginInit();
             this.grpMainEPG.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.trackColumnWidth)).BeginInit();
@@ -472,7 +473,7 @@
             // 
             // btnTunerLimit
             // 
-            this.btnTunerLimit.Location = new System.Drawing.Point(251, 27);
+            this.btnTunerLimit.Location = new System.Drawing.Point(251, 19);
             this.btnTunerLimit.Name = "btnTunerLimit";
             this.btnTunerLimit.Size = new System.Drawing.Size(75, 23);
             this.btnTunerLimit.TabIndex = 5;
@@ -482,6 +483,7 @@
             // 
             // grpWmcTweak
             // 
+            this.grpWmcTweak.Controls.Add(this.cbNoSuccess);
             this.grpWmcTweak.Controls.Add(this.label14);
             this.grpWmcTweak.Controls.Add(this.lblStatusLogoOpaque);
             this.grpWmcTweak.Controls.Add(this.trackBar1);
@@ -519,7 +521,7 @@
             // 
             this.label14.AutoSize = true;
             this.label14.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Underline))), System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label14.Location = new System.Drawing.Point(6, 384);
+            this.label14.Location = new System.Drawing.Point(6, 370);
             this.label14.Name = "label14";
             this.label14.Size = new System.Drawing.Size(175, 13);
             this.label14.TabIndex = 34;
@@ -527,7 +529,8 @@
             // 
             // lblStatusLogoOpaque
             // 
-            this.lblStatusLogoOpaque.Location = new System.Drawing.Point(6, 507);
+            this.lblStatusLogoOpaque.BackColor = System.Drawing.Color.Transparent;
+            this.lblStatusLogoOpaque.Location = new System.Drawing.Point(6, 488);
             this.lblStatusLogoOpaque.Name = "lblStatusLogoOpaque";
             this.lblStatusLogoOpaque.Size = new System.Drawing.Size(320, 23);
             this.lblStatusLogoOpaque.TabIndex = 33;
@@ -536,7 +539,7 @@
             // 
             // trackBar1
             // 
-            this.trackBar1.Location = new System.Drawing.Point(6, 477);
+            this.trackBar1.Location = new System.Drawing.Point(6, 463);
             this.trackBar1.Maximum = 100;
             this.trackBar1.Name = "trackBar1";
             this.trackBar1.Size = new System.Drawing.Size(320, 45);
@@ -549,7 +552,7 @@
             // rdoDark
             // 
             this.rdoDark.AutoSize = true;
-            this.rdoDark.Location = new System.Drawing.Point(6, 447);
+            this.rdoDark.Location = new System.Drawing.Point(6, 433);
             this.rdoDark.Name = "rdoDark";
             this.rdoDark.Size = new System.Drawing.Size(85, 17);
             this.rdoDark.TabIndex = 31;
@@ -561,7 +564,7 @@
             // rdoLight
             // 
             this.rdoLight.AutoSize = true;
-            this.rdoLight.Location = new System.Drawing.Point(6, 424);
+            this.rdoLight.Location = new System.Drawing.Point(6, 410);
             this.rdoLight.Name = "rdoLight";
             this.rdoLight.Size = new System.Drawing.Size(85, 17);
             this.rdoLight.TabIndex = 30;
@@ -574,7 +577,7 @@
             // 
             this.rdoNone.AutoSize = true;
             this.rdoNone.Checked = true;
-            this.rdoNone.Location = new System.Drawing.Point(6, 401);
+            this.rdoNone.Location = new System.Drawing.Point(6, 387);
             this.rdoNone.Name = "rdoNone";
             this.rdoNone.Size = new System.Drawing.Size(51, 17);
             this.rdoNone.TabIndex = 29;
@@ -587,7 +590,7 @@
             // pbStatusLogo
             // 
             this.pbStatusLogo.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.pbStatusLogo.Location = new System.Drawing.Point(97, 401);
+            this.pbStatusLogo.Location = new System.Drawing.Point(97, 387);
             this.pbStatusLogo.Name = "pbStatusLogo";
             this.pbStatusLogo.Size = new System.Drawing.Size(229, 70);
             this.pbStatusLogo.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
@@ -596,7 +599,7 @@
             // 
             // lblMovieGuide
             // 
-            this.lblMovieGuide.Location = new System.Drawing.Point(6, 90);
+            this.lblMovieGuide.Location = new System.Drawing.Point(6, 82);
             this.lblMovieGuide.Name = "lblMovieGuide";
             this.lblMovieGuide.Size = new System.Drawing.Size(239, 13);
             this.lblMovieGuide.TabIndex = 27;
@@ -604,7 +607,7 @@
             // 
             // btnMovieGuide
             // 
-            this.btnMovieGuide.Location = new System.Drawing.Point(251, 85);
+            this.btnMovieGuide.Location = new System.Drawing.Point(251, 77);
             this.btnMovieGuide.Name = "btnMovieGuide";
             this.btnMovieGuide.Size = new System.Drawing.Size(75, 23);
             this.btnMovieGuide.TabIndex = 26;
@@ -615,7 +618,7 @@
             // label13
             // 
             this.label13.AutoSize = true;
-            this.label13.Location = new System.Drawing.Point(69, 351);
+            this.label13.Location = new System.Drawing.Point(69, 342);
             this.label13.Name = "label13";
             this.label13.Size = new System.Drawing.Size(144, 13);
             this.label13.TabIndex = 25;
@@ -624,7 +627,7 @@
             // label11
             // 
             this.label11.AutoSize = true;
-            this.label11.Location = new System.Drawing.Point(69, 325);
+            this.label11.Location = new System.Drawing.Point(69, 316);
             this.label11.Name = "label11";
             this.label11.Size = new System.Drawing.Size(134, 13);
             this.label11.TabIndex = 24;
@@ -633,7 +636,7 @@
             // label6
             // 
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(69, 299);
+            this.label6.Location = new System.Drawing.Point(69, 290);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(100, 13);
             this.label6.TabIndex = 23;
@@ -641,7 +644,7 @@
             // 
             // numInstantReplay
             // 
-            this.numInstantReplay.Location = new System.Drawing.Point(9, 347);
+            this.numInstantReplay.Location = new System.Drawing.Point(9, 338);
             this.numInstantReplay.Name = "numInstantReplay";
             this.numInstantReplay.Size = new System.Drawing.Size(54, 20);
             this.numInstantReplay.TabIndex = 22;
@@ -654,7 +657,7 @@
             // 
             // numSkipAhead
             // 
-            this.numSkipAhead.Location = new System.Drawing.Point(9, 321);
+            this.numSkipAhead.Location = new System.Drawing.Point(9, 312);
             this.numSkipAhead.Name = "numSkipAhead";
             this.numSkipAhead.Size = new System.Drawing.Size(54, 20);
             this.numSkipAhead.TabIndex = 21;
@@ -672,7 +675,7 @@
             0,
             0,
             0});
-            this.numBuffer.Location = new System.Drawing.Point(9, 295);
+            this.numBuffer.Location = new System.Drawing.Point(9, 286);
             this.numBuffer.Maximum = new decimal(new int[] {
             400,
             0,
@@ -699,7 +702,7 @@
             this.textBox2.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.textBox2.Cursor = System.Windows.Forms.Cursors.Default;
             this.textBox2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.textBox2.Location = new System.Drawing.Point(144, 130);
+            this.textBox2.Location = new System.Drawing.Point(144, 121);
             this.textBox2.Multiline = true;
             this.textBox2.Name = "textBox2";
             this.textBox2.ReadOnly = true;
@@ -710,7 +713,7 @@
             // 
             // lblPatternExample
             // 
-            this.lblPatternExample.Location = new System.Drawing.Point(6, 249);
+            this.lblPatternExample.Location = new System.Drawing.Point(6, 240);
             this.lblPatternExample.Name = "lblPatternExample";
             this.lblPatternExample.Size = new System.Drawing.Size(320, 43);
             this.lblPatternExample.TabIndex = 18;
@@ -718,7 +721,7 @@
             // 
             // btnClearPattern
             // 
-            this.btnClearPattern.Location = new System.Drawing.Point(279, 224);
+            this.btnClearPattern.Location = new System.Drawing.Point(279, 215);
             this.btnClearPattern.Name = "btnClearPattern";
             this.btnClearPattern.Size = new System.Drawing.Size(47, 23);
             this.btnClearPattern.TabIndex = 17;
@@ -728,7 +731,7 @@
             // 
             // btnSetPattern
             // 
-            this.btnSetPattern.Location = new System.Drawing.Point(226, 224);
+            this.btnSetPattern.Location = new System.Drawing.Point(226, 215);
             this.btnSetPattern.Name = "btnSetPattern";
             this.btnSetPattern.Size = new System.Drawing.Size(47, 23);
             this.btnSetPattern.TabIndex = 16;
@@ -738,7 +741,7 @@
             // 
             // txtNamePattern
             // 
-            this.txtNamePattern.Location = new System.Drawing.Point(9, 226);
+            this.txtNamePattern.Location = new System.Drawing.Point(9, 217);
             this.txtNamePattern.Name = "txtNamePattern";
             this.txtNamePattern.Size = new System.Drawing.Size(211, 20);
             this.txtNamePattern.TabIndex = 15;
@@ -751,7 +754,7 @@
             this.textBox1.BackColor = System.Drawing.SystemColors.Control;
             this.textBox1.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.textBox1.Cursor = System.Windows.Forms.Cursors.Default;
-            this.textBox1.Location = new System.Drawing.Point(9, 130);
+            this.textBox1.Location = new System.Drawing.Point(9, 121);
             this.textBox1.Multiline = true;
             this.textBox1.Name = "textBox1";
             this.textBox1.ReadOnly = true;
@@ -764,7 +767,7 @@
             // 
             this.label10.AutoSize = true;
             this.label10.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Underline))), System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label10.Location = new System.Drawing.Point(6, 114);
+            this.label10.Location = new System.Drawing.Point(6, 105);
             this.label10.Name = "label10";
             this.label10.Size = new System.Drawing.Size(188, 13);
             this.label10.TabIndex = 13;
@@ -772,7 +775,7 @@
             // 
             // label9
             // 
-            this.label9.Location = new System.Drawing.Point(6, 61);
+            this.label9.Location = new System.Drawing.Point(6, 53);
             this.label9.Name = "label9";
             this.label9.Size = new System.Drawing.Size(239, 13);
             this.label9.TabIndex = 8;
@@ -780,7 +783,7 @@
             // 
             // btnRemoveLogos
             // 
-            this.btnRemoveLogos.Location = new System.Drawing.Point(251, 56);
+            this.btnRemoveLogos.Location = new System.Drawing.Point(251, 48);
             this.btnRemoveLogos.Name = "btnRemoveLogos";
             this.btnRemoveLogos.Size = new System.Drawing.Size(75, 23);
             this.btnRemoveLogos.TabIndex = 7;
@@ -790,11 +793,22 @@
             // 
             // lblTunerLimit
             // 
-            this.lblTunerLimit.Location = new System.Drawing.Point(6, 32);
+            this.lblTunerLimit.Location = new System.Drawing.Point(6, 24);
             this.lblTunerLimit.Name = "lblTunerLimit";
             this.lblTunerLimit.Size = new System.Drawing.Size(239, 13);
             this.lblTunerLimit.TabIndex = 6;
             this.lblTunerLimit.Text = "Increase tuner limits to 32 per tuner type.";
+            // 
+            // cbNoSuccess
+            // 
+            this.cbNoSuccess.AutoSize = true;
+            this.cbNoSuccess.Location = new System.Drawing.Point(9, 514);
+            this.cbNoSuccess.Name = "cbNoSuccess";
+            this.cbNoSuccess.Size = new System.Drawing.Size(240, 17);
+            this.cbNoSuccess.TabIndex = 35;
+            this.cbNoSuccess.Text = "Display Warnings, Errors, and Updates ONLY";
+            this.cbNoSuccess.UseVisualStyleBackColor = true;
+            this.cbNoSuccess.CheckedChanged += new System.EventHandler(this.cbNoSuccess_CheckedChanged);
             // 
             // frmWmcTweak
             // 
@@ -892,5 +906,6 @@
         private System.Windows.Forms.Label lblStatusLogoOpaque;
         private System.Windows.Forms.Label label14;
         private System.Windows.Forms.CheckBox cbChannelName;
+        private System.Windows.Forms.CheckBox cbNoSuccess;
     }
 }
