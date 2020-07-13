@@ -134,6 +134,37 @@ namespace epg123
             Logger.Initialize("Media Center", "epg123Client");
             EstablishFileFolderPaths();
 
+            // filter out mcupdate calls that may be redirected
+            string arguments = string.Join(" ", args);
+            switch (arguments)
+            {
+                case "-u -nogc": // opening WMC
+                case "-uf -nogc":
+                    Logger.WriteVerbose($"**** Intercepted \"mcupdate.exe {arguments}\" call. Ignored. ****");
+                    Logger.Close();
+                    return 0;
+                case "-u -manual -nogc -p 0": // guide update
+                case "-manual -nogc -p 0":
+                    //DateTime startTime = DateTime.Now;
+                    ProcessStartInfo startInfo = new ProcessStartInfo()
+                    {
+                        FileName = "schtasks.exe",
+                        Arguments = "/run /tn \"epg123_update\"",
+                        UseShellExecute = false,
+                        CreateNoWindow = true,
+                    };
+
+                    // begin reindex
+                    Process proc = Process.Start(startInfo);
+                    proc.WaitForExit();
+
+                    Logger.WriteInformation($"**** Attempting to kick off the epg123_update task on demand. Exit Code: {proc.ExitCode} ****");
+                    Logger.Close();
+                    return 0;
+                default:
+                    break;
+            }
+
             // create a mutex and keep alive until program exits
             using (Mutex mutex = new Mutex(false, "Global\\" + appGuid))
             {
@@ -193,7 +224,8 @@ namespace epg123
                                 nogc = true;
                                 break;
                             default:
-                                Console.WriteLine("ERROR: \"{0}\" is not a valid argument.", args[i]);
+                                Logger.WriteVerbose($"**** Invalid arguments for epg123Client.exe; \"{arguments}\" ****");
+                                Logger.Close();
                                 return -1;
                         }
                     }

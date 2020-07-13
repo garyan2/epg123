@@ -171,7 +171,7 @@ namespace epg123
 
         public static void reindexPvrSchedule()
         {
-            runWmcIndexTask("PvrScheduleTask", "mcupdate.exe", "-PvrSchedule -nogc");
+            //runWmcIndexTask("PvrScheduleTask", "mcupdate.exe", "-PvrSchedule -nogc");
         }
 
         private static bool runWmcIndexTask(string task, string program, string argument)

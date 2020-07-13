@@ -141,7 +141,8 @@ namespace epg123
             {
                 Author = "GaRyan2's epg123",
                 Description = "Utility to update the Windows Media Center Electronic Program Guide by downloading guide information from Schedules Direct and importing the created .mxf file.",
-                URI = "\\epg123_update"
+                URI = "\\epg123_update",
+                SecurityDescriptor = "D:(A;;FRFWSDWDWO;;;BA)(A;;FRFWSDWDWO;;;SY)(A;;FRFWFXDTDCSDWD;;;NS)(A;;FXFR;;;AU)"
             };
 
             // create trigger
@@ -276,18 +277,26 @@ namespace epg123
                 if (proc.ExitCode == 0)
                 {
                     Logger.WriteInformation("Successfully created the daily update task in Task Scheduler.");
-                    return true;
                 }
                 else
                 {
                     Logger.WriteError(string.Format("Failed to create a daily update task in Task Scheduler. Exit: {0}", proc.ExitCode.ToString("X8")));
+                    return false;
+                }
+
+                if (File.Exists(Helper.EhshellExeFilePath) && File.Exists(Helper.Epg123ClientExePath))
+                {
+                    startInfo.Arguments = $"/change /tn \"\\Microsoft\\Windows\\Media Center\\mcupdate\" /tr \"'{Helper.Epg123ClientExePath}' $(Arg0)\" /enable";
+                    Process proc2 = Process.Start(startInfo);
+                    proc2.WaitForExit();
                 }
             }
             catch (Exception ex)
             {
                 Logger.WriteError(string.Format("Failed to create a daily update task in Task Scheduler. message: {0}", ex.Message));
+                return false;
             }
-            return false;
+            return true;
         }
 
         private bool isWindows10()
@@ -314,18 +323,23 @@ namespace epg123
                 if (proc.ExitCode == 0)
                 {
                     Logger.WriteInformation("Successfully deleted the daily update task from Task Scheduler.");
-                    return true;
                 }
                 else
                 {
                     Logger.WriteError(string.Format("Failed to delete the daily task in Task Scheduler. Exit: {0}", proc.ExitCode.ToString("X8")));
+                    return false;
                 }
+
+                startInfo.Arguments = "/change /tn \"\\Microsoft\\Windows\\Media Center\\mcupdate\" /tr \"'%SystemRoot%\\ehome\\mcupdate.exe' $(Arg0)\" /disable";
+                Process proc2 = Process.Start(startInfo);
+                proc2.WaitForExit();
             }
             catch (Exception ex)
             {
                 Logger.WriteError(string.Format("Failed to delete the daily task in Task Scheduler. message: {0}", ex.Message));
+                return false;
             }
-            return false;
+            return true;
         }
     }
 }

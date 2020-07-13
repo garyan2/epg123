@@ -267,14 +267,26 @@ namespace epg123
             // add channel 1 to the available scan channels
             using (RegistryKey key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Multimedia\TV\Tuning Spaces\Digital Cable", true))
             {
-                if ((key != null) && (key.GetValue("MinChannel").ToString() != "1"))
-                {
-                    try
-                    {
-                        key.SetValue("MinChannel", 1, RegistryValueKind.DWord);
-                    }
-                    catch { }
-                }
+                if (key != null && (int)key.GetValue("MinChannel", 2) != 1) key.SetValue("MinChannel", 1, RegistryValueKind.DWord);
+            }
+
+            // disable metadata downloads
+            using (RegistryKey key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Media Center\Settings\MCE.GlobalSettings", true))
+            {
+                if (key != null && (int)key.GetValue("workoffline", 0) != 1) key.SetValue("workoffline", 1);
+            }
+
+            // disabe guide downloads
+            using (RegistryKey key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Media Center\Service\Epg", true))
+            {
+                if (key != null && (int)key.GetValue("dl", 1) != 0) key.SetValue("dl", 0);
+            }
+
+            // disable usage tracking
+            using (RegistryKey key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Media Center\Settings\ProgramGuide", true))
+            {
+                if (key != null && (int)key.GetValue("fPrivacyLevel", 2) != 0) key.SetValue("fPrivacyLevel", 0);
+                if (key != null && (int)key.GetValue("fUsageTracking", 1) != 0) key.SetValue("fUsageTracking", 0);
             }
         }
 

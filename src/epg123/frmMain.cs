@@ -182,7 +182,7 @@ namespace epg123
         {
             // give option to save if there were changes
             RefreshConfiguration();
-            if (!config.Equals(oldConfig) && DialogResult.Yes == MessageBox.Show("There have been changes made to your configuration. Do you wish to save changes before exiting?", "Configuration Change", MessageBoxButtons.YesNo, MessageBoxIcon.Question))
+            if (btnLogin.Enabled && !config.Equals(oldConfig) && DialogResult.Yes == MessageBox.Show("There have been changes made to your configuration. Do you wish to save changes before exiting?", "Configuration Change", MessageBoxButtons.YesNo, MessageBoxIcon.Question))
             {
                 btnSave_Click(sender, null);
             }
