@@ -118,14 +118,17 @@ namespace epg123
             // select base image based on status code
             double opacity = 1.0;
             string accent = "Light";
-            using (RegistryKey key = Registry.LocalMachine.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Media Center\\Start Menu", false))
+            try
             {
-                try
+                using (RegistryKey key = Registry.LocalMachine.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Media Center\\Start Menu", false))
                 {
                     accent = (string)key.GetValue("OEMLogoAccent", "Light");
                     opacity = (int)key.GetValue("OEMLogoOpacity", 100) / 100.0;
                 }
-                catch { }
+            }
+            catch
+            {
+                Logger.WriteInformation("Could not read registry settings for OEMLogo. Using default");
             }
 
             // set up the base image; default for brandlogo is light
@@ -230,9 +233,9 @@ namespace epg123
             image.Save(Helper.Epg123StatusLogoPath);
 
             // ensure OEMLogoUri is pointed to the file
-            using (RegistryKey key = Registry.LocalMachine.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Media Center\\Start Menu", true))
+            try
             {
-                try
+                using (RegistryKey key = Registry.LocalMachine.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Media Center\\Start Menu", true))
                 {
                     // if selected, do not display SUCCESS logo
                     if (accent.Contains("_ns") && status == EPG123STATUS.SUCCESS)
@@ -244,7 +247,10 @@ namespace epg123
                         key.SetValue("OEMLogoUri", "file://" + Helper.Epg123StatusLogoPath);
                     }
                 }
-                catch { }
+            }
+            catch
+            {
+                Logger.WriteInformation("Could not set OEMLogoUri in registry.");
             }
 
             return;

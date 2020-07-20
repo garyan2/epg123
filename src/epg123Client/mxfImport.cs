@@ -78,7 +78,7 @@ namespace epg123
                         {
                             // write a last index time in the future to avoid the dbgc kicking off a reindex while importing the mxf file
                             DateTime lastFullReindex = Convert.ToDateTime(key.GetValue("LastFullReindex") as string, CultureInfo.InvariantCulture);
-                            key.SetValue("LastFullReindex", Convert.ToString(nextRunTime, CultureInfo.InvariantCulture));
+                            key.SetValue("LastFullReindex", nextRunTime.ToString());
                         }
                     }
                 }
@@ -297,17 +297,18 @@ namespace epg123
                 }
 
                 // set registry setting to "activate" the guide if necessary
-                using (RegistryKey key = Registry.LocalMachine.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Media Center\\Settings\\ProgramGuide", true))
+                // NETWORK SERVICE does not have access to this registry in Win7
+                try
                 {
-                    try
+                    using (RegistryKey key = Registry.LocalMachine.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Media Center\\Settings\\ProgramGuide", true))
                     {
                         if ((int)key.GetValue("fAgreeTOS") != 1) key.SetValue("fAgreeTOS", 1);
                         if ((string)key.GetValue("strAgreedTOSVersion") != "1.0") key.SetValue("strAgreedTOSVersion", "1.0");
                     }
-                    catch
-                    {
-                        Logger.WriteError("Could not write/verify the registry settings to activate the guide in WMC.");
-                    }
+                }
+                catch
+                {
+                    Logger.WriteInformation("Could not write/verify the registry settings to activate the guide in WMC."); 
                 }
             }
             return (lineups > 0);

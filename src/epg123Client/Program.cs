@@ -145,7 +145,7 @@ namespace epg123
                     return 0;
                 case "-u -manual -nogc -p 0": // guide update
                 case "-manual -nogc -p 0":
-                    //DateTime startTime = DateTime.Now;
+                    DateTime startTime = DateTime.Now;
                     ProcessStartInfo startInfo = new ProcessStartInfo()
                     {
                         FileName = "schtasks.exe",
@@ -154,12 +154,37 @@ namespace epg123
                         CreateNoWindow = true,
                     };
 
-                    // begin reindex
+                    // begin update
                     Process proc = Process.Start(startInfo);
                     proc.WaitForExit();
 
-                    Logger.WriteInformation($"**** Attempting to kick off the epg123_update task on demand. Exit Code: {proc.ExitCode} ****");
+                    Logger.WriteInformation($"**** Attempted to kick off the epg123_update task on demand. ****");
                     Logger.Close();
+
+                    // monitor the task status until it is complete
+                    epgTaskScheduler ts = new epgTaskScheduler();
+                    while (true)
+                    {
+                        // looks like WMC may have a 300000 ms timeout for the update action
+                        // no reason to continue with the mcupdate run if it is going to be ignored
+                        if (DateTime.Now - startTime > TimeSpan.FromMinutes(5.0)) return 0;
+
+                        ts.queryTask(true);
+                        if (ts.statusString.ToLower().Contains("running"))
+                        {
+                            Thread.Sleep(100);
+                        }
+                        else break;
+                    }
+
+                    // kick off mcupdate so it can fail but signal WMC that update is complete
+                    startInfo = new ProcessStartInfo()
+                    {
+                        FileName = Environment.ExpandEnvironmentVariables(@"%SystemRoot%\ehome\mcupdate.exe"),
+                        Arguments = arguments
+                    };
+                    Process proc2 = Process.Start(startInfo);
+                    proc.WaitForExit();
                     return 0;
                 default:
                     break;

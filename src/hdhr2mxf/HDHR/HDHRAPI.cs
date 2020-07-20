@@ -149,13 +149,6 @@ namespace HDHomeRunTV
         {
             try
             {
-                //using (StreamReader sr = new StreamReader(@"C:\Temp\backup\hawleytoner\hdhr2mxf.xmltv"))
-                //{
-                //    XmlSerializer serializer = new XmlSerializer(typeof(XMLTV));
-                //    TextReader reader = new StringReader(sr.ReadToEnd());
-                //    return (XMLTV)serializer.Deserialize(reader);
-                //}
-
                 if (deviceAuth == null) return null;
                 using (StreamReader sr = GetRequestResponse(BaseUrl + "/api/xmltv.php?DeviceAuth=" + Uri.EscapeDataString(deviceAuth)))
                 {

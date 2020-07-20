@@ -361,10 +361,10 @@ namespace epg123
                                     }
                                     break;
                                 case "Antenna":
-                                    if (map.AtscMajor > 0 && map.AtscMinor > 0)
-                                    {
-                                        matchName = string.Format("OC:{0}:{1}", map.AtscMajor, map.AtscMinor);
-                                    }
+                                    //if (map.AtscMajor > 0 && map.AtscMinor > 0)
+                                    //{
+                                    //    matchName = string.Format("OC:{0}:{1}", map.AtscMajor, map.AtscMinor);
+                                    //}
                                     break;
                                 default:
                                     break;

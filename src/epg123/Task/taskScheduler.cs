@@ -13,6 +13,7 @@ namespace epg123
         private Random random = new Random();
         const string taskName = "epg123_update";
         public DateTime schedTime;
+        private DateTime oldTime;
         public string statusString;
         public bool exist = false;
         public bool existNoAccess = false;
@@ -24,9 +25,10 @@ namespace epg123
             public string Arguments;
         }
 
-        public void queryTask()
+        public void queryTask(bool silent = false)
         {
-            schedTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, random.Next(0, 23), random.Next(0, 59), 0);
+            if (oldTime != DateTime.MinValue) schedTime = oldTime;
+            else schedTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, random.Next(0, 23), random.Next(0, 59), 0);
             responseString = string.Empty;
             errorString = string.Empty;
             ProcessStartInfo startInfo = new ProcessStartInfo()
@@ -59,7 +61,7 @@ namespace epg123
                         actions[i].Arguments = task.Actions.Exec[i].Arguments;
                     }
                     wake = task.Settings.WakeToRun;
-                    schedTime = task.Triggers.Items[0].StartBoundary.Date + task.Triggers.Items[0].StartBoundary.TimeOfDay;
+                    oldTime = schedTime = task.Triggers.Items[0].StartBoundary.Date + task.Triggers.Items[0].StartBoundary.TimeOfDay;
                 }
 
                 responseString = string.Empty;
@@ -111,7 +113,7 @@ namespace epg123
             {
                 statusString = "No task is scheduled to run.";
             }
-            Logger.WriteVerbose(string.Format("Successfully queried the Task Scheduler for status. {0}", statusString));
+            if (!silent) Logger.WriteVerbose(string.Format("Successfully queried the Task Scheduler for status. {0}", statusString));
             return;
         }
 
@@ -184,6 +186,7 @@ namespace epg123
             // create principal
             // Windows10 1607 Anniversary Update introduced a bug which only executes the first
             // task action unless running a service or possibly administrator?
+            // Also, network service does not have access to some registry keys in Win7
             principalsType principals;
             if (isWindows10())
             {
@@ -330,9 +333,12 @@ namespace epg123
                     return false;
                 }
 
-                startInfo.Arguments = "/change /tn \"\\Microsoft\\Windows\\Media Center\\mcupdate\" /tr \"'%SystemRoot%\\ehome\\mcupdate.exe' $(Arg0)\" /disable";
-                Process proc2 = Process.Start(startInfo);
-                proc2.WaitForExit();
+                if (File.Exists(Helper.EhshellExeFilePath))
+                {
+                    startInfo.Arguments = "/change /tn \"\\Microsoft\\Windows\\Media Center\\mcupdate\" /tr \"'%SystemRoot%\\ehome\\mcupdate.exe' $(Arg0)\" /disable";
+                    Process proc2 = Process.Start(startInfo);
+                    proc2.WaitForExit();
+                }
             }
             catch (Exception ex)
             {
