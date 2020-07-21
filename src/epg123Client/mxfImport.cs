@@ -78,7 +78,7 @@ namespace epg123
                         {
                             // write a last index time in the future to avoid the dbgc kicking off a reindex while importing the mxf file
                             DateTime lastFullReindex = Convert.ToDateTime(key.GetValue("LastFullReindex") as string, CultureInfo.InvariantCulture);
-                            key.SetValue("LastFullReindex", nextRunTime.ToString());
+                            key.SetValue("LastFullReindex", Convert.ToString(nextRunTime, CultureInfo.InvariantCulture));
                         }
                     }
                 }
@@ -119,7 +119,7 @@ namespace epg123
                         {
                             try
                             {
-                                key.SetValue(epg123NextRunTime, Convert.ToString(nextRunTime, CultureInfo.InvariantCulture));
+                                key.SetValue(epg123NextRunTime, nextRunTime.ToString("s"));
                             }
                             catch
                             {
