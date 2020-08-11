@@ -28,6 +28,7 @@ AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
+CloseApplications=no
 DefaultDirName={pf32}\epg123
 DisableWelcomePage=no
 LicenseFile=docs\license.rtf
@@ -80,6 +81,7 @@ Source: "..\..\bin\Release\epg123Client.exe"; DestDir: "{app}"; Flags: ignorever
 Source: "..\..\bin\Release\epg123Client.exe.config"; DestDir: "{app}"; Flags: ignoreversion; Attribs: hidden; MinVersion: 6.1; OnlyBelowVersion: 6.2; Components: main2
 Source: "..\..\bin\Release\epg123Transfer.exe"; DestDir: "{app}"; Flags: ignoreversion; Components: main2
 Source: "..\..\bin\Release\epg123Transfer.exe.config"; DestDir: "{app}"; Flags: ignoreversion; Attribs: hidden; MinVersion: 6.1; OnlyBelowVersion: 6.2; Components: main2
+Source: "..\..\bin\Release\epgTray.exe"; DestDir: "{app}"; BeforeInstall: TaskKill('epgTray.exe'); Flags: ignoreversion; Components: main2
 Source: "docs\epg123_Guide.pdf"; DestDir: "{app}"; Flags: ignoreversion; Components: help
 Source: "docs\license.rtf"; DestDir: "{app}"; Flags: ignoreversion
 Source: "docs\customLineup.xml.example"; DestDir: "{app}"; Flags: ignoreversion; Components: main1
@@ -93,6 +95,7 @@ Name: "{commonprograms}\{#MyAppName}\EPG123 Guide"; Filename: "{app}\epg123_Guid
 Name: "{commonprograms}\{#MyAppName}\HDHR2MXF Update"; Filename: "{app}\hdhr2mxf.exe"; Parameters: "-update -import"; Components: hdhr
 Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon; Components: main1
 Name: "{commondesktop}\{#MyClientName}"; Filename: "{app}\{#MyClientExeName}"; Tasks: desktopicon; Components: main2
+Name: "{commonstartup}\EPG123 Tray"; Filename: "{app}\epgTray.exe"; Components: main2
 
 [Registry]
 ; Registry keys to add epg123 and epg123client as sources to the event log
@@ -102,6 +105,7 @@ Root: HKLM; Subkey: "SYSTEM\CurrentControlSet\Services\EventLog\Media Center\EPG
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent runascurrentuser unchecked; Components: main1
 Filename: "{app}\{#MyClientExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyClientName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent runascurrentuser unchecked; Components: main2
+Filename: "{app}\epgTray.exe"; Flags: nowait runascurrentuser; Components: main2
 
 [Dirs]
 ; Name: {code:GetRootDataFolder}; Permissions: everyone-full
@@ -120,6 +124,7 @@ Type: files; Name: "{app}\epg123Transfer.exe"; Components: not main2
 Type: files; Name: "{app}\epg123Transfer.exe.config"; Components: not main2
 Type: files; Name: "{app}\epg123_Guide.pdf"; Components: not help
 Type: files; Name: "{app}\customLineup.xml.example"; Components: not main1
+Type: files; Name: "{app}\epgTray.exe"; BeforeInstall: TaskKill('epgTray.exe'); Components: not main2
 Type: files; Name: "{commondesktop}\{#MyAppName}.lnk"; Components: not main1
 Type: files; Name: "{commondesktop}\{#MyClientName}.lnk"; Components: not main2
 Type: files; Name: "{commonprograms}\{#MyAppName}\{#MyAppName}.lnk"; Components: not main1
@@ -127,6 +132,10 @@ Type: files; Name: "{commonprograms}\{#MyAppName}\{#MyClientName}.lnk"; Componen
 Type: files; Name: "{commonprograms}\{#MyAppName}\EPG123 Transfer Tool.lnk"; Components: not main2
 Type: files; Name: "{commonprograms}\{#MyAppName}\EPG123 Guide.lnk"; Components: not help
 Type: files; Name: "{commonprograms}\{#MyAppName}\HDHR2MXF Update.lnk"; Components: not hdhr
+Type: files; Name: "{commonstartup}\EPG123 Tray.lnk"; Components: not main2
+
+[UninstallRun]
+Filename: "taskkill"; Parameters: "/im ""epgTray.exe"" /f"; Flags: runhidden
 
 [Code]
 // determine whether .NET Framework is installed
@@ -166,4 +175,12 @@ begin
     else begin
         result := ExpandConstant('{app}')
     end;
+end;
+
+// kill tray task
+procedure TaskKill(FileName: String);
+var
+    ResultCode: Integer;
+begin
+    Exec(ExpandConstant('taskkill.exe'), '/f /im ' + '"' + FileName + '"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
 end;

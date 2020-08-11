@@ -63,16 +63,6 @@ namespace epg123.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
         /// </summary>
-        internal static System.Drawing.Icon EPG123_download {
-            get {
-                object obj = ResourceManager.GetObject("EPG123_download", resourceCulture);
-                return ((System.Drawing.Icon)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
-        /// </summary>
         internal static System.Drawing.Icon EPG1231 {
             get {
                 object obj = ResourceManager.GetObject("EPG1231", resourceCulture);

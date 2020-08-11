@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.IO.Pipes;
 using System.Reflection;
 using System.Security.AccessControl;
 using System.Security.Principal;
@@ -147,6 +148,19 @@ namespace epg123
                 sw.WriteLine(action);
                 sw.Close();
             }
+        }
+
+        public static void SendPipeMessage(string message)
+        {
+            NamedPipeClientStream client = new NamedPipeClientStream(".", "Epg123StatusPipe", PipeDirection.Out);
+            try
+            {
+                client.Connect(100);
+                StreamWriter writer = new StreamWriter(client);
+                writer.WriteLine(message);
+                writer.Flush();
+            }
+            catch { }
         }
 
         #region ========== Folder and File Paths ==========

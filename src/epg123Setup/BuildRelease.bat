@@ -3,7 +3,7 @@ CLS
 
 REM Enable command extensions
 SETLOCAL ENABLEEXTENSIONS
-SET VER="1.3.9.30"
+SET VER="1.3.10.0"
 SET COMPILER=C:\Program Files (x86)\Inno Setup 5\compil32.exe
 SET BASE=..\..\bin\output
 SET PORTABLE=%BASE%\portable
@@ -23,6 +23,7 @@ COPY /Y "%RELEASE%\Newtonsoft.Json.dll" "%PORTABLE%"
 
 COPY /Y "%RELEASE%\epg123Client.exe" "%PORTABLE%"
 COPY /Y "%RELEASE%\epg123Client.exe.config" "%PORTABLE%"
+COPY /Y "%RELEASE%\epgTray.exe" "%PORTABLE%"
 
 COPY /Y "%RELEASE%\epg123Transfer.exe" "%PORTABLE%"
 COPY /Y "%RELEASE%\epg123Transfer.exe.config" "%PORTABLE%"

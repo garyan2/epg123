@@ -1532,6 +1532,9 @@ namespace epg123
 
             // open object store and repopulate the GUI
             btnRefreshLineups_Click(null, null);
+
+            // send a complete message
+            Helper.SendPipeMessage("Import Complete");
         }
         #endregion
 

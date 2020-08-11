@@ -133,6 +133,7 @@ namespace epg123
             {
                 Logger.WriteError(string.Format("Failed to retrieve token from Schedules Direct. message: {0}", errString));
             }
+            Helper.SendPipeMessage("Download Complete");
         }
         private static void AddBrandLogoToMxf()
         {
@@ -156,6 +157,28 @@ namespace epg123
 
         private static bool writeMxf()
         {
+            // add dummy lineup with dummy channel
+            MxfService service = sdMxf.With[0].getService("DUMMY");
+            service.CallSign = "DUMMY";
+            service.Name = "DUMMY Station";
+
+            sdMxf.With[0].Lineups.Add(new MxfLineup()
+            {
+                index = sdMxf.With[0].Lineups.Count + 1,
+                Uid = "ZZZ-DUMMY-EPG123",
+                Name = "ZZZ123 Dummy Lineup",
+                channels = new List<MxfChannel>()
+            });
+
+            int lineupIndex = sdMxf.With[0].Lineups.Count - 1;
+            sdMxf.With[0].Lineups[lineupIndex].channels.Add(new MxfChannel()
+            {
+                Lineup = sdMxf.With[0].Lineups[lineupIndex].Id,
+                lineupUid = "ZZZ-DUMMY-EPG123",
+                stationId = service.StationID,
+                Service = service.Id
+            });
+
             // make sure background worker to download station logos is complete
             int waits = 0;
             while (!stationLogosDownloadComplete)

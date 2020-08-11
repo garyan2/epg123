@@ -188,7 +188,7 @@ namespace epg123
             // task action unless running a service or possibly administrator?
             // Also, network service does not have access to some registry keys in Win7
             principalsType principals;
-            if (isWindows10())
+            if (false)//isWindows10())
             {
                 principals = new principalsType()
                 {
@@ -207,9 +207,8 @@ namespace epg123
                 {
                     Principal = new principalType()
                     {
-                        id = @"Author",
-                        LogonType = logonType.S4U,
-                        LogonTypeSpecified = true,
+                        id = @"SYSTEM",
+                        UserId = "S-1-5-18",
                         RunLevel = runLevelType.HighestAvailable,
                         RunLevelSpecified = true
                     }

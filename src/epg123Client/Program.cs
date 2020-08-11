@@ -96,8 +96,6 @@ namespace epg123
         private static bool showProgress = false;
         private static int maximumRecordingWaitHours = 23;
 
-        private static NotifyIcon notifyIcon;
-
         static void EstablishFileFolderPaths()
         {
             // set the base path and the working directory
@@ -314,14 +312,6 @@ namespace epg123
 
                     if (import)
                     {
-                        // establish the notify icon
-                        notifyIcon = new NotifyIcon()
-                        {
-                            Text = "EPG123\nPerforming WMC database maintenance...",
-                            Icon = epg123.Properties.Resources.EPG123_pause
-                        };
-                        notifyIcon.Visible = true;
-
                         // check if garbage cleanup is needed
                         if (!nogc)
                         {
@@ -329,7 +319,6 @@ namespace epg123
                         }
 
                         // ensure no recordings are active if importing
-                        notifyIcon.Text = "EPG123\nWaiting for recordings in progress to end...";
                         if (!force && programRecording())
                         {
                             Logger.WriteError(string.Format("A program recording is still in progress after {0} hours. Aborting the mxf file import.", maximumRecordingWaitHours));
@@ -337,25 +326,17 @@ namespace epg123
                             NativeMethods.SetThreadExecutionState(prevThreadState | (uint)ExecutionFlags.ES_CONTINUOUS);
                             mutex3.ReleaseMutex();
 
-                            notifyIcon.Visible = false;
-                            notifyIcon.Dispose();
-
                             statusLogo.statusImage();
                             return -1;
                         }
 
                         // import mxf file
-                        notifyIcon.Text = "EPG123\nImporting guide listings...";
-                        notifyIcon.Icon = epg123.Properties.Resources.EPG123_import;
                         if (import && !importMxfFile(filename))
                         {
                             Logger.WriteError("Failed to import .mxf file. Exiting.");
                             Logger.Close();
                             NativeMethods.SetThreadExecutionState(prevThreadState | (uint)ExecutionFlags.ES_CONTINUOUS);
                             mutex3.ReleaseMutex();
-
-                            notifyIcon.Visible = false;
-                            notifyIcon.Dispose();
 
                             statusLogo.statusImage();
                             return -1;
@@ -369,15 +350,9 @@ namespace epg123
                             NativeMethods.SetThreadExecutionState(prevThreadState | (uint)ExecutionFlags.ES_CONTINUOUS);
                             mutex3.ReleaseMutex();
 
-                            notifyIcon.Visible = false;
-                            notifyIcon.Dispose();
-
                             statusLogo.statusImage();
                             return -1;
                         }
-
-                        notifyIcon.Visible = false;
-                        notifyIcon.Dispose();
                     }
 
                     // perform automatch
@@ -417,6 +392,9 @@ namespace epg123
 
                         // update status logo
                         statusLogo.statusImage();
+
+                        // signal the notification tray to update the icon
+                        Helper.SendPipeMessage("Import Complete");
                     }
 
                     // all done
@@ -463,6 +441,7 @@ namespace epg123
 
                 if ((timeReady > DateTime.Now) && (DateTime.Now < expireTime))
                 {
+                    Helper.SendPipeMessage($"Importing|Waiting for recordings to end...|Will check again at {timeReady + TimeSpan.FromMinutes(1.0)}");
                     TimeSpan delay = TimeSpan.FromTicks(Math.Min((timeReady - DateTime.Now).Ticks + TimeSpan.FromMinutes(1).Ticks,
                                                                  TimeSpan.FromMinutes(intervalMinutes).Ticks));
                     Logger.WriteInformation(string.Format("Delaying import while WMC is recording. Will check recording status again at {0:HH:mm:ss}", DateTime.Now + delay));
@@ -470,7 +449,6 @@ namespace epg123
                 }
                 else
                 {
-                    notifyIcon.Icon = epg123.Properties.Resources.EPG123_import;
                     return active;
                 }
             } while (active);
@@ -593,7 +571,7 @@ namespace epg123
                 {
                     try
                     {
-                        if (mergedChannel.PrimaryChannel.Lineup.Name.StartsWith("Scanned"))
+                        if (mergedChannel.PrimaryChannel.Lineup.Name.StartsWith("Scanned") || mergedChannel.PrimaryChannel.Lineup.Name.StartsWith("ZZZ123"))
                         {
                             Logger.WriteVerbose(string.Format("Matching {0} to channel {1}", epg123Channel.CallSign, mergedChannel.ChannelNumber));
 
@@ -618,7 +596,7 @@ namespace epg123
                             }
 
                             // update primary channel and service
-                            if (!mergedChannel.SecondaryChannels.Contains(mergedChannel.PrimaryChannel))
+                            if (!mergedChannel.SecondaryChannels.Contains(mergedChannel.PrimaryChannel) && !mergedChannel.PrimaryChannel.Lineup.Name.StartsWith("ZZZ123"))
                             {
                                 mergedChannel.SecondaryChannels.Add(mergedChannel.PrimaryChannel);
                             }

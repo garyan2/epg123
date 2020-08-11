@@ -36,36 +36,45 @@ namespace epg123
                 else
                 {
                     // look at the status of the mxf file generated for warnings
-                    XDocument xdoc = null;
+                    XDocument providers = null;
+                    XDocument deviceGroup = null;
                     using (XmlReader reader = XmlReader.Create(mxfFile))
                     {
                         reader.MoveToContent();
                         while (reader.Read())
                         {
+                            if (reader.Name == "DeviceGroup")
+                            {
+                                deviceGroup = XDocument.Load(reader.ReadSubtree());
+                                if (providers != null) break;
+                            }
                             if (reader.Name == "Providers")
                             {
-                                xdoc = XDocument.Load(reader.ReadSubtree());
-                                break;
+                                providers = XDocument.Load(reader.ReadSubtree());
+                                if (deviceGroup != null) break;
                             }
                         }
                     }
 
-                    if (xdoc != null)
+                    if (providers != null)
                     {
-                        var provider = xdoc.Descendants()
+                        var provider = providers.Descendants()
                             .Where(arg => arg.Name.LocalName == "Provider")
                             .Where(arg => arg.Attribute("name") != null)
                             .Where(arg => arg.Attribute("name").Value == "EPG123")
                             .SingleOrDefault();
                         if (provider != null)
                         {
-                            // look at the age of the file to determine if there should be a warning
-                            FileInfo fi = new FileInfo(mxfFile);
-                            TimeSpan mxfFileAge = DateTime.UtcNow - fi.LastWriteTimeUtc;
-                            if (DateTime.UtcNow - fi.LastWriteTimeUtc > TimeSpan.FromHours(24.0))
+                            if (deviceGroup != null)
                             {
-                                Logger.WriteError(string.Format("The MXF file imported is {0:N2} hours old.", mxfFileAge.TotalHours));
-                                return EPG123STATUS.ERROR;
+                                DateTime timestamp = DateTime.Parse(deviceGroup.Root.Attribute("lastConfigurationChange").Value);
+                                TimeSpan mxfFileAge = DateTime.UtcNow - timestamp.ToUniversalTime();
+                                Logger.WriteInformation($"MXF file was created on {timestamp.ToLocalTime()}");
+                                if (mxfFileAge > TimeSpan.FromHours(23.0))
+                                {
+                                    Logger.WriteError(string.Format("The MXF file imported is {0:N2} hours old.", mxfFileAge.TotalHours));
+                                    return EPG123STATUS.ERROR;
+                                }
                             }
 
                             // determine the update available flag
@@ -114,6 +123,23 @@ namespace epg123
 
             // determine overall status
             EPG123STATUS status = (EPG123STATUS)(Math.Max(Logger.eventID, filestatus));
+
+            // enter datetime and status of this update run
+            try
+            {
+                using (RegistryKey key = Registry.LocalMachine.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Media Center\\Service\\Epg", true))
+                {
+                    if (key != null)
+                    {
+                        key.SetValue("epg123LastUpdateTime", DateTime.Now.ToString("s"), RegistryValueKind.String);
+                        key.SetValue("epg123LastUpdateStatus", (int)status, RegistryValueKind.DWord);
+                    }
+                }
+            }
+            catch
+            {
+                Logger.WriteInformation("Failed to set registry entries for time and status of update.");
+            }
 
             // select base image based on status code
             double opacity = 1.0;

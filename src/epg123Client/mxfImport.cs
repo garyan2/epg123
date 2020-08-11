@@ -91,6 +91,7 @@ namespace epg123
             if (runDbgc)
             {
                 Logger.WriteMessage("Entering PerformGarbageCleanup().");
+                Helper.SendPipeMessage("Importing|Performing garbage cleanup...");
                 try
                 {
                     // establish program to run and environment
@@ -148,9 +149,13 @@ namespace epg123
             string data = e.Data.ToString();
             if (data.Length > 0)
             {
-                if ((backgroundWorker != null) && data.StartsWith("Loading... "))
+                if (data.StartsWith("Loading... "))
                 {
-                    backgroundWorker.ReportProgress(int.Parse(data.Substring(11).TrimEnd('%')));
+                    Helper.SendPipeMessage($"Importing|{data}");
+                    if (backgroundWorker != null)
+                    {
+                        backgroundWorker.ReportProgress(int.Parse(data.Substring(11).TrimEnd('%')));
+                    }
                 }
             }
         }

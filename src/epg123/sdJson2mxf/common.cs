@@ -37,6 +37,11 @@ namespace epg123
 
         private static void reportProgress()
         {
+            if (processedObjects == 0)
+            {
+                Helper.SendPipeMessage($"Downloading|{processStage + 1}/{stages.Length} {stages[processStage].Substring(6)}");
+            }
+
             // if the progress form is not shown, nothing to update
             if (backgroundWorker == null) return;
 

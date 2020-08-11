@@ -184,14 +184,7 @@ namespace epg123
                 }
 
                 // let's do this
-                DateTime startTime = DateTime.UtcNow - TimeSpan.FromMinutes(1.0);
-                NotifyIcon notifyIcon = new NotifyIcon()
-                {
-                    Text = "EPG123\nDownloading and building guide listings...",
-                    Icon = Properties.Resources.EPG123_download
-                };
-                notifyIcon.Visible = true;
-
+                DateTime startTime = DateTime.UtcNow;
                 if (showGui || showProgress)
                 {
                     frmProgress build = new frmProgress(config);
@@ -201,11 +194,9 @@ namespace epg123
                 {
                     sdJson2mxf.Build(config);
                 }
-                notifyIcon.Visible = false;
-                notifyIcon.Dispose();
 
                 // close the logger and restore power/sleep settings
-                Logger.WriteVerbose(string.Format("epg123 update execution time was {0}.", DateTime.UtcNow - startTime - TimeSpan.FromMinutes(1.0)));
+                Logger.WriteVerbose(string.Format("epg123 update execution time was {0}.", DateTime.UtcNow - startTime));
                 Logger.Close();
                 NativeMethods.SetThreadExecutionState(prevThreadState | (uint)ExecutionFlags.ES_CONTINUOUS);
 
