@@ -497,15 +497,18 @@ namespace epg123
                 }
 
                 // get persistent cfg values
-                if (!task.exist && !task.existNoAccess && File.Exists(Helper.Epg123ClientExePath) && File.Exists(Helper.Epg123CfgPath))
+                if (!task.exist && !task.existNoAccess && File.Exists(Helper.Epg123ClientExePath))
                 {
-                    cbImport.Checked = cbAutomatch.Enabled = config.AutoImport;
-                    cbAutomatch.Checked = config.Automatch;
-                }
-                else if (!task.exist && !task.existNoAccess && File.Exists(Helper.Epg123ClientExePath) && !File.Exists(Helper.Epg123CfgPath))
-                {
-                    cbImport.Checked = cbAutomatch.Enabled = true;
-                    cbAutomatch.Checked = true;
+                    if (File.Exists(Helper.Epg123CfgPath))
+                    {
+                        cbImport.Checked = cbAutomatch.Enabled = config.AutoImport;
+                        cbAutomatch.Checked = config.Automatch;
+                    }
+                    else
+                    {
+                        cbImport.Checked = cbAutomatch.Enabled = true;
+                        cbAutomatch.Checked = true;
+                    }
                 }
 
                 // enable form controls
@@ -869,7 +872,7 @@ namespace epg123
                 })
             {
                 Tag = dlstation,
-                Checked = includedStations.Contains(stationid) || (config.AutoAddNew && !excludedStations.Contains(stationid)),
+                Checked = includedStations.Contains(stationid) || (config.AutoAddNew && !excludedStations.Contains(stationid) && !btnClientLineups.Enabled),
                 ImageKey = getLanguageIcon(language),
                 BackColor = channelIsNew ? Color.Pink : default(Color)
             };

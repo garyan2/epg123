@@ -121,7 +121,7 @@ namespace epg123
 
                     Logger.WriteVerbose(string.Format("Downloaded and processed {0} of data from Schedules Direct.", sdAPI.TotalDownloadBytes));
                     Logger.WriteVerbose(string.Format("Generated .mxf file contains {0} services, {1} series, {2} programs, and {3} people with {4} image links.",
-                                        sdMxf.With[0].Services.Count, sdMxf.With[0].SeriesInfos.Count, sdMxf.With[0].Programs.Count, sdMxf.With[0].People.Count, sdMxf.With[0].GuideImages.Count));
+                                        sdMxf.With[0].Services.Count - 1, sdMxf.With[0].SeriesInfos.Count, sdMxf.With[0].Programs.Count, sdMxf.With[0].People.Count, sdMxf.With[0].GuideImages.Count));
                     Logger.WriteInformation("Completed EPG123 update execution. SUCCESS.");
                 }
                 else

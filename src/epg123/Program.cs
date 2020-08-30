@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
-using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -135,6 +134,7 @@ namespace epg123
                     if (!cfgForm.Execute)
                     {
                         mutex.ReleaseMutex();
+                        GC.Collect();
                         return 0;
                     }
                     Logger.Initialize("Media Center", "EPG123");

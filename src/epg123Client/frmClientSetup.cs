@@ -293,7 +293,7 @@ namespace epg123
         private bool PerformBackup()
         {
             if (!string.IsNullOrEmpty(Helper.backupZipFile)) return true;
-            if (DialogResult.Cancel == MessageBox.Show("This procedure will delete all WMC databases in your eHome folder. Current tuner configurations, recording schedules, favorite lineups, and logos will be removed.\n\nClick 'OK' to proceed.", "EPG Clean Start", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning)) return false;
+            if (DialogResult.Cancel == MessageBox.Show("This procedure will delete all WMC databases in your eHome folder. Current tuner configurations, recording schedules, favorite lineups, and logos will be backed up prior to deletion.\n\nClick 'OK' to proceed.", "EPG Clean Start", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning)) return false;
 
             if (shouldBackup)
             {
@@ -486,7 +486,7 @@ namespace epg123
             DirectoryInfo di = new DirectoryInfo(folder);
             try
             {
-                foreach (FileInfo file in di.GetFiles("mcepg*.*", SearchOption.TopDirectoryOnly))
+                foreach (FileInfo file in di.GetFiles("*.*", SearchOption.AllDirectories))
                 {
                     try
                     {
@@ -512,20 +512,15 @@ namespace epg123
             {
                 foreach (DirectoryInfo dir in di.GetDirectories())
                 {
-                    // keep the playready crypto cache folder in-place if it exists
-                    if (dir.Name.ToLower().StartsWith("mcepg"))
+                    ret &= emptyFolder(dir);
+                    try
                     {
-                        ret &= emptyFolder(dir);
-
-                        try
-                        {
-                            dir.Delete(true);
-                        }
-                        catch
-                        {
-                            Logger.WriteError(string.Format("Failed to delete folder \"{0}\"", dir.FullName));
-                            ret = false;
-                        }
+                        dir.Delete(true);
+                    }
+                    catch
+                    {
+                        Logger.WriteError(string.Format("Failed to delete folder \"{0}\"", dir.FullName));
+                        ret = false;
                     }
                 }
             }

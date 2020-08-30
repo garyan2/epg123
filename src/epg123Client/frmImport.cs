@@ -33,6 +33,7 @@ namespace epg123
 
         private void backgroundWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
+            epg123.Helper.SendPipeMessage("Import Complete");
             this.Close();
         }
     }

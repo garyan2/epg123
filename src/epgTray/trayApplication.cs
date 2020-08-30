@@ -1,16 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.IO.Pipes;
-using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Security.Principal;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using epg123;
 using Microsoft.Win32;
@@ -72,13 +67,16 @@ namespace epgTray
             OpenConfigMenuItem = new ToolStripMenuItem();
             OpenClientMenuItem = new ToolStripMenuItem();
             ViewLogMenuItem = new ToolStripMenuItem();
+            RunUpdateMenuItem = new ToolStripMenuItem();
             TrayIconContextMenu.SuspendLayout();
 
             // 
             // TrayIconContextMenu
             // 
             this.TrayIconContextMenu.Items.AddRange(new ToolStripItem[] {
-            this.OpenConfigMenuItem, this.OpenClientMenuItem, this.ViewLogMenuItem, this.CloseMenuItem});
+            this.RunUpdateMenuItem, new ToolStripSeparator(),
+                this.OpenConfigMenuItem, this.OpenClientMenuItem, this.ViewLogMenuItem, new ToolStripSeparator(),
+                this.CloseMenuItem});
             this.TrayIconContextMenu.Name = "TrayIconContextMenu";
             // 
             // CloseMenuItem
@@ -106,6 +104,13 @@ namespace epgTray
             this.ViewLogMenuItem.Name = "ViewLogMenuItem";
             this.ViewLogMenuItem.Text = "View Log File";
             this.ViewLogMenuItem.Click += new EventHandler(this.OpenFileMenuItem_Click);
+            //
+            // RunUpdateMenuItem
+            //
+            this.RunUpdateMenuItem.Name = "RunUpdateMenuItem";
+            this.RunUpdateMenuItem.Text = "Update Guide Now";
+            this.RunUpdateMenuItem.Enabled = File.Exists(Helper.Epg123ClientExePath);
+            this.RunUpdateMenuItem.Click += new EventHandler(this.RunUpdateMenuItem_Click);
 
             TrayIconContextMenu.ResumeLayout(false);
             TrayIcon.ContextMenuStrip = TrayIconContextMenu;
@@ -149,7 +154,7 @@ namespace epgTray
                 return epgTray.Properties.Resources.statusError;
             }
 
-            Icon statusIcon = epgTray.Properties.Resources.statusOK; ;
+            Icon statusIcon = epgTray.Properties.Resources.statusOK;
             if (lastStatus == 0xDEAD)
             {
                 statusIcon = epgTray.Properties.Resources.statusError;
@@ -169,8 +174,12 @@ namespace epgTray
                 SetNotifyIconText($"EPG123\nLast update was successful.\n{lastTime}");
             }
 
-            timer = new System.Threading.Timer(TimerEvent);
-            timer.Change(lastTime - DateTime.Now + TimeSpan.FromHours(24.0), TimeSpan.FromMilliseconds(-1.0));
+            TimeSpan timerDuration = lastTime - DateTime.Now + TimeSpan.FromHours(24.0);
+            if (timerDuration > TimeSpan.Zero && lastStatus != 0xDEAD)
+            {
+                timer = new System.Threading.Timer(TimerEvent);
+                timer.Change(timerDuration, TimeSpan.FromMilliseconds(-1.0));
+            }
 
             // set and display icon
             return statusIcon;
@@ -189,7 +198,7 @@ namespace epgTray
 
         private void TimerEvent(object state)
         {
-            if (timer != null)
+            if (timer != null && !Shutdown)
             {
                 TrayIcon.Icon = currentStatusImage();
             }
@@ -207,11 +216,23 @@ namespace epgTray
                 try
                 {
                     server.WaitForConnection();
+
+                    // adjust timer to 1.1 hours after each pipe message to avoid crashing the notification tray
+                    // the checking for recordings in progress interval is 1 hour so need to be greater than that
+                    if (timer != null)
+                    {
+                        timer.Change(TimeSpan.FromHours(1.1), TimeSpan.FromMilliseconds(-1.0));
+                    }
+
                     string line = reader.ReadLine();
                     if (line.StartsWith("Downloading"))
                     {
                         TrayIcon.Icon = epgTray.Properties.Resources.statusUpdating;
                         SetNotifyIconText(line.Replace("|", "\n"));
+                    }
+                    else if (line.StartsWith("Download Complete"))
+                    {
+                        //TrayIcon.Icon = epgTray.Properties.Resources.statusUnknown;
                     }
                     else if (line.StartsWith("Importing"))
                     {
@@ -246,6 +267,10 @@ namespace epgTray
                     }
                     else if (line.StartsWith("Shutdown"))
                     {
+                        if (timer != null)
+                        {
+                            timer.Change(Timeout.Infinite, Timeout.Infinite);
+                        }
                         Shutdown = true;
                     }
                 }
@@ -277,6 +302,26 @@ namespace epgTray
                     return;
             }
             Process.Start(filePath);
+        }
+
+        private void RunUpdateMenuItem_Click(object sender, EventArgs e)
+        {
+            ProcessStartInfo startInfo = new ProcessStartInfo()
+            {
+                FileName = "schtasks.exe",
+                Arguments = "/run /tn \"epg123_update\"",
+                UseShellExecute = false,
+                CreateNoWindow = true,
+            };
+
+            // begin update
+            Process proc = Process.Start(startInfo);
+            proc.WaitForExit();
+
+            if (proc.ExitCode != 0)
+            {
+                MessageBox.Show("There was a problem starting the scheduled task to update the guide. Does the task exist?", "Error Starting Task", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void CloseMenuItem_Click(object sender, EventArgs e)

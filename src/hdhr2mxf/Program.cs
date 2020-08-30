@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Xml.Serialization;
 using HDHomeRunTV;
 using MxfXml;
@@ -77,10 +78,13 @@ namespace hdhr2mxf
 
             try
             {
+                epg123.Helper.SendPipeMessage("Downloading|Requesting XMLTV from SiliconDust...");
                 if (DetermineUpdateMethod())
                 {
+                    epg123.Helper.SendPipeMessage("Downloading|Building and saving MXF file...");
                     Common.buildKeywords();
                     writeMxf();
+                    epg123.Helper.SendPipeMessage("Downloading Complete");
 
                     if (automaticallyImport)
                     {
@@ -116,13 +120,6 @@ namespace hdhr2mxf
             {
                 FileName = "schtasks.exe",
                 Arguments = "/run /tn \"Microsoft\\Windows\\Media Center\\ReindexSearchRoot\"",
-            };
-            Process.Start(startInfo).WaitForExit();
-
-            startInfo = new ProcessStartInfo()
-            {
-                FileName = "schtasks.exe",
-                Arguments = "/run /tn \"Microsoft\\Windows\\Media Center\\PvrScheduleTask\"",
             };
             Process.Start(startInfo).WaitForExit();
         }

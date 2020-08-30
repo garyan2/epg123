@@ -426,24 +426,27 @@ namespace epg123
                     {
                         if ((recording.State == RecordingState.Initializing) || (recording.State == RecordingState.Recording))
                         {
-                            active = true;
-                            Logger.WriteInformation(string.Format("Recording in progress: {0:hh:mm tt} - {1:hh:mm tt} on channel {2}{3} -> {4} - {5}",
-                                                              recording.ScheduleEntry.StartTime.ToLocalTime(),
-                                                              recording.ScheduleEntry.EndTime.ToLocalTime(),
-                                                              recording.Channel.ChannelNumber,
-                                                              (recording.ScheduleEntry.Service != null) ? " " + recording.ScheduleEntry.Service.CallSign : string.Empty,
-                                                              (recording.ScheduleEntry.Program != null) ? recording.ScheduleEntry.Program.Title : "unknown program title",
-                                                              (recording.ScheduleEntry.Program != null) ? recording.ScheduleEntry.Program.EpisodeTitle : string.Empty));
-                            if (recording.RequestedEndTime.ToLocalTime() > timeReady) timeReady = recording.RequestedEndTime.ToLocalTime();
+                            if (recording.RequestedEndTime > DateTime.Now)
+                            {
+                                active = true;
+                                Logger.WriteInformation(string.Format("Recording in progress: {0:hh:mm tt} - {1:hh:mm tt} on channel {2}{3} -> {4} - {5}",
+                                                                  recording.ScheduleEntry.StartTime.ToLocalTime(),
+                                                                  recording.ScheduleEntry.EndTime.ToLocalTime(),
+                                                                  recording.Channel.ChannelNumber,
+                                                                  (recording.ScheduleEntry.Service != null) ? " " + recording.ScheduleEntry.Service.CallSign : string.Empty,
+                                                                  (recording.ScheduleEntry.Program != null) ? recording.ScheduleEntry.Program.Title : "unknown program title",
+                                                                  (recording.ScheduleEntry.Program != null) ? recording.ScheduleEntry.Program.EpisodeTitle : string.Empty));
+                                if (recording.RequestedEndTime.ToLocalTime() > timeReady) timeReady = recording.RequestedEndTime.ToLocalTime();
+                            }
                         }
                     }
                 }
 
                 if ((timeReady > DateTime.Now) && (DateTime.Now < expireTime))
                 {
-                    Helper.SendPipeMessage($"Importing|Waiting for recordings to end...|Will check again at {timeReady + TimeSpan.FromMinutes(1.0)}");
                     TimeSpan delay = TimeSpan.FromTicks(Math.Min((timeReady - DateTime.Now).Ticks + TimeSpan.FromMinutes(1).Ticks,
                                                                  TimeSpan.FromMinutes(intervalMinutes).Ticks));
+                    Helper.SendPipeMessage($"Importing|Waiting for recordings to end...|Will check again at {DateTime.Now + delay}");
                     Logger.WriteInformation(string.Format("Delaying import while WMC is recording. Will check recording status again at {0:HH:mm:ss}", DateTime.Now + delay));
                     Thread.Sleep((int)delay.TotalMilliseconds);
                 }

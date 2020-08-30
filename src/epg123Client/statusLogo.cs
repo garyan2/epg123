@@ -61,20 +61,26 @@ namespace epg123
                         var provider = providers.Descendants()
                             .Where(arg => arg.Name.LocalName == "Provider")
                             .Where(arg => arg.Attribute("name") != null)
-                            .Where(arg => arg.Attribute("name").Value == "EPG123")
+                            .Where(arg => arg.Attribute("name").Value == "EPG123" || arg.Attribute("name").Value == "HDHR2MXF")
                             .SingleOrDefault();
                         if (provider != null)
                         {
+                            DateTime timestamp = new DateTime();
                             if (deviceGroup != null)
                             {
-                                DateTime timestamp = DateTime.Parse(deviceGroup.Root.Attribute("lastConfigurationChange").Value);
-                                TimeSpan mxfFileAge = DateTime.UtcNow - timestamp.ToUniversalTime();
-                                Logger.WriteInformation($"MXF file was created on {timestamp.ToLocalTime()}");
-                                if (mxfFileAge > TimeSpan.FromHours(23.0))
-                                {
-                                    Logger.WriteError(string.Format("The MXF file imported is {0:N2} hours old.", mxfFileAge.TotalHours));
-                                    return EPG123STATUS.ERROR;
-                                }
+                                timestamp = DateTime.Parse(deviceGroup.Root.Attribute("lastConfigurationChange").Value);
+                            }
+                            else
+                            {
+                                FileInfo fi = new FileInfo(mxfFile);
+                                timestamp = fi.LastWriteTimeUtc;
+                            }
+                            TimeSpan mxfFileAge = DateTime.UtcNow - timestamp;
+                            Logger.WriteInformation($"MXF file was created on {timestamp.ToLocalTime()}");
+                            if (mxfFileAge > TimeSpan.FromHours(23.0))
+                            {
+                                Logger.WriteError(string.Format("The MXF file imported is {0:N2} hours old.", mxfFileAge.TotalHours));
+                                return EPG123STATUS.ERROR;
                             }
 
                             // determine the update available flag
