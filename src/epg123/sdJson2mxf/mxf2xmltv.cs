@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using epg123.MxfXml;
 using epg123.XmltvXml;
@@ -42,11 +43,11 @@ namespace epg123
                         MxfProgram program = new MxfProgram()
                         {
                             Description = config.XmltvFillerProgramDescription,
-                            IsGeneric = "true",
+                            IsGeneric = true,
                             Title = service.Name,
                             tmsId = string.Format("EPG123FILL{0}", service.StationID),
                             index = sdMxf.With[0].Programs.Count + 1,
-                            jsonProgramData = new sdProgram()
+                            //jsonProgramData = new sdProgram()
                         };
 
                         // populate the schedule entries
@@ -58,8 +59,8 @@ namespace epg123
                             {
                                 Duration = config.XmltvFillerProgramLength * 60 * 60,
                                 Program = sdMxf.With[0].getProgram(program.tmsId, program).Id,
-                                StartTime = startTime.ToString("yyyy-MM-ddTHH:mm:ss"),
-                                IsRepeat = "true"
+                                StartTime = startTime,
+                                IsRepeat = true
                             });
                             startTime += TimeSpan.FromHours((double)config.XmltvFillerProgramLength);
                         } while (startTime < stopTime);
@@ -67,9 +68,9 @@ namespace epg123
 
                     foreach (MxfScheduleEntry scheduleEntry in service.mxfScheduleEntries.ScheduleEntry)
                     {
-                        if (!string.IsNullOrEmpty(scheduleEntry.StartTime))
+                        if (scheduleEntry.StartTime != DateTime.MinValue)
                         {
-                            startTime = DateTime.Parse(scheduleEntry.StartTime + "Z").ToUniversalTime();
+                            startTime = scheduleEntry.StartTime;
                         }
                         xmltv.Programs.Add(buildXmltvProgram(scheduleEntry, startTime, service.xmltvChannelID, out startTime));
                     }
@@ -129,8 +130,8 @@ namespace epg123
                     new XmltvIcon()
                     {
                         src = mxfService.logoImage.URL,
-                        height = mxfService.logoImage.Height > 0 ? mxfService.logoImage.Height.ToString() : null,
-                        width = mxfService.logoImage.Width > 0 ? mxfService.logoImage.Width.ToString() : null
+                        height = mxfService.logoImage.Height,
+                        width = mxfService.logoImage.Width
                     }
                 };
             }
@@ -148,6 +149,75 @@ namespace epg123
             }
             endTime = startTime + TimeSpan.FromSeconds((scheduleEntry.Duration));
 
+            string descriptionExtended = string.Empty;
+            if (config.XmltvExtendedInfoInTitleDescriptions && !mxfProgram.IsPaidProgramming)
+            {
+                if (mxfProgram.IsMovie && mxfProgram.Year > 0) descriptionExtended = $"{mxfProgram.Year}";
+                else if (!mxfProgram.IsMovie)
+                {
+                    if (scheduleEntry.IsLive) descriptionExtended = "[LIVE]";
+                    else if (scheduleEntry.IsPremiere) descriptionExtended = "[PREMIERE]";
+                    else if (scheduleEntry.IsFinale) descriptionExtended = "[FINALE]";
+                    else if (!scheduleEntry.IsRepeat) descriptionExtended = "[NEW]";
+                    else if (scheduleEntry.IsRepeat && !mxfProgram.IsGeneric) descriptionExtended = "[REPEAT]";
+
+                    if (!config.PrefixEpisodeTitle && !config.PrefixEpisodeDescription && !config.AppendEpisodeDesc)
+                    {
+                        if (mxfProgram.SeasonNumber > 0 && mxfProgram.EpisodeNumber > 0) descriptionExtended += $" S{mxfProgram.SeasonNumber}:E{mxfProgram.EpisodeNumber}";
+                        else if (mxfProgram.EpisodeNumber > 0) descriptionExtended += $" #{mxfProgram.EpisodeNumber}";
+                    }
+                }
+
+                //if (scheduleEntry.IsHdtv) descriptionExtended += " HD";
+                //if (!string.IsNullOrEmpty(mxfProgram.Language)) descriptionExtended += $" {new CultureInfo(mxfProgram.Language).DisplayName}";
+                //if (scheduleEntry.IsCC) descriptionExtended += " CC";
+                //if (scheduleEntry.IsSigned) descriptionExtended += " Signed";
+                //if (scheduleEntry.IsSap) descriptionExtended += " SAP";
+                //if (scheduleEntry.IsSubtitled) descriptionExtended += " SUB";
+
+                string[] tvRatings = { "", "TV-Y", "TV-Y7", "TV-G", "TV-PG", "TV-14", "TV-MA",
+                                       "", "Kinder bis 12 Jahren", "Freigabe ab 12 Jahren", "Freigabe ab 16 Jahren", "Keine Jugendfreigabe",
+                                       "", "Déconseillé aux moins de 10 ans", "Déconseillé aux moins de 12 ans", "Déconseillé aux moins de 16 ans", "Déconseillé aux moins de 18 ans",
+                                       "모든 연령 시청가", "7세 이상 시청가", "12세 이상 시청가", "15세 이상 시청가", "19세 이상 시청가",
+                                       "SKY-UC", "SKY-U", "SKY-PG", "SKY-12", "SKY-15", "SKY-18", "SKY-R18" };
+                string[] mpaaRatings = { "", "G", "PG", "PG-13", "R", "NC-17", "X", "NR", "AO" };
+
+                if (!string.IsNullOrEmpty(tvRatings[scheduleEntry.TvRating]))
+                {
+                    descriptionExtended += $" {tvRatings[scheduleEntry.TvRating]}";
+                    if (mxfProgram.MpaaRating > 0) descriptionExtended += ",";
+                }
+                if (mxfProgram.MpaaRating > 0) descriptionExtended += $" {mpaaRatings[mxfProgram.MpaaRating]}";
+                
+                if (mxfProgram.contentAdvisories != null)
+                {
+                    string advisories = string.Empty;
+                    if (mxfProgram.HasAdult) advisories += "Adult Situations,";
+                    if (mxfProgram.HasGraphicLanguage) advisories += "Graphic Language,";
+                    else if (mxfProgram.HasLanguage) advisories += "Language,";
+                    if (mxfProgram.HasStrongSexualContent) advisories += "Strong Sexual Content,";
+                    if (mxfProgram.HasGraphicViolence) advisories += "Graphic Violence,";
+                    else if (mxfProgram.HasMildViolence) advisories += "Mild Violence,";
+                    else if (mxfProgram.HasViolence) advisories += "Violence,";
+                    if (mxfProgram.HasNudity) advisories += "Nudity,";
+                    else if (mxfProgram.HasBriefNudity) advisories += "Brief Nudity,";
+                    if (mxfProgram.HasRape) advisories += "Rape,";
+
+                    descriptionExtended += $" ({advisories.Trim().TrimEnd(',').Replace(",", ", ")})";
+                }
+
+                if (mxfProgram.IsMovie && mxfProgram.HalfStars > 0)
+                {
+                    descriptionExtended += $" {mxfProgram.HalfStars * 0.5:N1}/4.0";
+                }
+                else if (!mxfProgram.IsMovie)
+                {
+                    if (!mxfProgram.IsGeneric && !string.IsNullOrEmpty(mxfProgram.OriginalAirdate)) descriptionExtended += $" Original air date: {DateTime.Parse(mxfProgram.OriginalAirdate):d}";
+                }
+
+                if (!string.IsNullOrEmpty(descriptionExtended)) descriptionExtended = descriptionExtended.Trim() + "\u000D\u000A";
+            }
+
             return new XmltvProgramme()
             {
                 // added +0000 for NPVR; otherwise it would assume local time instead of UTC
@@ -157,7 +227,7 @@ namespace epg123
 
                 Titles = mxfStringToXmlTextArray(mxfProgram.Title),
                 SubTitles = mxfStringToXmlTextArray(mxfProgram.EpisodeTitle),
-                Descriptions = mxfStringToXmlTextArray(mxfProgram.Description),
+                Descriptions = mxfStringToXmlTextArray((descriptionExtended + mxfProgram.Description).Trim()),
                 Credits = buildProgramCredits(mxfProgram),
                 Date = buildProgramDate(mxfProgram),
                 Categories = buildProgramCategories(mxfProgram, scheduleEntry),
@@ -171,7 +241,7 @@ namespace epg123
                 PreviouslyShown = buildProgramPreviouslyShown(mxfProgram, scheduleEntry),
                 Premiere = buildProgramPremiere(mxfProgram, scheduleEntry),
                 Live = buildLiveFlag(scheduleEntry),
-                New = string.IsNullOrEmpty(scheduleEntry.IsRepeat) ? string.Empty : null,
+                New = (!scheduleEntry.IsRepeat) ? string.Empty : null,
                 Subtitles = buildProgramSubtitles(scheduleEntry),
                 Rating = buildProgramRatings(mxfProgram, scheduleEntry),
                 StarRating = buildProgramStarRatings(mxfProgram)
@@ -243,13 +313,13 @@ namespace epg123
         // Date
         private static string buildProgramDate(MxfProgram mxfProgram)
         {
-            if (!string.IsNullOrEmpty(mxfProgram.IsMovie))
+            if (mxfProgram.IsMovie && mxfProgram.Year > 0)
             {
-                return mxfProgram.Year;
+                return mxfProgram.Year.ToString();
             }
             else if (!string.IsNullOrEmpty(mxfProgram.OriginalAirdate))
             {
-                return mxfProgram.OriginalAirdate.Replace("-", "");
+                return DateTime.Parse(mxfProgram.OriginalAirdate).ToString("yyyyMMdd");
             }
             return null;
         }
@@ -273,7 +343,7 @@ namespace epg123
                     }
                 }
 
-                if (!string.IsNullOrEmpty(mxfScheduleEntry.IsLive))
+                if (mxfScheduleEntry.IsLive)
                 {
                     //categories.Add("Live");
                 }
@@ -353,9 +423,9 @@ namespace epg123
 
         private static XmltvText grabSportEvent(MxfProgram program)
         {
-            if (!string.IsNullOrEmpty(program.IsSports) && program.jsonProgramData.Genres != null)
+            if (program.IsSports && program.genres != null)
             {
-                foreach (string category in program.jsonProgramData.Genres)
+                foreach (string category in program.genres)
                 {
                     if (!category.ToLower().StartsWith("sport"))
                     {
@@ -368,12 +438,12 @@ namespace epg123
 
         private static List<XmltvText> buildSportTeams(MxfProgram program)
         {
-            if (!string.IsNullOrEmpty(program.IsSports) && program.jsonProgramData.EventDetails?.Teams != null)
+            if (program.IsSports && program.teams != null)
             {
                 List<XmltvText> ret = new List<XmltvText>();
-                foreach (sdProgramEventDetailsTeam team in program.jsonProgramData.EventDetails.Teams)
+                foreach (string team in program.teams)
                 {
-                    ret.Add(new XmltvText() { Text = team.Name });
+                    ret.Add(new XmltvText() { Text = team });
                 }
                 return ret;
             }
@@ -394,13 +464,13 @@ namespace epg123
                 });
             }
 
-            if (!string.IsNullOrEmpty(mxfProgram.EpisodeNumber) || !string.IsNullOrEmpty(mxfScheduleEntry.Part))
+            if (mxfProgram.EpisodeNumber != 0 || mxfScheduleEntry.Part != 0)
             {
                 string text = string.Format("{0}.{1}.{2}{3}",
-                    (mxfProgram.SeasonNumber != null) ? (int.Parse(mxfProgram.SeasonNumber) - 1).ToString() : string.Empty,
-                    (mxfProgram.EpisodeNumber != null) ? (int.Parse(mxfProgram.EpisodeNumber) - 1).ToString() : string.Empty,
-                    (mxfScheduleEntry.Part != null) ? (int.Parse(mxfScheduleEntry.Part) - 1).ToString() + "/" : "0/",
-                    (mxfScheduleEntry.Parts != null) ? (int.Parse(mxfScheduleEntry.Parts)).ToString() : "1");
+                    (mxfProgram.SeasonNumber != 0) ? (mxfProgram.SeasonNumber - 1).ToString() : string.Empty,
+                    (mxfProgram.EpisodeNumber != 0) ? (mxfProgram.EpisodeNumber - 1).ToString() : string.Empty,
+                    (mxfScheduleEntry.Part != 0) ? (mxfScheduleEntry.Part - 1).ToString() + "/" : "0/",
+                    (mxfScheduleEntry.Parts != 0) ? (mxfScheduleEntry.Parts).ToString() : "1");
                 list.Add(new XmltvEpisodeNum() { System = "xmltv_ns", Text = text });
             }
             else if (mxfProgram.tmsId.StartsWith("EPG123"))
@@ -412,44 +482,48 @@ namespace epg123
             {
                 // add this entry due to Plex identifying anything without an episode number as being a movie
                 string oad = mxfProgram.OriginalAirdate;
-                if (string.IsNullOrEmpty(mxfScheduleEntry.IsRepeat))
+                if (!mxfScheduleEntry.IsRepeat)
                 {
                     oad = startTime.ToLocalTime().ToString("yyyy-MM-dd HH:mm:") + randomNumber.Next(1, 60).ToString("00");
                 }
-                else if (string.IsNullOrEmpty(oad))
+                else if (!string.IsNullOrEmpty(oad))
+                {
+                    oad = DateTime.Parse(oad).ToString("yyyy-MM-dd");
+                }
+                else
                 {
                     oad = "1900-01-01";
                 }
                 list.Add(new XmltvEpisodeNum() { System = "original-air-date", Text = oad });
             }
 
-            if (mxfProgram.jsonProgramData.Metadata != null)
-            {
-                foreach (Dictionary<string, sdProgramMetadataProvider> providers in mxfProgram.jsonProgramData.Metadata)
-                {
-                    foreach (KeyValuePair<string, sdProgramMetadataProvider> provider in providers)
-                    {
-                        if (provider.Key.ToLower().Equals("thetvdb"))
-                        {
-                            if (provider.Value.SeriesID > 0)
-                            {
-                                list.Add(new XmltvEpisodeNum() { System = "thetvdb.com", Text = "series/" + provider.Value.SeriesID.ToString() });
-                            }
-                            if (provider.Value.EpisodeID > 0)
-                            {
-                                list.Add(new XmltvEpisodeNum() { System = "thetvdb.com", Text = "episode/" + provider.Value.EpisodeID.ToString() });
-                            }
-                        }
-                    }
-                }
-            }
+            //if (mxfProgram.jsonProgramData.Metadata != null)
+            //{
+            //    foreach (Dictionary<string, sdProgramMetadataProvider> providers in mxfProgram.jsonProgramData.Metadata)
+            //    {
+            //        foreach (KeyValuePair<string, sdProgramMetadataProvider> provider in providers)
+            //        {
+            //            if (provider.Key.ToLower().Equals("thetvdb"))
+            //            {
+            //                if (provider.Value.SeriesID > 0)
+            //                {
+            //                    list.Add(new XmltvEpisodeNum() { System = "thetvdb.com", Text = "series/" + provider.Value.SeriesID.ToString() });
+            //                }
+            //                if (provider.Value.EpisodeID > 0)
+            //                {
+            //                    list.Add(new XmltvEpisodeNum() { System = "thetvdb.com", Text = "episode/" + provider.Value.EpisodeID.ToString() });
+            //                }
+            //            }
+            //        }
+            //    }
+            //}
             return list;
         }
 
         // Video
         private static XmltvVideo buildProgramVideo(MxfScheduleEntry mxfScheduleEntry)
         {
-            if (!string.IsNullOrEmpty(mxfScheduleEntry.IsHdtv))
+            if (mxfScheduleEntry.IsHdtv)
             {
                 return new XmltvVideo() { Quality = "HDTV" };
             }
@@ -459,16 +533,16 @@ namespace epg123
         // Audio
         private static XmltvAudio buildProgramAudio(MxfScheduleEntry mxfScheduleEntry)
         {
-            if (!string.IsNullOrEmpty(mxfScheduleEntry.AudioFormat))
+            if (mxfScheduleEntry.AudioFormat > 0)
             {
                 string format = string.Empty;
                 switch (mxfScheduleEntry.AudioFormat)
                 {
-                    case "1": format = "mono"; break;
-                    case "2": format = "stereo"; break;
-                    case "3": format = "dolby"; break;
-                    case "4": format = "dolby digital"; break;
-                    case "5": format = "surround"; break;
+                    case 1: format = "mono"; break;
+                    case 2: format = "stereo"; break;
+                    case 3: format = "dolby"; break;
+                    case 4: format = "dolby digital"; break;
+                    case 5: format = "surround"; break;
                     default: break;
                 }
                 if (!string.IsNullOrEmpty(format))
@@ -482,7 +556,7 @@ namespace epg123
         // Previously Shown
         private static XmltvPreviouslyShown buildProgramPreviouslyShown(MxfProgram mxfProgram, MxfScheduleEntry mxfScheduleEntry)
         {
-            if (!string.IsNullOrEmpty(mxfScheduleEntry.IsRepeat) && string.IsNullOrEmpty(mxfProgram.IsMovie))
+            if (mxfScheduleEntry.IsRepeat && !mxfProgram.IsMovie)
             {
                 //if (!string.IsNullOrEmpty(mxfProgram.OriginalAirdate))
                 //{
@@ -496,12 +570,12 @@ namespace epg123
         // Premiere
         private static XmltvText buildProgramPremiere(MxfProgram mxfProgram, MxfScheduleEntry mxfScheduleEntry)
         {
-            if (!string.IsNullOrEmpty(mxfScheduleEntry.IsPremiere))
+            if (mxfScheduleEntry.IsPremiere)
             {
                 string text = string.Empty;
-                if (!string.IsNullOrEmpty(mxfProgram.IsMovie)) text = "Movie Premiere";
-                else if (!string.IsNullOrEmpty(mxfProgram.IsSeriesPremiere)) text = "Series Premiere";
-                else if (!string.IsNullOrEmpty(mxfProgram.IsSeasonPremiere)) text = "Season Premiere";
+                if (mxfProgram.IsMovie) text = "Movie Premiere";
+                else if (mxfProgram.IsSeriesPremiere) text = "Series Premiere";
+                else if (mxfProgram.IsSeasonPremiere) text = "Season Premiere";
                 else text = "Miniseries Premiere";
 
                 return new XmltvText() { Text = text };
@@ -512,31 +586,31 @@ namespace epg123
         // New
         private static string buildNewFlag(MxfProgram mxfProgram, MxfScheduleEntry mxfScheduleEntry)
         {
-            if (!string.IsNullOrEmpty(mxfProgram.IsMovie) || !string.IsNullOrEmpty(mxfScheduleEntry.IsRepeat)) return null;
+            if (mxfProgram.IsMovie || mxfScheduleEntry.IsRepeat) return null;
             return string.Empty;
         }
 
         private static string buildLiveFlag(MxfScheduleEntry mxfScheduleEntry)
         {
-            if (string.IsNullOrEmpty(mxfScheduleEntry.IsLive)) return null;
+            if (!mxfScheduleEntry.IsLive) return null;
             return string.Empty;
         }
 
         // Subtitles
         private static List<XmltvSubtitles> buildProgramSubtitles(MxfScheduleEntry mxfScheduleEntry)
         {
-            if (!string.IsNullOrEmpty(mxfScheduleEntry.IsCC) || !string.IsNullOrEmpty(mxfScheduleEntry.IsSubtitled) || !string.IsNullOrEmpty(mxfScheduleEntry.IsSigned))
+            if (mxfScheduleEntry.IsCC || mxfScheduleEntry.IsSubtitled || mxfScheduleEntry.IsSigned)
             {
                 List<XmltvSubtitles> list = new List<XmltvSubtitles>();
-                if (!string.IsNullOrEmpty(mxfScheduleEntry.IsCC))
+                if (mxfScheduleEntry.IsCC)
                 {
                     list.Add(new XmltvSubtitles() { Type = "teletext" });
                 }
-                if (!string.IsNullOrEmpty(mxfScheduleEntry.IsSubtitled))
+                if (mxfScheduleEntry.IsSubtitled)
                 {
                     list.Add(new XmltvSubtitles() { Type = "onscreen" });
                 }
-                if (!string.IsNullOrEmpty(mxfScheduleEntry.IsSigned))
+                if (mxfScheduleEntry.IsSigned)
                 {
                     list.Add(new XmltvSubtitles() { Type = "deaf-signed" });
                 }
@@ -548,7 +622,7 @@ namespace epg123
         // Rating
         private static List<XmltvRating> buildProgramRatings(MxfProgram mxfProgram, MxfScheduleEntry mxfScheduleEntry)
         {
-            if (!string.IsNullOrEmpty(mxfProgram.MpaaRating) || !string.IsNullOrEmpty(mxfScheduleEntry.TvRating) || (mxfProgram.contentRatings != null))
+            if (mxfProgram.MpaaRating != 0 || mxfScheduleEntry.TvRating != 0 || (mxfProgram.contentRatings != null))
             {
                 List<XmltvRating> ret = new List<XmltvRating>();
                 addProgramRatingAdvisory(mxfProgram.HasAdult, ret, "Adult Situations");
@@ -576,18 +650,18 @@ namespace epg123
                 }
             }
 
-            if (!string.IsNullOrEmpty(mxfScheduleEntry.TvRating))
+            if (mxfScheduleEntry.TvRating != 0)
             {
                 string rating = string.Empty;
                 switch (mxfScheduleEntry.TvRating)
                 {
                     // v-chip is only for US, Canada, and Brazil
-                    case "1": rating = "TV-Y"; break;
-                    case "2": rating = "TV-Y7"; break;
-                    case "3": rating = "TV-G"; break;
-                    case "4": rating = "TV-PG"; break;
-                    case "5": rating = "TV-14"; break;
-                    case "6": rating = "TV-MA"; break;
+                    case 1: rating = "TV-Y"; break;
+                    case 2: rating = "TV-Y7"; break;
+                    case 3: rating = "TV-G"; break;
+                    case 4: rating = "TV-PG"; break;
+                    case 5: rating = "TV-14"; break;
+                    case 6: rating = "TV-MA"; break;
                     default: break;
                 }
                 if (!string.IsNullOrEmpty(rating))
@@ -596,9 +670,9 @@ namespace epg123
                 }
             }
         }
-        private static void addProgramRatingAdvisory(string mxfProgramAdvise, List<XmltvRating> list, string advisory)
+        private static void addProgramRatingAdvisory(bool mxfProgramAdvise, List<XmltvRating> list, string advisory)
         {
-            if (!string.IsNullOrEmpty(mxfProgramAdvise))
+            if (mxfProgramAdvise)
             {
                 list.Add(new XmltvRating() { System = "advisory", Value = advisory });
             }
@@ -607,13 +681,13 @@ namespace epg123
         // StarRating
         private static List<XmltvRating> buildProgramStarRatings(MxfProgram mxfProgram)
         {
-            if (!string.IsNullOrEmpty(mxfProgram.HalfStars))
+            if (mxfProgram.HalfStars != 0)
             {
                 List<XmltvRating> list = new List<XmltvRating>
                 {
                     new XmltvRating()
                     {
-                        Value = string.Format("{0:N1}/4", int.Parse(mxfProgram.HalfStars) * 0.5)
+                        Value = string.Format("{0:N1}/4", mxfProgram.HalfStars * 0.5)
                     }
                 };
                 return list;

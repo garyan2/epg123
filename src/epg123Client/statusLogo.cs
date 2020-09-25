@@ -73,9 +73,9 @@ namespace epg123
                             else
                             {
                                 FileInfo fi = new FileInfo(mxfFile);
-                                timestamp = fi.LastWriteTimeUtc;
+                                timestamp = fi.LastWriteTime;
                             }
-                            TimeSpan mxfFileAge = DateTime.UtcNow - timestamp;
+                            TimeSpan mxfFileAge = DateTime.Now - timestamp;
                             Logger.WriteInformation($"MXF file was created on {timestamp.ToLocalTime()}");
                             if (mxfFileAge > TimeSpan.FromHours(23.0))
                             {

@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using System;
 
 namespace epg123
 {
@@ -23,6 +24,6 @@ namespace epg123
         public string Message { get; set; }
 
         [JsonProperty("datetime")]
-        public string Datetime { get; set; }
+        public DateTime Datetime { get; set; }
     }
 }

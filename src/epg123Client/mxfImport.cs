@@ -128,7 +128,7 @@ namespace epg123
                             }
                         }
 
-                        Logger.WriteInformation("Successfully complete garbage cleanup. Exit code: 0");
+                        Logger.WriteInformation("Successfully completed garbage cleanup. Exit code: 0");
                         Logger.WriteMessage("Exiting PerformGarbageCleanup(). SUCCESS.");
                     }
                     else

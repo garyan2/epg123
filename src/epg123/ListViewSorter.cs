@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using epg123;
+using System.Collections;
 using System.Linq;
 using System.Windows.Forms;
 
@@ -53,16 +54,21 @@ public class ListViewColumnSorter : IComparer
         if (SuspendSort) return 0;
 
         // Cast the objects to be compared to ListViewItem objects
-        string stringX = ((ListViewItem)x).SubItems[ColumnToSort].Text;
-        string stringY = ((ListViewItem)y).SubItems[ColumnToSort].Text;
+        string stringX = ((ListViewItem)x).SubItems[ColumnToSort].Text.Replace(".", "").Replace("-", "");
+        string stringY = ((ListViewItem)y).SubItems[ColumnToSort].Text.Replace(".", "").Replace("-", "");
 
         // Compare the two items either by number or text
-        if (stringX.Replace(".", "").All(char.IsDigit) && stringY.Replace(".", "").All(char.IsDigit))
+        if (stringX.All(char.IsDigit) && stringY.All(char.IsDigit))
         {
             compareResult = ObjectCompare.Compare(extendChannelSubchannel(stringX), extendChannelSubchannel(stringY));
         }
         else
         {
+            //if (ColumnToSort == 0)
+            //{
+            //    stringX = ((SdChannelDownload)((ListViewItem)x).Tag).CallSign;
+            //    stringY = ((SdChannelDownload)((ListViewItem)y).Tag).CallSign;
+            //}
             compareResult = ObjectCompare.Compare(stringX, stringY);
         }
 
@@ -98,6 +104,7 @@ public class ListViewColumnSorter : IComparer
                 return (split[0].PadLeft(6, '0') + ".000000");
             case 2:
             default:
+                if (split[0] == "-1") split[0] = "0";
                 return (split[0].PadLeft(6, '0') + "." + split[1].PadLeft(6, '0'));
         }
     }

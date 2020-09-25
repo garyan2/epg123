@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
 using System.Xml.Serialization;
 
 namespace epg123.MxfXml
 {
     public class MxfProgram
     {
-        private string _oad;
+        private DateTime _oad { get; set; } = DateTime.MinValue;
+
+        [XmlIgnore]
+        public DateTime _newDate { get; set; } = DateTime.MinValue;
 
         [XmlIgnore]
         public int index;
@@ -20,7 +21,7 @@ namespace epg123.MxfXml
         public string md5;
 
         [XmlIgnore]
-        public string IsPremiere;
+        public bool IsPremiere;
 
         [XmlIgnore]
         public string tmsId { get; set; }
@@ -32,13 +33,16 @@ namespace epg123.MxfXml
         public int _parts { get; set; }
 
         [XmlIgnore]
-        public string _newDate { get; set; }
-
-        [XmlIgnore]
         public Dictionary<string, string> contentRatings { get; set; }
 
         [XmlIgnore]
         public string[] contentAdvisories { get; set; }
+
+        [XmlIgnore]
+        public string[] genres { get; set; }
+
+        [XmlIgnore]
+        public List<string> teams { get; set; }
 
         [XmlIgnore]
         public IList<sdImage> programImages;
@@ -117,21 +121,24 @@ namespace epg123.MxfXml
         /// If unknown, this value is 0.
         /// </summary>
         [XmlAttribute("year")]
-        public string Year { get; set; }
+        public int Year { get; set; } = 0;
+        public bool ShouldSerializeYear() { return Year > 0; }
 
         /// <summary>
         /// The season number of the program (for example, 1). 
         /// If unknown, this value is 0.
         /// </summary>
         [XmlAttribute("seasonNumber")]
-        public string SeasonNumber { get; set; }
+        public int SeasonNumber { get; set; } = 0;
+        public bool ShouldSerializeSeasonNumber() { return SeasonNumber > 0; }
 
         /// <summary>
         /// The episode number of the program in the season.
         /// If unknown, this value is 0.
         /// </summary>
         [XmlAttribute("episodeNumber")]
-        public string EpisodeNumber { get; set; }
+        public int EpisodeNumber { get; set; } = 0;
+        public bool ShouldSerializeEpisodeNumber() { return EpisodeNumber > 0; }
 
         /// <summary>
         /// The original air date (in local time) of the program. Use this value to determine whether this program is a repeat.
@@ -141,15 +148,19 @@ namespace epg123.MxfXml
         {
             get
             {
-                if (!string.IsNullOrEmpty(_newDate) && !string.IsNullOrEmpty(_oad) && string.IsNullOrEmpty(IsGeneric))
+                if (!IsGeneric && _oad != DateTime.MinValue && _newDate != DateTime.MinValue)
                 {
-                    return _newDate;
+                    return _newDate.ToString("yyyy-MM-dd");
                 }
-                else return _oad;
+                else if (_oad != DateTime.MinValue)
+                {
+                    return _oad.ToString("yyyy-MM-dd");
+                }
+                else return null;
             }
             set
             {
-                _oad = value;
+                _oad = DateTime.Parse(value);
             }
         }
 
@@ -178,7 +189,8 @@ namespace epg123.MxfXml
         /// Each star equals two points. For example, a value of "3" is equal to 1.5 stars.
         /// </summary>
         [XmlAttribute("halfStars")]
-        public string HalfStars { get; set; }
+        public int HalfStars { get; set; } = 0;
+        public bool ShouldSerializeHalfStars() { return HalfStars > 0; }
 
         /// <summary>
         /// The MPAA movie rating.
@@ -194,277 +206,297 @@ namespace epg123.MxfXml
         /// 8 = AO
         /// </summary>
         [XmlAttribute("mpaaRating")]
-        public string MpaaRating { get; set; }
+        public int MpaaRating { get; set; } = 0;
+        public bool ShouldSerializeMpaaRating() { return MpaaRating > 0; }
 
         /// <summary>
         /// Undocumented
         /// </summary>
         [XmlAttribute("isAction")]
-        public string IsAction { get; set; }
+        public bool IsAction { get; set; } = false;
+        public bool ShouldSerializeIsAction() { return IsAction; }
+
+        [XmlIgnore]
+        public bool IsAdultOnly { get; set; } = false;
 
         /// <summary>
         /// Undocumented
         /// </summary>
         [XmlAttribute("isComedy")]
-        public string IsComedy { get; set; }
+        public bool IsComedy { get; set; } = false;
+        public bool ShouldSerializeIsComedy() { return IsComedy; }
 
         /// <summary>
         /// Undocumented
         /// </summary>
         [XmlAttribute("isDocumentary")]
-        public string IsDocumentary { get; set; }
+        public bool IsDocumentary { get; set; } = false;
+        public bool ShouldSerializeIsDocumentary() { return IsDocumentary; }
 
         /// <summary>
         /// Undocumented
         /// </summary>
         [XmlAttribute("isDrama")]
-        public string IsDrama { get; set; }
+        public bool IsDrama { get; set; } = false;
+        public bool ShouldSerializeIsDrama() { return IsDrama; }
 
         /// <summary>
         /// Undocumented
         /// </summary>
         [XmlAttribute("isEducational")]
-        public string IsEducational { get; set; }
+        public bool IsEducational { get; set; } = false;
+        public bool ShouldSerializeIsEducational() { return IsEducational; }
 
         /// <summary>
         /// Undocumented
         /// </summary>
         [XmlAttribute("isHorror")]
-        public string IsHorror { get; set; }
+        public bool IsHorror { get; set; } = false;
+        public bool ShouldSerializeIsHorror() { return IsHorror; }
 
         /// <summary>
         /// Undocumented
         /// </summary>
         [XmlAttribute("isIndy")]
-        public string IsIndy { get; set; }
+        public bool IsIndy { get; set; } = false;
+        public bool ShouldSerializeIsIndy() { return IsIndy; }
 
         /// <summary>
         /// Undocumented
         /// </summary>
         [XmlAttribute("isMusic")]
-        public string IsMusic { get; set; }
+        public bool IsMusic { get; set; } = false;
+        public bool ShouldSerializeIsMusic() { return IsMusic; }
 
         /// <summary>
         /// Undocumented
         /// </summary>
         [XmlAttribute("isRomance")]
-        public string IsRomance { get; set; }
+        public bool IsRomance { get; set; } = false;
+        public bool ShouldSerializeIsRomance() { return IsRomance; }
 
         /// <summary>
         /// Undocumented
         /// </summary>
         [XmlAttribute("isScienceFiction")]
-        public string IsScienceFiction { get; set; }
+        public bool IsScienceFiction { get; set; } = false;
+        public bool ShouldSerializeIsScienceFiction() { return IsScienceFiction; }
 
         /// <summary>
         /// Undocumented
         /// </summary>
         [XmlAttribute("isSoap")]
-        public string IsSoap { get; set; }
+        public bool IsSoap { get; set; } = false;
+        public bool ShouldSerializeIsSoap() { return IsSoap; }
 
         /// <summary>
         /// Undocumented
         /// </summary>
         [XmlAttribute("isThriller")]
-        public string IsThriller { get; set; }
+        public bool IsThriller { get; set; } = false;
+        public bool ShouldSerializeIsThriller() { return IsThriller; }
 
         /// <summary>
         /// Undocumented
         /// </summary>
         [XmlAttribute("isProgramEpisodic")]
-        public string IsProgramEpisodic { get; set; }
+        public bool IsProgramEpisodic { get; set; } = false;
+        public bool ShouldSerializeIsProgramEpisodic() { return IsProgramEpisodic; }
 
         /// <summary>
         /// Indicates whether the program is a movie.
         /// This value determines whether the program appears in the Movies category of the Guide grid and in other movie-related locations.
         /// </summary>
         [XmlAttribute("isMovie")]
-        public string IsMovie { get; set; }
+        public bool IsMovie { get; set; } = false;
+        public bool ShouldSerializeIsMovie() { return IsMovie; }
 
         /// <summary>
         /// Indicates whether the program is a miniseries.
         /// </summary>
         [XmlAttribute("isMiniseries")]
-        public string IsMiniseries { get; set; }
+        public bool IsMiniseries { get; set; } = false;
+        public bool ShouldSerializeIsMiniseries() { return IsMiniseries; }
 
         /// <summary>
         /// Indicates whether the program is a limited series.
         /// </summary>
         [XmlAttribute("isLimitedSeries")]
-        public string IsLimitedSeries { get; set; }
+        public bool IsLimitedSeries { get; set; } = false;
+        public bool ShouldSerializeIsLimitedSeries() { return IsLimitedSeries; }
 
         /// <summary>
         /// Indicates whether the program is paid programming.
         /// </summary>
         [XmlAttribute("isPaidProgramming")]
-        public string IsPaidProgramming { get; set; }
+        public bool IsPaidProgramming { get; set; } = false;
+        public bool ShouldSerializeIsPaidProgramming() { return IsPaidProgramming; }
 
         /// <summary>
         /// Indicates whether the program is a serial.
         /// </summary>
         [XmlAttribute("isSerial")]
-        public string IsSerial { get; set; }
+        public bool IsSerial { get; set; } = false;
+        public bool ShouldSerializeIsSerial() { return IsSerial; }
 
         /// <summary>
         /// Indicates whether the program is part of a series.
         /// </summary>
         [XmlAttribute("isSeries")]
-        public string IsSeries { get; set; }
+        public bool IsSeries { get; set; } = false;
+        public bool ShouldSerializeIsSeries() { return IsSeries; }
 
         /// <summary>
         /// Undocumented
         /// </summary>
         [XmlAttribute("isSeasonPremiere")]
-        public string IsSeasonPremiere { get; set; }
+        public bool IsSeasonPremiere { get; set; } = false;
+        public bool ShouldSerializeIsSeasonPremiere() { return IsSeasonPremiere; }
 
         /// <summary>
         /// Undocumented
         /// </summary>
         [XmlAttribute("isSeasonFinale")]
-        public string IsSeasonFinale { get; set; }
+        public bool IsSeasonFinale { get; set; } = false;
+        public bool ShouldSerializeIsSeasonFinale() { return IsSeasonFinale; }
 
         /// <summary>
         /// Undocumented
         /// </summary>
         [XmlAttribute("isSeriesPremiere")]
-        public string IsSeriesPremiere { get; set; }
+        public bool IsSeriesPremiere { get; set; } = false;
+        public bool ShouldSerializeIsSeriesPremiere() { return IsSeriesPremiere; }
 
         /// <summary>
         /// Undocumented
         /// </summary>
         [XmlAttribute("isSeriesFinale")]
-        public string IsSeriesFinale { get; set; }
+        public bool IsSeriesFinale { get; set; } = false;
+        public bool ShouldSerializeIsSeriesFinale() { return IsSeriesFinale; }
 
         /// <summary>
         /// Indicates whether the program is a short film.
         /// </summary>
         [XmlAttribute("isShortFilm")]
-        public string IsShortFilm { get; set; }
+        public bool IsShortFilm { get; set; } = false;
+        public bool ShouldSerializeIsShortFilm() { return IsShortFilm; }
 
         /// <summary>
         /// Indicates whether the program is a special.
         /// This value is used in the Guide's grid view categories.
         /// </summary>
         [XmlAttribute("isSpecial")]
-        public string IsSpecial { get; set; }
+        public bool IsSpecial { get; set; } = false;
+        public bool ShouldSerializeIsSpecial() { return IsSpecial; }
 
         /// <summary>
         /// Indicates whether the program is a sports program.
         /// This value is used in the Guide's grid view categories.
         /// </summary>
         [XmlAttribute("isSports")]
-        public string IsSports { get; set; }
+        public bool IsSports { get; set; } = false;
+        public bool ShouldSerializeIsSports() { return IsSports; }
 
         /// <summary>
         /// Indicates whether the program is a news show.
         /// This value is used in the Guide's grid view categories.
         /// </summary>
         [XmlAttribute("isNews")]
-        public string IsNews { get; set; }
+        public bool IsNews { get; set; } = false;
+        public bool ShouldSerializeIsNews() { return IsNews; }
 
         /// <summary>
         /// Indicates whether the program is for children.
         /// This value is used in the Guide's grid view categories.
         /// </summary>
         [XmlAttribute("isKids")]
-        public string IsKids { get; set; }
+        public bool IsKids { get; set; } = false;
+        public bool ShouldSerializeIsKids() { return IsKids; }
 
         /// <summary>
         /// Indicates whether the program is a reality show.
         /// </summary>
         [XmlAttribute("isReality")]
-        public string IsReality { get; set; }
+        public bool IsReality { get; set; } = false;
+        public bool ShouldSerializeIsReality() { return IsReality; }
 
         /// <summary>
         /// Indicates program is soft/contains generic description.
         /// Use for series episodes that are not known yet.
         /// </summary>
         [XmlAttribute("isGeneric")]
-        public string IsGeneric { get; set; }
+        public bool IsGeneric { get; set; } = false;
+        public bool ShouldSerializeIsGeneric() { return IsGeneric; }
 
         /// <summary>
         /// This value indicates the reason for the MPAA rating.
         /// </summary>
         [XmlAttribute("hasAdult")]
-        public string HasAdult { get; set; }
+        public bool HasAdult { get; set; } = false;
+        public bool ShouldSerializeHasAdult() { return HasAdult; }
 
         /// <summary>
         /// This value indicates the reason for the MPAA rating.
         /// </summary>
         [XmlAttribute("hasBriefNudity")]
-        public string HasBriefNudity { get; set; }
+        public bool HasBriefNudity { get; set; } = false;
+        public bool ShouldSerializeHasBriefNudity() { return HasBriefNudity; }
 
         /// <summary>
         /// This value indicates the reason for the MPAA rating.
         /// </summary>
         [XmlAttribute("hasGraphicLanguage")]
-        public string HasGraphicLanguage { get; set; }
+        public bool HasGraphicLanguage { get; set; } = false;
+        public bool ShouldSerializeHasGraphicLanguage() { return HasGraphicLanguage; }
 
         /// <summary>
         /// This value indicates the reason for the MPAA rating.
         /// </summary>
         [XmlAttribute("hasGraphicViolence")]
-        public string HasGraphicViolence { get; set; }
+        public bool HasGraphicViolence { get; set; } = false;
+        public bool ShouldSerializeHasGraphicViolence() { return HasGraphicViolence; }
 
         /// <summary>
         /// This value indicates the reason for the MPAA rating.
         /// </summary>
         [XmlAttribute("hasLanguage")]
-        public string HasLanguage { get; set; }
+        public bool HasLanguage { get; set; } = false;
+        public bool ShouldSerializeHasLanguage() { return HasLanguage; }
 
         /// <summary>
         /// This value indicates the reason for the MPAA rating.
         /// </summary>
         [XmlAttribute("hasMildViolence")]
-        public string HasMildViolence { get; set; }
+        public bool HasMildViolence { get; set; } = false;
+        public bool ShouldSerializeHasMildViolence() { return HasMildViolence; }
 
         /// <summary>
         /// This value indicates the reason for the MPAA rating.
         /// </summary>
         [XmlAttribute("hasNudity")]
-        public string HasNudity { get; set; }
+        public bool HasNudity { get; set; } = false;
+        public bool ShouldSerializeHasNudity() { return HasNudity; }
 
         /// <summary>
         /// This value indicates the reason for the MPAA rating.
         /// </summary>
         [XmlAttribute("hasRape")]
-        public string HasRape { get; set; }
+        public bool HasRape { get; set; } = false;
+        public bool ShouldSerializeHasRape() { return HasRape; }
 
         /// <summary>
         /// This value indicates the reason for the MPAA rating.
         /// </summary>
         [XmlAttribute("hasStrongSexualContent")]
-        public string HasStrongSexualContent { get; set; }
+        public bool HasStrongSexualContent { get; set; } = false;
+        public bool ShouldSerializeHasStrongSexualContent() { return HasStrongSexualContent; }
 
         /// <summary>
         /// This value indicates the reason for the MPAA rating.
         /// </summary>
         [XmlAttribute("hasViolence")]
-        public string HasViolence { get; set; }
-
-        /// <summary>
-        /// This value is for movies to show the extended cast and crew information.
-        /// </summary>
-        [XmlAttribute("hasExtendedCastAndCrew")]
-        public string HasExtendedCastAndCrew { get; set; }
-
-        /// <summary>
-        /// This value is for movies to show any extended synopsis.
-        /// </summary>
-        [XmlAttribute("hasExtendedSynopsis")]
-        public string HasExtendedSynopsis { get; set; }
-
-        /// <summary>
-        /// This value is for movies to show any review available.
-        /// </summary>
-        [XmlAttribute("hasReview")]
-        public string HasReview { get; set; }
-
-        /// <summary>
-        /// This value is for movies to show any similar movies.
-        /// </summary>
-        [XmlAttribute("hasSimilarPrograms")]
-        public string HasSimilarPrograms { get; set; }
+        public bool HasViolence { get; set; } = false;
+        public bool ShouldSerializeHasViolence() { return HasViolence; }
 
         /// <summary>
         /// This value contains an image to display for the program.

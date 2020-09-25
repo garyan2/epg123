@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace epg123
@@ -12,7 +13,7 @@ namespace epg123
         public IList<sdUserStatusLineup> Lineups { get; set; }
 
         [JsonProperty("lastDataUpdate")]
-        public string LastDataUpdate { get; set; }
+        public DateTime LastDataUpdate { get; set; }
 
         //[JsonProperty("notifications")]
         //public string[] Notifications { get; set; }
@@ -33,7 +34,7 @@ namespace epg123
     public class sdUserStatusAccount
     {
         [JsonProperty("expires")]
-        public string Expires { get; set; }
+        public DateTime Expires { get; set; }
 
         //[JsonProperty("messages")]
         //public string[] Messages { get; set; }

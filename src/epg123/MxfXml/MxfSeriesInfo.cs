@@ -6,6 +6,8 @@ namespace epg123.MxfXml
 {
     public class MxfSeriesInfo
     {
+        private DateTime _startAirdate { get; set; } = DateTime.MinValue;
+
         [XmlIgnore]
         public int index;
 
@@ -85,13 +87,27 @@ namespace epg123.MxfXml
         /// The date the series was first aired.
         /// </summary>
         [XmlAttribute("startAirdate")]
-        public string StartAirdate { get; set; }
+        public string StartAirdate
+        {
+            get
+            {
+                if (_startAirdate != DateTime.MinValue)
+                {
+                    return _startAirdate.ToString("yyyy-MM-dd");
+                }
+                return null;
+            }
+            set
+            {
+                _startAirdate = DateTime.Parse(value);
+            }
+        }
 
         /// <summary>
         /// The date the series ended.
         /// </summary>
-        [XmlAttribute("endAirdate")]
-        public string EndAirdate { get; set; }
+        //[XmlAttribute("endAirdate")]
+        //public string EndAirdate { get; set; }
 
         /// <summary>
         /// An image to show for the series.
@@ -103,7 +119,7 @@ namespace epg123.MxfXml
         /// <summary>
         /// Undocumented
         /// </summary>
-        [XmlAttribute("studio")]
-        public string Studio { get; set; }
+        //[XmlAttribute("studio")]
+        //public string Studio { get; set; }
     }
 }

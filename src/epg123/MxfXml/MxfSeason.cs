@@ -61,7 +61,8 @@ namespace epg123.MxfXml
         /// Undocumented
         /// </summary>
         [XmlAttribute("seasonNumber")]
-        public string SeasonNumber { get; set; }
+        public int SeasonNumber { get; set; } = 0;
+        public bool ShouldSerializeSeasonNumber() { return SeasonNumber != 0; }
 
         /// <summary>
         /// Undocumented

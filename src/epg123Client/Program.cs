@@ -103,10 +103,10 @@ namespace epg123
             Directory.SetCurrentDirectory(Helper.ExecutablePath);
 
             // establish folders with permissions
-            if (!Helper.CreateAndSetFolderAcl(Helper.Epg123ProgramDataFolder))
-            {
-                Logger.WriteInformation(string.Format("Failed to set full control permissions for Everyone on folder \"{0}\".", Helper.Epg123ProgramDataFolder));
-            }
+            //if (!Helper.CreateAndSetFolderAcl(Helper.Epg123ProgramDataFolder))
+            //{
+            //    Logger.WriteInformation(string.Format("Failed to set full control permissions for Everyone on folder \"{0}\".", Helper.Epg123ProgramDataFolder));
+            //}
             string[] folders = { Helper.Epg123BackupFolder };
             foreach (string folder in folders)
             {
@@ -275,7 +275,7 @@ namespace epg123
                         Logger.WriteMessage("===============================================================================");
                         clientForm client = new clientForm(advanced);
                         client.ShowDialog();
-                        mutex2.ReleaseMutex();
+                        mutex2.ReleaseMutex(); GC.Collect();
                         Logger.Close();
                         client.Dispose();
                         return 0;
@@ -313,7 +313,7 @@ namespace epg123
                     if (import)
                     {
                         // check if garbage cleanup is needed
-                        if (!nogc)
+                        if (!nogc && !force && !programRecording())
                         {
                             mxfImport.PerformGarbageCleanup();
                         }
@@ -324,7 +324,7 @@ namespace epg123
                             Logger.WriteError(string.Format("A program recording is still in progress after {0} hours. Aborting the mxf file import.", maximumRecordingWaitHours));
                             Logger.Close();
                             NativeMethods.SetThreadExecutionState(prevThreadState | (uint)ExecutionFlags.ES_CONTINUOUS);
-                            mutex3.ReleaseMutex();
+                            mutex3.ReleaseMutex(); GC.Collect();
 
                             statusLogo.statusImage();
                             return -1;
@@ -336,7 +336,7 @@ namespace epg123
                             Logger.WriteError("Failed to import .mxf file. Exiting.");
                             Logger.Close();
                             NativeMethods.SetThreadExecutionState(prevThreadState | (uint)ExecutionFlags.ES_CONTINUOUS);
-                            mutex3.ReleaseMutex();
+                            mutex3.ReleaseMutex(); GC.Collect();
 
                             statusLogo.statusImage();
                             return -1;
@@ -348,7 +348,7 @@ namespace epg123
                             Logger.WriteError("Failed to locate any lineups from EPG123.");
                             Logger.Close();
                             NativeMethods.SetThreadExecutionState(prevThreadState | (uint)ExecutionFlags.ES_CONTINUOUS);
-                            mutex3.ReleaseMutex();
+                            mutex3.ReleaseMutex(); GC.Collect();
 
                             statusLogo.statusImage();
                             return -1;
@@ -401,7 +401,7 @@ namespace epg123
                     Logger.WriteInformation("Completed EPG123 client execution.");
                     Logger.WriteVerbose(string.Format("EPG123 client execution time was {0}.", DateTime.UtcNow - startTime));
                     Logger.Close();
-                    mutex3.ReleaseMutex();
+                    mutex3.ReleaseMutex(); GC.Collect();
                 }
 
                 NativeMethods.SetThreadExecutionState(prevThreadState | (uint)ExecutionFlags.ES_CONTINUOUS);

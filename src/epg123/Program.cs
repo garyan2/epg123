@@ -40,19 +40,19 @@ namespace epg123
 
             // establish folders with permissions
             string[] folders = { Helper.Epg123BackupFolder, Helper.Epg123CacheFolder, Helper.Epg123LogosFolder, Helper.Epg123OutputFolder, Helper.Epg123SdLogosFolder };
-            if (Environment.UserInteractive && !Helper.CreateAndSetFolderAcl(Helper.Epg123ProgramDataFolder))
-            {
-                Logger.WriteError(string.Format("Failed to set full control permissions for Everyone on folder \"{0}\".", Helper.Epg123ProgramDataFolder));
-            }
-            else
+            //if (Environment.UserInteractive && !Helper.CreateAndSetFolderAcl(Helper.Epg123ProgramDataFolder))
+            //{
+            //    Logger.WriteError(string.Format("Failed to set full control permissions for Everyone on folder \"{0}\".", Helper.Epg123ProgramDataFolder));
+            //}
+            //else
             {
                 foreach (string folder in folders)
                 {
                     if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
-                    if (Environment.UserInteractive && !Helper.CreateAndSetFolderAcl(folder))
-                    {
-                        Logger.WriteError(string.Format("Failed to set full control permissions for Everyone on folder \"{0}\".", folder));
-                    }
+                    //if (Environment.UserInteractive && !Helper.CreateAndSetFolderAcl(folder))
+                    //{
+                    //    Logger.WriteError(string.Format("Failed to set full control permissions for Everyone on folder \"{0}\".", folder));
+                    //}
                 }
             }
 
@@ -133,8 +133,7 @@ namespace epg123
                     Logger.Close();
                     if (!cfgForm.Execute)
                     {
-                        mutex.ReleaseMutex();
-                        GC.Collect();
+                        mutex.ReleaseMutex(); GC.Collect();
                         return 0;
                     }
                     Logger.Initialize("Media Center", "EPG123");
@@ -170,7 +169,7 @@ namespace epg123
                         Logger.WriteError(string.Format("Failed to open configuration file during initialization due to IO exception. message: {0}", ex.Message));
                         Logger.Close();
                         NativeMethods.SetThreadExecutionState(prevThreadState | (uint)ExecutionFlags.ES_CONTINUOUS);
-                        mutex.ReleaseMutex();
+                        mutex.ReleaseMutex(); GC.Collect();
                         return -1;
                     }
                     catch (Exception ex)
@@ -178,7 +177,7 @@ namespace epg123
                         Logger.WriteError(string.Format("Failed to open configuration file during initialization with unknown exception. message: {0}", ex.Message));
                         Logger.Close();
                         NativeMethods.SetThreadExecutionState(prevThreadState | (uint)ExecutionFlags.ES_CONTINUOUS);
-                        mutex.ReleaseMutex();
+                        mutex.ReleaseMutex(); GC.Collect();
                         return -1;
                     }
                 }
@@ -206,7 +205,7 @@ namespace epg123
                     // verify output file exists
                     if (!File.Exists(Helper.Epg123MxfPath) || !File.Exists(Helper.Epg123ClientExePath))
                     {
-                        mutex.ReleaseMutex();
+                        mutex.ReleaseMutex(); GC.Collect();
                         return -1;
                     }
 
@@ -224,7 +223,7 @@ namespace epg123
                     proc.WaitForExit();
                 }
 
-                mutex.ReleaseMutex();
+                mutex.ReleaseMutex(); GC.Collect();
                 return 0;
             }
         }

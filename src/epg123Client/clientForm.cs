@@ -420,11 +420,26 @@ namespace epg123
                 MergedChannel mergedChannel = (MergedChannel)mergedItem.Tag;
                 foreach (Channel lineupChannel in lineupChannels)
                 {
-                    string textValue = (btnCase == 0) ? lineupChannel.CallSign : lineupChannel.ChannelNumber.ToString();
-                    if (mergedItem.SubItems[btnCase].Text == textValue)
+                    if (lineupChannel.DisplayChannelNumber.Equals("-1") && !string.IsNullOrEmpty(lineupChannel.MatchName) && btnCase == 1)
                     {
-                        subscribeChannel(index, mergedChannel, lineupChannel);
-                        break;
+                        string[] l = lineupChannel.MatchName.Split(':');
+                        if (l.Length != 6) break;
+                        if ((mergedChannel.MatchName.StartsWith($"{l[0]}:{l[1]}") && mergedChannel.MatchName.EndsWith($":{l[5]}")) ||
+                            (!mergedChannel.SecondaryChannels.Empty && 
+                              mergedChannel.SecondaryChannels.First.MatchName.StartsWith($"{l[0]}:{l[1]}") && mergedChannel.SecondaryChannels.First.MatchName.EndsWith($":{l[5]}")))
+                        {
+                            subscribeChannel(index, mergedChannel, lineupChannel);
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        string textValue = (btnCase == 0) ? lineupChannel.CallSign : lineupChannel.ChannelNumber.ToString();
+                        if (mergedItem.SubItems[btnCase].Text == textValue)
+                        {
+                            subscribeChannel(index, mergedChannel, lineupChannel);
+                            break;
+                        }
                     }
                 }
 
@@ -2248,15 +2263,30 @@ namespace epg123
 
         private void clipboardMenuItem_Click(object sender, EventArgs e)
         {
-            string TextToAdd = "Call Sign\tNumber\tService Name\tSubscribed Lineup\tScanned Source(s)\tTuningInfo\r\n";
+            string TextToAdd = "Call Sign\tNumber\tService Name\tSubscribed Lineup\tScanned Source(s)\tTuningInfo\tMatchName\tService Callsign\r\n";
             foreach (ListViewItem listViewItem in mergedChannelListView.Items)
             {
-                TextToAdd += string.Format("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\r\n", listViewItem.SubItems[0].Text,
+                string matchname = string.Empty;
+                string callsign = string.Empty;
+                MergedChannel mergedChannel = (MergedChannel)listViewItem.Tag;
+                if (!mergedChannel.SecondaryChannels.Empty && mergedChannel.SecondaryChannels.First.Lineup.Name.StartsWith("Scanned"))
+                {
+                    matchname = mergedChannel.SecondaryChannels.First.MatchName;
+                    callsign = mergedChannel.SecondaryChannels.First.CallSign;
+                }
+                else //if (mergedChannel.PrimaryChannel.Lineup.Name.StartsWith("Scannned"))
+                {
+                    matchname = mergedChannel.MatchName;
+                    callsign = mergedChannel.CallSign;
+                }
+                TextToAdd += string.Format("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}\r\n", listViewItem.SubItems[0].Text,
                                                                                listViewItem.SubItems[1].Text,
                                                                                listViewItem.SubItems[2].Text,
                                                                                listViewItem.SubItems[3].Text,
                                                                                listViewItem.SubItems[4].Text,
-                                                                               listViewItem.SubItems[5].Text);
+                                                                               listViewItem.SubItems[5].Text,
+                                                                               matchname, callsign);
+
             }
             Clipboard.SetText(TextToAdd);
         }

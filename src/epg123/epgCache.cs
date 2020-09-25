@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
+using Microsoft.VisualBasic.Devices;
 using Newtonsoft.Json;
 
 namespace epg123
@@ -38,30 +39,43 @@ namespace epg123
             if (isDirty && JsonFiles.Count > 0)
             {
                 CleanDictionary();
-                //using (StreamWriter writer = File.CreateText(Helper.Epg123CacheJsonPath))
-                //{
-                //    try
-                //    {
-                //        JsonSerializer serializer = new JsonSerializer() { NullValueHandling = NullValueHandling.Ignore, Formatting = Formatting.Indented };
-                //        serializer.Serialize(writer, JsonFiles);
-                //    }
-                //    catch (Exception ex)
-                //    {
-                //        Logger.WriteWarning("Failed to write cache file to the cache folder. Message: " + ex.Message);
-                //    }
-                //}
-
-                MemoryStream stream = new MemoryStream();
-                using (StreamWriter swriter = new StreamWriter(stream))
+                if (new ComputerInfo().AvailablePhysicalMemory < (ulong)Math.Pow(1024, 3))
                 {
-                    using (JsonTextWriter jwriter = new JsonTextWriter(swriter))
+                    using (StreamWriter writer = File.CreateText(Helper.Epg123CacheJsonPath))
                     {
-                        JsonSerializer serializer = new JsonSerializer() { NullValueHandling = NullValueHandling.Ignore, Formatting = Formatting.Indented };
-                        serializer.Serialize(jwriter, JsonFiles);
-                        swriter.Flush();
-                        stream.Seek(0, SeekOrigin.Begin);
+                        try
+                        {
+                            JsonSerializer serializer = new JsonSerializer() { NullValueHandling = NullValueHandling.Ignore, Formatting = Formatting.Indented };
+                            serializer.Serialize(writer, JsonFiles);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.WriteWarning("Failed to write cache file to the cache folder. Message: " + ex.Message);
+                        }
+                    }
+                    if (File.Exists(Helper.Epg123CompressCachePath))
+                    {
+                        File.Delete(Helper.Epg123CompressCachePath);
+                    }
+                }
+                else
+                {
+                    MemoryStream stream = new MemoryStream();
+                    using (StreamWriter swriter = new StreamWriter(stream))
+                    {
+                        using (JsonTextWriter jwriter = new JsonTextWriter(swriter))
+                        {
+                            JsonSerializer serializer = new JsonSerializer() { NullValueHandling = NullValueHandling.Ignore, Formatting = Formatting.Indented };
+                            serializer.Serialize(jwriter, JsonFiles);
+                            swriter.Flush();
+                            stream.Seek(0, SeekOrigin.Begin);
 
-                        CompressXmlFiles.CompressSingleStreamToFile(stream, cacheFileUri, Helper.Epg123CompressCachePath);
+                            CompressXmlFiles.CompressSingleStreamToFile(stream, cacheFileUri, Helper.Epg123CompressCachePath);
+                        }
+                    }
+                    if (File.Exists(Helper.Epg123CacheJsonPath))
+                    {
+                        File.Delete(Helper.Epg123CacheJsonPath);
                     }
                 }
             }
@@ -98,6 +112,17 @@ namespace epg123
 
             // store
             JsonFiles[md5].Images = json;
+            isDirty = true;
+        }
+
+        public static void UpdateAssetJsonEntry(string md5, string json)
+        {
+            // reduce the size of the string by removing nulls and empty strings
+            json = Regex.Replace(json, "\"\\w+?\":null,?", string.Empty);
+            json = Regex.Replace(json, "\"\\w+?\":\"\",?", string.Empty);
+
+            // store
+            JsonFiles[md5].JsonEntry = json;
             isDirty = true;
         }
 

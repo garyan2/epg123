@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace epg123
@@ -72,7 +73,7 @@ namespace epg123
         public string ProgramID { get; set; }
 
         [JsonProperty("airDateTime")]
-        public string AirDateTime { get; set; }
+        public DateTime AirDateTime { get; set; }
 
         [JsonProperty("duration")]
         public int Duration { get; set; }
@@ -156,10 +157,10 @@ namespace epg123
     public class sdSchedMultipart
     {
         [JsonProperty("partNumber")]
-        public string PartNumber { get; set; }
+        public int PartNumber { get; set; }
 
         [JsonProperty("totalParts")]
-        public string TotalParts { get; set; }
+        public int TotalParts { get; set; }
     }
 
     public class sdSchedTvRating

@@ -660,7 +660,7 @@ namespace epg123
                             break;
                         case "CallsignDefaultFont":
                         case "CallsignExpandedFont":
-                            value = (int)(trackCellFontSize.Value * 0.82 + 0.5);
+                            value = (int)(trackCellFontSize.Value * 0.82 - 1);
                             font.SetAttributeValue("FontSize", value.ToString()); // default is 18
                             break;
                         default:
@@ -678,7 +678,7 @@ namespace epg123
                     switch (inset.Attribute("Name").Value)
                     {
                         case "BackgroundDefaultPadding": // channel logo
-                            value = string.Format("0,{0},{1},{0}", (cbRemoveAnimations.Checked) ? 0 : (int)((rowHeightPixel - 0.82 * logoHeight) / 2.0),
+                            value = string.Format("0,{0},{1},{0}", (cbRemoveAnimations.Checked) ? 0 : (int)((rowHeightPixel - 0.82 * logoHeight) / 2.0 - 0.5),
                                                                    (cbHideNumber.Checked) ? 0 : 5);
                             inset.SetAttributeValue("Inset", value); // default is "10,12,10,8"
                             break;
@@ -826,7 +826,7 @@ namespace epg123
                             graphic.SetAttributeValue("CenterPointPercent", "1.0,0.5,0.5"); // default is null
                             break;
                         case "ContinuingPrevious":
-                            value = string.Format("0,0,{0},0", (int)(9 * scaleFactor + 14 * scaleFactor - 13.5));
+                            value = string.Format("0,0,{0},0", (int)(23 * scaleFactor - 13.5));
                             graphic.SetAttributeValue("Margins", value); // default is "0,1,9,8"
                             value = string.Format("{0},{1}", (int)(14 * Math.Min(scaleFactor, 1.0) + 0.5), (int)(19 * Math.Min(scaleFactor, 1.0) + 0.5));
                             graphic.SetAttributeValue("MinimumSize", value); // default is "14,19"
@@ -835,7 +835,7 @@ namespace epg123
                             graphic.SetAttributeValue("CenterPointPercent", "0.0,0.5,0.5"); // default is null
                             break;
                         case "ContinuingNext":
-                            value = string.Format("{0},0,0,0", (int)(9 * scaleFactor + 14 * scaleFactor - 13.5));
+                            value = string.Format("{0},0,0,0", (int)(23 * scaleFactor - 13.5));
                             graphic.SetAttributeValue("Margins", value); // default is "9,1,0,8"
                             value = string.Format("{0},{1}", (int)(14 * Math.Min(scaleFactor, 1.0) + 0.5), (int)(19 * Math.Min(scaleFactor, 1.0) + 0.5));
                             graphic.SetAttributeValue("MinimumSize", value); // default is "14,19"
@@ -1372,30 +1372,30 @@ namespace epg123
             // out of applying any updates
             return false;
 
-            int success = 0;
-            using (UIds uids = new UIds(Store.objectStore))
-            {
-                foreach (UId uid in uids.Where(arg => arg.IdValue.StartsWith("vss-")))
-                {
-                    foreach (string country in countries)
-                    {
-                        if (uid.IdValue.Equals("vss-" + country))
-                        {
-                            Type t = uid.Target.GetType();
-                            PropertyInfo[] properties = t.GetProperties();
-                            foreach (var property in properties.Where(arg => arg.Name.StartsWith("MaxRecordersFor")))
-                            {
-                                var q = property.GetValue(uid.Target, null);
-                                if ((int)q != TUNERLIMIT) return false;
-                            }
-                            ++success;
-                            continue;
-                        }
-                    }
-                    if (success == countries.Length) return true;
-                }
-            }
-            return false;
+            //int success = 0;
+            //using (UIds uids = new UIds(Store.objectStore))
+            //{
+            //    foreach (UId uid in uids.Where(arg => arg.IdValue.StartsWith("vss-")))
+            //    {
+            //        foreach (string country in countries)
+            //        {
+            //            if (uid.IdValue.Equals("vss-" + country))
+            //            {
+            //                Type t = uid.Target.GetType();
+            //                PropertyInfo[] properties = t.GetProperties();
+            //                foreach (var property in properties.Where(arg => arg.Name.StartsWith("MaxRecordersFor")))
+            //                {
+            //                    var q = property.GetValue(uid.Target, null);
+            //                    if ((int)q != TUNERLIMIT) return false;
+            //                }
+            //                ++success;
+            //                continue;
+            //            }
+            //        }
+            //        if (success == countries.Length) return true;
+            //    }
+            //}
+            //return false;
         }
 
         private void txtNamePattern_KeyPress(object sender, KeyPressEventArgs e)

@@ -29,16 +29,19 @@ namespace epg123
     public class CustomStation
     {
         [XmlAttribute("number")]
-        public string Number { get; set; }
+        public int Number { get; set; }
 
         [XmlAttribute("subnumber")]
-        public string Subnumber { get; set; }
+        public int Subnumber { get; set; }
 
         [XmlAttribute("callsign")]
         public string Callsign { get; set; }
 
         [XmlAttribute("name")]
         public string Name { get; set; }
+
+        [XmlAttribute("matchName")]
+        public string MatchName { get; set; }
 
         [XmlAttribute("alternate")]
         public string Alternate { get; set; }

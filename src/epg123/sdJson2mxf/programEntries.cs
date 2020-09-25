@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using epg123.MxfXml;
+using System.Data.SqlTypes;
 
 namespace epg123
 {
@@ -76,6 +77,9 @@ namespace epg123
 
         private static void downloadProgramResponses(int start)
         {
+            // reject 0 requests
+            if (programQueue.Count - start < 1) return;
+
             // build the array of programs to request for
             string[] programs = new string[Math.Min(programQueue.Count - start, MAXQUERIES)];
             for (int i = 0; i < programs.Length; ++i)
@@ -137,14 +141,23 @@ namespace epg123
                 EventDetails = sd.EventDetails,
                 KeyWords = sd.KeyWords,
                 Movie = sd.Movie,
-                OriginalAirDate = (!string.IsNullOrEmpty(sd.ShowType) && sd.ShowType.ToLower().Contains("series") ? sd.OriginalAirDate : null),
+                OriginalAirDate = (!string.IsNullOrEmpty(sd.ShowType) && sd.ShowType.ToLower().Contains("series") ? sd.OriginalAirDate.ToString("s") : null),
                 ShowType = sd.ShowType
             });
         }
 
         private static MxfProgram buildMxfProgram(MxfProgram prg, sdProgram sd)
         {
-            prg.jsonProgramData = sd;
+            // populate stuff for xmltv
+            prg.genres = sd.Genres;
+            if (sd.EventDetails?.Teams != null)
+            {
+                prg.teams = new List<string>();
+                foreach (sdProgramEventDetailsTeam team in sd.EventDetails.Teams)
+                {
+                    prg.teams.Add(team.Name);
+                }
+            }
 
             // populate title, short title, description, and short description
             determineTitlesAndDescriptions(ref prg, sd);
@@ -156,7 +169,7 @@ namespace epg123
             determineProgramKeywords(ref prg, sd);
 
             // determine movie or series information
-            if (!string.IsNullOrEmpty(prg.IsMovie))
+            if (prg.IsMovie)
             {
                 // populate mpaa and star rating as well as enable extended information
                 determineMovieInfo(ref prg, sd);
@@ -218,7 +231,7 @@ namespace epg123
                 }
             }
 
-            prg.OriginalAirdate = sd.OriginalAirDate;
+            prg.OriginalAirdate = sd.OriginalAirDate.ToString();
         }
 
         private static string getDescriptions(IList<sdProgramDescription> description, out string language)
@@ -258,6 +271,7 @@ namespace epg123
         {
             // transfer genres to mxf program
             prg.IsAction = Helper.tableContains(sd.Genres, "Action");
+            prg.IsAdultOnly = Helper.tableContains(sd.Genres, "Adults Only");
             prg.IsComedy = Helper.tableContains(sd.Genres, "Comedy");
             prg.IsDocumentary = Helper.tableContains(sd.Genres, "Documentary");
             prg.IsDrama = Helper.tableContains(sd.Genres, "Drama");
@@ -287,16 +301,16 @@ namespace epg123
             prg.IsPaidProgramming = Helper.stringContains(sd.ShowType, "Paid Programming");
             //prg.IsProgramEpisodic = null;
             //prg.IsSerial = null;
-            prg.IsSeries = Helper.stringContains(sd.ShowType, "Series") ?? Helper.stringContains(sd.ShowType, "Sports non-event");
+            prg.IsSeries = Helper.stringContains(sd.ShowType, "Series") || Helper.stringContains(sd.ShowType, "Sports non-event");
             prg.IsShortFilm = Helper.stringContains(sd.ShowType, "Short Film");
             prg.IsSpecial = Helper.stringContains(sd.ShowType, "Special");
             prg.IsSports = Helper.stringContains(sd.ShowType, "Sports event");
 
             // set isGeneric flag if programID starts with "SH", is a series, is not a miniseries, and is not paid programming
-            if (prg.tmsId.StartsWith("SH") && ((!string.IsNullOrEmpty(prg.IsSports) && string.IsNullOrEmpty(Helper.stringContains(sd.EntityType, "Sports"))) ||
-                                               (!string.IsNullOrEmpty(prg.IsSeries) && string.IsNullOrEmpty(prg.IsMiniseries) && string.IsNullOrEmpty(prg.IsPaidProgramming))))
+            if (prg.tmsId.StartsWith("SH") && ((prg.IsSports && !Helper.stringContains(sd.EntityType, "Sports")) ||
+                                               (prg.IsSeries && !prg.IsMiniseries && !prg.IsPaidProgramming)))
             {
-                prg.IsGeneric = "true";
+                prg.IsGeneric = true;
             }
 
             // special case to flag sports events ** I CURRENTLY SEE NO ADVANTAGE TO DOING THIS **
@@ -320,15 +334,15 @@ namespace epg123
         {
             // determine primary group of program
             GROUPS group = GROUPS.UNKNOWN;
-            if (!string.IsNullOrEmpty(prg.IsMovie)) group = GROUPS.MOVIES;
-            else if (!string.IsNullOrEmpty(prg.IsPaidProgramming)) group = GROUPS.PAIDPROGRAMMING;
-            else if (!string.IsNullOrEmpty(prg.IsSports)) group = GROUPS.SPORTS;
-            else if (!string.IsNullOrEmpty(prg.IsKids)) group = GROUPS.KIDS;
-            else if (!string.IsNullOrEmpty(prg.IsEducational)) group = GROUPS.EDUCATIONAL;
-            else if (!string.IsNullOrEmpty(prg.IsNews)) group = GROUPS.NEWS;
-            else if (!string.IsNullOrEmpty(prg.IsSpecial)) group = GROUPS.SPECIAL;
-            else if (!string.IsNullOrEmpty(prg.IsReality)) group = GROUPS.REALITY;
-            else if (!string.IsNullOrEmpty(prg.IsSeries)) group = GROUPS.SERIES;
+            if (prg.IsMovie) group = GROUPS.MOVIES;
+            else if (prg.IsPaidProgramming) group = GROUPS.PAIDPROGRAMMING;
+            else if (prg.IsSports) group = GROUPS.SPORTS;
+            else if (prg.IsKids) group = GROUPS.KIDS;
+            else if (prg.IsEducational) group = GROUPS.EDUCATIONAL;
+            else if (prg.IsNews) group = GROUPS.NEWS;
+            else if (prg.IsSpecial) group = GROUPS.SPECIAL;
+            else if (prg.IsReality) group = GROUPS.REALITY;
+            else if (prg.IsSeries) group = GROUPS.SERIES;
 
             // build the keywords/categories
             if (group != GROUPS.UNKNOWN)
@@ -336,19 +350,19 @@ namespace epg123
                 prg.Keywords = string.Format("k{0}", (int)group + 1);
 
                 // add premiere categories as necessary
-                if (!string.IsNullOrEmpty(prg.IsSeasonPremiere) || !string.IsNullOrEmpty(prg.IsSeriesPremiere))
+                if (prg.IsSeasonPremiere || prg.IsSeriesPremiere)
                 {
                     prg.Keywords += string.Format(",k{0}", (int)GROUPS.PREMIERES + 1);
-                    if (!string.IsNullOrEmpty(prg.IsSeasonPremiere)) prg.Keywords += "," + sdMxf.With[0].KeywordGroups[(int)GROUPS.PREMIERES].getKeywordId("Season Premiere");
-                    if (!string.IsNullOrEmpty(prg.IsSeriesPremiere)) prg.Keywords += "," + sdMxf.With[0].KeywordGroups[(int)GROUPS.PREMIERES].getKeywordId("Series Premiere");
+                    if (prg.IsSeasonPremiere) prg.Keywords += "," + sdMxf.With[0].KeywordGroups[(int)GROUPS.PREMIERES].getKeywordId("Season Premiere");
+                    if (prg.IsSeriesPremiere) prg.Keywords += "," + sdMxf.With[0].KeywordGroups[(int)GROUPS.PREMIERES].getKeywordId("Series Premiere");
                 }
-                else if (!string.IsNullOrEmpty(prg.IsPremiere))
+                else if (prg.IsPremiere)
                 {
                     if (group == GROUPS.MOVIES)
                     {
                         prg.Keywords += "," + sdMxf.With[0].KeywordGroups[(int)group].getKeywordId("Premiere");
                     }
-                    else if (Helper.tableContains(sd.Genres, "miniseries") == "true")
+                    else if (Helper.tableContains(sd.Genres, "miniseries"))
                     {
                         prg.Keywords += string.Format(",k{0}", (int)GROUPS.PREMIERES + 1);
                         prg.Keywords += "," + sdMxf.With[0].KeywordGroups[(int)GROUPS.PREMIERES].getKeywordId("Miniseries Premiere");
@@ -389,7 +403,7 @@ namespace epg123
             }
             else if (!string.IsNullOrEmpty(prg.OriginalAirdate))
             {
-                prg.Year = prg.OriginalAirdate.Substring(0, 4);
+                prg.Year = int.Parse(prg.OriginalAirdate.Substring(0, 4));
             }
 
             //prg.HasExtendedCastAndCrew = "true";
@@ -400,12 +414,6 @@ namespace epg123
 
         private static void DetermineSeriesInfo(ref MxfProgram mxfProgram, sdProgram sdProgram)
         {
-            // do not extend cast and crew for paid programming
-            if (string.IsNullOrEmpty(mxfProgram.IsPaidProgramming))
-            {
-                //mxfProgram.HasExtendedCastAndCrew = "true";
-            }
-
             // for sports programs that start with "SP", create a series entry based on program title
             // this groups them all together as a series for recordings
             MxfSeriesInfo mxfSeriesInfo;
@@ -419,6 +427,44 @@ namespace epg123
             {
                 // create a seriesInfo entry if needed
                 mxfSeriesInfo = sdMxf.With[0].getSeriesInfo(mxfProgram.tmsId.Substring(2, 8));
+                if (mxfProgram.IsGeneric)
+                {
+                    // go ahead and create/update the cache entry as needed
+                    if (epgCache.JsonFiles.ContainsKey(mxfProgram.tmsId))
+                    {
+                        using (StringReader reader = new StringReader(epgCache.GetAsset(mxfProgram.tmsId)))
+                        {
+                            JsonSerializer serializer = new JsonSerializer();
+                            sdGenericDescriptions cached = (sdGenericDescriptions)serializer.Deserialize(reader, typeof(sdGenericDescriptions));
+                            if (cached.StartAirdate == null)
+                            {
+                                cached.StartAirdate = mxfProgram.OriginalAirdate ?? string.Empty;
+                                using (StringWriter writer = new StringWriter())
+                                {
+                                    serializer.Serialize(writer, cached);
+                                    epgCache.UpdateAssetJsonEntry(mxfProgram.tmsId, writer.ToString());
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        sdGenericDescriptions newEntry = new sdGenericDescriptions()
+                        {
+                            Code = 0,
+                            Description1000 = mxfProgram.Description,
+                            Description100 = mxfProgram.ShortDescription,
+                            StartAirdate = mxfProgram.OriginalAirdate ?? string.Empty
+                        };
+
+                        JsonSerializer serializer = new JsonSerializer();
+                        using (StringWriter writer = new StringWriter())
+                        {
+                            serializer.Serialize(writer, newEntry);
+                            epgCache.AddAsset(mxfProgram.tmsId, writer.ToString());
+                        }
+                    }
+                }
             }
 
             mxfSeriesInfo.Title = mxfSeriesInfo.Title ?? mxfProgram.Title;
@@ -431,9 +477,9 @@ namespace epg123
             {
                 // use the last 4 numbers as a production number
                 int episode = int.Parse(prg.tmsId.Substring(10));
-                if (episode > 0)
+                if (episode != 0)
                 {
-                    prg.EpisodeNumber = episode.ToString();
+                    prg.EpisodeNumber = episode;
                 }
 
                 if (sd.Metadata != null)
@@ -446,23 +492,23 @@ namespace epg123
                         {
                             if ((provider == null) || (provider.EpisodeNumber == 0)) continue;
 
-                            prg.SeasonNumber = provider.SeasonNumber.ToString();
-                            prg.EpisodeNumber = provider.EpisodeNumber.ToString();
+                            prg.SeasonNumber = provider.SeasonNumber;
+                            prg.EpisodeNumber = provider.EpisodeNumber;
                             if (!config.TheTVDBNumbers) break;
                         }
                         else if (providers.TryGetValue("TheTVDB", out provider))
                         {
-                            if ((provider == null) || (provider.EpisodeNumber == 0) || (provider.SeasonNumber > 255)) continue;
+                            if ((provider == null) || (provider.EpisodeNumber == 0) || (provider.SeasonNumber > DateTime.Now.Year)) continue;
 
-                            prg.SeasonNumber = provider.SeasonNumber.ToString();
-                            prg.EpisodeNumber = provider.EpisodeNumber.ToString();
+                            prg.SeasonNumber = provider.SeasonNumber;
+                            prg.EpisodeNumber = provider.EpisodeNumber;
                             if (config.TheTVDBNumbers) break;
                         }
                     }
                 }
 
                 // if there is a season number, create as seasonInfo entry
-                if (!string.IsNullOrEmpty(prg.SeasonNumber))
+                if (prg.SeasonNumber != 0)
                 {
                     prg.Season = sdMxf.With[0].getSeasonId(prg.tmsId.Substring(2, 8), prg.SeasonNumber);
                 }
@@ -479,13 +525,13 @@ namespace epg123
             else if (string.IsNullOrEmpty(prg.EpisodeTitle)) return;
 
             string se = config.AlternateSEFormat ? "S{0}:E{1} " : "s{0:D2}e{1:D2} ";
-            if (!string.IsNullOrEmpty(prg.SeasonNumber))
+            if (prg.SeasonNumber != 0)
             {
-                se = string.Format(se, int.Parse(prg.SeasonNumber), int.Parse(prg.EpisodeNumber));
+                se = string.Format(se, prg.SeasonNumber, prg.EpisodeNumber);
             }
-            else if (!string.IsNullOrEmpty(prg.EpisodeNumber))
+            else if (prg.EpisodeNumber != 0)
             {
-                se = string.Format("#{0} ", int.Parse(prg.EpisodeNumber));
+                se = string.Format("#{0} ", prg.EpisodeNumber);
             }
             else se = string.Empty;
 
@@ -509,14 +555,13 @@ namespace epg123
             if (config.AppendEpisodeDesc)
             {
                 // add space before appending season and episode numbers in case there is no short description
-                if (!string.IsNullOrEmpty(prg.SeasonNumber) && !string.IsNullOrEmpty(prg.EpisodeNumber))
+                if (prg.SeasonNumber != 0 && prg.EpisodeNumber != 0)
                 {
-                    prg.Description += string.Format(" \u000D\u000ASeason {0}, Episode {1}",
-                        int.Parse(prg.SeasonNumber), int.Parse(prg.EpisodeNumber));
+                    prg.Description += $" \u000D\u000ASeason {prg.SeasonNumber}, Episode {prg.EpisodeNumber}";
                 }
-                else if (!string.IsNullOrEmpty(prg.EpisodeNumber))
+                else if (prg.EpisodeNumber != 0)
                 {
-                    prg.Description += string.Format(" \u000D\u000AProduction #{0}", prg.EpisodeNumber);
+                    prg.Description += $" \u000D\u000AProduction #{prg.EpisodeNumber}";
                 }
             }
 
@@ -537,7 +582,7 @@ namespace epg123
                 prg.contentRatings = new Dictionary<string, string>();
                 foreach (sdProgramContentRating rating in sd.ContentRating)
                 {
-                    if (string.IsNullOrEmpty(rating.Country) || !string.IsNullOrEmpty(Helper.tableContains(ratings, "ALL")) || !string.IsNullOrEmpty(Helper.tableContains(ratings, rating.Country)))
+                    if (string.IsNullOrEmpty(rating.Country) || Helper.tableContains(ratings, "ALL") || Helper.tableContains(ratings, rating.Country))
                     {
                         prg.contentRatings.Add(rating.Body, rating.Code);
                     }
@@ -564,16 +609,16 @@ namespace epg123
                 string[] advisoryTable = advisories.ToArray();
 
                 // set flags
-                prg.HasAdult = Helper.tableContains(advisoryTable, "Adult Situations");
+                prg.HasAdult = Helper.tableContains(advisoryTable, "Adult Situations") || Helper.tableContains(advisoryTable, "Dialog");
                 prg.HasBriefNudity = Helper.tableContains(advisoryTable, "Brief Nudity");
                 prg.HasGraphicLanguage = Helper.tableContains(advisoryTable, "Graphic Language");
                 prg.HasGraphicViolence = Helper.tableContains(advisoryTable, "Graphic Violence");
-                prg.HasLanguage = Helper.tableContains(advisoryTable, "Adult Language");
+                prg.HasLanguage = Helper.tableContains(advisoryTable, "Adult Language") || Helper.tableContains(advisoryTable, "Language", true);
                 prg.HasMildViolence = Helper.tableContains(advisoryTable, "Mild Violence");
-                prg.HasNudity = Helper.tableContains(advisoryTable, "Nudity");
+                prg.HasNudity = Helper.tableContains(advisoryTable, "Nudity", true);
                 prg.HasRape = Helper.tableContains(advisoryTable, "Rape");
                 prg.HasStrongSexualContent = Helper.tableContains(advisoryTable, "Strong Sexual Content");
-                prg.HasViolence = Helper.tableContains(advisoryTable, "Violence");
+                prg.HasViolence = Helper.tableContains(advisoryTable, "Violence", true);
 
                 prg.contentAdvisories = advisoryTable;
             }
@@ -617,7 +662,7 @@ namespace epg123
             return null;
         }
 
-        private static string decodeMpaaRating(IList<sdProgramContentRating> sdProgramContentRatings)
+        private static int decodeMpaaRating(IList<sdProgramContentRating> sdProgramContentRatings)
         {
             if (sdProgramContentRatings != null)
             {
@@ -656,12 +701,12 @@ namespace epg123
                             break;
                     }
                 }
-                if (maxValue > 0) return maxValue.ToString();
+                return maxValue;
             }
-            return null;
+            return 0;
         }
 
-        private static string decodeStarRating(IList<sdProgramQualityRating> sdProgramQualityRatings)
+        private static int decodeStarRating(IList<sdProgramQualityRating> sdProgramQualityRatings)
         {
             if (sdProgramQualityRatings != null)
             {
@@ -681,9 +726,9 @@ namespace epg123
                 }
 
                 // return rounded number of half stars in a 4 star scale
-                if (maxValue > 0.0) return ((int)(8.0 * maxValue + 0.125)).ToString();
+                if (maxValue > 0.0) return ((int)(8.0 * maxValue + 0.125));
             }
-            return null;
+            return 0;
         }
     }
 }

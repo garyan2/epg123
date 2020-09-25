@@ -42,17 +42,17 @@ namespace epg123
             if (length == 0) return ret;
 
             Interlocked.Add(ref totalBytes_, length);
-            return ret + " / " + GetStringByteLength(length);
+            return $"{ret} / {GetStringByteLength(length)}";
         }
         private static string GetStringByteLength(long length)
         {
-            string[] units = { "B", "KB", "MB", "GB", "TB" };
+            string[] units = { "", "K", "M", "G", "T" };
             for (int i = 0; i < units.Length; ++i)
             {
                 double calc;
                 if ((calc = length / Math.Pow(1024, i)) < 1024)
                 {
-                    return string.Format("{0,9:N3} {1}", calc, units[i]);
+                    return $"{calc,9:N3} {units[i]}B";
                 }
             }
             return string.Empty;
@@ -134,19 +134,19 @@ namespace epg123
                         case WebExceptionStatus.Timeout:
                             if ((wex.Status == WebExceptionStatus.Timeout) && (cntTries <= maxTries))
                             {
-                                Logger.WriteVerbose(string.Format("SD API WebException Thrown. Message: {0} , Status: {1} . Trying again.", wex.Message, wex.Status));
+                                Logger.WriteVerbose($"SD API WebException Thrown. Message: {wex.Message} , Status: {wex.Status} . Trying again.");
                             }
                             break;
                         default:
-                            Logger.WriteVerbose(string.Format("SD API WebException Thrown. Message: {0} , Status: {1}", wex.Message, wex.Status));
+                            Logger.WriteVerbose($"SD API WebException Thrown. Message: {wex.Message} , Status: {wex.Status}");
                             try
                             {
                                 StreamReader sr = new StreamReader(wex.Response.GetResponseStream(), Encoding.UTF8);
                                 sdError err = JsonConvert.DeserializeObject<sdError>(sr.ReadToEnd());
                                 if (err != null)
                                 {
-                                    ErrorString = string.Format("Message: {0} Response: {1}", err.Message ?? string.Empty, err.Response ?? string.Empty);
-                                    Logger.WriteVerbose(string.Format("SD responded with error code: {0} , message: {1} , serverID: {2} , datetime: {3}", err.Code, err.Message ?? err.Response, err.ServerID, err.Datetime));
+                                    ErrorString = $"Message: {err.Message ?? string.Empty} Response: {err.Response ?? string.Empty}";
+                                    Logger.WriteVerbose($"SD responded with error code: {err.Code} , message: {err.Message ?? err.Response} , serverID: {err.ServerID} , datetime: {err.Datetime:s}Z");
                                 }
                             }
                             catch { }
@@ -155,23 +155,13 @@ namespace epg123
                 }
                 catch (Exception ex)
                 {
-                    Logger.WriteVerbose(string.Format("SD API Unknown exception thrown. Message: {0}", ex.Message));
+                    Logger.WriteVerbose($"SD API Unknown exception thrown. Message: {ex.Message}");
                 }
             } while (cntTries < maxTries);
 
             // failed miserably
             Logger.WriteError("Failed to complete request. Exiting");
             return null;
-        }
-        private static string ReadStreamFromResponse(WebResponse response)
-        {
-            using (Stream responseStream = response.GetResponseStream())
-            {
-                using (StreamReader sr = new StreamReader(responseStream))
-                {
-                    return sr.ReadToEnd();
-                }
-            }
         }
 
         public static bool sdGetToken(string username, string passwordHash, ref string errorString)
@@ -195,13 +185,13 @@ namespace epg123
                 switch (ret.Code)
                 {
                     case 0:
-                        Logger.WriteVerbose(string.Format("Token request successful. serverID: {0}", ret.ServerID));
+                        Logger.WriteVerbose($"Token request successful. serverID: {ret.ServerID}");
                         sdToken = ret.Token;
                         return true;
                     default:
                         break;
                 }
-                errorString = string.Format("Failed token request. code: {0} , message: {1} , datetime: {2}", ret.Code, ret.Message, ret.DateTime);
+                errorString = $"Failed token request. code: {ret.Code} , message: {ret.Message} , datetime: {ret.DateTime:s}Z";
             }
             catch (Exception ex)
             {
@@ -226,26 +216,24 @@ namespace epg123
                 switch (ret.Code)
                 {
                     case 0:
-                        Logger.WriteVerbose(string.Format("Status request successful. account expires: {0} , lineups: {1}/{2} , lastDataUpdate: {3}",
-                                                          ret.Account.Expires, ret.Lineups.Count, ret.Account.MaxLineups, ret.LastDataUpdate));
-                        Logger.WriteVerbose(string.Format("system status: {0} , message: {1}", ret.SystemStatus[0].Status, ret.SystemStatus[0].Message));
+                        Logger.WriteVerbose($"Status request successful. account expires: {ret.Account.Expires:s}Z , lineups: {ret.Lineups.Count}/{ret.Account.MaxLineups} , lastDataUpdate: {ret.LastDataUpdate:s}Z");
+                        Logger.WriteVerbose($"system status: {ret.SystemStatus[0].Status} , message: {ret.SystemStatus[0].Message}");
                         maxLineups = ret.Account.MaxLineups;
 
-                        TimeSpan expires = DateTime.Parse(ret.Account.Expires) - DateTime.Now;
+                        TimeSpan expires = ret.Account.Expires - DateTime.UtcNow;
                         if (expires < TimeSpan.FromDays(7.0))
                         {
-                            Logger.WriteWarning(string.Format("Your Schedules Direct account expires in {0:D2} days {1:D2} hours {2:D2} minutes.",
-                                expires.Days, expires.Hours, expires.Minutes));
+                            Logger.WriteWarning($"Your Schedules Direct account expires in {expires.Days:D2} days {expires.Hours:D2} hours {expires.Minutes:D2} minutes.");
                         }
                         return ret;
                     default:
                         break;
                 }
-                Logger.WriteError(string.Format("Failed to get account status. code: {0} , message: {1}", ret.Code, sdErrorLookup(ret.Code)));
+                Logger.WriteError($"Failed to get account status. code: {ret.Code} , message: {sdErrorLookup(ret.Code)}");
             }
             catch (Exception ex)
             {
-                Logger.WriteError(string.Format("sdUserStatusResponse() Unknown exception thrown. Message: {0}", ex.Message));
+                Logger.WriteError($"sdUserStatusResponse() Unknown exception thrown. Message: {ex.Message}");
             }
             return null;
         }
@@ -268,21 +256,21 @@ namespace epg123
                         if (ret.Version != grabberVersion)
                         {
                             if (Logger.eventID == 0) Logger.eventID = 1;
-                            Logger.WriteInformation(string.Format("epg123 is not up to date. Latest version is {0} and can be downloaded from http://epg123.garyan2.net.", ret.Version));
+                            Logger.WriteInformation($"epg123 is not up to date. Latest version is {ret.Version} and can be downloaded from http://epg123.garyan2.net.");
                         }
                         return ret;
                     case 1005:
-                        Logger.WriteInformation(string.Format("epg123 is not recognized as an approved app from Schedules Direct. code: {0} , message: {1} , datetime: {2}", ret.Code, ret.Message, ret.Datetime));
+                        Logger.WriteInformation($"epg123 is not recognized as an approved app from Schedules Direct. code: {ret.Code} , message: {ret.Message} , datetime: {ret.Datetime:s}Z");
                         break;
                     case 3000:
                     default:
-                        Logger.WriteError(string.Format("Failed version check. code: {0} , message: {1} , datetime: {2}", ret.Code, ret.Message, ret.Datetime));
+                        Logger.WriteError($"Failed version check. code: {ret.Code} , message: {ret.Message} , datetime: {ret.Datetime:s}Z");
                         break;
                 }
             }
             catch (Exception ex)
             {
-                Logger.WriteError(string.Format("sdClientVersionResponse() Unknown exception thrown. Message: {0}", ex.Message));
+                Logger.WriteError($"sdClientVersionResponse() Unknown exception thrown. Message: {ex.Message}");
             }
             return null;
         }
@@ -307,11 +295,11 @@ namespace epg123
                     default:
                         break;
                 }
-                Logger.WriteError(string.Format("Failed request for listing of client lineups. code: {0} , message: {1}", ret.Code, sdErrorLookup(ret.Code)));
+                Logger.WriteError($"Failed request for listing of client lineups. code: {ret.Code} , message: {sdErrorLookup(ret.Code)}");
             }
             catch (Exception ex)
             {
-                Logger.WriteError(string.Format("sdGetLineups() Unknown exception thrown. Message: {0}", ex.Message));
+                Logger.WriteError($"sdGetLineups() Unknown exception thrown. Message: {ex.Message}");
             }
             return null;
         }
@@ -323,33 +311,33 @@ namespace epg123
             {
                 if (sr != null)
                 {
-                    Logger.WriteVerbose(string.Format("Successfully retrieved the channels in lineup {0} for preview.", lineup));
+                    Logger.WriteVerbose($"Successfully retrieved the channels in lineup {lineup} for preview.");
                     return JsonConvert.DeserializeObject<IList<sdLineupPreviewChannel>>(sr.Replace("[],", string.Empty));
                 }
-                Logger.WriteError(string.Format("Did not receive a response from Schedules Direct for retrieval of lineup {0} to preview.", lineup));
+                Logger.WriteError($"Did not receive a response from Schedules Direct for retrieval of lineup {lineup} to preview.");
             }
             catch (Exception ex)
             {
-                Logger.WriteError(string.Format("sdPreviewLineupChannels() Unknown exception thrown. Message: {0}", ex.Message));
+                Logger.WriteError($"sdPreviewLineupChannels() Unknown exception thrown. Message: {ex.Message}");
             }
             return null;
         }
 
         public static SdStationMapResponse sdGetStationMaps(string lineup)
         {
-            var sr = sdGetRequestResponse(METHODS.GETVERBOSEMAP, string.Format("lineups/{0}", lineup));
+            var sr = sdGetRequestResponse(METHODS.GETVERBOSEMAP, $"lineups/{lineup}");
             try
             {
                 if (sr != null)
                 {
-                    Logger.WriteVerbose(string.Format("Successfully retrieved the station mapping for lineup {0}.", lineup));
+                    Logger.WriteVerbose($"Successfully retrieved the station mapping for lineup {lineup}.");
                     return JsonConvert.DeserializeObject<SdStationMapResponse>(sr.Replace("[],", string.Empty));
                 }
-                Logger.WriteError(string.Format("Did not receive a response from Schedules Direct for retrieval of lineup {0}.", lineup));
+                Logger.WriteError($"Did not receive a response from Schedules Direct for retrieval of lineup {lineup}.");
             }
             catch (Exception ex)
             {
-                Logger.WriteError(string.Format("sdGetStationMaps() Unknown exception thrown. Message: {0}", ex.Message));
+                Logger.WriteError($"sdGetStationMaps() Unknown exception thrown. Message: {ex.Message}");
             }
             return null;
         }
@@ -362,14 +350,14 @@ namespace epg123
             {
                 if (sr != null)
                 {
-                    Logger.WriteVerbose(string.Format("Successfully retrieved {0,3} station's daily schedules.          ({1})", request.Length, GetStringTimeAndByteLength(DateTime.Now - dtStart, sr.Length)));
+                    Logger.WriteVerbose($"Successfully retrieved {request.Length,3} station's daily schedules.          ({GetStringTimeAndByteLength(DateTime.Now - dtStart, sr.Length)})");
                     return JsonConvert.DeserializeObject<IList<sdScheduleResponse>>(sr);
                 }
-                Logger.WriteError(string.Format("Did not receive a response from Schedules Direct for {0,3} station's daily schedules. ({1})", request.Length, GetStringTimeAndByteLength(DateTime.Now - dtStart)));
+                Logger.WriteError($"Did not receive a response from Schedules Direct for {request.Length,3} station's daily schedules. ({GetStringTimeAndByteLength(DateTime.Now - dtStart)})");
             }
             catch (Exception ex)
             {
-                Logger.WriteError(string.Format("sdGetScheduleListings() Unknown exception thrown. Message: {0}", ex.Message));
+                Logger.WriteError($"sdGetScheduleListings() Unknown exception thrown. Message: {ex.Message}");
             }
             return null;
         }
@@ -382,14 +370,14 @@ namespace epg123
             {
                 if (sr != null)
                 {
-                    Logger.WriteVerbose(string.Format("Successfully retrieved Md5s for {0,3} station's daily schedules. ({1})", request.Length, GetStringTimeAndByteLength(DateTime.Now - dtStart, sr.Length)));
+                    Logger.WriteVerbose($"Successfully retrieved Md5s for {request.Length,3} station's daily schedules. ({GetStringTimeAndByteLength(DateTime.Now - dtStart, sr.Length)})");
                     return JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, sdScheduleMd5DateResponse>>>(sr.Replace("[]", "{}"));
                 }
-                Logger.WriteError(string.Format("Did not receive a response from Schedules Direct for Md5s of {0,3} station's daily schedules. ({1})", request.Length, GetStringTimeAndByteLength(DateTime.Now - dtStart)));
+                Logger.WriteError($"Did not receive a response from Schedules Direct for Md5s of {request.Length,3} station's daily schedules. ({GetStringTimeAndByteLength(DateTime.Now - dtStart)})");
             }
             catch (Exception ex)
             {
-                Logger.WriteError(string.Format("sdGetScheduleMd5s() Unknown exception thrown. Message: {0}", ex.Message));
+                Logger.WriteError($"sdGetScheduleMd5s() Unknown exception thrown. Message: {ex.Message}");
             }
             return null;
         }
@@ -402,14 +390,14 @@ namespace epg123
             {
                 if (sr != null)
                 {
-                    Logger.WriteVerbose(string.Format("Successfully retrieved {0,4} program descriptions. ({1})", request.Length, GetStringTimeAndByteLength(DateTime.Now - dtStart, sr.Length)));
+                    Logger.WriteVerbose($"Successfully retrieved {request.Length,4} program descriptions. ({GetStringTimeAndByteLength(DateTime.Now - dtStart, sr.Length)})");
                     return JsonConvert.DeserializeObject<IList<sdProgram>>(sr);
                 }
-                Logger.WriteError(string.Format("Did not receive a response from Schedules Direct for {0,4} program descriptions. ({1})", request.Length, GetStringTimeAndByteLength(DateTime.Now - dtStart)));
+                Logger.WriteError($"Did not receive a response from Schedules Direct for {request.Length,4} program descriptions. ({GetStringTimeAndByteLength(DateTime.Now - dtStart)})");
             }
             catch (Exception ex)
             {
-                Logger.WriteError(string.Format("sdGetPrograms() Unknown exception thrown. Message: {0}", ex.Message));
+                Logger.WriteError($"sdGetPrograms() Unknown exception thrown. Message: {ex.Message}");
             }
             return null;
         }
@@ -422,14 +410,14 @@ namespace epg123
             {
                 if (sr != null)
                 {
-                    Logger.WriteVerbose(string.Format("Successfully retrieved {0,3} generic program descriptions. ({1})", request.Length, GetStringTimeAndByteLength(DateTime.Now - dtStart, sr.Length)));
+                    Logger.WriteVerbose($"Successfully retrieved {request.Length,3} generic program descriptions. ({GetStringTimeAndByteLength(DateTime.Now - dtStart, sr.Length)})");
                     return JsonConvert.DeserializeObject<Dictionary<string, sdGenericDescriptions>>(sr);
                 }
-                Logger.WriteError(string.Format("Did not receive a response from Schedules Direct for {0,3} generic program descriptions. ({1})", request.Length, GetStringTimeAndByteLength(DateTime.Now - dtStart)));
+                Logger.WriteError($"Did not receive a response from Schedules Direct for {request.Length,3} generic program descriptions. ({GetStringTimeAndByteLength(DateTime.Now - dtStart)})");
             }
             catch (Exception ex)
             {
-                Logger.WriteError(string.Format("sdGetProgramGenericDescription() Unknown exception thrown. Message: {0}", ex.Message));
+                Logger.WriteError($"sdGetProgramGenericDescription() Unknown exception thrown. Message: {ex.Message}");
             }
             return null;
         }
@@ -442,14 +430,14 @@ namespace epg123
             {
                 if (sr != null)
                 {
-                    Logger.WriteVerbose(string.Format("Successfully retrieved artwork info for {0,3} programs. ({1})", request.Length, GetStringTimeAndByteLength(DateTime.Now - dtStart, sr.Length)));
+                    Logger.WriteVerbose($"Successfully retrieved artwork info for {request.Length,3} programs. ({GetStringTimeAndByteLength(DateTime.Now - dtStart, sr.Length)})");
                     return JsonConvert.DeserializeObject<IList<sdArtworkResponse>>(sr);
                 }
-                Logger.WriteError(string.Format("Did not receive a response from Schedules Direct for artwork info of {0,3} programs. ({1})", request.Length, GetStringTimeAndByteLength(DateTime.Now - dtStart)));
+                Logger.WriteError($"Did not receive a response from Schedules Direct for artwork info of {request.Length,3} programs. ({GetStringTimeAndByteLength(DateTime.Now - dtStart)})");
             }
             catch (Exception ex)
             {
-                Logger.WriteError(string.Format("sdGetArtwork() Unknown exception thrown. Message: {0}", ex.Message));
+                Logger.WriteError($"sdGetArtwork() Unknown exception thrown. Message: {ex.Message}");
             }
             return null;
         }
@@ -468,7 +456,7 @@ namespace epg123
             }
             catch (Exception ex)
             {
-                Logger.WriteError(string.Format("getCountryAvailables() Unknown exception thrown. Message: {0}", ex.Message));
+                Logger.WriteError($"getCountryAvailables() Unknown exception thrown. Message: {ex.Message}");
             }
             return null;
         }
@@ -487,7 +475,7 @@ namespace epg123
             }
             catch (Exception ex)
             {
-                Logger.WriteError(string.Format("getSatelliteAvailables() Unknown exception thrown. Message: {0}", ex.Message));
+                Logger.WriteError($"getSatelliteAvailables() Unknown exception thrown. Message: {ex.Message}");
             }
             return null;
         }
@@ -506,36 +494,36 @@ namespace epg123
             }
             catch (Exception ex)
             {
-                Logger.WriteError(string.Format("getTransmitters() Unknown exception thrown. Message: {0}", ex.Message));
+                Logger.WriteError($"getTransmitters() Unknown exception thrown. Message: {ex.Message}");
             }
             return null;
         }
 
         public static IList<sdHeadendResponse> getHeadends(string country, string postalcode)
         {
-            var sr = sdGetRequestResponse(METHODS.GET, string.Format("headends?country={0}&postalcode={1}", country, postalcode));
+            var sr = sdGetRequestResponse(METHODS.GET, $"headends?country={country}&postalcode={postalcode}");
             try
             {
                 if (sr != null)
                 {
-                    Logger.WriteVerbose(string.Format("Successfully retrieved the headends for {0} and postal code {1}.", country, postalcode));
+                    Logger.WriteVerbose($"Successfully retrieved the headends for {country} and postal code {postalcode}.");
                     return JsonConvert.DeserializeObject<IList<sdHeadendResponse>>(sr);
                 }
-                Logger.WriteError(string.Format("Failed to get a response from Schedules Direct for the headends of {0} and postal code {1}.", country, postalcode));
+                Logger.WriteError($"Failed to get a response from Schedules Direct for the headends of {country} and postal code {postalcode}.");
             }
             catch (Exception ex)
             {
-                Logger.WriteError(string.Format("getHeadends() Unknown exception thrown. Message: {0}", ex.Message));
+                Logger.WriteError($"getHeadends() Unknown exception thrown. Message: {ex.Message}");
             }
             return null;
         }
 
         public static bool addLineup(string lineup)
         {
-            var sr = sdGetRequestResponse(METHODS.PUT, string.Format("lineups/{0}", lineup));
+            var sr = sdGetRequestResponse(METHODS.PUT, $"lineups/{lineup}");
             if (sr == null)
             {
-                Logger.WriteError(string.Format("Failed to get a response from Schedules Direct when trying to add lineup {0}.", lineup));
+                Logger.WriteError($"Failed to get a response from Schedules Direct when trying to add lineup {lineup}.");
                 return false;
             }
 
@@ -545,28 +533,26 @@ namespace epg123
                 switch ((int)resp["code"])
                 {
                     case 0:
-                        Logger.WriteVerbose(string.Format("Successfully added lineup {0} to account. serverID: {1} , message: {2} , changesRemaining: {3}",
-                            lineup, resp["serverID"], resp["message"], resp["changesRemaining"]));
+                        Logger.WriteVerbose($"Successfully added lineup {lineup} to account. serverID: {resp["serverID"]} , message: {resp["message"]} , changesRemaining: {resp["changesRemaining"]}");
                         return true;
                     default:
-                        Logger.WriteError(string.Format("Failed to add lineup {0} to account. serverID: {1} , code: {2} , message: {3} , changesRemaining: {4}",
-                            lineup, resp["serverID"], resp["code"], resp["message"], resp["changesRemaining"]));
+                        Logger.WriteError($"Failed to add lineup {lineup} to account. serverID: {resp["serverID"]} , message: {resp["message"]} , changesRemaining: {resp["changesRemaining"]}");
                         break;
                 }
             }
             catch (Exception ex)
             {
-                Logger.WriteError(string.Format("addLineup() Unknown exception thrown. Message: {0}", ex.Message));
+                Logger.WriteError($"addLineup() Unknown exception thrown. Message: {ex.Message}");
             }
             return false;
         }
 
         public static bool removeLineup(string lineup)
         {
-            var sr = sdGetRequestResponse(METHODS.DELETE, string.Format("lineups/{0}", lineup));
+            var sr = sdGetRequestResponse(METHODS.DELETE, $"lineups/{lineup}");
             if (sr == null)
             {
-                Logger.WriteError(string.Format("Failed to get a response from Schedules Direct when trying to remove lineup {0}.", lineup));
+                Logger.WriteError($"Failed to get a response from Schedules Direct when trying to remove lineup {lineup}.");
                 return false;
             }
 
@@ -576,18 +562,16 @@ namespace epg123
                 switch ((int)resp["code"])
                 {
                     case 0:
-                        Logger.WriteVerbose(string.Format("Successfully removed lineup {0} from account. serverID: {1} , message: {2} , changesRemaining: {3}",
-                            lineup, resp["serverID"], resp["message"], resp["changesRemaining"]));
+                        Logger.WriteVerbose($"Successfully removed lineup {lineup} from account. serverID: {resp["serverID"]} , message: {resp["message"]} , changesRemaining: {resp["changesRemaining"]}");
                         return true;
                     default:
-                        Logger.WriteError(string.Format("Failed to remove lineup {0} from account. serverID: {1} , code: {2} , message: {3} , changesRemaining: {4}",
-                            lineup, resp["serverID"], resp["code"], resp["message"], resp["changesRemaining"]));
+                        Logger.WriteError($"Failed to remove lineup {lineup} from account. serverID: {resp["serverID"]} , code: {resp["code"]} , message: {resp["message"]} , changesRemaining: {resp["changesRemaining"]}");
                         break;
                 }
             }
             catch (Exception ex)
             {
-                Logger.WriteError(string.Format("removeLineup() Unknown exception thrown. Message: {0}", ex.Message));
+                Logger.WriteError($"removeLineup() Unknown exception thrown. Message: {ex.Message}");
             }
             return false;
         }

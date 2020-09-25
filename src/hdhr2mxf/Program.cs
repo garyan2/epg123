@@ -12,7 +12,7 @@ namespace hdhr2mxf
 {
     class Program
     {
-        static bool xmltvOnly = false;
+        //static bool xmltvOnly = false;
         static bool automaticallyImport = false;
         static string outputFile = "hdhr2mxf.mxf";
 
@@ -55,7 +55,7 @@ namespace hdhr2mxf
                         case "-update":
                             epg123.Helper.outputPathOverride = epg123.Helper.Epg123OutputFolder;
                             outputFile = epg123.Helper.Epg123MxfPath;
-                            xmltvOnly = true;
+                            //xmltvOnly = true;
                             
                             string[] folders = { epg123.Helper.Epg123OutputFolder };
                             foreach (string folder in folders)
@@ -151,11 +151,11 @@ namespace hdhr2mxf
                 Console.WriteLine("Using available 14-day XMLTV file from SiliconDust.");
                 return XmltvMxf.BuildMxfFromXmltvGuide(homeruns.ToList());
             }
-            else if (false)// (!xmltvOnly)
-            {
-                Console.WriteLine("Using available 24-hour slice guide data from SiliconDust.");
-                return SliceMxf.BuildMxfFromSliceGuide(homeruns.ToList());
-            }
+            //else if (false)// (!xmltvOnly)
+            //{
+            //    Console.WriteLine("Using available 24-hour slice guide data from SiliconDust.");
+            //    return SliceMxf.BuildMxfFromSliceGuide(homeruns.ToList());
+            //}
             else
             {
                 Console.WriteLine("HDHR2MXF is not configured to download guide data using JSON from SiliconDust.");

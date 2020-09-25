@@ -21,6 +21,8 @@
 ; NOTE: The value of AppId uniquely identifies this application.
 ; Do not use the same AppId value in installers for other applications.
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
+SignTool=signtool /d "EPG123" /du "https://epg123.garyan2.net" $f
+SignedUninstaller=yes
 AppId={{A592C107-8384-4DFF-902E-30F5133EA626}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
@@ -43,11 +45,11 @@ UninstallDisplayIcon={uninstallexe}
 WizardImageFile=imgs\EPG123_164x319.bmp
 WizardSmallImageFile=imgs\EPG123_55x55.bmp
 AllowRootDirectory=True
-AppCopyright=2019
+AppCopyright=2016
 VersionInfoVersion={#MyAppVersion}
 VersionInfoCompany={#MyAppPublisher}
 VersionInfoDescription=Media Center Electronic Program Guide in 1-2-3
-VersionInfoCopyright=2019
+VersionInfoCopyright=2020
 VersionInfoProductName={#MyAppName}
 VersionInfoProductVersion={#MyAppVersion}
 VersionInfoProductTextVersion={#MyAppVersion}
@@ -74,14 +76,14 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 
 [Files]
 Source: "misc\dotNetFx40_Full_setup.exe"; DestDir: "{tmp}"; Flags: dontcopy
-Source: "..\..\bin\Release\epg123.exe"; DestDir: "{app}"; Flags: ignoreversion; Components: main1
-Source: "..\..\bin\Release\hdhr2mxf.exe"; DestDir: "{app}"; Flags: ignoreversion; Components: hdhr
+Source: "..\..\bin\Release\epg123.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: main1
+Source: "..\..\bin\Release\hdhr2mxf.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: hdhr
 Source: "..\..\bin\Release\Newtonsoft.Json.dll"; DestDir: "{app}"; Flags: ignoreversion; Components: main1 hdhr
-Source: "..\..\bin\Release\epg123Client.exe"; DestDir: "{app}"; Flags: ignoreversion; Components: main2
+Source: "..\..\bin\Release\epg123Client.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: main2
 Source: "..\..\bin\Release\epg123Client.exe.config"; DestDir: "{app}"; Flags: ignoreversion; Attribs: hidden; MinVersion: 6.1; OnlyBelowVersion: 6.2; Components: main2
-Source: "..\..\bin\Release\epg123Transfer.exe"; DestDir: "{app}"; Flags: ignoreversion; Components: main2
+Source: "..\..\bin\Release\epg123Transfer.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: main2
 Source: "..\..\bin\Release\epg123Transfer.exe.config"; DestDir: "{app}"; Flags: ignoreversion; Attribs: hidden; MinVersion: 6.1; OnlyBelowVersion: 6.2; Components: main2
-Source: "..\..\bin\Release\epgTray.exe"; DestDir: "{app}"; BeforeInstall: TaskKill('epgTray.exe'); Flags: ignoreversion; Components: main2
+Source: "..\..\bin\Release\epgTray.exe"; DestDir: "{app}"; BeforeInstall: TaskKill('epgTray.exe'); Flags: ignoreversion signonce; Components: main2
 Source: "docs\epg123_Guide.pdf"; DestDir: "{app}"; Flags: ignoreversion; Components: help
 Source: "docs\license.rtf"; DestDir: "{app}"; Flags: ignoreversion
 Source: "docs\customLineup.xml.example"; DestDir: "{app}"; Flags: ignoreversion; Components: main1

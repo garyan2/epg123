@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace epg123
@@ -24,7 +25,8 @@ namespace epg123
         public sdProgramDescriptions Descriptions { get; set; }
 
         [JsonProperty("originalAirDate")]
-        public string OriginalAirDate { get; set; }
+        public DateTime OriginalAirDate { get; set; } = DateTime.MinValue;
+        public bool ShouldSerializeOriginalAirDate() { return OriginalAirDate != DateTime.MinValue; }
 
         [JsonProperty("genres")]
         public string[] Genres { get; set; }
@@ -112,6 +114,9 @@ namespace epg123
     {
         [JsonProperty("code")]
         public int Code { get; set; }
+
+        [JsonProperty("startAirdate")]
+        public string StartAirdate { get; set; }
 
         [JsonProperty("description100")]
         public string Description100 { get; set; }
@@ -201,7 +206,7 @@ namespace epg123
     public class sdProgramMovie
     {
         [JsonProperty("year")]
-        public string Year { get; set; }
+        public int Year { get; set; }
 
         [JsonProperty("duration")]
         public int Duration { get; set; }

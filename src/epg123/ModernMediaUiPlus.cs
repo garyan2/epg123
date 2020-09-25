@@ -20,7 +20,7 @@ namespace epg123
             {
                 try
                 {
-                    JsonSerializer serializer = new JsonSerializer() { NullValueHandling = NullValueHandling.Ignore, Formatting = Formatting.None };
+                    JsonSerializer serializer = new JsonSerializer() { NullValueHandling = NullValueHandling.Ignore, Formatting = Formatting.Indented };
                     serializer.Serialize(writer, Programs);
 
                     Logger.WriteInformation(string.Format("Completed save of ModernMedia UI+ JSON support file to \"{0}\".", filepath));

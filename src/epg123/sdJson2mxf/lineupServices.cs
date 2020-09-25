@@ -114,8 +114,8 @@ namespace epg123
                             customMap.Map.Add(new SdLineupMap()
                             {
                                 StationID = station.StationId,
-                                AtscMajor = int.Parse(station.Number),
-                                AtscMinor = int.Parse(station.Subnumber)
+                                AtscMajor = station.Number,
+                                AtscMinor = station.Subnumber
                             });
                             customStations.Add(station.StationId);
                             customMap.Stations.Add(lineupStation);
@@ -125,8 +125,8 @@ namespace epg123
                             customMap.Map.Add(new SdLineupMap()
                             {
                                 StationID = station.Alternate,
-                                AtscMajor = int.Parse(station.Number),
-                                AtscMinor = int.Parse(station.Subnumber)
+                                AtscMajor = station.Number,
+                                AtscMinor = station.Subnumber
                             });
                             customStations.Add(station.Alternate);
                             customMap.Stations.Add(lineupStation);
@@ -168,8 +168,8 @@ namespace epg123
                         SdStationImage stationLogo = null;
 
                         // add callsign and station name
-                        mxfService.CallSign = station.Callsign;
-                        mxfService.Name = station.Name;
+                        mxfService.CallSign = checkCustomCallsign(station.StationID) ?? station.Callsign;
+                        mxfService.Name = checkCustomServicename(station.StationID) ?? station.Name;
 
                         // add affiliate if available
                         if (!string.IsNullOrEmpty(station.Affiliate))
@@ -565,6 +565,19 @@ namespace epg123
                     }
                 }
             }
+        }
+
+        private static string checkCustomCallsign(string stationId)
+        {
+            var cus = config.StationID.Where(arg => arg.StationID == stationId).SingleOrDefault();
+            if (string.IsNullOrEmpty(cus.customCallSign)) return null;
+            return cus.customCallSign;
+        }
+        private static string checkCustomServicename(string stationId)
+        {
+            var cus = config.StationID.Where(arg => arg.StationID == stationId).SingleOrDefault();
+            if (string.IsNullOrEmpty(cus.customServiceName)) return null;
+            return cus.customServiceName;
         }
     }
 }

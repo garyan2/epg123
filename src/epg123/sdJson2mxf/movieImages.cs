@@ -17,8 +17,8 @@ namespace epg123
 
         private static bool getAllMoviePosters()
         {
-            var moviePrograms = sdMxf.With[0].Programs.Where(arg => !string.IsNullOrEmpty(arg.IsMovie))
-                                                      .Where(arg => string.IsNullOrEmpty(Helper.tableContains(arg.jsonProgramData.Genres, "Adults Only")));
+            var moviePrograms = sdMxf.With[0].Programs.Where(arg => arg.IsMovie)
+                                                      .Where(arg => !arg.IsAdultOnly);
 
             // reset counters
             processedObjects = 0;
@@ -82,7 +82,7 @@ namespace epg123
                         movieImageQueue.Add(mxfProgram.tmsId);
                     }
                 }
-                catch (Exception ex)
+                catch
                 {
                     Logger.WriteInformation(string.Format("Could not find expected program with MD5 hash {0}. Continuing.", mxfProgram.md5));
                 }
@@ -227,7 +227,7 @@ namespace epg123
             return ret;
         }
 
-        private static IList<sdImage> getMoviePosterId(string title, string year, string language)
+        private static IList<sdImage> getMoviePosterId(string title, int year, string language)
         {
             if (!string.IsNullOrEmpty(language))
             {
@@ -241,17 +241,16 @@ namespace epg123
             if (tmdbAPI.isAlive)
             {
                 // if year is empty, use last year as starting point
-                if (string.IsNullOrEmpty(year))
+                if (year == 0)
                 {
-                    year = (DateTime.Now.Year - 1).ToString();
+                    year = DateTime.Now.Year - 1;
                 }
 
                 // return first finding
-                int yyyy = int.Parse(year);
-                int[] years = new int[] { yyyy, yyyy - 1, yyyy + 1 };
+                int[] years = new int[] { year, year + 1, year - 1 };
                 foreach (int y in years)
                 {
-                    if (tmdbAPI.SearchCatalog(title, y, language) > 0)
+                    if (year <= DateTime.Now.Year && tmdbAPI.SearchCatalog(title, y, language) > 0)
                     {
                         return tmdbAPI.sdImages;
                     }

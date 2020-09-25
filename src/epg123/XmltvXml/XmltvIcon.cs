@@ -8,9 +8,11 @@ namespace epg123.XmltvXml
         public string src { get; set; }
 
         [XmlAttribute("width")]
-        public string width { get; set; }
+        public int width { get; set; } = 0;
+        public bool ShouldSerializewidth() { return width != 0; }
 
         [XmlAttribute("height")]
-        public string height { get; set; }
+        public int height { get; set; } = 0;
+        public bool ShouldSerializeheight() { return height != 0; }
     }
 }

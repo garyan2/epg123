@@ -54,6 +54,10 @@ namespace epg123
                         {
                             series.ShortDescription = cached.Description100;
                             series.Description = cached.Description1000;
+                            if (!string.IsNullOrEmpty(cached.StartAirdate))
+                            {
+                                series.StartAirdate = cached.StartAirdate;
+                            }
                         }
                     }
                 }
@@ -175,25 +179,25 @@ namespace epg123
                 // generic series information already in support file array
                 else if (ModernMediaUiPlus.Programs.ContainsKey(seriesId))
                 {
-                    ModernMediaUiPlusPrograms program;
-                    if (ModernMediaUiPlus.Programs.TryGetValue(seriesId, out program))
-                    {
-                        SetSeriesOriginalAirdate(seriesId, program.OriginalAirDate);
-                    }
                     ++processedObjects; reportProgress();
+                    ModernMediaUiPlusPrograms program;
+                    if (ModernMediaUiPlus.Programs.TryGetValue(seriesId, out program) && program.OriginalAirDate != null)
+                    {
+                        UpdateSeriesAirdate(seriesId, program.OriginalAirDate);
+                    }
                     continue;
                 }
                 // extended information in current json file
                 else if (oldPrograms.ContainsKey(seriesId))
                 {
+                    ++processedObjects; reportProgress();
                     ModernMediaUiPlusPrograms program;
                     if (oldPrograms.TryGetValue(seriesId, out program) && !string.IsNullOrEmpty(program.OriginalAirDate))
                     {
                         ModernMediaUiPlus.Programs.Add(seriesId, program);
-                        SetSeriesOriginalAirdate(seriesId, program.OriginalAirDate);
-                        ++processedObjects; reportProgress();
-                        continue;
+                        UpdateSeriesAirdate(seriesId, program.OriginalAirDate);
                     }
+                    continue;
                 }
 
                 // add to queue
@@ -248,17 +252,34 @@ namespace epg123
                 }
 
                 // add the series start air date if available
-                if (!string.IsNullOrEmpty(response.OriginalAirDate))
-                {
-                    SetSeriesOriginalAirdate(response.ProgramID, response.OriginalAirDate);
-                }
+                UpdateSeriesAirdate(response.ProgramID, response.OriginalAirDate);
             }
             return true;
         }
-        private static void SetSeriesOriginalAirdate(string programId, string originalAirdate)
+        private static void UpdateSeriesAirdate(string seriesId, string originalAirdate)
         {
-            // determine which series this belongs to
-            sdMxf.With[0].getSeriesInfo(programId.Substring(2, 8)).StartAirdate = originalAirdate;
+            UpdateSeriesAirdate(seriesId, DateTime.Parse(originalAirdate));
+        }
+        private static void UpdateSeriesAirdate(string seriesId, DateTime airdate)
+        {
+            // write the mxf entry
+            sdMxf.With[0].getSeriesInfo(seriesId.Substring(2, 8)).StartAirdate = airdate.ToString();
+
+            // update cache if needed
+            using (StringReader reader = new StringReader(epgCache.GetAsset(seriesId)))
+            {
+                JsonSerializer serializer = new JsonSerializer();
+                sdGenericDescriptions cached = (sdGenericDescriptions)serializer.Deserialize(reader, typeof(sdGenericDescriptions));
+                if (string.IsNullOrEmpty(cached.StartAirdate))
+                {
+                    cached.StartAirdate = airdate.Equals(DateTime.MinValue) ? "" : airdate.ToString("yyyy-MM-dd");
+                    using (StringWriter writer = new StringWriter())
+                    {
+                        serializer.Serialize(writer, cached);
+                        epgCache.UpdateAssetJsonEntry(seriesId, writer.ToString());
+                    }
+                }
+            }
         }
     }
 }

@@ -35,10 +35,10 @@ namespace epg123
                     {
                         Aspect = "2x3",
                         Category = "Poster Art",
-                        Height = height.ToString(),
+                        Height = height,
                         Size = "Md",
                         Uri = posterImageUrl,
-                        Width = width.ToString()
+                        Width = width
                     });
                 }
                 //if (!string.IsNullOrEmpty(backdropImageUrl))

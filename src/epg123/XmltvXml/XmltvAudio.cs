@@ -10,9 +10,9 @@ namespace epg123.XmltvXml
     public class XmltvAudio
     {
         [XmlElement("present")]
-        public String Present { get; set; }
+        public string Present { get; set; }
 
         [XmlElement("stereo")]
-        public String Stereo { get; set; }
+        public string Stereo { get; set; }
     }
 }

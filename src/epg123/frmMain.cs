@@ -157,9 +157,6 @@ namespace epg123
                 Logger.WriteError(ex.Message);
             }
 
-            // update the task panel
-            updateTaskPanel();
-
             // if client was started as elevated to perform an action
             if (Helper.UserHasElevatedRights && File.Exists(Helper.EButtonPath))
             {
@@ -261,10 +258,10 @@ namespace epg123
         #endregion
 
         #region ========== Scheduled Task ==========
-        private void updateTaskPanel()
+        private void updateTaskPanel(bool silent = false)
         {
             // get status
-            task.queryTask();
+            task.queryTask(silent);
 
             // set task create/delete button text
             btnTask.Text = (task.exist || task.existNoAccess) ? "Delete" : "Create";
@@ -290,7 +287,7 @@ namespace epg123
                 }
 
                 // verify task configuration with respect to this executable
-                if (epg123Index >= 0 && !task.actions[epg123Index].Path.ToLower().Replace("\"", "").Equals(Helper.Epg123ExePath.ToLower()))
+                if (!silent && epg123Index >= 0 && !task.actions[epg123Index].Path.ToLower().Replace("\"", "").Equals(Helper.Epg123ExePath.ToLower()))
                 {
                     MessageBox.Show(string.Format("The location of this program file is not the same location configured in the Scheduled Task.\n\nThis program:\n{0}\n\nTask program:\n{1}",
                                                   Helper.Epg123ExePath, task.actions[epg123Index].Path), "Configuration Warning", MessageBoxButtons.OK);
@@ -488,6 +485,7 @@ namespace epg123
                     ckSubstitutePath.Checked = (config.XmltvIncludeChannelLogos == "substitute");
                     txtSubstitutePath.Text = config.XmltvLogoSubstitutePath;
                     ckXmltvFillerData.Checked = config.XmltvAddFillerData;
+                    ckXmltvExtendedInfo.Checked = config.XmltvExtendedInfoInTitleDescriptions;
                     numFillerDuration.Value = config.XmltvFillerProgramLength;
                     rtbFillerDescription.Text = config.XmltvFillerProgramDescription;
                     tbXmltvOutput.Text = config.XmltvOutputFile ?? Helper.Epg123XmltvPath;
@@ -518,6 +516,9 @@ namespace epg123
                 btnExecute.Enabled = true;
                 btnClientLineups.Enabled = true;
 
+                // update the task panel
+                updateTaskPanel();
+
                 // automatically save a .cfg file with account info if first login or password change
                 if (newLogin)
                 {
@@ -540,8 +541,8 @@ namespace epg123
             }
             else
             {
-                txtAcctExpires.Text = DateTime.Parse(status.Account.Expires).ToString();
-                if (DateTime.Parse(status.Account.Expires) - DateTime.Now < TimeSpan.FromDays(14.0))
+                txtAcctExpires.Text = status.Account.Expires.ToLocalTime().ToString();
+                if (status.Account.Expires - DateTime.Now < TimeSpan.FromDays(14.0))
                 {
                     // weird fact: the text color of a read-only textbox will only change after you set the backcolor
                     txtAcctExpires.ForeColor = Color.Red;
@@ -683,8 +684,8 @@ namespace epg123
             {
                 CustomStation stationItem = PrimaryOrAlternateStation(station);
 
-                string channel = stationItem.Number;
-                channel += (stationItem.Subnumber != "0") ? "." + stationItem.Subnumber : string.Empty;
+                string channel = stationItem.Number.ToString();
+                channel += (stationItem.Subnumber != 0) ? "." + stationItem.Subnumber.ToString() : string.Empty;
                 items.Add(new ListViewItem(
                     new string[]
                     {
@@ -776,6 +777,8 @@ namespace epg123
                                 {
                                     CallSign = station.Callsign,
                                     StationID = station.StationID,
+                                    customCallSign = checkCustomCallsign(station.StationID),
+                                    customServiceName = checkCustomServicename(station.StationID),
                                     HDOverride = checkHdOverride(station.StationID),
                                     SDOverride = checkSdOverride(station.StationID)
                                 };
@@ -822,7 +825,7 @@ namespace epg123
                                 string channelNumber = number.ToString() + ((subnumber > 0) ? "." + subnumber.ToString() : null);
                                 if (channelNumbers.Add(channelNumber + ":" + station.StationID))
                                 {
-                                    listViewItems.Add(addListviewChannel(station.Callsign, channelNumber, station.StationID, station.Name, dlStation, stationLanguage));
+                                    listViewItems.Add(addListviewChannel(dlStation.customCallSign ?? station.Callsign, channelNumber, station.StationID, dlStation.customServiceName ?? station.Name, dlStation, stationLanguage));
 
                                     // URIs to channel logos are here ... store them for use if needed
                                     string dummy;
@@ -1414,7 +1417,7 @@ namespace epg123
         {
             if (sender.Equals(cbXmltv))
             {
-                config.CreateXmltv = ckChannelNumbers.Enabled = ckChannelLogos.Enabled = ckXmltvFillerData.Enabled =
+                config.CreateXmltv = ckChannelNumbers.Enabled = ckChannelLogos.Enabled = ckXmltvFillerData.Enabled = ckXmltvExtendedInfo.Enabled =
                     lblXmltvOutput.Enabled = tbXmltvOutput.Enabled = btnXmltvOutput.Enabled = lblXmltvLogosNote.Enabled = cbXmltv.Checked;
                 if (!cbXmltv.Checked)
                 {
@@ -1482,6 +1485,10 @@ namespace epg123
             else if (sender.Equals(rtbFillerDescription))
             {
                 config.XmltvFillerProgramDescription = rtbFillerDescription.Text;
+            }
+            else if (sender.Equals(ckXmltvExtendedInfo))
+            {
+                config.XmltvExtendedInfoInTitleDescriptions = ckXmltvExtendedInfo.Checked;
             }
         }
         private void btnXmltvOutput_Click(object sender, EventArgs e)
@@ -1654,6 +1661,28 @@ namespace epg123
                 if (station.StationID == stationId) return station.SDOverride;
             }
             return false;
+        }
+
+        private string checkCustomCallsign(string stationId)
+        {
+            foreach (SdChannelDownload station in config.StationID)
+            {
+                if (station.StationID == stationId && !string.IsNullOrEmpty(station.customCallSign)) return station.customCallSign;
+            }
+            return null;
+        }
+        private string checkCustomServicename(string stationId)
+        {
+            foreach (SdChannelDownload station in config.StationID)
+            {
+                if (station.StationID == stationId && !string.IsNullOrEmpty(station.customServiceName)) return station.customServiceName;
+            }
+            return null;
+        }
+
+        private void tabTask_Enter(object sender, EventArgs e)
+        {
+            updateTaskPanel(true);
         }
     }
 }

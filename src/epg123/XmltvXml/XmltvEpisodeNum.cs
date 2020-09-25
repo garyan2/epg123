@@ -6,9 +6,9 @@ namespace epg123.XmltvXml
     public class XmltvEpisodeNum
     {
         [XmlAttribute("system")]
-        public String System { get; set; }
+        public string System { get; set; }
 
         [XmlText]
-        public String Text { get; set; }
+        public string Text { get; set; }
     }
 }

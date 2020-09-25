@@ -18,10 +18,10 @@ namespace epg123
     public class sdImage
     {
         [JsonProperty("width")]
-        public string Width { get; set; }
+        public int Width { get; set; }
 
         [JsonProperty("height")]
-        public string Height { get; set; }
+        public int Height { get; set; }
 
         [JsonProperty("uri")]
         public string Uri { get; set; }

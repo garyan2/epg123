@@ -84,6 +84,7 @@ namespace epg123
             }
             Logger.WriteInformation(string.Format("Processed {0} daily schedules for {1} stations.", totalObjects, sdMxf.With[0].Services.Count));
             Logger.WriteMessage("Exiting getAllScheduleEntryMd5s(). SUCCESS.");
+            GC.Collect();
             return true;
         }
 
@@ -286,8 +287,8 @@ namespace epg123
             foreach (sdSchedProgram program in schedule.Programs)
             {
                 // determine whether to populate StartTime attribute
-                string startTime = program.AirDateTime.TrimEnd('Z');
-                DateTime dtStart = DateTime.Parse(startTime);
+                DateTime dtStart = program.AirDateTime;
+                string startTime = dtStart.ToString("s");
                 if (dtStart == mxfService.mxfScheduleEntries.endTime)
                 {
                     startTime = null;
@@ -328,10 +329,10 @@ namespace epg123
                     IsSeasonPremiere = Helper.stringContains(program.IsPremiereOrFinale, "Season Premiere"),
                     IsSeriesFinale = Helper.stringContains(program.IsPremiereOrFinale, "Series Finale"),
                     IsSeriesPremiere = Helper.stringContains(program.IsPremiereOrFinale, "Series Premiere"),
-                    IsPremiere = (program.Premiere) ? "true" : Helper.stringContains(program.IsPremiereOrFinale, "Premiere"),
-                    _part = (program.Multipart != null) ? int.Parse(program.Multipart.PartNumber) : 0,
-                    _parts = (program.Multipart != null) ? int.Parse(program.Multipart.TotalParts) : 0,
-                    _newDate = (config.OADOverride && program.New) ? dtStart.ToLocalTime().ToString("yyyy-MM-dd") : string.Empty
+                    IsPremiere = program.Premiere || Helper.stringContains(program.IsPremiereOrFinale, "Premiere"),
+                    _part = (program.Multipart != null) ? program.Multipart.PartNumber : 0,
+                    _parts = (program.Multipart != null) ? program.Multipart.TotalParts : 0,
+                    _newDate = (config.OADOverride && program.New) ? dtStart.ToLocalTime() : DateTime.MinValue
                 };
 
                 // grab any tvratings from desired countries
@@ -341,7 +342,7 @@ namespace epg123
                     string[] ratings = config.RatingsOrigin.Split(',');
                     foreach (sdSchedTvRating rating in program.Ratings)
                     {
-                        if (string.IsNullOrEmpty(rating.Country) || !string.IsNullOrEmpty(Helper.tableContains(ratings, "ALL")) || !string.IsNullOrEmpty(Helper.tableContains(ratings, rating.Country)))
+                        if (string.IsNullOrEmpty(rating.Country) || Helper.tableContains(ratings, "ALL") || Helper.tableContains(ratings, rating.Country))
                         {
                             scheduleTvRatings.Add(rating.Body, rating.Code);
                         }
@@ -355,36 +356,36 @@ namespace epg123
                     AudioFormat = encodeAudioFormat(program.AudioProperties),
                     Duration = program.Duration,
                     Is3D = Helper.tableContains(program.VideoProperties, "3d"),
-                    IsBlackout = (program.SubjectToBlackout) ? "true" : null,
-                    IsClassroom = (program.CableInTheClassroom) ? "true" : null,
+                    IsBlackout = program.SubjectToBlackout,
+                    IsClassroom = program.CableInTheClassroom,
                     IsCC = Helper.tableContains(program.AudioProperties, "cc"),
                     IsDelay = Helper.stringContains(program.LiveTapeDelay, "delay"),
                     IsDvs = Helper.tableContains(program.AudioProperties, "dvs"),
                     IsEnhanced = Helper.tableContains(program.VideoProperties, "enhanced"),
                     IsFinale = Helper.stringContains(program.IsPremiereOrFinale, "finale"),
-                    IsHdtv = checkHdOverride(schedule.StationID) ? "true" : checkSdOverride(schedule.StationID) ? "false" : Helper.tableContains(program.VideoProperties, "hdtv"),
+                    IsHdtv = checkHdOverride(schedule.StationID) ? true : checkSdOverride(schedule.StationID) ? false : Helper.tableContains(program.VideoProperties, "hdtv"),
                     //IsHdtvSimulCast = null,
-                    IsInProgress = (program.JoinedInProgress) ? "true" : null,
+                    IsInProgress = program.JoinedInProgress,
                     IsLetterbox = Helper.tableContains(program.VideoProperties, "letterbox"),
                     IsLive = Helper.stringContains(program.LiveTapeDelay, "live"),
                     //IsLiveSports = null,
                     IsPremiere = prog.IsPremiere,
-                    IsRepeat = program.New ? null : "true",
+                    IsRepeat = !program.New,
                     IsSap = Helper.tableContains(program.AudioProperties, "sap"),
                     IsSubtitled = Helper.tableContains(program.AudioProperties, "subtitled"),
                     IsTape = Helper.stringContains(program.LiveTapeDelay, "tape"),
-                    Part = (program.Multipart != null) ? program.Multipart.PartNumber : null,
-                    Parts = (program.Multipart != null) ? program.Multipart.TotalParts : null,
+                    Part = (program.Multipart != null) ? program.Multipart.PartNumber : 0,
+                    Parts = (program.Multipart != null) ? program.Multipart.TotalParts : 0,
                     Program = sdMxf.With[0].getProgram(program.ProgramID, prog).Id,
-                    StartTime = startTime,
+                    StartTime = (startTime == null) ? DateTime.MinValue : DateTime.Parse(startTime),
                     //TvRating is determined in the class itself to combine with the program content ratings
-                    IsSigned = (program.Signed) ? "true" : null,
+                    IsSigned = program.Signed
                 });
             }
             return true;
         }
 
-        private static string encodeAudioFormat(string[] audioProperties)
+        private static int encodeAudioFormat(string[] audioProperties)
         {
             int maxValue = 0;
             if (audioProperties != null)
@@ -409,7 +410,7 @@ namespace epg123
                     }
                 }
             }
-            return (maxValue > 0) ? maxValue.ToString() : null;
+            return maxValue;
         }
 
         private static bool checkHdOverride(string stationId)

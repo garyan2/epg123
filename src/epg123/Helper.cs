@@ -119,26 +119,26 @@ namespace epg123
             }
         }
 
-        public static string tableContains(string[] table, string text, bool exactMatch = false)
+        public static bool tableContains(string[] table, string text, bool exactMatch = false)
         {
             if (table != null)
             {
                 foreach (string str in table)
                 {
-                    if (!exactMatch && str.ToLower().Contains(text.ToLower())) return "true";
-                    else if (str.ToLower().Equals(text.ToLower())) return "true";
+                    if (!exactMatch && str.ToLower().Contains(text.ToLower())) return true;
+                    else if (str.ToLower().Equals(text.ToLower())) return true;
                 }
             }
-            return null;
+            return false;
         }
 
-        public static string stringContains(string str, string text)
+        public static bool stringContains(string str, string text)
         {
             if (str != null)
             {
-                if (str.ToLower().Contains(text.ToLower())) return "true";
+                if (str.ToLower().Contains(text.ToLower())) return true;
             }
-            return null;
+            return false;
         }
 
         public static void WriteEButtonFile(string action)

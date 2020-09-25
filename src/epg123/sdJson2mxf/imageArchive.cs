@@ -94,9 +94,9 @@ namespace epg123
         public string Url { get; set; }
 
         [XmlAttribute("width")]
-        public string Width { get; set; }
+        public int Width { get; set; }
 
         [XmlAttribute("height")]
-        public string Height { get; set; }
+        public int Height { get; set; }
     }
 }

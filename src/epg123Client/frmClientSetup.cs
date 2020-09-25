@@ -486,7 +486,7 @@ namespace epg123
             DirectoryInfo di = new DirectoryInfo(folder);
             try
             {
-                foreach (FileInfo file in di.GetFiles("*.*", SearchOption.AllDirectories))
+                foreach (FileInfo file in di.GetFiles("mcepg*.*", SearchOption.TopDirectoryOnly))
                 {
                     try
                     {
@@ -512,6 +512,7 @@ namespace epg123
             {
                 foreach (DirectoryInfo dir in di.GetDirectories())
                 {
+                    if (!dir.Name.StartsWith("mcepg") && !dir.Name.Contains("Packages")) continue;
                     ret &= emptyFolder(dir);
                     try
                     {

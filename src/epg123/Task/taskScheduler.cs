@@ -190,16 +190,16 @@ namespace epg123
             principalsType principals;
             if (false)//isWindows10())
             {
-                principals = new principalsType()
-                {
-                    Principal = new principalType()
-                    {
-                        id = @"NT AUTHORITY\NETWORKSERVICE",
-                        UserId = "S-1-5-20",
-                        RunLevel = runLevelType.HighestAvailable,
-                        RunLevelSpecified = true
-                    }
-                };
+                //principals = new principalsType()
+                //{
+                //    Principal = new principalType()
+                //    {
+                //        id = @"NT AUTHORITY\NETWORKSERVICE",
+                //        UserId = "S-1-5-20",
+                //        RunLevel = runLevelType.HighestAvailable,
+                //        RunLevelSpecified = true
+                //    }
+                //};
             }
             else
             {
