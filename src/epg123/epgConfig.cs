@@ -88,7 +88,7 @@ namespace epg123
             if (other == null) return false;
             if (ReferenceEquals(this, other)) return true;
 
-            //if (!this.version.Equals(other.version)) return false;
+            if (!this.version.Equals(other.version)) return false;
             if (!this.UserAccount.LoginName.Equals(other.UserAccount?.LoginName)) return false;
             if (!this.UserAccount.PasswordHash.Equals(other.UserAccount?.PasswordHash)) return false;
             if (!this.RatingsOrigin.Equals(other.RatingsOrigin)) return false;
@@ -277,7 +277,7 @@ namespace epg123
                                                        "            less-than = &lt;\n" +
                                                        "            greater-than = &gt;\n" +
                                                        "            quotation = &quot;\n" +
-                                                       "            apostraphe = &apos; ");
+                                                       "            apostrophe = &apos; ");
             }
             set { }
         }

@@ -54,11 +54,11 @@ public class ListViewColumnSorter : IComparer
         if (SuspendSort) return 0;
 
         // Cast the objects to be compared to ListViewItem objects
-        string stringX = ((ListViewItem)x).SubItems[ColumnToSort].Text.Replace(".", "").Replace("-", "");
-        string stringY = ((ListViewItem)y).SubItems[ColumnToSort].Text.Replace(".", "").Replace("-", "");
+        string stringX = ((ListViewItem)x).SubItems[ColumnToSort].Text.Replace("-", "");
+        string stringY = ((ListViewItem)y).SubItems[ColumnToSort].Text.Replace("-", "");
 
         // Compare the two items either by number or text
-        if (stringX.All(char.IsDigit) && stringY.All(char.IsDigit))
+        if (stringX.Replace(".", "").All(char.IsDigit) && stringY.Replace(".", "").All(char.IsDigit))
         {
             compareResult = ObjectCompare.Compare(extendChannelSubchannel(stringX), extendChannelSubchannel(stringY));
         }

@@ -1200,6 +1200,7 @@ namespace epg123
                     // save configuration file
                     using (StreamWriter stream = new StreamWriter(Helper.Epg123CfgPath, false, Encoding.UTF8))
                     {
+                        config.version = Helper.epg123Version;
                         XmlSerializer serializer = new XmlSerializer(typeof(epgConfig));
                         XmlSerializerNamespaces ns = new XmlSerializerNamespaces();
                         ns.Add("", "");
