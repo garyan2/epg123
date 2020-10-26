@@ -52,6 +52,7 @@ namespace epg123
             }
         }
         public bool shouldBackup;
+        public bool hdhr2mxfSrv;
 
         public frmClientSetup()
         {
@@ -97,7 +98,7 @@ namespace epg123
             // STEP 2: WMC TV Setup
             else if (sender.Equals(btnTvSetup) && configureHdPvrTuners() && openWmc() && activateGuide() && disableBackgroundScanning())
             {
-                if (!isTunerCountTweaked(TUNERLIMIT) && MessageBox.Show("If the tuner limit increase did not stick during TV Setup, you can try again. Do you wish to apply the tweak and perform a TV Setup in WMC again?\n\nNOTE: This only affects users with more than 4 tuners of any tuner type (i.e. ATSC, Digital Cable, DVB-T, etc). If this does not affect you, click [NO].", "Verify Tuner Limit Increase", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                if (!isTunerCountTweaked(TUNERLIMIT))
                 {
                     tweakMediaCenterTunerCount(TUNERLIMIT);
                 }
@@ -144,11 +145,6 @@ namespace epg123
                     updateStatusText(string.Empty);
                 }
 
-                // create a backup of the new WMC configuration
-                if (shouldBackup = (Store.objectStore != null))
-                {
-                    PerformBackup();
-                }
                 MessageBox.Show("Setup is complete. Be sure to create a Scheduled Task to perform daily updates and keep your guide up to date!", "Setup Complete", MessageBoxButtons.OK);
                 Logger.WriteVerbose("Setup is complete.  Be sure to create a Scheduled Task to perform daily updates and keep your guide up to date!");
                 btnCleanStart.Enabled = true;
@@ -596,34 +592,38 @@ namespace epg123
 
         private bool isTunerCountTweaked(int count)
         {
-            updateStatusText("Verifying tuner limit increases ...");
-            Logger.WriteVerbose("Verifying tuner limit increases ...");
-
-            int success = 0;
-            using (UIds uids = new UIds(Store.objectStore))
+            int tuners = 0;
+            int recorders = 0;
+            using (RegistryKey tunersKey = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Media Center\Service\Video\Tuners", false))
             {
-                foreach (UId uid in uids.Where(arg => arg.GetFullName().StartsWith("!vss-")))
+                string[] subkeys = tunersKey.GetSubKeyNames().Where(arg => !arg.Equals("DVR")).ToArray();
+                foreach (string subkey in subkeys)
                 {
-                    foreach (string country in countries)
+                    using (RegistryKey tunersKey2 = tunersKey.OpenSubKey(subkey))
                     {
-                        if (uid.GetFullName().Equals("!vss-" + country))
-                        {
-                            Type t = uid.Target.GetType();
-                            PropertyInfo[] properties = t.GetProperties();
-                            foreach (var property in properties.Where(arg => arg.Name.StartsWith("MaxRecordersFor")))
-                            {
-                                var q = property.GetValue(uid.Target, null);
-                                if ((int)q != count) return false;
-                            }
-                            ++success;
-                            continue;
-                        }
+                        tuners += tunersKey2.SubKeyCount;
                     }
-                    if (success == countries.Length) return true;
                 }
             }
-            Store.Close();
-            return false;
+            using (RegistryKey key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Media Center\Settings", false))
+            {
+                string[] subkeys = key.GetSubKeyNames().Where(arg => arg.StartsWith("RecorderSettings")).ToArray();
+                foreach (string subkey in subkeys)
+                {
+                    using (RegistryKey key2 = key.OpenSubKey(subkey))
+                    {
+                        if (!key2.GetValue("id").Equals("<<NULL>>")) ++recorders;
+                    }
+                }
+            }
+            if (tuners != recorders)
+            {
+                if (DialogResult.Yes == MessageBox.Show($"It appears there are {tuners} tuners available for use but only {recorders} of them configured in WMC.\n\nDo you wish to perform TV Setup again?", "Verify Tuner Count", MessageBoxButtons.YesNo, MessageBoxIcon.Question))
+                {
+                    return false;
+                }
+            }
+            return true;
         }
         #endregion
 
@@ -821,6 +821,7 @@ namespace epg123
             if ((File.Exists(Helper.Epg123ExePath) && File.Exists(Helper.Hdhr2mxfExePath) && DialogResult.Yes == MessageBox.Show(text, caption, MessageBoxButtons.YesNo, MessageBoxIcon.Question)) ||
                 (File.Exists(Helper.Hdhr2mxfExePath) && !File.Exists(Helper.Epg123ExePath)))
             {
+                hdhr2mxfSrv = true;
                 updateStatusText("Running HDHR2MXF to create the guide ...");
                 Logger.WriteVerbose("Running HDHR2MXF to create the guide ...");
 

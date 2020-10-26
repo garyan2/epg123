@@ -88,19 +88,20 @@ namespace epg123
             mergedLineup_ = null;
             singletonLineup_ = null;
 
-            if (objectStore_ != null)
-            {
-            }
             if (dispose)
             {
-                if (objectStore_ != null)
+                try
                 {
-                    objectStore.Dispose();
+                    if (objectStore_ != null)
+                    {
+                        objectStore.Dispose();
+                    }
+                    if (singletonStore_ != null)
+                    {
+                        ObjectStore.DisposeSingleton();
+                    }
                 }
-                if (singletonStore_ != null)
-                {
-                    ObjectStore.DisposeSingleton();
-                }
+                catch { }
             }
             objectStore_ = null;
             singletonStore_ = null;

@@ -7,12 +7,12 @@ namespace epg123
 {
     class CompressXmlFiles
     {
-        public static bool CompressSingleStreamToFile(Stream stream, string fileUri, string filePath, CompressionOption option = CompressionOption.Maximum)
+        public static bool CompressSingleStreamToFile(Stream stream, string fileUri, string filePath, CompressionOption option = CompressionOption.Normal)
         {
             using (var pack = ZipPackage.Open(filePath, FileMode.Create))
             {
                 var part = pack.CreatePart(new Uri(fileUri, UriKind.Relative), 
-                    System.Net.Mime.MediaTypeNames.Text.Xml, CompressionOption.Normal);
+                    System.Net.Mime.MediaTypeNames.Text.Xml, option);
                 CopyStream(stream, part.GetStream());
             }
             return true;

@@ -570,13 +570,13 @@ namespace epg123
         private static string checkCustomCallsign(string stationId)
         {
             var cus = config.StationID.Where(arg => arg.StationID == stationId).SingleOrDefault();
-            if (string.IsNullOrEmpty(cus.customCallSign)) return null;
+            if (string.IsNullOrEmpty(cus?.customCallSign)) return null;
             return cus.customCallSign;
         }
         private static string checkCustomServicename(string stationId)
         {
             var cus = config.StationID.Where(arg => arg.StationID == stationId).SingleOrDefault();
-            if (string.IsNullOrEmpty(cus.customServiceName)) return null;
+            if (string.IsNullOrEmpty(cus?.customServiceName)) return null;
             return cus.customServiceName;
         }
     }

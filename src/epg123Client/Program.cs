@@ -9,6 +9,7 @@ using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using Microsoft.MediaCenter.Guide;
 using Microsoft.MediaCenter.Pvr;
+using epg123Client;
 
 namespace epg123
 {
@@ -103,10 +104,10 @@ namespace epg123
             Directory.SetCurrentDirectory(Helper.ExecutablePath);
 
             // establish folders with permissions
-            //if (!Helper.CreateAndSetFolderAcl(Helper.Epg123ProgramDataFolder))
-            //{
-            //    Logger.WriteInformation(string.Format("Failed to set full control permissions for Everyone on folder \"{0}\".", Helper.Epg123ProgramDataFolder));
-            //}
+            if (!Helper.CreateAndSetFolderAcl(Helper.Epg123ProgramDataFolder))
+            {
+                Logger.WriteInformation(string.Format("Failed to set full control permissions for Everyone on folder \"{0}\".", Helper.Epg123ProgramDataFolder));
+            }
             string[] folders = { Helper.Epg123BackupFolder };
             foreach (string folder in folders)
             {
@@ -191,8 +192,8 @@ namespace epg123
             // create a mutex and keep alive until program exits
             using (Mutex mutex = new Mutex(false, "Global\\" + appGuid))
             {
-                bool match, nologo, import, force, showGui, advanced, nogc;
-                match = nologo = import = force = showGui = advanced = nogc = false;
+                bool match, nologo, import, force, showGui, advanced, nogc, verbose;
+                match = nologo = import = force = showGui = advanced = nogc = verbose = false;
 
                 if ((args != null) && (args.Length > 0))
                 {
@@ -246,6 +247,9 @@ namespace epg123
                             case "-nogc":
                                 nogc = true;
                                 break;
+                            case "-verbose":
+                                verbose = true;
+                                break;
                             default:
                                 Logger.WriteVerbose($"**** Invalid arguments for epg123Client.exe; \"{arguments}\" ****");
                                 Logger.Close();
@@ -258,153 +262,166 @@ namespace epg123
                     showGui = true;
                 }
 
-                if (showGui)
+                // use another mutex if the GUI is open
+                using (Mutex mutex2 = new Mutex(false, "Global\\" + guiGuid))
                 {
-                    // use another mutex if the GUI is open
-                    using (Mutex mutex2 = new Mutex(false, "Global\\" + guiGuid))
+                    // check for a gui instance already running
+                    if (!mutex2.WaitOne(2000, false) && (showGui || !showProgress))
                     {
-                        // check for a gui instance already running
-                        if (!mutex2.WaitOne(2000, false))
+                        if (showGui)
                         {
-                            MessageBox.Show("An instance of EPG123 Client is already running.", "Initialization Aborted");
-                            return 0;
+                            MessageBox.Show("An instance of EPG123 Client GUI is already running.", "Initialization Aborted");
                         }
+                        else
+                        {
+                            Logger.WriteError("An instance of EPG123 Client GUI is already running. Initialization Aborted.");
+                            Logger.Close();
+                        }
+                        return -1;
+                    }
 
+                    if (showGui)
+                    {
                         Logger.WriteMessage("===============================================================================");
                         Logger.WriteMessage(string.Format(" Activating the epg123 client GUI. version {0}", Helper.epg123Version));
                         Logger.WriteMessage("===============================================================================");
                         clientForm client = new clientForm(advanced);
                         client.ShowDialog();
-                        mutex2.ReleaseMutex(); GC.Collect();
-                        Logger.Close();
                         client.Dispose();
-                        return 0;
                     }
-                }
-
-                // prevent machine from entering sleep mode
-                uint prevThreadState = NativeMethods.SetThreadExecutionState((uint)ExecutionFlags.ES_CONTINUOUS |
-                                                                             (uint)ExecutionFlags.ES_SYSTEM_REQUIRED |
-                                                                             (uint)ExecutionFlags.ES_AWAYMODE_REQUIRED);
-
-                // and yet another mutex for the import action
-                using (Mutex mutex3 = new Mutex(false, "Global\\" + impGuid))
-                {
-                    // check for an import instance is already running
-                    if (!mutex3.WaitOne(0, false))
+                    else
                     {
-                        Logger.WriteError("An instance of EPG123 Client import is already running. Aborting this instance.");
-                        return -1;
-                    }
-
-                    Logger.WriteMessage("===============================================================================");
-                    Logger.WriteMessage(string.Format(" Beginning epg123 client execution. version {0}", Helper.epg123Version));
-                    Logger.WriteMessage("===============================================================================");
-                    Logger.WriteInformation(string.Format("Beginning epg123 client execution. {0:u}", DateTime.Now.ToUniversalTime()));
-                    Logger.WriteVerbose(string.Format("Import: {0} , Match: {1} , NoLogo: {2} , Force: {3} , ShowProgress: {4}", import, match, nologo, force, showProgress));
-                    DateTime startTime = DateTime.UtcNow;
-
-                    // remove all channel logos
-                    if (nologo)
-                    {
-                        clearLineupChannelLogos();
-                    }
-
-                    if (import)
-                    {
-                        // check if garbage cleanup is needed
-                        if (!nogc && !force && !programRecording())
+                        // and yet another mutex for the import action
+                        using (Mutex mutex3 = new Mutex(false, "Global\\" + impGuid))
                         {
-                            mxfImport.PerformGarbageCleanup();
-                        }
-
-                        // ensure no recordings are active if importing
-                        if (!force && programRecording())
-                        {
-                            Logger.WriteError(string.Format("A program recording is still in progress after {0} hours. Aborting the mxf file import.", maximumRecordingWaitHours));
-                            Logger.Close();
-                            NativeMethods.SetThreadExecutionState(prevThreadState | (uint)ExecutionFlags.ES_CONTINUOUS);
-                            mutex3.ReleaseMutex(); GC.Collect();
-
-                            statusLogo.statusImage();
-                            return -1;
-                        }
-
-                        // import mxf file
-                        if (import && !importMxfFile(filename))
-                        {
-                            Logger.WriteError("Failed to import .mxf file. Exiting.");
-                            Logger.Close();
-                            NativeMethods.SetThreadExecutionState(prevThreadState | (uint)ExecutionFlags.ES_CONTINUOUS);
-                            mutex3.ReleaseMutex(); GC.Collect();
-
-                            statusLogo.statusImage();
-                            return -1;
-                        }
-
-                        // get lineup and configure lineup type and devices 
-                        if (!mxfImport.activateLineupAndGuide())
-                        {
-                            Logger.WriteError("Failed to locate any lineups from EPG123.");
-                            Logger.Close();
-                            NativeMethods.SetThreadExecutionState(prevThreadState | (uint)ExecutionFlags.ES_CONTINUOUS);
-                            mutex3.ReleaseMutex(); GC.Collect();
-
-                            statusLogo.statusImage();
-                            return -1;
-                        }
-                    }
-
-                    // perform automatch
-                    if (match)
-                    {
-                        try
-                        {
-                            matchLineups();
-                            Logger.WriteInformation("Completed the automatch of lineup stations to tuner channels.");
-                        }
-                        catch
-                        {
-                            Logger.WriteError("Failed to perform the automatch of lineup stations to tuner channels task.");
-                        }
-                    }
-
-                    if (import)
-                    {
-                        // refresh the lineups after import
-                        using (MergedLineups mergedLineups = new MergedLineups(Store.objectStore))
-                        {
-                            foreach (MergedLineup mergedLineup in mergedLineups)
+                            // check for an import instance is already running
+                            if (!mutex3.WaitOne(0, false))
                             {
-                                mergedLineup.Refresh();
+                                Logger.WriteError("An instance of EPG123 Client import is already running. Aborting this instance.");
+                                Logger.Close();
+                                return -1;
                             }
+
+                            // prevent machine from entering sleep mode
+                            uint prevThreadState = NativeMethods.SetThreadExecutionState((uint)ExecutionFlags.ES_CONTINUOUS |
+                                                                                         (uint)ExecutionFlags.ES_SYSTEM_REQUIRED |
+                                                                                         (uint)ExecutionFlags.ES_AWAYMODE_REQUIRED);
+
+                            Logger.WriteMessage("===============================================================================");
+                            Logger.WriteMessage(string.Format(" Beginning epg123 client execution. version {0}", Helper.epg123Version));
+                            Logger.WriteMessage("===============================================================================");
+                            Logger.WriteInformation(string.Format("Beginning epg123 client execution. {0:u}", DateTime.Now.ToUniversalTime()));
+                            Logger.WriteVerbose(string.Format("Import: {0} , Match: {1} , NoLogo: {2} , Force: {3} , ShowProgress: {4}", import, match, nologo, force, showProgress));
+                            DateTime startTime = DateTime.UtcNow;
+
+                            // remove all channel logos
+                            if (nologo)
+                            {
+                                clearLineupChannelLogos();
+                            }
+
+                            if (import)
+                            {
+                                // check if garbage cleanup is needed
+                                if (!nogc && !force && !programRecording())
+                                {
+                                    mxfImport.PerformGarbageCleanup();
+                                }
+
+                                // ensure no recordings are active if importing
+                                if (!force && programRecording())
+                                {
+                                    Logger.WriteError(string.Format("A program recording is still in progress after {0} hours. Aborting the mxf file import.", maximumRecordingWaitHours));
+                                    Logger.Close();
+                                    NativeMethods.SetThreadExecutionState(prevThreadState | (uint)ExecutionFlags.ES_CONTINUOUS);
+
+                                    statusLogo.statusImage();
+                                    return -1;
+                                }
+
+                                // import mxf file
+                                if (!importMxfFile(filename))
+                                {
+                                    Logger.WriteError("Failed to import .mxf file. Exiting.");
+                                    Logger.Close();
+                                    NativeMethods.SetThreadExecutionState(prevThreadState | (uint)ExecutionFlags.ES_CONTINUOUS);
+
+                                    statusLogo.statusImage();
+                                    return -1;
+                                }
+                                else
+                                {
+                                    VerifyLoad verifyLoad = new VerifyLoad(filename, verbose);
+                                }
+
+                                // get lineup and configure lineup type and devices 
+                                if (!mxfImport.activateLineupAndGuide())
+                                {
+                                    Logger.WriteError("Failed to locate any lineups from EPG123.");
+                                    Logger.Close();
+                                    NativeMethods.SetThreadExecutionState(prevThreadState | (uint)ExecutionFlags.ES_CONTINUOUS);
+
+                                    statusLogo.statusImage();
+                                    return -1;
+                                }
+                            }
+
+                            // perform automatch
+                            if (match)
+                            {
+                                try
+                                {
+                                    matchLineups();
+                                    Logger.WriteInformation("Completed the automatch of lineup stations to tuner channels.");
+                                }
+                                catch (Exception ex)
+                                {
+                                    Logger.WriteError($"{ex.Message}");
+                                    Logger.WriteError("Failed to perform the automatch of lineup stations to tuner channels task.");
+                                }
+                            }
+
+                            if (import)
+                            {
+                                // refresh the lineups after import
+                                using (MergedLineups mergedLineups = new MergedLineups(Store.objectStore))
+                                {
+                                    foreach (MergedLineup mergedLineup in mergedLineups)
+                                    {
+                                        mergedLineup.Refresh();
+                                    }
+                                }
+                                Logger.WriteInformation("Completed lineup refresh.");
+
+                                // reindex database
+                                mxfImport.reindexDatabase();
+
+                                // set all active recording requests to anyLanguage=true
+                                setSeriesRecordingRequestAnyLanguage();
+
+                                // reindex pvr schedule
+                                mxfImport.reindexPvrSchedule();
+
+                                // update status logo
+                                statusLogo.statusImage();
+
+                                // signal the notification tray to update the icon
+                                Helper.SendPipeMessage("Import Complete");
+                            }
+
+                            if (Store.objectStore != null)
+                            {
+                                Store.Close(true);
+                            }
+
+                            // all done
+                            Logger.WriteInformation("Completed EPG123 client execution.");
+                            Logger.WriteVerbose(string.Format("EPG123 client execution time was {0}.", DateTime.UtcNow - startTime));
+                            Logger.Close();
+                            NativeMethods.SetThreadExecutionState(prevThreadState | (uint)ExecutionFlags.ES_CONTINUOUS);
                         }
-                        Logger.WriteInformation("Completed lineup refresh.");
-
-                        // reindex database
-                        mxfImport.reindexDatabase();
-
-                        // set all active recording requests to anyLanguage=true
-                        setSeriesRecordingRequestAnyLanguage();
-
-                        // reindex pvr schedule
-                        mxfImport.reindexPvrSchedule();
-
-                        // update status logo
-                        statusLogo.statusImage();
-
-                        // signal the notification tray to update the icon
-                        Helper.SendPipeMessage("Import Complete");
                     }
-
-                    // all done
-                    Logger.WriteInformation("Completed EPG123 client execution.");
-                    Logger.WriteVerbose(string.Format("EPG123 client execution time was {0}.", DateTime.UtcNow - startTime));
-                    Logger.Close();
-                    mutex3.ReleaseMutex(); GC.Collect();
                 }
-
-                NativeMethods.SetThreadExecutionState(prevThreadState | (uint)ExecutionFlags.ES_CONTINUOUS);
                 return 0;
             }
         }
@@ -561,6 +578,7 @@ namespace epg123
                             else
                             {
                                 Logger.WriteVerbose(string.Format("Removing {0} from channel {1} in lineup {2}.", epg123Channel.CallSign, mergedChannel.ChannelNumber, lineup.Name));
+                                mergedChannel.AddChannelListings(null);
                                 lineup.RemoveChannel(epg123Channel);
                                 lineup.Update();
                             }

@@ -70,7 +70,7 @@ namespace epg123
                     string nextRun;
                     if ((nextRun = (string)key.GetValue(epg123NextRunTime)) != null)
                     {
-                        if (DateTime.Parse(nextRun) > DateTime.Now)
+                        if (DateTime.Parse(nextRun) > DateTime.Now && (DateTime.Parse(nextRun) - DateTime.Now) < TimeSpan.FromDays(5))
                         {
                             runDbgc = false;
                         }

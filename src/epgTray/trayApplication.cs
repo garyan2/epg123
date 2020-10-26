@@ -26,6 +26,7 @@ namespace epgTray
         public bool Shutdown = false;
         private Thread serverThread;
         private int lastStatus;
+        private DateTime nextUpdate = DateTime.MinValue;
 
         public trayApplication()
         {
@@ -174,12 +175,9 @@ namespace epgTray
                 SetNotifyIconText($"EPG123\nLast update was successful.\n{lastTime}");
             }
 
-            TimeSpan timerDuration = lastTime - DateTime.Now + TimeSpan.FromHours(24.0);
-            if (timerDuration > TimeSpan.Zero && lastStatus != 0xDEAD)
-            {
-                timer = new System.Threading.Timer(TimerEvent);
-                timer.Change(timerDuration, TimeSpan.FromMilliseconds(-1.0));
-            }
+            nextUpdate = lastTime + TimeSpan.FromHours(24);
+            timer = new System.Threading.Timer(TimerEvent);
+            timer.Change(60000, 60000);
 
             // set and display icon
             return statusIcon;
@@ -198,7 +196,7 @@ namespace epgTray
 
         private void TimerEvent(object state)
         {
-            if (timer != null && !Shutdown)
+            if (lastStatus != 0xDEAD && nextUpdate < DateTime.Now)
             {
                 TrayIcon.Icon = currentStatusImage();
             }
@@ -216,13 +214,10 @@ namespace epgTray
                 try
                 {
                     server.WaitForConnection();
-
+                    
                     // adjust timer to 1.1 hours after each pipe message to avoid crashing the notification tray
                     // the checking for recordings in progress interval is 1 hour so need to be greater than that
-                    if (timer != null)
-                    {
-                        timer.Change(TimeSpan.FromHours(1.1), TimeSpan.FromMilliseconds(-1.0));
-                    }
+                    nextUpdate = DateTime.Now + TimeSpan.FromHours(1.1);
 
                     string line = reader.ReadLine();
                     if (line.StartsWith("Downloading"))

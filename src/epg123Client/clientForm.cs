@@ -360,6 +360,7 @@ namespace epg123
             renumberMenuItem.Visible = mergedChannelMenuStrip;
             toolStripSeparator6.Visible = mergedChannelMenuStrip;
             clipboardMenuItem.Visible = mergedChannelMenuStrip;
+            clearListingsMenuItem.Visible = mergedChannelMenuStrip;
 
             // only enable rename menu item if a single channel has been selected
             renameMenuItem.Enabled = (mergedChannelListView.SelectedItems.Count == 1) && customLabelsOnly;
@@ -1100,7 +1101,7 @@ namespace epg123
                     (!scanned) ? (mergedChannel.Service.Name ?? null) : null,
                     (!scanned) ? (mergedChannel.PrimaryChannel.Lineup.Name ?? null) : null,
                     source, tuneInfos,
-                    (!scanned) ? mergedChannel.PrimaryChannel.Service.ScheduleEndTime.ToLocalTime().ToString() : null
+                    (!scanned) ? mergedChannel.Service.ScheduleEndTime.ToLocalTime().ToString() : null
                 })
                 {
                     Tag = mergedChannel
@@ -2039,6 +2040,7 @@ namespace epg123
 
             // open the form
             frm.ShowDialog();
+            tbTaskInfo.Text = frm.hdhr2mxfSrv ? Helper.Hdhr2mxfExePath : Helper.Epg123ExePath;
             frm.Dispose();
 
             // build the listviews and make sure registries are good
@@ -2300,6 +2302,34 @@ namespace epg123
                 Logger.WriteInformation("Restarting EPG123 Client to avoid an external process crashing EPG123 10 seconds after adding channels.");
                 isolateEpgDatabase();
                 restartClient();
+            }
+        }
+
+        private void btnClearScheduleEntries(object sender, EventArgs e)
+        {
+            foreach (ListViewItem lviSelected in mergedChannelListView.SelectedItems)
+            {
+                Service service = (lviSelected.Tag as MergedChannel).Service;
+                foreach (ListViewItem lvi in mergedChannelListView.Items)
+                {
+                    if (string.IsNullOrEmpty(lvi.SubItems[3].Text)) continue;
+                    if ((lvi.Tag as MergedChannel).Service.IsSameAs(service))
+                    {
+                        if ((lvi.Tag as MergedChannel).Service.ScheduleEndTime > DateTime.MinValue)
+                        {
+                            foreach (ScheduleEntry scheduleEntry in (lvi.Tag as MergedChannel).Service.ScheduleEntries)
+                            {
+                                scheduleEntry.Service = null;
+                                scheduleEntry.Program = null;
+                                scheduleEntry.Unlock();
+                                scheduleEntry.Update();
+                            }
+                            (lvi.Tag as MergedChannel).Service.ScheduleEndTime = DateTime.MinValue;
+                            (lvi.Tag as MergedChannel).Service.Update();
+                        }
+                        lvi.SubItems[6].Text = (lvi.Tag as MergedChannel).Service.ScheduleEndTime.ToString();
+                    }
+                }
             }
         }
     }

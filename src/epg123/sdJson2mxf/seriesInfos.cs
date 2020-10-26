@@ -45,19 +45,34 @@ namespace epg123
 
                 if (epgCache.JsonFiles.ContainsKey(seriesId))
                 {
-                    ++processedObjects; reportProgress();
-                    using (StringReader reader = new StringReader(epgCache.GetAsset(seriesId)))
+                    try
                     {
-                        JsonSerializer serializer = new JsonSerializer();
-                        sdGenericDescriptions cached = (sdGenericDescriptions)serializer.Deserialize(reader, typeof(sdGenericDescriptions));
-                        if (cached.Code == 0)
+                        using (StringReader reader = new StringReader(epgCache.GetAsset(seriesId)))
                         {
-                            series.ShortDescription = cached.Description100;
-                            series.Description = cached.Description1000;
-                            if (!string.IsNullOrEmpty(cached.StartAirdate))
+                            JsonSerializer serializer = new JsonSerializer();
+                            sdGenericDescriptions cached = (sdGenericDescriptions)serializer.Deserialize(reader, typeof(sdGenericDescriptions));
+                            if (cached.Code == 0)
                             {
-                                series.StartAirdate = cached.StartAirdate;
+                                series.ShortDescription = cached.Description100;
+                                series.Description = cached.Description1000;
+                                if (!string.IsNullOrEmpty(cached.StartAirdate))
+                                {
+                                    series.StartAirdate = cached.StartAirdate;
+                                }
                             }
+                        }
+                        ++processedObjects; reportProgress();
+                    }
+                    catch
+                    {
+                        if (int.TryParse(series.tmsSeriesId, out int dummy))
+                        {
+                            // must use EP to query generic series description
+                            seriesDescriptionQueue.Add(string.Format("EP{0}0000", series.tmsSeriesId));
+                        }
+                        else
+                        {
+                            ++processedObjects; reportProgress();
                         }
                     }
                 }
@@ -266,20 +281,24 @@ namespace epg123
             sdMxf.With[0].getSeriesInfo(seriesId.Substring(2, 8)).StartAirdate = airdate.ToString();
 
             // update cache if needed
-            using (StringReader reader = new StringReader(epgCache.GetAsset(seriesId)))
+            try
             {
-                JsonSerializer serializer = new JsonSerializer();
-                sdGenericDescriptions cached = (sdGenericDescriptions)serializer.Deserialize(reader, typeof(sdGenericDescriptions));
-                if (string.IsNullOrEmpty(cached.StartAirdate))
+                using (StringReader reader = new StringReader(epgCache.GetAsset(seriesId)))
                 {
-                    cached.StartAirdate = airdate.Equals(DateTime.MinValue) ? "" : airdate.ToString("yyyy-MM-dd");
-                    using (StringWriter writer = new StringWriter())
+                    JsonSerializer serializer = new JsonSerializer();
+                    sdGenericDescriptions cached = (sdGenericDescriptions)serializer.Deserialize(reader, typeof(sdGenericDescriptions));
+                    if (string.IsNullOrEmpty(cached.StartAirdate))
                     {
-                        serializer.Serialize(writer, cached);
-                        epgCache.UpdateAssetJsonEntry(seriesId, writer.ToString());
+                        cached.StartAirdate = airdate.Equals(DateTime.MinValue) ? "" : airdate.ToString("yyyy-MM-dd");
+                        using (StringWriter writer = new StringWriter())
+                        {
+                            serializer.Serialize(writer, cached);
+                            epgCache.UpdateAssetJsonEntry(seriesId, writer.ToString());
+                        }
                     }
                 }
             }
+            catch { }
         }
     }
 }

@@ -40,12 +40,19 @@ namespace epg123
 
                 if (epgCache.JsonFiles.ContainsKey(sdMxf.With[0].Programs[i].md5))
                 {
-                    ++processedObjects; reportProgress();
-                    using (StringReader reader = new StringReader(epgCache.GetAsset(sdMxf.With[0].Programs[i].md5)))
+                    try
                     {
-                        JsonSerializer serializer = new JsonSerializer();
-                        sdProgram program = (sdProgram)serializer.Deserialize(reader, typeof(sdProgram));
-                        sdMxf.With[0].Programs[i] = buildMxfProgram(sdMxf.With[0].Programs[i], program);
+                        using (StringReader reader = new StringReader(epgCache.GetAsset(sdMxf.With[0].Programs[i].md5)))
+                        {
+                            JsonSerializer serializer = new JsonSerializer();
+                            sdProgram program = (sdProgram)serializer.Deserialize(reader, typeof(sdProgram));
+                            sdMxf.With[0].Programs[i] = buildMxfProgram(sdMxf.With[0].Programs[i], program);
+                        }
+                        ++processedObjects; reportProgress();
+                    }
+                    catch
+                    {
+                        programQueue.Add(sdMxf.With[0].Programs[i].tmsId);
                     }
                 }
                 else
@@ -432,20 +439,24 @@ namespace epg123
                     // go ahead and create/update the cache entry as needed
                     if (epgCache.JsonFiles.ContainsKey(mxfProgram.tmsId))
                     {
-                        using (StringReader reader = new StringReader(epgCache.GetAsset(mxfProgram.tmsId)))
+                        try
                         {
-                            JsonSerializer serializer = new JsonSerializer();
-                            sdGenericDescriptions cached = (sdGenericDescriptions)serializer.Deserialize(reader, typeof(sdGenericDescriptions));
-                            if (cached.StartAirdate == null)
+                            using (StringReader reader = new StringReader(epgCache.GetAsset(mxfProgram.tmsId)))
                             {
-                                cached.StartAirdate = mxfProgram.OriginalAirdate ?? string.Empty;
-                                using (StringWriter writer = new StringWriter())
+                                JsonSerializer serializer = new JsonSerializer();
+                                sdGenericDescriptions cached = (sdGenericDescriptions)serializer.Deserialize(reader, typeof(sdGenericDescriptions));
+                                if (cached.StartAirdate == null)
                                 {
-                                    serializer.Serialize(writer, cached);
-                                    epgCache.UpdateAssetJsonEntry(mxfProgram.tmsId, writer.ToString());
+                                    cached.StartAirdate = mxfProgram.OriginalAirdate ?? string.Empty;
+                                    using (StringWriter writer = new StringWriter())
+                                    {
+                                        serializer.Serialize(writer, cached);
+                                        epgCache.UpdateAssetJsonEntry(mxfProgram.tmsId, writer.ToString());
+                                    }
                                 }
                             }
                         }
+                        catch { }
                     }
                     else
                     {

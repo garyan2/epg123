@@ -124,10 +124,6 @@ namespace epg123
                                         sdMxf.With[0].Services.Count - 1, sdMxf.With[0].SeriesInfos.Count, sdMxf.With[0].Programs.Count, sdMxf.With[0].People.Count, sdMxf.With[0].GuideImages.Count));
                     Logger.WriteInformation("Completed EPG123 update execution. SUCCESS.");
                 }
-                else
-                {
-                    Logger.WriteError("Failed to create MXF file. Exiting.");
-                }
             }
             else
             {

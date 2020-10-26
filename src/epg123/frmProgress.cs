@@ -20,6 +20,10 @@ namespace epg123
         private void backgroundWorker_DoWork(object sender, DoWorkEventArgs e)
         {
             sdJson2mxf.Build((epgConfig)e.Argument);
+            if (!sdJson2mxf.success)
+            {
+                Logger.WriteError("Failed to create MXF file. Exiting.");
+            }
         }
 
         private void backgroundWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)

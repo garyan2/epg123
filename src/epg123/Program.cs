@@ -40,11 +40,11 @@ namespace epg123
 
             // establish folders with permissions
             string[] folders = { Helper.Epg123BackupFolder, Helper.Epg123CacheFolder, Helper.Epg123LogosFolder, Helper.Epg123OutputFolder, Helper.Epg123SdLogosFolder };
-            //if (Environment.UserInteractive && !Helper.CreateAndSetFolderAcl(Helper.Epg123ProgramDataFolder))
-            //{
-            //    Logger.WriteError(string.Format("Failed to set full control permissions for Everyone on folder \"{0}\".", Helper.Epg123ProgramDataFolder));
-            //}
-            //else
+            if (Environment.UserInteractive && !Helper.CreateAndSetFolderAcl(Helper.Epg123ProgramDataFolder))
+            {
+                Logger.WriteError(string.Format("Failed to set full control permissions for Everyone on folder \"{0}\".", Helper.Epg123ProgramDataFolder));
+            }
+            else
             {
                 foreach (string folder in folders)
                 {
@@ -192,6 +192,10 @@ namespace epg123
                 else
                 {
                     sdJson2mxf.Build(config);
+                    if (!sdJson2mxf.success)
+                    {
+                        Logger.WriteError("Failed to create MXF file. Exiting.");
+                    }
                 }
 
                 // close the logger and restore power/sleep settings

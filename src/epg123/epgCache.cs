@@ -15,22 +15,30 @@ namespace epg123
 
         public static void LoadCache()
         {
-            if (File.Exists(Helper.Epg123CompressCachePath))
+            try
             {
-                using (StreamReader reader = new StreamReader(CompressXmlFiles.GetBackupFileStream(cacheFileUri, Helper.Epg123CompressCachePath)))
+                if (File.Exists(Helper.Epg123CompressCachePath))
                 {
-                    JsonSerializer serializer = new JsonSerializer();
-                    JsonFiles = (Dictionary<string, epgJsonCache>)serializer.Deserialize(reader, typeof(Dictionary<string, epgJsonCache>));
+                    using (StreamReader reader = new StreamReader(CompressXmlFiles.GetBackupFileStream(cacheFileUri, Helper.Epg123CompressCachePath)))
+                    {
+                        JsonSerializer serializer = new JsonSerializer();
+                        JsonFiles = (Dictionary<string, epgJsonCache>)serializer.Deserialize(reader, typeof(Dictionary<string, epgJsonCache>));
+                    }
+                    CompressXmlFiles.ClosePackage();
                 }
-                CompressXmlFiles.ClosePackage();
+                else if (File.Exists(Helper.Epg123CacheJsonPath))
+                {
+                    using (StreamReader reader = File.OpenText(Helper.Epg123CacheJsonPath))
+                    {
+                        JsonSerializer serializer = new JsonSerializer();
+                        JsonFiles = (Dictionary<string, epgJsonCache>)serializer.Deserialize(reader, typeof(Dictionary<string, epgJsonCache>));
+                    }
+                }
             }
-            else if (File.Exists(Helper.Epg123CacheJsonPath))
+            catch (Exception ex)
             {
-                using (StreamReader reader = File.OpenText(Helper.Epg123CacheJsonPath))
-                {
-                    JsonSerializer serializer = new JsonSerializer();
-                    JsonFiles = (Dictionary<string, epgJsonCache>)serializer.Deserialize(reader, typeof(Dictionary<string, epgJsonCache>));
-                }
+                Logger.WriteInformation("The cache file appears to be corrupted and will need to be rebuilt.");
+                Logger.WriteInformation(ex.Message);
             }
         }
 
@@ -39,44 +47,57 @@ namespace epg123
             if (isDirty && JsonFiles.Count > 0)
             {
                 CleanDictionary();
-                if (new ComputerInfo().AvailablePhysicalMemory < (ulong)Math.Pow(1024, 3))
+                try
                 {
-                    using (StreamWriter writer = File.CreateText(Helper.Epg123CacheJsonPath))
+                    if (true || new ComputerInfo().AvailablePhysicalMemory < (ulong)Math.Pow(1024, 3)) // disable compression of cache file
                     {
-                        try
+                        using (StreamWriter writer = File.CreateText(Helper.Epg123CacheJsonPath))
                         {
                             JsonSerializer serializer = new JsonSerializer() { NullValueHandling = NullValueHandling.Ignore, Formatting = Formatting.Indented };
                             serializer.Serialize(writer, JsonFiles);
                         }
-                        catch (Exception ex)
+                        if (File.Exists(Helper.Epg123CompressCachePath))
                         {
-                            Logger.WriteWarning("Failed to write cache file to the cache folder. Message: " + ex.Message);
+                            File.Delete(Helper.Epg123CompressCachePath);
                         }
                     }
-                    if (File.Exists(Helper.Epg123CompressCachePath))
+                    else
                     {
-                        File.Delete(Helper.Epg123CompressCachePath);
+                        MemoryStream stream = new MemoryStream();
+                        using (StreamWriter swriter = new StreamWriter(stream))
+                        {
+                            using (JsonTextWriter jwriter = new JsonTextWriter(swriter))
+                            {
+                                JsonSerializer serializer = new JsonSerializer() { NullValueHandling = NullValueHandling.Ignore, Formatting = Formatting.Indented };
+                                serializer.Serialize(jwriter, JsonFiles);
+                                swriter.Flush();
+                                stream.Seek(0, SeekOrigin.Begin);
+
+                                CompressXmlFiles.CompressSingleStreamToFile(stream, cacheFileUri, Helper.Epg123CompressCachePath);
+                            }
+                        }
+                        if (File.Exists(Helper.Epg123CacheJsonPath))
+                        {
+                            File.Delete(Helper.Epg123CacheJsonPath);
+                        }
                     }
                 }
-                else
+                catch (Exception ex)
                 {
-                    MemoryStream stream = new MemoryStream();
-                    using (StreamWriter swriter = new StreamWriter(stream))
+                    Logger.WriteInformation("Failed to write cache file to the cache folder. Message: " + ex.Message);
+                    Logger.WriteInformation("Deleting cache file to be rebuilt on next update.");
+                    try
                     {
-                        using (JsonTextWriter jwriter = new JsonTextWriter(swriter))
+                        if (File.Exists(Helper.Epg123CompressCachePath))
                         {
-                            JsonSerializer serializer = new JsonSerializer() { NullValueHandling = NullValueHandling.Ignore, Formatting = Formatting.Indented };
-                            serializer.Serialize(jwriter, JsonFiles);
-                            swriter.Flush();
-                            stream.Seek(0, SeekOrigin.Begin);
-
-                            CompressXmlFiles.CompressSingleStreamToFile(stream, cacheFileUri, Helper.Epg123CompressCachePath);
+                            File.Delete(Helper.Epg123CompressCachePath);
+                        }
+                        if (File.Exists(Helper.Epg123CacheJsonPath))
+                        {
+                            File.Delete(Helper.Epg123CacheJsonPath);
                         }
                     }
-                    if (File.Exists(Helper.Epg123CacheJsonPath))
-                    {
-                        File.Delete(Helper.Epg123CacheJsonPath);
-                    }
+                    catch { }
                 }
             }
         }

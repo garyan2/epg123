@@ -63,9 +63,9 @@
             this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
             this.btnDeleteChannel = new System.Windows.Forms.ToolStripButton();
             this.btnAddChannels = new System.Windows.Forms.ToolStripButton();
+            this.btnUndelete = new System.Windows.Forms.ToolStripButton();
             this.btnStoreExplorer = new System.Windows.Forms.ToolStripButton();
             this.btnExportMxf = new System.Windows.Forms.ToolStripButton();
-            this.btnUndelete = new System.Windows.Forms.ToolStripButton();
             this.toolStripContainer2 = new System.Windows.Forms.ToolStripContainer();
             this.lineupChannelListView = new System.Windows.Forms.ListView();
             this.columnHeader4 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -91,14 +91,10 @@
             this.lblDatabaseUtilities = new System.Windows.Forms.Label();
             this.btnTweakWmc = new System.Windows.Forms.Button();
             this.btnBackup = new System.Windows.Forms.Button();
-            this.ebtnRestore = new epg123.ElevatedButton();
-            this.ebtnRebuild = new epg123.ElevatedButton();
-            this.ebtnSetup = new epg123.ElevatedButton();
             this.btnImport = new System.Windows.Forms.Button();
             this.grpScheduledTask = new System.Windows.Forms.GroupBox();
             this.cbAutomatch = new System.Windows.Forms.CheckBox();
             this.rdoClientMode = new System.Windows.Forms.RadioButton();
-            this.btnTask = new epg123.ElevatedButton();
             this.tbTaskInfo = new System.Windows.Forms.TextBox();
             this.cbTaskWake = new System.Windows.Forms.CheckBox();
             this.rdoFullMode = new System.Windows.Forms.RadioButton();
@@ -106,6 +102,11 @@
             this.tbSchedTime = new System.Windows.Forms.MaskedTextBox();
             this.lblUpdateTime = new System.Windows.Forms.Label();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
+            this.clearListingsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.ebtnRestore = new epg123.ElevatedButton();
+            this.ebtnRebuild = new epg123.ElevatedButton();
+            this.ebtnSetup = new epg123.ElevatedButton();
+            this.btnTask = new epg123.ElevatedButton();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -246,53 +247,54 @@
             this.renameMenuItem,
             this.renumberMenuItem,
             this.toolStripSeparator6,
-            this.clipboardMenuItem});
+            this.clipboardMenuItem,
+            this.clearListingsMenuItem});
             this.contextMenuStrip1.Name = "contextMenuStrip1";
-            this.contextMenuStrip1.Size = new System.Drawing.Size(179, 126);
+            this.contextMenuStrip1.Size = new System.Drawing.Size(184, 148);
             this.contextMenuStrip1.Opening += new System.ComponentModel.CancelEventHandler(this.contextMenuStrip1_Opening);
             // 
             // subscribeMenuItem
             // 
             this.subscribeMenuItem.Name = "subscribeMenuItem";
-            this.subscribeMenuItem.Size = new System.Drawing.Size(178, 22);
+            this.subscribeMenuItem.Size = new System.Drawing.Size(183, 22);
             this.subscribeMenuItem.Text = "Subscribe";
             this.subscribeMenuItem.Click += new System.EventHandler(this.subscribeMenuItem_Click);
             // 
             // unsubscribeMenuItem
             // 
             this.unsubscribeMenuItem.Name = "unsubscribeMenuItem";
-            this.unsubscribeMenuItem.Size = new System.Drawing.Size(178, 22);
+            this.unsubscribeMenuItem.Size = new System.Drawing.Size(183, 22);
             this.unsubscribeMenuItem.Text = "Unsubscribe";
             this.unsubscribeMenuItem.Click += new System.EventHandler(this.subscribeMenuItem_Click);
             // 
             // toolStripSeparator2
             // 
             this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(175, 6);
+            this.toolStripSeparator2.Size = new System.Drawing.Size(180, 6);
             // 
             // renameMenuItem
             // 
             this.renameMenuItem.Name = "renameMenuItem";
-            this.renameMenuItem.Size = new System.Drawing.Size(178, 22);
+            this.renameMenuItem.Size = new System.Drawing.Size(183, 22);
             this.renameMenuItem.Text = "Rename";
             this.renameMenuItem.Click += new System.EventHandler(this.renameMenuItem_Click);
             // 
             // renumberMenuItem
             // 
             this.renumberMenuItem.Name = "renumberMenuItem";
-            this.renumberMenuItem.Size = new System.Drawing.Size(178, 22);
+            this.renumberMenuItem.Size = new System.Drawing.Size(183, 22);
             this.renumberMenuItem.Text = "Renumber";
             this.renumberMenuItem.Click += new System.EventHandler(this.renumberMenuItem_Click);
             // 
             // toolStripSeparator6
             // 
             this.toolStripSeparator6.Name = "toolStripSeparator6";
-            this.toolStripSeparator6.Size = new System.Drawing.Size(175, 6);
+            this.toolStripSeparator6.Size = new System.Drawing.Size(180, 6);
             // 
             // clipboardMenuItem
             // 
             this.clipboardMenuItem.Name = "clipboardMenuItem";
-            this.clipboardMenuItem.Size = new System.Drawing.Size(178, 22);
+            this.clipboardMenuItem.Size = new System.Drawing.Size(183, 22);
             this.clipboardMenuItem.Text = "Copy to clipboard...";
             this.clipboardMenuItem.Click += new System.EventHandler(this.clipboardMenuItem_Click);
             // 
@@ -434,6 +436,17 @@
             this.btnAddChannels.ToolTipText = "Add Tuner Channel(s)";
             this.btnAddChannels.Click += new System.EventHandler(this.btnAddChannels_Click);
             // 
+            // btnUndelete
+            // 
+            this.btnUndelete.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.btnUndelete.Image = ((System.Drawing.Image)(resources.GetObject("btnUndelete.Image")));
+            this.btnUndelete.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnUndelete.Name = "btnUndelete";
+            this.btnUndelete.Size = new System.Drawing.Size(23, 20);
+            this.btnUndelete.Text = "Undelete";
+            this.btnUndelete.ToolTipText = "Restore deleted scanned channels";
+            this.btnUndelete.Click += new System.EventHandler(this.btnUndelete_Click);
+            // 
             // btnStoreExplorer
             // 
             this.btnStoreExplorer.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
@@ -453,17 +466,6 @@
             this.btnExportMxf.Size = new System.Drawing.Size(23, 20);
             this.btnExportMxf.Text = "Export Store to MXF";
             this.btnExportMxf.Click += new System.EventHandler(this.btnExportMxf_Click);
-            // 
-            // btnUndelete
-            // 
-            this.btnUndelete.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.btnUndelete.Image = ((System.Drawing.Image)(resources.GetObject("btnUndelete.Image")));
-            this.btnUndelete.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.btnUndelete.Name = "btnUndelete";
-            this.btnUndelete.Size = new System.Drawing.Size(23, 20);
-            this.btnUndelete.Text = "Undelete";
-            this.btnUndelete.ToolTipText = "Restore deleted scanned channels";
-            this.btnUndelete.Click += new System.EventHandler(this.btnUndelete_Click);
             // 
             // toolStripContainer2
             // 
@@ -721,39 +723,6 @@
             this.btnBackup.UseVisualStyleBackColor = true;
             this.btnBackup.Click += new System.EventHandler(this.btnBackup_Click);
             // 
-            // ebtnRestore
-            // 
-            this.ebtnRestore.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.ebtnRestore.Location = new System.Drawing.Point(282, 44);
-            this.ebtnRestore.Name = "ebtnRestore";
-            this.ebtnRestore.Size = new System.Drawing.Size(72, 23);
-            this.ebtnRestore.TabIndex = 16;
-            this.ebtnRestore.Text = "Restore";
-            this.ebtnRestore.UseVisualStyleBackColor = true;
-            this.ebtnRestore.Click += new System.EventHandler(this.btnRestore_Click);
-            // 
-            // ebtnRebuild
-            // 
-            this.ebtnRebuild.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.ebtnRebuild.Location = new System.Drawing.Point(204, 70);
-            this.ebtnRebuild.Name = "ebtnRebuild";
-            this.ebtnRebuild.Size = new System.Drawing.Size(150, 23);
-            this.ebtnRebuild.TabIndex = 14;
-            this.ebtnRebuild.Text = "Rebuild WMC Database";
-            this.ebtnRebuild.UseVisualStyleBackColor = true;
-            this.ebtnRebuild.Click += new System.EventHandler(this.btnRebuild_Click);
-            // 
-            // ebtnSetup
-            // 
-            this.ebtnSetup.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.ebtnSetup.Location = new System.Drawing.Point(6, 19);
-            this.ebtnSetup.Name = "ebtnSetup";
-            this.ebtnSetup.Size = new System.Drawing.Size(93, 23);
-            this.ebtnSetup.TabIndex = 13;
-            this.ebtnSetup.Text = "Client Setup";
-            this.ebtnSetup.UseVisualStyleBackColor = true;
-            this.ebtnSetup.Click += new System.EventHandler(this.btnSetup_Click);
-            // 
             // btnImport
             // 
             this.btnImport.Enabled = false;
@@ -803,17 +772,6 @@
             this.rdoClientMode.Text = "Client Mode";
             this.rdoClientMode.UseVisualStyleBackColor = true;
             this.rdoClientMode.CheckedChanged += new System.EventHandler(this.rdoMode_CheckedChanged);
-            // 
-            // btnTask
-            // 
-            this.btnTask.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.btnTask.Location = new System.Drawing.Point(326, 19);
-            this.btnTask.Name = "btnTask";
-            this.btnTask.Size = new System.Drawing.Size(80, 23);
-            this.btnTask.TabIndex = 10;
-            this.btnTask.Text = "Create";
-            this.btnTask.UseVisualStyleBackColor = true;
-            this.btnTask.Click += new System.EventHandler(this.btnTask_Click);
             // 
             // tbTaskInfo
             // 
@@ -881,6 +839,57 @@
             // openFileDialog1
             // 
             this.openFileDialog1.FileName = "openFileDialog1";
+            // 
+            // clearListingsMenuItem
+            // 
+            this.clearListingsMenuItem.Name = "clearListingsMenuItem";
+            this.clearListingsMenuItem.Size = new System.Drawing.Size(183, 22);
+            this.clearListingsMenuItem.Text = "Clear guide listings...";
+            this.clearListingsMenuItem.Click += new System.EventHandler(this.btnClearScheduleEntries);
+            // 
+            // ebtnRestore
+            // 
+            this.ebtnRestore.FlatStyle = System.Windows.Forms.FlatStyle.System;
+            this.ebtnRestore.Location = new System.Drawing.Point(282, 44);
+            this.ebtnRestore.Name = "ebtnRestore";
+            this.ebtnRestore.Size = new System.Drawing.Size(72, 23);
+            this.ebtnRestore.TabIndex = 16;
+            this.ebtnRestore.Text = "Restore";
+            this.ebtnRestore.UseVisualStyleBackColor = true;
+            this.ebtnRestore.Click += new System.EventHandler(this.btnRestore_Click);
+            // 
+            // ebtnRebuild
+            // 
+            this.ebtnRebuild.FlatStyle = System.Windows.Forms.FlatStyle.System;
+            this.ebtnRebuild.Location = new System.Drawing.Point(204, 70);
+            this.ebtnRebuild.Name = "ebtnRebuild";
+            this.ebtnRebuild.Size = new System.Drawing.Size(150, 23);
+            this.ebtnRebuild.TabIndex = 14;
+            this.ebtnRebuild.Text = "Rebuild WMC Database";
+            this.ebtnRebuild.UseVisualStyleBackColor = true;
+            this.ebtnRebuild.Click += new System.EventHandler(this.btnRebuild_Click);
+            // 
+            // ebtnSetup
+            // 
+            this.ebtnSetup.FlatStyle = System.Windows.Forms.FlatStyle.System;
+            this.ebtnSetup.Location = new System.Drawing.Point(6, 19);
+            this.ebtnSetup.Name = "ebtnSetup";
+            this.ebtnSetup.Size = new System.Drawing.Size(93, 23);
+            this.ebtnSetup.TabIndex = 13;
+            this.ebtnSetup.Text = "Client Setup";
+            this.ebtnSetup.UseVisualStyleBackColor = true;
+            this.ebtnSetup.Click += new System.EventHandler(this.btnSetup_Click);
+            // 
+            // btnTask
+            // 
+            this.btnTask.FlatStyle = System.Windows.Forms.FlatStyle.System;
+            this.btnTask.Location = new System.Drawing.Point(326, 19);
+            this.btnTask.Name = "btnTask";
+            this.btnTask.Size = new System.Drawing.Size(80, 23);
+            this.btnTask.TabIndex = 10;
+            this.btnTask.Text = "Create";
+            this.btnTask.UseVisualStyleBackColor = true;
+            this.btnTask.Click += new System.EventHandler(this.btnTask_Click);
             // 
             // clientForm
             // 
@@ -1013,5 +1022,6 @@
         private System.Windows.Forms.ToolStripMenuItem clipboardMenuItem;
         private System.Windows.Forms.ColumnHeader columnGuideEndTime;
         private System.Windows.Forms.ToolStripButton btnUndelete;
+        private System.Windows.Forms.ToolStripMenuItem clearListingsMenuItem;
     }
 }

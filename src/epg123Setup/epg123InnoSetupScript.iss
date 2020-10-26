@@ -30,10 +30,12 @@ AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
+AppendDefaultDirName=no
 CloseApplications=no
 DefaultDirName={pf32}\epg123
 DisableWelcomePage=no
 LicenseFile=docs\license.rtf
+AlwaysShowDirOnReadyPage=yes
 OutputDir=..\..\bin\output\setup
 OutputBaseFilename={#MySetupBaseFilename + MyAppVersion}
 SetupIconFile=imgs\EPG123.ico
@@ -110,7 +112,7 @@ Filename: "{app}\{#MyClientExeName}"; Description: "{cm:LaunchProgram,{#StringCh
 Filename: "{app}\epgTray.exe"; Flags: nowait runascurrentuser; Components: main2
 
 [Dirs]
-; Name: {code:GetRootDataFolder}; Permissions: everyone-full
+Name: {code:GetRootDataFolder}; Permissions: everyone-full
 
 [InstallDelete]
 Type: files; Name: "{app}\Newtonsoft.json.dll"; Components: main1 main2 hdhr help
