@@ -434,6 +434,17 @@ namespace epg123
             {
                 // create a seriesInfo entry if needed
                 mxfSeriesInfo = sdMxf.With[0].getSeriesInfo(mxfProgram.tmsId.Substring(2, 8));
+                if (mxfSeriesInfo.tvdbSeriesId == null && sdProgram.Metadata != null)
+                {
+                    foreach (Dictionary<string, sdProgramMetadataProvider> providers in sdProgram.Metadata)
+                    {
+                        if (providers.TryGetValue("TheTVDB", out sdProgramMetadataProvider provider))
+                        {
+                            mxfSeriesInfo.tvdbSeriesId = provider.SeriesID.ToString();
+                        }
+                    }
+                }
+
                 if (mxfProgram.IsGeneric)
                 {
                     // go ahead and create/update the cache entry as needed

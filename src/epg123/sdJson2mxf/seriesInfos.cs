@@ -32,8 +32,8 @@ namespace epg123
                 }
 
                 // import the cached description if exists, otherwise queue it up
-                string seriesId = string.Format("SH{0}0000", series.tmsSeriesId);
-                string filepath = string.Format("{0}\\{1}", Helper.Epg123CacheFolder, seriesId);
+                string seriesId = $"SH{series.tmsSeriesId}0000";
+                string filepath = $"{Helper.Epg123CacheFolder}\\{seriesId}";
                 FileInfo file = new FileInfo(filepath);
                 if (file.Exists && (file.Length > 0) && !epgCache.JsonFiles.ContainsKey(seriesId))
                 {
@@ -68,7 +68,7 @@ namespace epg123
                         if (int.TryParse(series.tmsSeriesId, out int dummy))
                         {
                             // must use EP to query generic series description
-                            seriesDescriptionQueue.Add(string.Format("EP{0}0000", series.tmsSeriesId));
+                            seriesDescriptionQueue.Add($"EP{series.tmsSeriesId}0000");
                         }
                         else
                         {
@@ -83,10 +83,10 @@ namespace epg123
                 else
                 {
                     // must use EP to query generic series description
-                    seriesDescriptionQueue.Add(string.Format("EP{0}0000", series.tmsSeriesId));
+                    seriesDescriptionQueue.Add($"EP{series.tmsSeriesId}0000");
                 }
             }
-            Logger.WriteVerbose(string.Format("Found {0} cached series descriptions.", processedObjects));
+            Logger.WriteVerbose($"Found {processedObjects} cached series descriptions.");
 
             // maximum 500 queries at a time
             if (seriesDescriptionQueue.Count > 0)
@@ -99,10 +99,10 @@ namespace epg123
                 processSeriesDescriptionsResponses();
                 if (processedObjects != totalObjects)
                 {
-                    Logger.WriteWarning("Problem occurred during buildGenericSeriesInfoDescriptions(). Did not process all series descriptions.");
+                    Logger.WriteInformation("Problem occurred during buildGenericSeriesInfoDescriptions(). Did not process all series descriptions.");
                 }
             }
-            Logger.WriteInformation(string.Format("Processed {0} series descriptions.", processedObjects));
+            Logger.WriteInformation($"Processed {processedObjects} series descriptions.");
             Logger.WriteMessage("Exiting buildAllGenericSeriesInfoDescriptions(). SUCCESS.");
             seriesDescriptionQueue = null; seriesDescriptionResponses = null;
             return true;
@@ -183,7 +183,7 @@ namespace epg123
             // fill mxf programs with cached values and queue the rest
             foreach (MxfSeriesInfo series in sdMxf.With[0].SeriesInfos)
             {
-                string seriesId = string.Format("SH{0}0000", series.tmsSeriesId);
+                string seriesId = $"SH{series.tmsSeriesId}0000";
 
                 // sports events will not have a generic description
                 if (series.tmsSeriesId.StartsWith("SP"))
@@ -218,7 +218,7 @@ namespace epg123
                 // add to queue
                 seriesDescriptionQueue.Add(seriesId);
             }
-            Logger.WriteVerbose(string.Format("Found {0} cached extended series descriptions.", processedObjects));
+            Logger.WriteVerbose($"Found {processedObjects} cached extended series descriptions.");
 
             // maximum 5000 queries at a time
             if (seriesDescriptionQueue.Count > 0)
@@ -227,12 +227,12 @@ namespace epg123
                 {
                     if (!GetExtendedSeriesDataForUiPlus(i))
                     {
-                        Logger.WriteError("Problem occurred during buildAllExtendedSeriesDataForUiPlus(). Exiting.");
-                        return false;
+                        Logger.WriteInformation("Problem occurred during buildAllExtendedSeriesDataForUiPlus(). Exiting.");
+                        return true;
                     }
                 }
             }
-            Logger.WriteInformation(string.Format("Processed {0} extended series descriptions.", processedObjects));
+            Logger.WriteInformation($"Processed {processedObjects} extended series descriptions.");
             Logger.WriteMessage("Exiting buildAllExtendedSeriesDataForUiPlus(). SUCCESS.");
             return true;
         }
@@ -255,7 +255,7 @@ namespace epg123
             {
                 if (response == null)
                 {
-                    Logger.WriteWarning(string.Format("Did not receive data for program {0}.", programs[idx++]));
+                    Logger.WriteInformation($"Did not receive data for program {programs[idx++]}.");
                     continue;
                 }
                 ++idx; ++processedObjects; reportProgress();

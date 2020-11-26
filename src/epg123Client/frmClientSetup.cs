@@ -3,12 +3,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
 using Microsoft.Win32;
-using Microsoft.MediaCenter.Store;
+using epg123Client;
 
 namespace epg123
 {
@@ -29,7 +28,6 @@ namespace epg123
         const int SW_RESTORE = 9;
         const int TUNERLIMIT = 32;
 
-        private string[] countries = { /*"default", */"au", "be", "br", "ca", "ch", "cn", "cz", "de", "dk", "es", "fi", "fr", "gb", "hk", "hu", "ie", "in",/* "it",*/ "jp", "kr", "mx", "nl", "no", "nz", "pl",/* "pt",*/ "ru", "se", "sg", "sk",/* "tr", "tw",*/ "us", "za" };
         private IntPtr wmcPtr = IntPtr.Zero;
         private string BYPASSED = "BACKUP_BYPASSED";
         private bool colossusInstalled = false;
@@ -98,7 +96,7 @@ namespace epg123
             // STEP 2: WMC TV Setup
             else if (sender.Equals(btnTvSetup) && configureHdPvrTuners() && openWmc() && activateGuide() && disableBackgroundScanning())
             {
-                if (!isTunerCountTweaked(TUNERLIMIT))
+                if (!isTunerCountTweaked())
                 {
                     tweakMediaCenterTunerCount(TUNERLIMIT);
                 }
@@ -267,10 +265,10 @@ namespace epg123
             }
 
             // disable metadata downloads
-            using (RegistryKey key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Media Center\Settings\MCE.GlobalSettings", true))
-            {
-                if (key != null && (int)key.GetValue("workoffline", 0) != 1) key.SetValue("workoffline", 1);
-            }
+            //using (RegistryKey key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Media Center\Settings\MCE.GlobalSettings", true))
+            //{
+            //    if (key != null && (int)key.GetValue("workoffline", 0) != 1) key.SetValue("workoffline", 1);
+            //}
 
             // disabe guide downloads
             using (RegistryKey key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Media Center\Service\Epg", true))
@@ -530,67 +528,10 @@ namespace epg123
         {
             updateStatusText("Increasing tuner limits ...");
             Logger.WriteVerbose("Increasing tuner limits ...");
-
-            // create mxf file with increased tuner limits
-            string xml = "<?xml version=\"1.0\" standalone=\"yes\"?>\r\n" +
-                         "<MXF version=\"1.0\" xmlns=\"\">\r\n" +
-                         "  <Assembly name=\"mcstore\">\r\n" +
-                         "    <NameSpace name=\"Microsoft.MediaCenter.Store\">\r\n" +
-                         "      <Type name=\"StoredType\" />\r\n" +
-                         "    </NameSpace>\r\n" +
-                         "  </Assembly>\r\n" +
-                         "  <Assembly name=\"ehshell\">\r\n" +
-                         "    <NameSpace name=\"ServiceBus.UIFramework\">\r\n" +
-                         "      <Type name=\"TvSignalSetupParams\" />\r\n" +
-                         "    </NameSpace>\r\n" +
-                         "  </Assembly>\r\n";
-            xml += string.Format("  <With maxRecordersForHomePremium=\"{0}\" maxRecordersForUltimate=\"{0}\" maxRecordersForRacing=\"{0}\" maxRecordersForBusiness=\"{0}\" maxRecordersForEnterprise=\"{0}\" maxRecordersForOthers=\"{0}\">\r\n", count);
-
-            foreach (string country in countries)
-            {
-                if (country.Equals("ca"))
-                {
-                    // sneak this one in for our Canadian friends just north of the (contiguous) border to be able to tune ATSC stations from the USA
-                    xml += string.Format("    <TvSignalSetupParams uid=\"tvss-{0}\" atscSupported=\"true\" autoSetupLikelyAtscChannels=\"34, 35, 36, 43, 31, 39, 38, 32, 41, 27, 19, 51, 44, 42, 30, 28\" tvRatingSystem=\"US\" />\r\n", country);
-                }
-                else
-                {
-                    xml += string.Format("    <TvSignalSetupParams uid=\"tvss-{0}\" />\r\n", country);
-                }
-            }
-
-            xml += "  </With>\r\n";
-            xml += "</MXF>";
-
-            // create temporary file
-            string mxfFilepath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.mxf");
-            using (StreamWriter writer = new StreamWriter(mxfFilepath, false))
-            {
-                writer.Write(xml);
-            }
-
-            // import tweak using loadmxf.exe because for some reason the MxfImporter doesn't work for this
-            ProcessStartInfo startInfo = new ProcessStartInfo()
-            {
-                FileName = Environment.ExpandEnvironmentVariables(@"%SystemRoot%\ehome\loadmxf.exe"),
-                Arguments = string.Format("-i \"{0}\"", mxfFilepath),
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                CreateNoWindow = true
-            };
-            using (Process process = Process.Start(startInfo))
-            {
-                process.StandardOutput.ReadToEnd();
-                process.WaitForExit(30000);
-            }
-
-            // delete temporary file
-            File.Delete(mxfFilepath);
-
-            return true;
+            return WmcUtilities.SetWmcTunerLimits(count);
         }
 
-        private bool isTunerCountTweaked(int count)
+        private bool isTunerCountTweaked()
         {
             int tuners = 0;
             int recorders = 0;
@@ -757,58 +698,20 @@ namespace epg123
         }
         private bool activateGuide()
         {
-            bool ret = false;
             updateStatusText("Activating guide in registry ...");
             Logger.WriteVerbose("Activating guide in registry ...");
-            RegistryKey key = Registry.LocalMachine.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Media Center\\Settings\\ProgramGuide", true);
-            if (key != null)
-            {
-                try
-                {
-                    if ((int)key.GetValue("fAgreeTOS") != 1) key.SetValue("fAgreeTOS", 1);
-                    if ((string)key.GetValue("strAgreeTOSVersion") != "1.0") key.SetValue("strAgreedTOSVersion", "1.0");
-                    key.Close();
-                }
-                catch
-                {
-                    MessageBox.Show("Failed to open/edit registry to show the Guide in WMC.", "Registry Access", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    key.Close();
-                }
-                ret = true;
-            }
-            updateStatusText(string.Empty);
 
+            bool ret = WmcRegistries.ActivateGuide();
+            updateStatusText(string.Empty);
             return ret;
         }
         private bool disableBackgroundScanning()
         {
-            bool ret = false;
             updateStatusText("Disabling background scanner ...");
             Logger.WriteVerbose("Disabling background scanner ...");
-            RegistryKey key = Registry.LocalMachine.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Media Center\\Service\\BackgroundScanner", true);
-            if (key != null)
-            {
-                try
-                {
-                    if ((key.GetValue("PeriodicScanEnabled") == null) || ((int)key.GetValue("PeriodicScanEnabled") != 0))
-                    {
-                        key.SetValue("PeriodicScanEnabled", 0, RegistryValueKind.DWord);
-                    }
-                    if ((key.GetValue("PeriodicScanIntervalSeconds") == null) || ((int)key.GetValue("PeriodicScanIntervalSeconds") != 0x7FFFFFFF))
-                    {
-                        key.SetValue("PeriodicScanIntervalSeconds", 0x7FFFFFFF, RegistryValueKind.DWord);
-                    }
-                    key.Close();
-                    ret = true;
-                }
-                catch
-                {
-                    MessageBox.Show("Failed to open/edit registry to disable periodic tuner background scanning.", "Registry Access", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    key.Close();
-                }
-            }
-            updateStatusText(string.Empty);
 
+            bool ret = WmcRegistries.SetBackgroundScanning(false);
+            updateStatusText(string.Empty);
             return ret;
         }
         #endregion
@@ -842,8 +745,7 @@ namespace epg123
                     // kick off the reindex
                     if (importForm.success)
                     {
-                        mxfImport.reindexDatabase();
-                        mxfImport.reindexPvrSchedule();
+                        WmcUtilities.ReindexDatabase();
                     }
                     else
                     {
@@ -889,6 +791,7 @@ namespace epg123
                 Thread.Sleep(100);
                 Application.DoEvents();
             } while (!procEpg123.HasExited);
+
             updateStatusText(string.Empty);
 
             return true;

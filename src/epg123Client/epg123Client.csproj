@@ -110,9 +110,6 @@
     <Compile Include="..\epg123\Helper.cs">
       <Link>Helper.cs</Link>
     </Compile>
-    <Compile Include="..\epg123\ListViewSorter.cs">
-      <Link>ListViewSorter.cs</Link>
-    </Compile>
     <Compile Include="..\epg123\Logger.cs">
       <Link>Logger.cs</Link>
     </Compile>
@@ -161,21 +158,14 @@
       <DependentUpon>frmWmcTweak.cs</DependentUpon>
     </Compile>
     <Compile Include="LineupListViewSorter.cs" />
-    <Compile Include="mxfImport.cs" />
+    <Compile Include="ListViewSorter.cs" />
+    <Compile Include="WmcRegistries.cs" />
+    <Compile Include="WmcStore.cs" />
+    <Compile Include="WmcUtilities.cs" />
     <Compile Include="MxfXml\MXF.cs" />
-    <Compile Include="MxfXml\MxfAffiliate.cs" />
-    <Compile Include="MxfXml\MxfChannel.cs" />
-    <Compile Include="MxfXml\MxfGuideImage.cs" />
-    <Compile Include="MxfXml\MxfKeyword.cs" />
-    <Compile Include="MxfXml\MxfKeywordGroup.cs" />
-    <Compile Include="MxfXml\MxfLineup.cs" />
-    <Compile Include="MxfXml\MxfPerson.cs" />
-    <Compile Include="MxfXml\MxfPersonRank.cs" />
     <Compile Include="MxfXml\MxfProgram.cs" />
     <Compile Include="MxfXml\MxfProvider.cs" />
     <Compile Include="MxfXml\MxfScheduleEntry.cs" />
-    <Compile Include="MxfXml\MxfSeason.cs" />
-    <Compile Include="MxfXml\MxfSeriesInfo.cs" />
     <Compile Include="MxfXml\MxfService.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -195,7 +185,6 @@
       <DesignTime>True</DesignTime>
     </Compile>
     <Compile Include="statusLogo.cs" />
-    <Compile Include="Store.cs" />
     <Compile Include="VerifyLoad.cs" />
   </ItemGroup>
   <ItemGroup>

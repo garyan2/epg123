@@ -53,6 +53,10 @@
     <ApplicationIcon>Resources\epg123Transfer.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="BDATunePIA, Version=6.3.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\wmc_dlls\w7\BDATunePIA.dll</HintPath>
+    </Reference>
     <Reference Include="mcepg, Version=6.3.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\wmc_dlls\w7\mcepg.dll</HintPath>
@@ -80,8 +84,8 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\epg123Client\Store.cs">
-      <Link>Store.cs</Link>
+    <Compile Include="..\epg123Client\WmcStore.cs">
+      <Link>WmcStore.cs</Link>
     </Compile>
     <Compile Include="..\epg123\CompressXmlFiles.cs">
       <Link>CompressXmlFiles.cs</Link>
@@ -94,6 +98,9 @@
     </Compile>
     <Compile Include="..\epg123\ListViewSorter.cs">
       <Link>ListViewSorter.cs</Link>
+    </Compile>
+    <Compile Include="..\epg123\Logger.cs">
+      <Link>Logger.cs</Link>
     </Compile>
     <Compile Include="frmLogin.cs">
       <SubType>Form</SubType>

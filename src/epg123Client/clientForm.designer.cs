@@ -49,6 +49,7 @@
             this.renumberMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator6 = new System.Windows.Forms.ToolStripSeparator();
             this.clipboardMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.clearListingsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.lblMergedChannelListView = new System.Windows.Forms.ToolStripLabel();
             this.btnLablesDisplay = new System.Windows.Forms.ToolStripButton();
@@ -80,9 +81,7 @@
             this.toolStripSeparator5 = new System.Windows.Forms.ToolStripSeparator();
             this.btnDeleteLineup = new System.Windows.Forms.ToolStripButton();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
-            this.getChannelsProgressBar = new System.Windows.Forms.ToolStripProgressBar();
             this.lvItemsProgressBar = new System.Windows.Forms.ToolStripProgressBar();
-            this.mergedLineupProgressBar = new System.Windows.Forms.ToolStripProgressBar();
             this.lblToolStripStatus = new System.Windows.Forms.ToolStripStatusLabel();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.grpClientConfig = new System.Windows.Forms.GroupBox();
@@ -102,7 +101,6 @@
             this.tbSchedTime = new System.Windows.Forms.MaskedTextBox();
             this.lblUpdateTime = new System.Windows.Forms.Label();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
-            this.clearListingsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.ebtnRestore = new epg123.ElevatedButton();
             this.ebtnRebuild = new epg123.ElevatedButton();
             this.ebtnSetup = new epg123.ElevatedButton();
@@ -180,7 +178,6 @@
             this.lvEditTextBox.TabIndex = 1;
             this.lvEditTextBox.Visible = false;
             this.lvEditTextBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.lvEditTextBox_KeyPress);
-            this.lvEditTextBox.Leave += new System.EventHandler(this.lvEditTextBox_LostFocus);
             // 
             // mergedChannelListView
             // 
@@ -199,16 +196,22 @@
             this.mergedChannelListView.HideSelection = false;
             this.mergedChannelListView.Location = new System.Drawing.Point(0, 0);
             this.mergedChannelListView.Name = "mergedChannelListView";
+            this.mergedChannelListView.OwnerDraw = true;
             this.mergedChannelListView.Size = new System.Drawing.Size(415, 378);
             this.mergedChannelListView.Sorting = System.Windows.Forms.SortOrder.Ascending;
             this.mergedChannelListView.TabIndex = 0;
             this.mergedChannelListView.UseCompatibleStateImageBehavior = false;
             this.mergedChannelListView.View = System.Windows.Forms.View.Details;
+            this.mergedChannelListView.VirtualMode = true;
             this.mergedChannelListView.AfterLabelEdit += new System.Windows.Forms.LabelEditEventHandler(this.mergedChannelListView_AfterLabelEdit);
             this.mergedChannelListView.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.lvLineupSort);
-            this.mergedChannelListView.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.mergedChannelListView_ItemCheck);
-            this.mergedChannelListView.ItemChecked += new System.Windows.Forms.ItemCheckedEventHandler(this.mergedChannelListView_ItemChecked);
+            this.mergedChannelListView.DrawColumnHeader += new System.Windows.Forms.DrawListViewColumnHeaderEventHandler(this.mergedChannelListView_DrawColumnHeader);
+            this.mergedChannelListView.DrawItem += new System.Windows.Forms.DrawListViewItemEventHandler(this.mergedChannelListView_DrawItem);
+            this.mergedChannelListView.DrawSubItem += new System.Windows.Forms.DrawListViewSubItemEventHandler(this.mergedChannelListView_DrawSubItem);
+            this.mergedChannelListView.RetrieveVirtualItem += new System.Windows.Forms.RetrieveVirtualItemEventHandler(this.mergedChannelListView_RetrieveVirtualItem);
             this.mergedChannelListView.KeyDown += new System.Windows.Forms.KeyEventHandler(this.mergedChannelListView_KeyDown);
+            this.mergedChannelListView.MouseClick += new System.Windows.Forms.MouseEventHandler(this.mergedChannelListView_MouseClick);
+            this.mergedChannelListView.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.mergedChannelListView_MouseDoubleClick);
             // 
             // columnCallSign
             // 
@@ -221,10 +224,12 @@
             // columnServiceName
             // 
             this.columnServiceName.Text = "Service Name";
+            this.columnServiceName.Width = 100;
             // 
             // columnSubscribedLineup
             // 
             this.columnSubscribedLineup.Text = "Subscribed Lineup";
+            this.columnSubscribedLineup.Width = 100;
             // 
             // columnScannedSources
             // 
@@ -297,6 +302,13 @@
             this.clipboardMenuItem.Size = new System.Drawing.Size(183, 22);
             this.clipboardMenuItem.Text = "Copy to clipboard...";
             this.clipboardMenuItem.Click += new System.EventHandler(this.clipboardMenuItem_Click);
+            // 
+            // clearListingsMenuItem
+            // 
+            this.clearListingsMenuItem.Name = "clearListingsMenuItem";
+            this.clearListingsMenuItem.Size = new System.Drawing.Size(183, 22);
+            this.clearListingsMenuItem.Text = "Clear guide listings...";
+            this.clearListingsMenuItem.Click += new System.EventHandler(this.btnClearScheduleEntries);
             // 
             // toolStrip1
             // 
@@ -518,6 +530,7 @@
             // columnHeader6
             // 
             this.columnHeader6.Text = "Service Name";
+            this.columnHeader6.Width = 100;
             // 
             // toolStrip2
             // 
@@ -598,9 +611,7 @@
             // statusStrip1
             // 
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.getChannelsProgressBar,
             this.lvItemsProgressBar,
-            this.mergedLineupProgressBar,
             this.lblToolStripStatus});
             this.statusStrip1.Location = new System.Drawing.Point(0, 539);
             this.statusStrip1.Name = "statusStrip1";
@@ -608,28 +619,17 @@
             this.statusStrip1.TabIndex = 1;
             this.statusStrip1.Text = "statusStrip1";
             // 
-            // getChannelsProgressBar
-            // 
-            this.getChannelsProgressBar.AutoSize = false;
-            this.getChannelsProgressBar.Name = "getChannelsProgressBar";
-            this.getChannelsProgressBar.Size = new System.Drawing.Size(0, 16);
-            // 
             // lvItemsProgressBar
             // 
             this.lvItemsProgressBar.AutoSize = false;
             this.lvItemsProgressBar.Name = "lvItemsProgressBar";
             this.lvItemsProgressBar.Size = new System.Drawing.Size(0, 16);
             // 
-            // mergedLineupProgressBar
-            // 
-            this.mergedLineupProgressBar.AutoSize = false;
-            this.mergedLineupProgressBar.Name = "mergedLineupProgressBar";
-            this.mergedLineupProgressBar.Size = new System.Drawing.Size(0, 16);
-            // 
             // lblToolStripStatus
             // 
             this.lblToolStripStatus.Name = "lblToolStripStatus";
-            this.lblToolStripStatus.Size = new System.Drawing.Size(0, 17);
+            this.lblToolStripStatus.Size = new System.Drawing.Size(70, 17);
+            this.lblToolStripStatus.Text = "Initializing...";
             // 
             // splitContainer2
             // 
@@ -840,13 +840,6 @@
             // 
             this.openFileDialog1.FileName = "openFileDialog1";
             // 
-            // clearListingsMenuItem
-            // 
-            this.clearListingsMenuItem.Name = "clearListingsMenuItem";
-            this.clearListingsMenuItem.Size = new System.Drawing.Size(183, 22);
-            this.clearListingsMenuItem.Text = "Clear guide listings...";
-            this.clearListingsMenuItem.Click += new System.EventHandler(this.btnClearScheduleEntries);
-            // 
             // ebtnRestore
             // 
             this.ebtnRestore.FlatStyle = System.Windows.Forms.FlatStyle.System;
@@ -1015,8 +1008,6 @@
         private System.Windows.Forms.ToolStripButton btnDeleteLineup;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator5;
         private System.Windows.Forms.Button btnViewLog;
-        private System.Windows.Forms.ToolStripProgressBar mergedLineupProgressBar;
-        private System.Windows.Forms.ToolStripProgressBar getChannelsProgressBar;
         private System.Windows.Forms.ToolStripProgressBar lvItemsProgressBar;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator6;
         private System.Windows.Forms.ToolStripMenuItem clipboardMenuItem;

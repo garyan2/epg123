@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using epg123Client;
+using System.ComponentModel;
 using System.Windows.Forms;
 
 namespace epg123
@@ -11,14 +12,14 @@ namespace epg123
             Application.EnableVisualStyles();
             InitializeComponent();
 
-            mxfImport.backgroundWorker = backgroundWorker1;
+            WmcUtilities.backgroundWorker = backgroundWorker1;
             backgroundWorker1.WorkerReportsProgress = true;
             backgroundWorker1.RunWorkerAsync(filepath);
         }
 
         private void backgroundWorker_DoWork(object sender, DoWorkEventArgs e)
         {
-            success = mxfImport.importMxfFile((string)e.Argument);
+            success = WmcUtilities.ImportMxfFile((string)e.Argument);
         }
 
         private void backgroundWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)

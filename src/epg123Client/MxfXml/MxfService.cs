@@ -26,29 +26,10 @@ namespace epg123.MxfXml
         public string Uid { get; set; }
 
         /// <summary>
-        /// The display name of the service.
-        /// </summary>
-        [XmlAttribute("name")]
-        public string Name { get; set; }
-
-        /// <summary>
         /// The call sign of the service.
         /// For example, "BBC1".
         /// </summary>
         [XmlAttribute("callSign")]
         public string CallSign { get; set; }
-
-        /// <summary>
-        /// The ID of an Affiliate element that to which this service is affiliated.
-        /// </summary>
-        [XmlAttribute("affiliate")]
-        public string Affiliate { get; set; }
-
-        /// <summary>
-        /// Specifies a logo image to display.
-        /// This value contains a GuideImage id attribute. When searching for a logo to display, the service is searched first, and then its affiliate.
-        /// </summary>
-        [XmlAttribute("logoImage")]
-        public string LogoImage { get; set; }
     }
 }

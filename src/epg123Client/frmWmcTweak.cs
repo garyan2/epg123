@@ -9,8 +9,8 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Xml.Linq;
 using System.Windows.Forms;
-using Microsoft.MediaCenter.Store;
 using Microsoft.Win32;
+using epg123Client;
 
 namespace epg123
 {
@@ -139,9 +139,6 @@ namespace epg123
         private void frmWmcTweak_Shown(object sender, EventArgs e)
         {
             this.Refresh();
-
-            // determine if tuner limit tweak is in place
-            lblTunerLimit.Enabled = btnTunerLimit.Enabled = !isTunerCountTweaked();
         }
 
         private void setNamePatternExampleText()
@@ -1284,84 +1281,22 @@ namespace epg123
             }
         }
 
-        string[] countries = { /*"default", */"au", "be", "br", "ca", "ch", "cn", "cz", "de", "dk", "es", "fi", "fr", "gb", "hk", "hu", "ie", "in",/* "it",*/ "jp", "kr", "mx", "nl", "no", "nz", "pl",/* "pt",*/ "ru", "se", "sg", "sk",/* "tr", "tw",*/ "us", "za" };
         private void btnTunerLimit_Click(object sender, EventArgs e)
         {
             // activate the wait cursor for the tweak form
             this.UseWaitCursor = true;
 
-            // create the MXF file to import
-            string xml = "<?xml version=\"1.0\" standalone=\"yes\"?>\r\n" +
-                         "<MXF version=\"1.0\" xmlns=\"\">\r\n" +
-                         "  <Assembly name=\"mcstore\">\r\n" +
-                         "    <NameSpace name=\"Microsoft.MediaCenter.Store\">\r\n" +
-                         "      <Type name=\"StoredType\" />\r\n" +
-                         "    </NameSpace>\r\n" +
-                         "  </Assembly>\r\n" +
-                         "  <Assembly name=\"ehshell\">\r\n" +
-                         "    <NameSpace name=\"ServiceBus.UIFramework\">\r\n" +
-                         "      <Type name=\"TvSignalSetupParams\" />\r\n" +
-                         "    </NameSpace>\r\n" +
-                         "  </Assembly>\r\n";
-            xml += string.Format("  <With maxRecordersForHomePremium=\"{0}\" maxRecordersForUltimate=\"{0}\" maxRecordersForRacing=\"{0}\" maxRecordersForBusiness=\"{0}\" maxRecordersForEnterprise=\"{0}\" maxRecordersForOthers=\"{0}\">\r\n", TUNERLIMIT);
-
-            foreach (string country in countries)
+            if (WmcUtilities.SetWmcTunerLimits(TUNERLIMIT))
             {
-                if (country.Equals("ca"))
-                {
-                    // sneak this one in for our Canadian friends just north of the (contiguous) border to be able to tune ATSC stations from the USA
-                    xml += string.Format("    <TvSignalSetupParams uid=\"tvss-{0}\" atscSupported=\"true\" autoSetupLikelyAtscChannels=\"34, 35, 36, 43, 31, 39, 38, 32, 41, 27, 19, 51, 44, 42, 30, 28\" tvRatingSystem=\"US\" />\r\n", country);
-                }
-                else
-                {
-                    xml += string.Format("    <TvSignalSetupParams uid=\"tvss-{0}\" />\r\n", country);
-                }
+                MessageBox.Show("The tuner limit increase has been successfully applied.", "Tuner Limit Tweak", MessageBoxButtons.OK);
             }
-
-            xml += "  </With>\r\n";
-            xml += "</MXF>";
-
-            // create temporary file
-            string mxfFilepath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.mxf");
-            using (StreamWriter writer = new StreamWriter(mxfFilepath, false))
+            else
             {
-                writer.Write(xml);
+                MessageBox.Show("The tuner limit increase tweak has failed.", "Tuner Limit Tweak", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-
-            // import tweak using loadmxf.exe because for some reason the MxfImporter doesn't work for this
-            ProcessStartInfo startInfo = new ProcessStartInfo()
-            {
-                FileName = Environment.ExpandEnvironmentVariables(@"%SystemRoot%\ehome\loadmxf.exe"),
-                Arguments = string.Format("-i \"{0}\"", mxfFilepath),
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                CreateNoWindow = true
-            };
-            using (Process process = Process.Start(startInfo))
-            {
-                process.StandardOutput.ReadToEnd();
-                process.WaitForExit(30000);
-                if (process.ExitCode == 0)
-                {
-                    MessageBox.Show("The tuner limit increase has been successfully applied.", "Tuner Limit Tweak", MessageBoxButtons.OK);
-                }
-                else
-                {
-                    MessageBox.Show("The tuner limit increase tweak has failed.", "Tuner Limit Tweak", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-            }
-
-            // delete temporary file
-            File.Delete(mxfFilepath);
 
             // restore cursor for tweak form
             this.UseWaitCursor = false;
-
-            //// check tweak status
-            //if (lblTunerLimit.Enabled = btnTunerLimit.Enabled = !isTunerCountTweaked())
-            //{
-            //    MessageBox.Show("The tuner limit increase tweak failed to get applied.", "Unknown Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            //}
         }
 
         private bool isTunerCountTweaked()
@@ -1371,31 +1306,6 @@ namespace epg123
             // to grab Microsoft.MediaCenter.Shell.dll and lock itself
             // out of applying any updates
             return false;
-
-            //int success = 0;
-            //using (UIds uids = new UIds(Store.objectStore))
-            //{
-            //    foreach (UId uid in uids.Where(arg => arg.IdValue.StartsWith("vss-")))
-            //    {
-            //        foreach (string country in countries)
-            //        {
-            //            if (uid.IdValue.Equals("vss-" + country))
-            //            {
-            //                Type t = uid.Target.GetType();
-            //                PropertyInfo[] properties = t.GetProperties();
-            //                foreach (var property in properties.Where(arg => arg.Name.StartsWith("MaxRecordersFor")))
-            //                {
-            //                    var q = property.GetValue(uid.Target, null);
-            //                    if ((int)q != TUNERLIMIT) return false;
-            //                }
-            //                ++success;
-            //                continue;
-            //            }
-            //        }
-            //        if (success == countries.Length) return true;
-            //    }
-            //}
-            //return false;
         }
 
         private void txtNamePattern_KeyPress(object sender, KeyPressEventArgs e)

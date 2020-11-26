@@ -84,10 +84,10 @@ namespace epg123
                 }
                 catch
                 {
-                    Logger.WriteInformation(string.Format("Could not find expected program with MD5 hash {0}. Continuing.", mxfProgram.md5));
+                    Logger.WriteInformation($"Could not find expected program with MD5 hash {mxfProgram.md5}. Continuing.");
                 }
             }
-            Logger.WriteVerbose(string.Format("Found {0} cached movie poster links.", processedObjects));
+            Logger.WriteVerbose($"Found {processedObjects} cached movie poster links.");
 
             // maximum 500 queries at a time
             if (movieImageQueue.Count > 0)
@@ -100,10 +100,10 @@ namespace epg123
                 processMovieImageResponses();
                 if (processedObjects != totalObjects)
                 {
-                    Logger.WriteWarning("Problem occurred during getAllMoviePosters(). Did not process all movie image responses.");
+                    Logger.WriteInformation("Problem occurred during getAllMoviePosters(). Did not process all movie image responses.");
                 }
             }
-            Logger.WriteInformation(string.Format("Processed {0} movie poster links.", processedObjects));
+            Logger.WriteInformation($"Processed {processedObjects} movie poster links.");
             Logger.WriteMessage("Exiting getAllMoviePosters(). SUCCESS.");
             movieImageQueue = null; movieImageResponses = null;
             return true;
@@ -193,7 +193,7 @@ namespace epg123
                 {
                     if (!image.Uri.ToLower().StartsWith("http"))
                     {
-                        image.Uri = string.Format("{0}{1}image/{2}", sdAPI.jsonBaseUrl, sdAPI.jsonApi, image.Uri.ToLower());
+                        image.Uri = $"{sdAPI.jsonBaseUrl}{sdAPI.jsonApi}image/{image.Uri.ToLower()}";
                     }
 
                     switch (image.Category.ToLower())

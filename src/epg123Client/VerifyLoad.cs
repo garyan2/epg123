@@ -35,7 +35,12 @@ namespace epg123Client
             foreach (MxfService mxfService in mxf.With[0].Services)
             {
                 // get wmcService that matches mxfService using the UId
-                Service wmcService = Store.objectStore.UIds[mxfService.Uid].Target as Service;
+                Service wmcService = null;
+                try
+                {
+                    wmcService = WmcStore.WmcObjectStore.UIds[mxfService.Uid].Target as Service;
+                }
+                catch { }
                 if (wmcService == null)
                 {
                     Logger.WriteError($"Service {mxfService.Uid}: {mxfService.CallSign} is not present in the WMC database.");
@@ -83,107 +88,161 @@ namespace epg123Client
                 }
 
                 // build a list of wmc schedule entries based on start times
-                Dictionary<DateTime, ScheduleEntry> wmcScheduleEntryTimes = new Dictionary<DateTime, ScheduleEntry>();
-                foreach (ScheduleEntry wmcScheduleEntry in wmcService.ScheduleEntries.OrderBy(key => key.StartTime).ThenBy(key => key.EndTime))
+                Dictionary<DateTime, ScheduleEntry> wmcScheduleEntryTimes = new Dictionary<DateTime, ScheduleEntry>(wmcService.ScheduleEntries.Count());
+                foreach (ScheduleEntry wmcScheduleEntry in wmcService.ScheduleEntries)
                 {
                     try
                     {
+                        if (wmcScheduleEntry.LockCount == 0 || wmcScheduleEntry.Program == null) throw new Exception();
                         wmcScheduleEntryTimes.Add(wmcScheduleEntry.StartTime, wmcScheduleEntry);
                     }
                     catch
                     {
                         // remove duplicate start time entry; probably from a discontinuity
-                        wmcScheduleEntry.Program = null;
-                        wmcScheduleEntry.Service = null;
-                        wmcScheduleEntry.Unlock();
-                        wmcScheduleEntry.Update();
+                        try
+                        {
+                            wmcScheduleEntry.Refresh();
+                            wmcScheduleEntry.Program = null;
+                            wmcScheduleEntry.Service = null;
+                            wmcScheduleEntry.Unlock();
+                            wmcScheduleEntry.Update();
+                        }
+                        catch { }
                     }
                 }
 
                 // make everything right
-                DateTime mxfLastStartTime = DateTime.MinValue;
-                foreach (MxfScheduleEntry mxfScheduleEntry in mxfScheduleEntries.ScheduleEntry)
+                try
                 {
-                    ++entriesChecked;
-
-                    // update mxfScheduleEntry start time if needed
-                    if (mxfScheduleEntry.StartTime != DateTime.MinValue)
+                    DateTime mxfLastStartTime = DateTime.MinValue;
+                    foreach (MxfScheduleEntry mxfScheduleEntry in mxfScheduleEntries.ScheduleEntry)
                     {
-                        mxfStartTime = mxfScheduleEntry.StartTime;
-                    }
+                        ++entriesChecked;
 
-                    // only verify programs that are in the future and not currently showing or is the next showing
-                    if (mxfStartTime < DateTime.UtcNow || (DateTime.UtcNow > mxfLastStartTime && DateTime.UtcNow < (mxfStartTime + TimeSpan.FromSeconds(mxfScheduleEntry.Duration))))
-                    {
-                        wmcScheduleEntryTimes.Remove(mxfStartTime);
-                        mxfLastStartTime = mxfStartTime;
-                        mxfStartTime += TimeSpan.FromSeconds(mxfScheduleEntry.Duration);
-                        continue;
-                    }
-
-                    // find the program in the MXF file for this schedule entry
-                    MxfProgram mxfProgram = mxf.With[0].Programs[int.Parse(mxfScheduleEntry.Program) - 1];
-
-                    // verify a schedule entry exists matching the MXF file and determine whether there needs to be intervention
-                    if (!wmcScheduleEntryTimes.TryGetValue(mxfStartTime, out ScheduleEntry wmcScheduleEntry))
-                    {
-                        Microsoft.MediaCenter.Guide.Program addProgram = Store.objectStore.UIds[mxfProgram.Uid].Target as Microsoft.MediaCenter.Guide.Program;
-                        ScheduleEntry addScheduleEntry = new ScheduleEntry(addProgram, wmcService, mxfStartTime, TimeSpan.FromSeconds(mxfScheduleEntry.Duration), mxfScheduleEntry.Part, mxfScheduleEntry.Parts);
-                        UpdateScheduleEntryTags(addScheduleEntry, mxfScheduleEntry);
-                        Store.objectStore.Add(addScheduleEntry);
-                        if (verbose) Logger.WriteInformation($"Service {mxfService.CallSign}: Adding schedule entry from {mxfStartTime.ToLocalTime()} to {mxfStartTime.ToLocalTime() + TimeSpan.FromSeconds(mxfScheduleEntry.Duration)} for program [{mxfProgram.Uid.Replace("!Program!", "")} - [{mxfProgram.Title}] - [{mxfProgram.EpisodeTitle}]].");
-                        ++correctedCount;
-                    }
-                    else
-                    {
-                        ProgramScheduleCompare compare = new ProgramScheduleCompare(wmcScheduleEntry, mxfScheduleEntry, mxfProgram);
-                        if (!compare.isStopTimeSame)
+                        // update mxfScheduleEntry start time if needed
+                        if (mxfScheduleEntry.StartTime != DateTime.MinValue)
                         {
-                            // change the start time of the next wmc schedule entry if possible/needed
-                            if (!wmcScheduleEntryTimes.ContainsKey(mxfScheduleEntry.StartTime + TimeSpan.FromSeconds(mxfScheduleEntry.Duration)) &&
-                                wmcScheduleEntryTimes.TryGetValue(wmcScheduleEntry.EndTime, out ScheduleEntry scheduleEntry))
+                            mxfStartTime = mxfScheduleEntry.StartTime;
+                        }
+
+                        // only verify programs that are in the future and not currently showing or is the next showing
+                        if (mxfStartTime < DateTime.UtcNow || (DateTime.UtcNow > mxfLastStartTime && DateTime.UtcNow < (mxfStartTime + TimeSpan.FromSeconds(mxfScheduleEntry.Duration))))
+                        {
+                            wmcScheduleEntryTimes.Remove(mxfStartTime);
+                            mxfLastStartTime = mxfStartTime;
+                            mxfStartTime += TimeSpan.FromSeconds(mxfScheduleEntry.Duration);
+                            continue;
+                        }
+
+                        // find the program in the MXF file for this schedule entry
+                        MxfProgram mxfProgram = mxf.With[0].Programs[int.Parse(mxfScheduleEntry.Program) - 1];
+
+                        // verify a schedule entry exists matching the MXF file and determine whether there needs to be intervention
+                        if (!wmcScheduleEntryTimes.TryGetValue(mxfStartTime, out ScheduleEntry wmcScheduleEntry))
+                        {
+                            try
                             {
-                                wmcScheduleEntryTimes.Remove(scheduleEntry.StartTime);
-                                scheduleEntry.StartTime = mxfScheduleEntry.StartTime + TimeSpan.FromSeconds(mxfScheduleEntry.Duration);
-                                scheduleEntry.Update();
-                                wmcScheduleEntryTimes.Add(scheduleEntry.StartTime, scheduleEntry);
+                                if (verbose) Logger.WriteInformation($"Service {mxfService.CallSign}: Adding schedule entry from {mxfStartTime.ToLocalTime()} to {mxfStartTime.ToLocalTime() + TimeSpan.FromSeconds(mxfScheduleEntry.Duration)} for program [{mxfProgram.Uid.Replace("!Program!", "")} - [{mxfProgram.Title}] - [{mxfProgram.EpisodeTitle}]].");
+                                Microsoft.MediaCenter.Guide.Program addProgram = WmcStore.WmcObjectStore.UIds[mxfProgram.Uid].Target as Microsoft.MediaCenter.Guide.Program;
+                                ScheduleEntry addScheduleEntry = new ScheduleEntry(addProgram, wmcService, mxfStartTime, TimeSpan.FromSeconds(mxfScheduleEntry.Duration), mxfScheduleEntry.Part, mxfScheduleEntry.Parts);
+                                UpdateScheduleEntryTags(addScheduleEntry, mxfScheduleEntry);
+                                WmcStore.WmcObjectStore.Add(addScheduleEntry);
+                                ++correctedCount;
+                            }
+                            catch (Exception e)
+                            {
+                                Logger.WriteWarning($"Service {mxfService.CallSign}: Failed to add schedule entry from {mxfStartTime.ToLocalTime()} to {mxfStartTime.ToLocalTime() + TimeSpan.FromSeconds(mxfScheduleEntry.Duration)} for program [{mxfProgram.Uid.Replace("!Program!", "")} - [{mxfProgram.Title}] - [{mxfProgram.EpisodeTitle}]].\nmessage {e.Message}\n{e.StackTrace}");
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            if (wmcScheduleEntry.Duration.TotalSeconds != mxfScheduleEntry.Duration)
+                            {
+                                // change the start time of the next wmc schedule entry if possible/needed
+                                if (!wmcScheduleEntryTimes.ContainsKey(mxfScheduleEntry.StartTime + TimeSpan.FromSeconds(mxfScheduleEntry.Duration)) &&
+                                     wmcScheduleEntryTimes.TryGetValue(wmcScheduleEntry.EndTime, out ScheduleEntry scheduleEntry))
+                                {
+                                    try
+                                    {
+                                        scheduleEntry.Refresh();
+                                        wmcScheduleEntryTimes.Remove(scheduleEntry.StartTime);
+                                        scheduleEntry.StartTime = mxfScheduleEntry.StartTime + TimeSpan.FromSeconds(mxfScheduleEntry.Duration);
+                                        scheduleEntry.Update();
+                                        wmcScheduleEntryTimes.Add(scheduleEntry.StartTime, scheduleEntry);
+                                    }
+                                    catch { }
+                                }
+
+                                // correct the end time of current wmc schedule entry
+                                try
+                                {
+                                    if (verbose) Logger.WriteInformation($"Service {mxfService.CallSign} at {mxfStartTime.ToLocalTime()}: Changing end time of [{wmcScheduleEntry.Program.GetUIdValue().Replace("!Program!", "")} - [{wmcScheduleEntry.Program.Title}]-[{wmcScheduleEntry.Program.EpisodeTitle}]] from {wmcScheduleEntry.EndTime.ToLocalTime()} to {mxfStartTime.ToLocalTime() + TimeSpan.FromSeconds(mxfScheduleEntry.Duration)}");
+                                    wmcScheduleEntry.Refresh();
+                                    wmcScheduleEntry.EndTime = mxfStartTime + TimeSpan.FromSeconds(mxfScheduleEntry.Duration);
+                                    wmcScheduleEntry.Update();
+                                }
+                                catch (Exception e)
+                                {
+                                    Logger.WriteWarning($"Service {mxfService.CallSign} at {mxfStartTime.ToLocalTime()}: Failed to change end time of [{wmcScheduleEntry.Program.GetUIdValue().Replace("!Program!", "")} - [{wmcScheduleEntry.Program.Title}]-[{wmcScheduleEntry.Program.EpisodeTitle}]] from {wmcScheduleEntry.EndTime.ToLocalTime()} to {mxfStartTime.ToLocalTime() + TimeSpan.FromSeconds(mxfScheduleEntry.Duration)}\nmessage {e.Message}\n{e.StackTrace}");
+                                    break;
+                                }
                             }
 
-                            // correct the end time of current wmc schedule entry
-                            if (verbose) Logger.WriteInformation($"Service {mxfService.CallSign} at {mxfStartTime.ToLocalTime()}: Changing end time of [{wmcScheduleEntry.Program.GetUIdValue().Replace("!Program!", "")} - [{wmcScheduleEntry.Program.Title}]-[{wmcScheduleEntry.Program.EpisodeTitle}]] from {wmcScheduleEntry.EndTime.ToLocalTime()} to {mxfStartTime.ToLocalTime() + TimeSpan.FromSeconds(mxfScheduleEntry.Duration)}");
-                            wmcScheduleEntry.EndTime = mxfStartTime + TimeSpan.FromSeconds(mxfScheduleEntry.Duration);
-                            wmcScheduleEntry.Update();
+                            try
+                            {
+                                if (wmcScheduleEntry.Program.GetUIdValue() != mxfProgram.Uid)
+                                {
+                                    if (verbose) Logger.WriteInformation($"Service {mxfService.CallSign} at {mxfStartTime.ToLocalTime()}: Replacing [{wmcScheduleEntry.Program.GetUIdValue().Replace("!Program!", "")} - [{wmcScheduleEntry.Program.Title}]-[{wmcScheduleEntry.Program.EpisodeTitle}]] with [{mxfProgram.Uid.Replace("!Program!", "")} - [{mxfProgram.Title}]-[{mxfProgram.EpisodeTitle}]]");
+                                    wmcScheduleEntry.Refresh();
+                                    wmcScheduleEntry.Program = WmcStore.WmcObjectStore.UIds[mxfProgram.Uid].Target as Microsoft.MediaCenter.Guide.Program;
+                                    UpdateScheduleEntryTags(wmcScheduleEntry, mxfScheduleEntry);
+                                    wmcScheduleEntry.EndTime = mxfStartTime + TimeSpan.FromSeconds(mxfScheduleEntry.Duration);
+                                    wmcScheduleEntry.Update();
+                                    ++correctedCount;
+                                }
+                            }
+                            catch (Exception e)
+                            {
+                                Logger.WriteWarning($"Service {mxfService.CallSign} at {mxfStartTime.ToLocalTime()}: Failed to replace [{wmcScheduleEntry.Program.GetUIdValue().Replace("!Program!", "")} - [{wmcScheduleEntry.Program.Title}]-[{wmcScheduleEntry.Program.EpisodeTitle}]] with [{mxfProgram.Uid.Replace("!Program!", "")} - [{mxfProgram.Title}]-[{mxfProgram.EpisodeTitle}]]\nmessage {e.Message}\n{e.StackTrace}");
+                                break;
+                            }
+
+                            wmcScheduleEntryTimes.Remove(mxfStartTime);
                         }
 
-                        if (!compare.isUidSame)
-                        {
-                            if (verbose) Logger.WriteInformation($"Service {mxfService.CallSign} at {mxfStartTime.ToLocalTime()}: Replacing [{wmcScheduleEntry.Program.GetUIdValue().Replace("!Program!", "")} - [{wmcScheduleEntry.Program.Title}]-[{wmcScheduleEntry.Program.EpisodeTitle}]] with [{mxfProgram.Uid.Replace("!Program!", "")} - [{mxfProgram.Title}]-[{mxfProgram.EpisodeTitle}]]");
-                            wmcScheduleEntry.Program = Store.objectStore.UIds[mxfProgram.Uid].Target as Microsoft.MediaCenter.Guide.Program;
-                            UpdateScheduleEntryTags(wmcScheduleEntry, mxfScheduleEntry);
-                            wmcScheduleEntry.EndTime = mxfStartTime + TimeSpan.FromSeconds(mxfScheduleEntry.Duration);
-                            wmcScheduleEntry.Update();
-                            ++correctedCount;
-                        }
-
-                        wmcScheduleEntryTimes.Remove(mxfStartTime);
+                        mxfLastStartTime = mxfStartTime;
+                        mxfStartTime += TimeSpan.FromSeconds(mxfScheduleEntry.Duration);
                     }
 
-                    mxfLastStartTime = mxfStartTime;
-                    mxfStartTime += TimeSpan.FromSeconds(mxfScheduleEntry.Duration);
-                }
-
-                // remove orphaned wmcScheduleEntries
-                foreach (KeyValuePair<DateTime, ScheduleEntry> keyValuePair in wmcScheduleEntryTimes)
-                {
-                    if (keyValuePair.Value.StartTime > DateTime.UtcNow && keyValuePair.Value.StartTime < mxfStartTime)
+                    // remove orphaned wmcScheduleEntries
+                    foreach (KeyValuePair<DateTime, ScheduleEntry> keyValuePair in wmcScheduleEntryTimes)
                     {
-                        if (verbose) Logger.WriteInformation($"Service {mxfService.CallSign} at {keyValuePair.Value.StartTime.ToLocalTime()}: Removing [{keyValuePair.Value.Program.GetUIdValue().Replace("!Program!", "")} - [{keyValuePair.Value.Program.Title}]-[{keyValuePair.Value.Program.EpisodeTitle}]] due to being overlapped by another schedule entry.");
-                        keyValuePair.Value.Service = null;
-                        keyValuePair.Value.Program = null;
-                        keyValuePair.Value.Unlock();
-                        keyValuePair.Value.Update();
+                        try
+                        {
+                            if (keyValuePair.Value.StartTime > DateTime.UtcNow && keyValuePair.Value.StartTime < mxfStartTime)
+                            {
+                                if (verbose) Logger.WriteInformation($"Service {mxfService.CallSign} at {keyValuePair.Value.StartTime.ToLocalTime()}: Removing [{keyValuePair.Value.Program.GetUIdValue().Replace("!Program!", "")} - [{keyValuePair.Value.Program.Title}]-[{keyValuePair.Value.Program.EpisodeTitle}]] due to being overlapped by another schedule entry.");
+                                keyValuePair.Value.Refresh();
+                                keyValuePair.Value.Service = null;
+                                keyValuePair.Value.Program = null;
+                                keyValuePair.Value.Unlock();
+                                keyValuePair.Value.Update();
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            if (verbose) Logger.WriteInformation($"Service {mxfService.CallSign} at {keyValuePair.Value.StartTime.ToLocalTime()}: Failed to remove [{keyValuePair.Value.Program.GetUIdValue().Replace("!Program!", "")} - [{keyValuePair.Value.Program.Title}]-[{keyValuePair.Value.Program.EpisodeTitle}]] due to being overlapped by another schedule entry.\nmessage {e.Message}\n{e.StackTrace}");
+                        }
                     }
                 }
+                catch (Exception e)
+                {
+                    Logger.WriteInformation($"Exception caught for {mxfService.CallSign} at {mxfStartTime.ToLocalTime()}, message {e.Message}\n{e.StackTrace}");
+                }
+                //GC.Collect();
+                //GC.WaitForPendingFinalizers();
+                //GC.Collect();
             }
             Logger.WriteInformation($"Checked {entriesChecked} entries and corrected {correctedCount} of them.");
             Logger.WriteMessage("Exiting VerifyLoad()");
@@ -207,40 +266,13 @@ namespace epg123Client
             wmc.IsLive = mxf.IsLive;
             wmc.IsLiveSports = mxf.IsLiveSports;
             wmc.IsPremiere = mxf.IsPremiere;
-            //wmcScheduleEntry.IsRepeatFlag = mxfScheduleEntry.IsRepeat;
+            //wmc.IsRepeatFlag = mxf.IsRepeat;
             wmc.IsSap = mxf.IsSap;
             wmc.IsSubtitled = mxf.IsSubtitled;
             wmc.IsTape = mxf.IsTape;
             wmc.Part = mxf.Part;
             wmc.Parts = mxf.Parts;
             wmc.TVRating = (TVRating)mxf.TvRating;
-        }
-    }
-
-    public class ProgramScheduleCompare
-    {
-        public bool isTitleSame { get; set; }
-        public bool isSubtitleSame { get; set; }
-        public bool isDescriptionSame { get; set; }
-        public bool isOadSame { get; set; }
-        public bool isNewRepeatSame { get; set; }
-        public bool isSeasonEpisodeNumbersSame { get; set; }
-        public bool isSeriesIdSame { get; set; }
-        public bool isStopTimeSame { get; set; }
-        public bool isUidSame { get; set; }
-
-        public ProgramScheduleCompare(ScheduleEntry wmcScheduleEntry, MxfScheduleEntry mxfScheduleEntry, MxfProgram mxfProgram)
-        {
-            string wmcUid = wmcScheduleEntry.Program.GetUIdValue();
-            isUidSame = wmcUid == mxfProgram.Uid;
-            isTitleSame = wmcScheduleEntry.Program.Title == (mxfProgram.Title ?? string.Empty);
-            isSubtitleSame = wmcScheduleEntry.Program.EpisodeTitle == (mxfProgram.EpisodeTitle ?? string.Empty);
-            isDescriptionSame = wmcScheduleEntry.Program.Description == (mxfProgram.Description ?? string.Empty);
-            isOadSame = wmcScheduleEntry.Program.OriginalAirdate.ToString("yyyy-MM-dd") == (mxfProgram.OriginalAirdate ?? string.Empty);
-            isNewRepeatSame = wmcScheduleEntry.IsRepeat == mxfScheduleEntry.IsRepeat;
-            isSeasonEpisodeNumbersSame = (wmcScheduleEntry.Program.SeasonNumber == mxfProgram.SeasonNumber) && (wmcScheduleEntry.Program.EpisodeNumber == mxfProgram.EpisodeNumber);
-            isSeriesIdSame = wmcUid.Substring(10, 8) == mxfProgram.Uid.Substring(10, 8);
-            isStopTimeSame = wmcScheduleEntry.Duration.TotalSeconds == mxfScheduleEntry.Duration;
         }
     }
 }

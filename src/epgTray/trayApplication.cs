@@ -206,7 +206,7 @@ namespace epgTray
         {
             PipeSecurity pipeSecurity = new PipeSecurity();
             pipeSecurity.AddAccessRule(new PipeAccessRule(new SecurityIdentifier(WellKnownSidType.WorldSid, null), PipeAccessRights.FullControl, System.Security.AccessControl.AccessControlType.Allow));
-            NamedPipeServerStream server = new NamedPipeServerStream("Epg123StatusPipe", PipeDirection.InOut, 1, PipeTransmissionMode.Message, PipeOptions.None, 0, 0, pipeSecurity);
+            NamedPipeServerStream server = new NamedPipeServerStream("Epg123StatusPipe", PipeDirection.InOut, -1, PipeTransmissionMode.Message, PipeOptions.None, 0, 0, pipeSecurity);
             StreamReader reader = new StreamReader(server);
 
             while (!Shutdown)
@@ -217,7 +217,7 @@ namespace epgTray
                     
                     // adjust timer to 1.1 hours after each pipe message to avoid crashing the notification tray
                     // the checking for recordings in progress interval is 1 hour so need to be greater than that
-                    nextUpdate = DateTime.Now + TimeSpan.FromHours(1.1);
+                    nextUpdate = DateTime.Now + TimeSpan.FromMinutes(60.0);
 
                     string line = reader.ReadLine();
                     if (line.StartsWith("Downloading"))
@@ -282,6 +282,7 @@ namespace epgTray
         {
             ToolStripMenuItem menuItem = (ToolStripMenuItem)sender;
             string filePath;
+            string arguments = string.Empty;
             switch (menuItem.Name)
             {
                 case "OpenConfigMenuItem":
@@ -291,12 +292,13 @@ namespace epgTray
                     filePath = Helper.Epg123ClientExePath;
                     break;
                 case "ViewLogMenuItem":
-                    filePath = Helper.Epg123TraceLogPath;
+                    filePath = "notepad.exe";
+                    arguments = Helper.Epg123TraceLogPath;
                     break;
                 default:
                     return;
             }
-            Process.Start(filePath);
+            Process.Start(filePath, arguments);
         }
 
         private void RunUpdateMenuItem_Click(object sender, EventArgs e)

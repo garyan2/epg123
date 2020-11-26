@@ -43,13 +43,6 @@ namespace epg123.MxfXml
         public bool ShouldSerializeIsCC() { return IsCC; }
 
         /// <summary>
-        /// Indicates whether this broadcast is deaf-signed
-        /// </summary>
-        [XmlAttribute("isSigned")]
-        public bool IsSigned { get; set; } = false;
-        public bool ShouldSerializeIsSigned() { return IsSigned; }
-
-        /// <summary>
         /// Indicates the audio format of the broadcast.
         /// Possible values are:
         /// 0 = Not specified

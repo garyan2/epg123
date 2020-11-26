@@ -35,6 +35,7 @@ namespace epg123
             }
         }
         private bool newLogin = true;
+        public bool restartAsAdmin = false;
 
         public epgConfig config = new epgConfig();
         private epgConfig oldConfig = new epgConfig();
@@ -209,24 +210,8 @@ namespace epg123
             }
 
             // start a new process with elevated rights
-            try
-            {
-                ProcessStartInfo startInfo = new ProcessStartInfo()
-                {
-                    FileName = Helper.Epg123ExePath,
-                    WorkingDirectory = Helper.ExecutablePath,
-                    UseShellExecute = true,
-                    Verb = "runas"
-                };
-                Process proc = Process.Start(startInfo);
-
-                // close original process
-                Application.Exit();
-            }
-            catch (System.ComponentModel.Win32Exception ex)
-            {
-                Logger.WriteError(ex.Message);
-            }
+            restartAsAdmin = true;
+            Application.Exit();
         }
         private bool createEventLogSource()
         {
@@ -1243,7 +1228,7 @@ namespace epg123
         {
             if (File.Exists(Helper.Epg123TraceLogPath))
             {
-                Process.Start(Helper.Epg123TraceLogPath);
+                Process.Start("notepad.exe", Helper.Epg123TraceLogPath);
             }
         }
         private void btnClearCache_Click(object sender, EventArgs e)

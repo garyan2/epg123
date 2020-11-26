@@ -20,6 +20,9 @@ namespace epg123.MxfXml
         [XmlIgnore]
         public string tmsSeriesId;
 
+        [XmlIgnore]
+        public string tvdbSeriesId;
+
         /// <summary>
         /// A series of a particular program.
         /// Example: Lost

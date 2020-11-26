@@ -5,12 +5,11 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Net;
-using System.Security.Cryptography;
 using System.Text;
 using System.Windows.Forms;
 using System.Xml.Serialization;
 using Microsoft.MediaCenter.Pvr;
-using Microsoft.MediaCenter.Store;
+using epg123;
 using epg123Transfer.MxfXml;
 
 namespace epg123Transfer
@@ -292,7 +291,7 @@ namespace epg123Transfer
         private void populateWmcRecordings()
         {
             List<ListViewItem> listViewItems = new List<ListViewItem>();
-            foreach (SeriesRequest request in new SeriesRequests(epg123.Store.objectStore))
+            foreach (SeriesRequest request in new SeriesRequests(epg123Client.WmcStore.WmcObjectStore))
             {
                 // do not display archived/completed entries
                 if (request.Complete) continue;
@@ -313,7 +312,7 @@ namespace epg123Transfer
                 wmcRecording.Add(request.Series.GetUIdValue());
             }
 
-            foreach (ManualRequest request in new ManualRequests(epg123.Store.objectStore))
+            foreach (ManualRequest request in new ManualRequests(epg123Client.WmcStore.WmcObjectStore))
             {
                 // do not display archived/completed entries
                 if (request.Complete || (request.StartTime < DateTime.UtcNow)) continue;
@@ -334,7 +333,7 @@ namespace epg123Transfer
                 wmcRecording.Add(request.Title + " " + request.StartTime + " " + request.Channel.ChannelNumber.Number + "." + request.Channel.ChannelNumber.SubNumber);
             }
 
-            foreach (WishListRequest request in new WishListRequests(epg123.Store.objectStore))
+            foreach (WishListRequest request in new WishListRequests(epg123Client.WmcStore.WmcObjectStore))
             {
                 // do not display archived/completed entries
                 if (request.Complete) continue;
@@ -355,7 +354,7 @@ namespace epg123Transfer
                 wmcRecording.Add(request.Keywords);
             }
 
-            foreach (OneTimeRequest request in new OneTimeRequests(epg123.Store.objectStore))
+            foreach (OneTimeRequest request in new OneTimeRequests(epg123Client.WmcStore.WmcObjectStore))
             {
                 // do not display archived/completed entries
                 if (request.Complete || (request.StartTime < DateTime.UtcNow)) continue;
@@ -525,6 +524,7 @@ namespace epg123Transfer
 
         private void btnExit_Click(object sender, EventArgs e)
         {
+            epg123Client.WmcStore.Close();
             this.Close();
         }
 

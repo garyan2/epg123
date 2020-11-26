@@ -65,7 +65,7 @@ namespace epg123
                 string ret = null;
                 if (search_results.Results[search_index].PosterPath != null)
                 {
-                    ret = String.Format("{0}{1}{2}", config.Images.BaseUrl, config.Images.PosterSizes[posterSizeIdx], search_results.Results[search_index].PosterPath);
+                    ret = $"{config.Images.BaseUrl}{config.Images.PosterSizes[posterSizeIdx]}{search_results.Results[search_index].PosterPath}";
                 }
                 return ret;
             }
@@ -77,7 +77,7 @@ namespace epg123
                 string ret = null;
                 if (search_results.Results[search_index].BackdropPath != null)
                 {
-                    ret = String.Format("{0}{1}{2}", config.Images.BaseUrl, config.Images.BackdropSizes[posterSizeIdx], search_results.Results[search_index].BackdropPath);
+                    ret = $"{config.Images.BaseUrl}{config.Images.BackdropSizes[posterSizeIdx]}{search_results.Results[search_index].BackdropPath}";
                 }
                 return ret;
             }
@@ -104,7 +104,7 @@ namespace epg123
                         DateTime dt;
                         if (DateTime.TryParse(movie.ReleaseDate, out dt))
                         {
-                            title += string.Format(" ({0})", dt.Year.ToString());
+                            title += $" ({dt.Year})";
                         }
                     }
                     ret.Add(title);
@@ -172,7 +172,7 @@ namespace epg123
         private static StreamReader tmdbGetRequestResponse(string uri)
         {
             // build url
-            string url = string.Format("{0}{1}", tmdbBaseUrl, uri);
+            string url = $"{tmdbBaseUrl}{uri}";
 
             while (true)
             {
@@ -192,16 +192,16 @@ namespace epg123
                     if (((int)response.StatusCode == 429) && isAlive)
                     {
                         int delay = int.Parse(response.Headers.GetValues("Retry-After")[0]) + 1;
-                        Logger.WriteVerbose(string.Format("TMDb API server requested a delay of {0} seconds before next request.", delay));
+                        //Logger.WriteVerbose($"TMDb API server requested a delay of {delay} seconds before next request.");
                         Thread.Sleep(delay * 1000);
                         continue;
                     }
-                    Logger.WriteError(string.Format("TMDb API WebException thrown. Message: {0} , Status: {1}", wex.Message, wex.Status));
+                    Logger.WriteError($"TMDb API WebException thrown. Message: {wex.Message} , Status: {wex.Status}");
                     break;
                 }
                 catch (Exception ex)
                 {
-                    Logger.WriteError(string.Format("TMDb API Unknown exception thrown. Message: {0}", ex.Message));
+                    Logger.WriteError($"TMDb API Unknown exception thrown. Message: {ex.Message}");
                     break;
                 }
             }
@@ -210,7 +210,7 @@ namespace epg123
 
         private static TmdbConfiguration getTmdbConfiguration()
         {
-            string uri = string.Format("configuration?api_key={0}", Properties.Resources.tmdbAPIKey);
+            string uri = $"configuration?api_key={Properties.Resources.tmdbAPIKey}";
             try
             {
                 StreamReader sr = tmdbGetRequestResponse(uri);
@@ -240,7 +240,7 @@ namespace epg123
                 {
                     search_results = JsonConvert.DeserializeObject<TmdbMovieListResponse>(sr.ReadToEnd());
                     int count = (search_results == null) ? 0 : search_results.Results.Count;
-                    Logger.WriteVerbose(string.Format("TMDb catalog search for \"{0}\" from {1} found {2} results.", title, year, count));
+                    if (count > 0) Logger.WriteVerbose($"TMDb catalog search for \"{title}\" from {year} found {count} results.");
                     return count;
                 }
             }

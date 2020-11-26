@@ -497,6 +497,14 @@ namespace epg123
                 list.Add(new XmltvEpisodeNum() { System = "original-air-date", Text = oad });
             }
 
+            if (mxfProgram.Series != null)
+            {
+                MxfSeriesInfo mxfSeriesInfo = sdMxf.With[0].SeriesInfos[int.Parse(mxfProgram.Series.Substring(2)) - 1];
+                if (mxfSeriesInfo.tvdbSeriesId != null)
+                {
+                    list.Add(new XmltvEpisodeNum() { System = "thetvdb.com", Text = $"series/{mxfSeriesInfo.tvdbSeriesId}" });
+                }
+            }
             //if (mxfProgram.jsonProgramData.Metadata != null)
             //{
             //    foreach (Dictionary<string, sdProgramMetadataProvider> providers in mxfProgram.jsonProgramData.Metadata)

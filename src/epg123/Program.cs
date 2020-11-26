@@ -134,6 +134,17 @@ namespace epg123
                     if (!cfgForm.Execute)
                     {
                         mutex.ReleaseMutex(); GC.Collect();
+                        if (cfgForm.restartAsAdmin)
+                        {
+                            ProcessStartInfo startInfo = new ProcessStartInfo()
+                            {
+                                FileName = Helper.Epg123ExePath,
+                                WorkingDirectory = Helper.ExecutablePath,
+                                UseShellExecute = true,
+                                Verb = "runas"
+                            };
+                            Process proc = Process.Start(startInfo);
+                        }
                         return 0;
                     }
                     Logger.Initialize("Media Center", "EPG123");
@@ -183,6 +194,7 @@ namespace epg123
                 }
 
                 // let's do this
+                Helper.SendPipeMessage("Downloading|Initializing...");
                 DateTime startTime = DateTime.UtcNow;
                 if (showGui || showProgress)
                 {
@@ -217,17 +229,13 @@ namespace epg123
                     ProcessStartInfo startInfo = new ProcessStartInfo()
                     {
                         FileName = "epg123Client.exe",
-                        Arguments = "-i \"" + Helper.Epg123MxfPath + "\"" + (match ? " -match" : string.Empty) + (showGui ? " -p" : string.Empty) + " -nogc",
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
+                        Arguments = "-i \"" + Helper.Epg123MxfPath + "\" -nogc -noverify" + (match ? " -match" : string.Empty) + (showGui ? " -p" : string.Empty),
                         UseShellExecute = false,
                         CreateNoWindow = true
                     };
                     Process proc = Process.Start(startInfo);
                     proc.WaitForExit();
                 }
-
-                mutex.ReleaseMutex(); GC.Collect();
                 return 0;
             }
         }

@@ -129,6 +129,8 @@ namespace epg123
             {
                 Logger.WriteError(string.Format("Failed to retrieve token from Schedules Direct. message: {0}", errString));
             }
+            sdMxf = null;
+            GC.Collect();
             Helper.SendPipeMessage("Download Complete");
         }
         private static void AddBrandLogoToMxf()

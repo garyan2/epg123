@@ -3,20 +3,43 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using Microsoft.Win32;
 
 namespace epg123
 {
     public static class Logger
     {
+        private static bool FirstEntry = true;
+
+        private static bool createEventLogSource(string source)
+        {
+            bool ret = false;
+            try
+            {
+                RegistryKey key = Registry.LocalMachine.OpenSubKey($@"SYSTEM\CurrentControlSet\services\eventlog\Media Center\{source}");
+                if (key == null)
+                {
+                    if (!EventLog.SourceExists(source))
+                    {
+                        EventSourceCreationData sourceData = new EventSourceCreationData(source, "Media Center");
+                        EventLog.CreateEventSource(sourceData);
+                    }
+                }
+                ret = true;
+            }
+            catch (Exception ex)
+            {
+                Logger.WriteInformation($"{source} has not been registered as a source for Media Center event logs. This GUI must be executed with elevated rights to add {source} as a valid source.\n{ex.Message}\n{ex.StackTrace}");
+            }
+            return ret;
+        }
+
         public static void Initialize(string log, string source)
         {
             try
             {
                 // initialize/create the event log source for the service
-                if (!EventLog.SourceExists(source))
-                {
-                    EventLog.CreateEventSource(source, log);
-                }
+                createEventLogSource(source);
 
                 // reset parameters
                 eventLog = new EventLog()
@@ -133,11 +156,12 @@ namespace epg123
 
             try
             {
-                checkFileLength();
+                if (FirstEntry) checkFileLength();
                 using (StreamWriter stream = new StreamWriter(Helper.Epg123TraceLogPath, true))
                 {
                     stream.WriteLine(string.Format("[{0:G}] {1}{2}", time, type, message));
                 }
+                FirstEntry = false;
             }
             catch { }
         }

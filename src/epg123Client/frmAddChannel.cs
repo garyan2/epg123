@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using epg123Client;
 using Microsoft.MediaCenter.Guide;
 using Microsoft.MediaCenter.TV.Tuning;
 using Microsoft.Win32;
@@ -28,7 +29,7 @@ namespace epg123
         private void populateScannedLineups()
         {
             HashSet<Lineup> scannedLineups = new HashSet<Lineup>();
-            foreach (Device device in Store.mergedLineup.DeviceGroup.Devices)
+            foreach (Device device in WmcStore.WmcMergedLineup.DeviceGroup.Devices)
             {
                 if (device.ScannedLineup == null) continue;
                 scannedLineups.Add(device.ScannedLineup);
@@ -56,7 +57,7 @@ namespace epg123
                 return;
             }
 
-            foreach (Device device in Store.mergedLineup.DeviceGroup.Devices)
+            foreach (Device device in WmcStore.WmcMergedLineup.DeviceGroup.Devices)
             {
                 if (device.ScannedLineup == null) return;
                 if (device.ScannedLineup.IsSameAs((Lineup)cmbScannedLineups.SelectedItem))
@@ -315,7 +316,7 @@ namespace epg123
         {
             if (channelsToAdd.Count > 0)
             {
-                Logger.WriteInformation(string.Format("Adding {0} channels to lineup {1}.", channelsToAdd.Count, Store.mergedLineup.Name));
+                Logger.WriteInformation(string.Format("Adding {0} channels to lineup {1}.", channelsToAdd.Count, WmcStore.WmcMergedLineup.Name));
                 channelsToAdd[0].Lineup.NotifyChannelsAdded(channelsToAdd);              
             }
         }

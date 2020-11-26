@@ -59,7 +59,7 @@ namespace epg123
                     }
                 }
 
-                if (!newInstall && (DialogResult.OK != MessageBox.Show(string.Format("EPG123 is going to add the user 'Everyone' with Full Control rights to the \"{0}\" folder. This may take a while depending on how many files are in the folder and subfolders.", folder), "Edit Permissions", MessageBoxButtons.OK)))
+                if (!newInstall && (DialogResult.OK != MessageBox.Show($"EPG123 is going to add the user 'Everyone' with Full Control rights to the \"{folder}\" folder. This may take a while depending on how many files are in the folder and subfolders.", "Edit Permissions", MessageBoxButtons.OK)))
                 {
                     return false;
                 }
@@ -97,7 +97,7 @@ namespace epg123
             {
                 if (!UserHasElevatedRights)
                 {
-                    MessageBox.Show(string.Format("EPG123 did not have sufficient priveleges to edit the folder \"{0}\" permissions. Please run this GUI with elevated rights (as Administrator) to make the necessary changes.", folder),
+                    MessageBox.Show($"EPG123 did not have sufficient priveleges to edit the folder \"{folder}\" permissions. Please run this GUI with elevated rights (as Administrator) to make the necessary changes.",
                                     "Folder Permissions Error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 }
                 return false;

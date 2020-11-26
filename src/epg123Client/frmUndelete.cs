@@ -1,21 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 using Microsoft.MediaCenter.Guide;
-using Microsoft.MediaCenter.TV.Tuning;
+using epg123;
 
-namespace epg123
+namespace epg123Client
 {
     public partial class frmUndelete : Form
     {
         double dpiScaleFactor = 1.0;
         private ListViewColumnSorter channelColumnSorter = new ListViewColumnSorter();
         public bool channelAdded = false;
+        private List<ListViewItem> listViewItems = new List<ListViewItem>();
 
         public frmUndelete()
         {
@@ -33,6 +30,11 @@ namespace epg123
 
         private void frmUndelete_Shown(object sender, EventArgs e)
         {
+            // reset sorting column and order
+            channelColumnSorter.Order = SortOrder.Ascending;
+            channelColumnSorter.SortColumn = 1;
+
+            // build listview
             listView1.BeginUpdate();
             buildListView();
             listView1.EndUpdate();
@@ -48,12 +50,9 @@ namespace epg123
 
         private void buildListView()
         {
-            // attach lineup sorter to listview
-            listView1.ListViewItemSorter = channelColumnSorter;
-
             // scan all the channels to find any that are orphaned
             // the referencing merged channels will have a null lineup
-            List<Channel> scannedChannels = new Channels(Store.objectStore).ToList();
+            List<Channel> scannedChannels = new Channels(WmcStore.WmcObjectStore).ToList();
             foreach (Channel scannedChannel in scannedChannels)
             {
                 if ((scannedChannel.ChannelType != ChannelType.CalculatedScanned && scannedChannel.ChannelType != ChannelType.Scanned) ||
@@ -82,10 +81,11 @@ namespace epg123
                 // if all referencing channels have a null lineup, do some magic
                 if (orphaned)
                 {
-                    //scannedChannel.Lineup.NotifyChannelAdded(scannedChannel);
-                    listView1.Items.Add(buildOrphanedChannelLvi(scannedChannel));
+                    listViewItems.Add(buildOrphanedChannelLvi(scannedChannel));
                 }
             }
+            listViewItems.Sort(channelColumnSorter);
+            listView1.VirtualListSize = listViewItems.Count;
         }
 
         private ListViewItem buildOrphanedChannelLvi(Channel orphanedChannel)
@@ -93,134 +93,9 @@ namespace epg123
             // build original channel number string
             string originalChannelNumber = orphanedChannel.OriginalNumber.ToString();
             if (orphanedChannel.OriginalSubNumber > 0) originalChannelNumber += ("." + orphanedChannel.OriginalSubNumber.ToString());
-            string customChannelNumber = orphanedChannel.Number.ToString();
-            if (orphanedChannel.SubNumber > 0) customChannelNumber += ("." + orphanedChannel.SubNumber.ToString());
 
             // build tuning info
-            HashSet<string> tuningInfos = new HashSet<string>();
-            foreach (TuningInfo tuningInfo in orphanedChannel.TuningInfos)
-            {
-                // handle any overrides to tuninginfo
-                // assumes that tuninginfo is valid unless an override explicitly says otherwise
-                bool shown = true;
-                if (!tuningInfo.Overrides.Empty)
-                {
-                    foreach (TuningInfoOverride tuningInfoOverride in tuningInfo.Overrides)
-                    {
-                        if (tuningInfoOverride.Channel.Id != orphanedChannel.Id) continue;
-                        else if (!tuningInfoOverride.IsLatestVersion) continue;
-                        else if ((tuningInfoOverride.Channel.ChannelType == ChannelType.UserHidden) ||
-                                 (tuningInfoOverride.IsUserOverride && tuningInfoOverride.UserBlockedState == UserBlockedState.Disabled))
-                        {
-                            shown = false;
-                        }
-                        if (!shown) break;
-                    }
-                }
-                if (!shown) continue;
-
-                // unfortunately the lock emoji didn't come into play until Unicode 6.0.0
-                // Windows 7 uses Unicode 5.x, it will just show an open block
-                string lockSymbol = "\uD83D\uDD12";
-                if (tuningInfo is DvbTuningInfo)
-                {
-                    DvbTuningInfo ti = tuningInfo as DvbTuningInfo;
-                    switch (tuningInfo.TuningSpace)
-                    {
-                        case "DVB-T":
-                            // formula to convert channel (n) to frequency (fc) is fc = 8n + 306 (in MHz)
-                            // offset is -167KHz, 0Hz, +167KHz => int offset = ti.Frequency - (channel * 8000) - 306000;
-                            int channel = (ti.Frequency - 305833) / 8000;
-                            tuningInfos.Add(string.Format("{0}UHF C{1}", ti.IsEncrypted ? lockSymbol : string.Empty, channel));
-                            break;
-                        case "DVB-S":
-                            DVBSLocator locator = ti.TuneRequest.Locator as DVBSLocator;
-                            string polarization = string.Empty;
-                            switch (locator.SignalPolarisation)
-                            {
-                                case Polarisation.BDA_POLARISATION_LINEAR_H:
-                                    polarization = " H";
-                                    break;
-                                case Polarisation.BDA_POLARISATION_LINEAR_V:
-                                    polarization = " V";
-                                    break;
-                                case Polarisation.BDA_POLARISATION_CIRCULAR_L:
-                                    polarization = " LHC";
-                                    break;
-                                case Polarisation.BDA_POLARISATION_CIRCULAR_R:
-                                    polarization = " RHC";
-                                    break;
-                                default:
-                                    break;
-                            }
-                            tuningInfos.Add(string.Format("{0}{1:F0}{2} ({3})", ti.IsEncrypted ? lockSymbol : string.Empty, ti.Frequency / 1000.0, polarization, ti.Sid));
-                            break;
-                        case "DVB-C":
-                        case "ISDB-T":
-                        case "ISDB-S":
-                        case "ISDB-C":
-                            tuningInfos.Add(string.Format("{0} not implemented yet. Contact me!", tuningInfo.TuningSpace));
-                            break;
-                        default:
-                            break;
-                    }
-                }
-                else if (tuningInfo is ChannelTuningInfo)
-                {
-                    ChannelTuningInfo ti = tuningInfo as ChannelTuningInfo;
-                    switch (tuningInfo.TuningSpace)
-                    {
-                        case "ATSC":
-                            tuningInfos.Add(string.Format("{0} {1}{2}",
-                                (ti.PhysicalNumber < 14) ? "VHF" : "UHF", ti.PhysicalNumber, (ti.SubNumber > 0) ? "." + ti.SubNumber.ToString() : null));
-                            break;
-                        case "Cable":
-                        case "ClearQAM":
-                        case "Digital Cable":
-                            tuningInfos.Add(string.Format("{0}C{1}{2}", ti.IsEncrypted ? lockSymbol : string.Empty,
-                                ti.PhysicalNumber, (ti.SubNumber > 0) ? "." + ti.SubNumber.ToString() : null));
-                            break;
-                        case "{adb10da8-5286-4318-9ccb-cbedc854f0dc}":
-                            tuningInfos.Add(string.Format("IR {0}{1}",
-                                ti.PhysicalNumber, (ti.SubNumber > 0) ? "." + ti.SubNumber.ToString() : null));
-                            break;
-                        case "AuxIn1":
-                        case "Antenna":
-                        case "ATSCCable":
-                            tuningInfos.Add(string.Format("{0} not implemented yet. Contact me!", tuningInfo.TuningSpace));
-                            break;
-                        default:
-                            break;
-                    }
-                }
-                else if (tuningInfo is StringTuningInfo)
-                {
-                    StringTuningInfo ti = tuningInfo as StringTuningInfo;
-                    switch (tuningInfo.TuningSpace)
-                    {
-                        case "dc65aa02-5cb0-4d6d-a020-68702a5b34b8":
-                            foreach (Channel channel in ti.Channels)
-                            {
-                                tuningInfos.Add("C" + channel.OriginalNumber.ToString());
-                            }
-                            break;
-                        default:
-                            tuningInfos.Add(string.Format("{0} not implemented yet. Contact me!", tuningInfo.TuningSpace));
-                            break;
-                    }
-                }
-            }
-
-            // sort the hashset into a new array
-            string[] sortedTuningInfos = tuningInfos.ToArray();
-            Array.Sort(sortedTuningInfos);
-
-            string tuneInfos = string.Empty;
-            foreach (string info in sortedTuningInfos)
-            {
-                if (!string.IsNullOrEmpty(tuneInfos)) tuneInfos += " + ";
-                tuneInfos += info;
-            }
+            string tuneInfos = WmcStore.GetAllTuningInfos(orphanedChannel);
 
             // build ListViewItem
             try
@@ -266,7 +141,7 @@ namespace epg123
             }
 
             // Perform the sort with these new sort options.
-            listView1.Sort();
+            listViewItems.Sort(channelColumnSorter);
             listView1.Refresh();
         }
 
@@ -297,6 +172,12 @@ namespace epg123
         private void btnExit_Click(object sender, EventArgs e)
         {
             this.Close();
+        }
+
+        private void listView1_RetrieveVirtualItem(object sender, RetrieveVirtualItemEventArgs e)
+        {
+            if (listViewItems.Count == 0) e.Item = new ListViewItem();
+            else e.Item = listViewItems[e.ItemIndex];
         }
     }
 }

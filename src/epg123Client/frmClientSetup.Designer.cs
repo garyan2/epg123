@@ -149,6 +149,7 @@
             this.MinimizeBox = false;
             this.MinimumSize = new System.Drawing.Size(300, 228);
             this.Name = "frmClientSetup";
+            this.ShowInTaskbar = false;
             this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Hide;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Client Setup";

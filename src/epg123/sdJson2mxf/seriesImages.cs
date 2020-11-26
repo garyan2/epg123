@@ -73,10 +73,10 @@ namespace epg123
                     seriesImageQueue.AddRange(sportsSeries.GetValues(series.tmsSeriesId));
                 }
             }
-            Logger.WriteVerbose(string.Format("Found {0} cached series image links.", processedObjects));
+            Logger.WriteVerbose($"Found {processedObjects} cached series image links.");
             if (refreshing > 0)
             {
-                Logger.WriteVerbose(string.Format("Refreshing {0} series image links.", refreshing));
+                Logger.WriteVerbose($"Refreshing {refreshing} series image links.");
             }
             totalObjects = processedObjects + seriesImageQueue.Count;
             reportProgress();
@@ -92,10 +92,10 @@ namespace epg123
                 processSeriesImageResponses();
                 if (processedObjects != totalObjects)
                 {
-                    Logger.WriteWarning("Problem occurred during getAllSeriesImages(). Did not process all series image links.");
+                    Logger.WriteInformation("Problem occurred during getAllSeriesImages(). Did not process all series image links.");
                 }
             }
-            Logger.WriteInformation(string.Format("Processed {0} series image links.", processedObjects));
+            Logger.WriteInformation($"Processed {processedObjects} series image links.");
             Logger.WriteMessage("Exiting getAllSeriesImages(). SUCCESS.");
             seriesImageQueue = null; sportsSeries = null; seriesImageResponses = null;
             return true;
@@ -204,7 +204,7 @@ namespace epg123
                     aspects.Add(image.Aspect);
                     if (!image.Uri.ToLower().StartsWith("http"))
                     {
-                        image.Uri = string.Format("{0}{1}image/{2}", sdAPI.jsonBaseUrl, sdAPI.jsonApi, image.Uri.ToLower());
+                        image.Uri = $"{sdAPI.jsonBaseUrl}{sdAPI.jsonApi}image/{image.Uri.ToLower()}";
                     }
                 }
 
