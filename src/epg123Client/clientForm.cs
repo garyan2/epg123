@@ -1529,11 +1529,11 @@ namespace epg123
         {
             foreach (string backup in backupFolders)
             {
-                using (Stream stream = CompressXmlFiles.GetBackupFileStream(backup, Helper.backupZipFile))
+                using (Stream stream = CompressXmlFiles.GetBackupFileStream(backup + ".mxf", Helper.backupZipFile))
                 {
                     if (stream != null)
                     {
-                        if (backup == "lineup.mxf")
+                        if (backup == "lineup")
                         {
                             if (deleteActiveDatabaseFile() == null) return;
                         }
@@ -1586,15 +1586,14 @@ namespace epg123
         private bool deleteeHomeFile(string filename)
         {
             // delete the database file
-            string path = string.Format("{0}\\Microsoft\\eHome\\{1}.db", Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), filename);
             try
             {
-                foreach (Process proc in FileUtil.WhoIsLocking(path))
+                foreach (Process proc in FileUtil.WhoIsLocking(filename))
                 {
                     proc.Kill();
                     proc.WaitForExit(1000);
                 }
-                File.Delete(path);
+                File.Delete(filename);
             }
             catch (Exception ex)
             {
