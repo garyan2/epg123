@@ -508,7 +508,7 @@ namespace epg123Client
                         Logger.WriteVerbose($"Skipped matching {epg123Channel.CallSign} to channel {mergedChannel.ChannelNumber} due to channel already having an assigned listing.");
                     }
                 }
-                else if (mergedChannel.PrimaryChannel.Lineup.Name.StartsWith("EPG123"))
+                else if (mergedChannel.PrimaryChannel.Lineup.Name.StartsWith("EPG123") && !epg123Channels.Contains(mergedChannel.PrimaryChannel))
                 {
                     Logger.WriteVerbose($"Removing {mergedChannel.PrimaryChannel.CallSign} from channel {mergedChannel.ChannelNumber}.");
                     SubscribeLineupChannel(0, mergedChannel.Id);
