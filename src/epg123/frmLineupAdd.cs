@@ -3,30 +3,30 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using epg123.SchedulesDirectAPI;
 using Microsoft.Win32;
 
 namespace epg123
 {
     public partial class frmLineupAdd : Form
     {
-        public SdLineup addLineup;
+        public SdLineup AddLineup;
 
-        Dictionary<string, IList<sdCountry>> countryResp;
-        List<sdCountry> countries = new List<sdCountry>();
+        readonly List<sdCountry> _countries = new List<sdCountry>();
 
-        string mask;
-        List<SdLineup> headends = new List<SdLineup>();
+        private string _mask;
+        private List<SdLineup> _headends = new List<SdLineup>();
 
         public frmLineupAdd()
         {
             InitializeComponent();
-            string isoCountry = System.Globalization.RegionInfo.CurrentRegion.ThreeLetterISORegionName;
+            var isoCountry = System.Globalization.RegionInfo.CurrentRegion.ThreeLetterISORegionName;
 
-            countryResp = sdAPI.getCountryAvailables();
+            var countryResp = sdApi.GetAvailableCountries();
             if (countryResp != null)
             {
                 // add the only freeview listing
-                countries.Add(new sdCountry()
+                _countries.Add(new sdCountry()
                 {
                     FullName = "Great Britain Freeview",
                     PostalCode = "/",
@@ -35,41 +35,33 @@ namespace epg123
                 });
 
                 // get all the region/countries
-                List<string> regions = new List<string>(countryResp.Keys);
-                foreach (string region in regions)
+                var regions = new List<string>(countryResp.Keys);
+                foreach (var country in regions.Where(region => !region.ToLower().Equals("zzz")).Select(region => countryResp[region]).SelectMany(regionCountries => regionCountries))
                 {
-                    if (region.ToLower().Equals("zzz")) continue;
-                    IList<sdCountry> regionCountries = countryResp[region];
-                    foreach (sdCountry country in regionCountries)
-                    {
-                        countries.Add(country);
-                    }
+                    _countries.Add(country);
                 }
 
                 // sort the countries
-                countries = countries.OrderBy(o => o.FullName).ToList();
-                foreach (sdCountry country in countries)
+                _countries = _countries.OrderBy(o => o.FullName).ToList();
+                foreach (var country in _countries)
                 {
                     cmbCountries.Items.Add(country.FullName);
                 }
 
                 // add the DVB satellites
-                foreach (string region in regions)
+                foreach (var regionCountries in from region in regions where region.ToLower().Equals("zzz") select countryResp[region])
                 {
-                    if (!region.ToLower().Equals("zzz")) continue;
-                    IList<sdCountry> regionCountries = countryResp[region];
-
-                    countries.Add(null); cmbCountries.Items.Add(string.Empty);
-                    foreach (sdCountry country in regionCountries)
+                    _countries.Add(null); cmbCountries.Items.Add(string.Empty);
+                    foreach (var country in regionCountries)
                     {
-                        countries.Add(country);
+                        _countries.Add(country);
                         cmbCountries.Items.Add(country.FullName);
                     }
                 }
 
                 // add a manual option
-                countries.Add(null);
-                countries.Add(new sdCountry()
+                _countries.Add(null);
+                _countries.Add(new sdCountry()
                 {
                     FullName = "Manual lineup input...",
                     OnePostalCode = false,
@@ -80,37 +72,36 @@ namespace epg123
                 cmbCountries.Items.Add(string.Empty); cmbCountries.Items.Add("Manual lineup input...");
             }
 
-            int index = 0;
-            for (int i = 0; i < countries.Count; ++i)
+            var index = 0;
+            for (var i = 0; i < _countries.Count; ++i)
             {
-                if (countries[i] == null) continue;
-                if (!string.IsNullOrEmpty(countries[i].ShortName) && countries[i].ShortName.ToUpper().Equals(isoCountry))
-                {
-                    index = i;
-                    break;
-                }
+                if (_countries[i] == null) continue;
+                if (string.IsNullOrEmpty(_countries[i].ShortName) || !_countries[i].ShortName.ToUpper().Equals(isoCountry)) continue;
+                index = i;
+                break;
             }
             cmbCountries.SelectedIndex = index;
 
             // automatically fetch the zipcode as entered during TV Setup and perform a fetch
             try
             {
-                using (RegistryKey key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Media Center\Settings\ProgramGuide", false))
+                using (var key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Media Center\Settings\ProgramGuide", false))
                 {
-                    if ((key != null) && (!string.IsNullOrEmpty(key.GetValue("strLocation").ToString())))
-                    {
-                        txtZipcode.Text = key.GetValue("strLocation").ToString().Split(' ')[0];
-                        btnFetch_Click(btnFetch, null);
-                    }
+                    if ((key == null) || (string.IsNullOrEmpty(key.GetValue("strLocation").ToString()))) return;
+                    txtZipcode.Text = key.GetValue("strLocation").ToString().Split(' ')[0];
+                    btnFetch_Click(btnFetch, null);
                 }
             }
-            catch { }
+            catch
+            {
+                // ignored
+            }
         }
 
         private void cmbCountries_SelectedIndexChanged(object sender, EventArgs e)
         {
             listBox1.Items.Clear();
-            headends.Clear();
+            _headends.Clear();
             btnFetch.Enabled = false;
             txtZipcode.Enabled = false;
             lblExample.Text = string.Empty;
@@ -120,29 +111,27 @@ namespace epg123
             {
                 return;
             }
-            else if (countries[cmbCountries.SelectedIndex].ShortName.Equals("ZZZ"))
+            else if (_countries[cmbCountries.SelectedIndex].ShortName.Equals("ZZZ"))
             {
-                getSatellites();
+                GetSatellites();
             }
-            else if (countries[cmbCountries.SelectedIndex].PostalCodeExample == null)
+            else if (_countries[cmbCountries.SelectedIndex].PostalCodeExample == null)
             {
-                getTransmitters(countries[cmbCountries.SelectedIndex].ShortName);
+                GetTransmitters(_countries[cmbCountries.SelectedIndex].ShortName);
             }
 
-            if (!string.IsNullOrEmpty(countries[cmbCountries.SelectedIndex].PostalCodeExample))
+            if (string.IsNullOrEmpty(_countries[cmbCountries.SelectedIndex].PostalCodeExample)) return;
+            _mask = "(" + _countries[cmbCountries.SelectedIndex].PostalCode.Split('/')[1] + ")";
+            if (!_countries[cmbCountries.SelectedIndex].OnePostalCode)
             {
-                mask = "(" + countries[cmbCountries.SelectedIndex].PostalCode.Split('/')[1] + ")";
-                if (!countries[cmbCountries.SelectedIndex].OnePostalCode)
-                {
-                    lblExample.Text = "Example: " + countries[cmbCountries.SelectedIndex].PostalCodeExample;
-                    txtZipcode.Enabled = true;
-                    btnFetch.Enabled = true;
-                }
-                else
-                {
-                    txtZipcode.Text = countries[cmbCountries.SelectedIndex].PostalCode.Replace("/", "").Replace("\\", "");
-                    btnFetch_Click(null, null);
-                }
+                lblExample.Text = $"Example: {_countries[cmbCountries.SelectedIndex].PostalCodeExample}";
+                txtZipcode.Enabled = true;
+                btnFetch.Enabled = true;
+            }
+            else
+            {
+                txtZipcode.Text = _countries[cmbCountries.SelectedIndex].PostalCode.Replace("/", "").Replace("\\", "");
+                btnFetch_Click(null, null);
             }
         }
 
@@ -156,47 +145,49 @@ namespace epg123
 
         private void btnFetch_Click(object sender, EventArgs e)
         {
-            this.Enabled = false;
-            this.UseWaitCursor = true;
+            Enabled = false;
+            UseWaitCursor = true;
             Application.DoEvents();
 
             // evaluate the zipcode format
-            Match m = Regex.Match(txtZipcode.Text.ToUpper(), mask);
-            if ((m.Length == 0) && (!string.IsNullOrEmpty(countries[cmbCountries.SelectedIndex].PostalCodeExample)))
+            var m = Regex.Match(txtZipcode.Text.ToUpper(), _mask);
+            if ((m.Length == 0) && (!string.IsNullOrEmpty(_countries[cmbCountries.SelectedIndex].PostalCodeExample)))
             {
                 MessageBox.Show("Postal Code is in the wrong format for selected country.\nPlease correct entry and try again.\n", "Invalid Entry", MessageBoxButtons.OK);
             }
-            else if (countries[cmbCountries.SelectedIndex].ShortName.Equals("EPG123"))
+            else if (_countries[cmbCountries.SelectedIndex].ShortName.Equals("EPG123"))
             {
                 listBox1.Items.Clear();
                 listBox1.Items.Add(txtZipcode.Text);
 
-                headends = new List<SdLineup>();
-                headends.Add(new SdLineup()
+                _headends = new List<SdLineup>
                 {
-                    Transport = "unknown",
-                    Name = txtZipcode.Text,
-                    Location = "unknown",
-                    Lineup = txtZipcode.Text
-                });
+                    new SdLineup()
+                    {
+                        Transport = "unknown",
+                        Name = txtZipcode.Text,
+                        Location = "unknown",
+                        Lineup = txtZipcode.Text
+                    }
+                };
             }
             else
             {
                 listBox1.Items.Clear();
-                headends = new List<SdLineup>();
+                _headends = new List<SdLineup>();
 
-                IList<sdHeadendResponse> heads = sdAPI.getHeadends(countries[cmbCountries.SelectedIndex].ShortName, m.Value);
+                var heads = sdApi.GetHeadends(_countries[cmbCountries.SelectedIndex].ShortName, m.Value);
                 if (heads == null)
                 {
                     MessageBox.Show("No headends found for entered postal code and country.", "No Headend Found", MessageBoxButtons.OK);
                     return;
                 }
 
-                foreach (sdHeadendResponse head in heads)
+                foreach (var head in heads)
                 {
-                    foreach (sdHeadendLineup lineup in head.Lineups)
+                    foreach (var lineup in head.Lineups)
                     {
-                        headends.Add(new SdLineup()
+                        _headends.Add(new SdLineup()
                         {
                             Transport = head.Transport,
                             Name = lineup.Name,
@@ -208,25 +199,25 @@ namespace epg123
 
                 }
 
-                if (headends.Count > 0)
+                if (_headends.Count > 0)
                 {
-                    headends = headends.OrderBy(o => o.Lineup).OrderBy(o => o.Name).ToList();
-                    foreach (SdLineup lineup in headends)
+                    _headends = _headends.OrderBy(o => o.Lineup).ThenBy(o => o.Name).ToList();
+                    foreach (var lineup in _headends)
                     {
-                        listBox1.Items.Add(string.Format("{0} ({1})", lineup.Name, lineup.Location));
+                        listBox1.Items.Add($"{lineup.Name} ({lineup.Location})");
                     }
                 }
             }
 
-            this.UseWaitCursor = false;
-            this.Enabled = true;
+            UseWaitCursor = false;
+            Enabled = true;
         }
-        private void getSatellites()
+        private void GetSatellites()
         {
-            dynamic satcom = sdAPI.getSatelliteAvailables();
-            for (int i = 0; i < satcom.Count; ++i)
+            var satcom = sdApi.GetAvailableSatellites();
+            for (var i = 0; i < satcom.Count; ++i)
             {
-                headends.Add(new SdLineup()
+                _headends.Add(new SdLineup()
                 {
                     Transport = "DVB-S",
                     Name = satcom[i].lineup,
@@ -236,54 +227,47 @@ namespace epg123
                 listBox1.Items.Add(satcom[i].lineup);
             }
         }
-        private void getTransmitters(string country)
+        private void GetTransmitters(string country)
         {
-            Dictionary<string, string> xmitters = sdAPI.getTransmitters(country);
-            List<string> sites = new List<string>(xmitters.Keys);
-            foreach (string site in sites)
+            var xmitters = sdApi.GetTransmitters(country);
+            var sites = new List<string>(xmitters.Keys);
+            foreach (var site in sites)
             {
-                string lineup = string.Empty;
-                if (xmitters.TryGetValue(site, out lineup))
+                if (!xmitters.TryGetValue(site, out var lineup)) continue;
+                _headends.Add(new SdLineup()
                 {
-                    headends.Add(new SdLineup()
-                    {
-                        Transport = "DVB-T",
-                        Name = site,
-                        Location = null,
-                        Lineup = lineup
-                    });
-                    listBox1.Items.Add(site);
-                }
+                    Transport = "DVB-T",
+                    Name = site,
+                    Location = null,
+                    Lineup = lineup
+                });
+                listBox1.Items.Add(site);
             }
         }
 
         private void listBox1_DoubleClick(object sender, EventArgs e)
         {
-            addLineup = headends[listBox1.SelectedIndex];
-            this.Close();
+            AddLineup = _headends[listBox1.SelectedIndex];
+            Close();
         }
 
         private void listBox1_MouseMove(object sender, MouseEventArgs e)
         {
-            int index = listBox1.IndexFromPoint(e.Location);
-            if ((index != -1) && (index < listBox1.Items.Count))
+            var index = listBox1.IndexFromPoint(e.Location);
+            if ((index == -1) || (index >= listBox1.Items.Count)) return;
+            if (toolTip1.GetToolTip(listBox1) != _headends[index].Lineup)
             {
-                if (toolTip1.GetToolTip(listBox1) != headends[index].Lineup)
-                {
-                    toolTip1.SetToolTip(listBox1, headends[index].Lineup);
-                }
+                toolTip1.SetToolTip(listBox1, _headends[index].Lineup);
             }
         }
 
         private void listBox1_MouseUp(object sender, MouseEventArgs e)
         {
-            int index = listBox1.IndexFromPoint(e.Location);
-            if ((e.Button == MouseButtons.Right) && (index != -1) && (index < listBox1.Items.Count))
-            {
-                listBox1.SelectedIndex = listBox1.IndexFromPoint(e.Location);
-                frmPreview preview = new frmPreview(headends[index].Lineup.Trim());
-                preview.ShowDialog();
-            }
+            var index = listBox1.IndexFromPoint(e.Location);
+            if ((e.Button != MouseButtons.Right) || (index == -1) || (index >= listBox1.Items.Count)) return;
+            listBox1.SelectedIndex = listBox1.IndexFromPoint(e.Location);
+            var preview = new frmPreview(_headends[index].Lineup.Trim());
+            preview.ShowDialog();
         }
     }
 }

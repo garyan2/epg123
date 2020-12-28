@@ -1,24 +1,22 @@
 ﻿using System.Xml.Serialization;
 
-namespace MxfXml
+namespace hdhr2mxf.MXF
 {
     public class MxfChannel
     {
         private int _number;
 
         [XmlIgnore]
-        public string lineupUid;
+        public string LineupUid;
 
         [XmlIgnore]
-        public string stationId;
+        public string StationId;
 
         [XmlIgnore]
-        public string match;
+        public string Match;
 
         [XmlIgnore]
-        public bool isHD;
-
-        public MxfChannel() { }
+        public bool IsHd;
 
         /// <summary>
         /// A unique ID that is consistent between loads. 
@@ -27,10 +25,7 @@ namespace MxfXml
         [XmlAttribute("uid")]
         public string Uid
         {
-            get
-            {
-                return ("!Channel!" + lineupUid + "!" + stationId + "_" + Number + "_" + SubNumber);
-            }
+            get => ("!Channel!" + LineupUid + "!" + StationId + "_" + Number + "_" + SubNumber);
             set { }
         }
 
@@ -79,12 +74,10 @@ namespace MxfXml
                 {
                     return -1;
                 }
-                else return _number;
+
+                return _number;
             }
-            set
-            {
-                _number = value;
-            }
+            set => _number = value;
         }
 
         /// <summary>

@@ -157,7 +157,6 @@
     <Compile Include="frmWmcTweak.Designer.cs">
       <DependentUpon>frmWmcTweak.cs</DependentUpon>
     </Compile>
-    <Compile Include="LineupListViewSorter.cs" />
     <Compile Include="ListViewSorter.cs" />
     <Compile Include="WmcRegistries.cs" />
     <Compile Include="WmcStore.cs" />

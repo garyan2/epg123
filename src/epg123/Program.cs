@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -13,59 +12,27 @@ namespace epg123
     internal static class NativeMethods
     {
         [DllImport("user32.dll")]
-        internal static extern IntPtr SendMessage(HandleRef hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
+        internal static extern IntPtr SendMessage(HandleRef hWnd, uint msg, IntPtr wParam, IntPtr lParam);
 
         [DllImport("kernel32.dll")]
         internal static extern uint SetThreadExecutionState(uint esFlags);
     }
 
-    class Program
+    internal class Program
     {
         public enum ExecutionFlags : uint
         {
             ES_SYSTEM_REQUIRED = 0x00000001,
-            ES_DISPLAY_REQUIRED = 0x00000002,
-            ES_USER_PRESENT = 0x00000004,
+            //ES_DISPLAY_REQUIRED = 0x00000002,
+            //ES_USER_PRESENT = 0x00000004,
             ES_AWAYMODE_REQUIRED = 0x00000040,
             ES_CONTINUOUS = 0x80000000
         }
 
-        private static string appGuid = "{BAEC0A11-437B-4D39-A2FA-DB56F8C977E3}";
-
-        static void EstablishFileFolderPaths()
-        {
-            // set the base path and the working directory
-            Helper.ExecutablePath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            Directory.SetCurrentDirectory(Helper.ExecutablePath);
-
-            // establish folders with permissions
-            string[] folders = { Helper.Epg123BackupFolder, Helper.Epg123CacheFolder, Helper.Epg123LogosFolder, Helper.Epg123OutputFolder, Helper.Epg123SdLogosFolder };
-            if (Environment.UserInteractive && !Helper.CreateAndSetFolderAcl(Helper.Epg123ProgramDataFolder))
-            {
-                Logger.WriteError(string.Format("Failed to set full control permissions for Everyone on folder \"{0}\".", Helper.Epg123ProgramDataFolder));
-            }
-            else
-            {
-                foreach (string folder in folders)
-                {
-                    if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
-                    //if (Environment.UserInteractive && !Helper.CreateAndSetFolderAcl(folder))
-                    //{
-                    //    Logger.WriteError(string.Format("Failed to set full control permissions for Everyone on folder \"{0}\".", folder));
-                    //}
-                }
-            }
-
-            // copy custom lineup file to proper location in needed
-            string oldCustomFile = Helper.ExecutablePath + "\\customLineup.xml.example";
-            if (!File.Exists(Helper.Epg123CustomLineupsXmlPath) && File.Exists(oldCustomFile))
-            {
-                File.Copy(oldCustomFile, Helper.Epg123CustomLineupsXmlPath);
-            }
-        }
+        private const string AppGuid = "{BAEC0A11-437B-4D39-A2FA-DB56F8C977E3}";
 
         [STAThread]
-        static int Main(string[] args)
+        private static int Main(string[] args)
         {
             // setup catch to fatal program crash
             AppDomain.CurrentDomain.UnhandledException += MyUnhandledException;
@@ -73,23 +40,23 @@ namespace epg123
 
             // establish file/folder locations
             Logger.Initialize("Media Center", "EPG123");
-            EstablishFileFolderPaths();
+            Helper.EstablishFileFolderPaths();
 
             // create a mutex and keep alive until program exits
-            using (Mutex mutex = new Mutex(true, "Global\\" + appGuid))
+            using (var mutex = new Mutex(true, "Global\\" + AppGuid))
             {
-                bool showGui = true;
-                bool import = false;
-                bool match = false;
-                bool showProgress = false;
+                var showGui = true;
+                var import = false;
+                var match = false;
+                var showProgress = false;
                 epgConfig config = null;
 
                 // only evaluate arguments if a configuration file exists, otherwise open the gui
                 if (File.Exists(Helper.Epg123CfgPath) && (args != null))
                 {
-                    for (int i = 0; i < args.Length; ++i)
+                    foreach (var t in args)
                     {
-                        switch (args[i].ToLower())
+                        switch (t.ToLower())
                         {
                             case "-update":
                                 showGui = false;
@@ -126,40 +93,38 @@ namespace epg123
                 if (showGui)
                 {
                     Logger.WriteMessage("===============================================================================");
-                    Logger.WriteMessage(string.Format(" Activating the epg123 configuration GUI. version {0}", Helper.epg123Version));
+                    Logger.WriteMessage($" Activating the epg123 configuration GUI. version {Helper.Epg123Version}");
                     Logger.WriteMessage("===============================================================================");
-                    frmMain cfgForm = new frmMain();
+                    var cfgForm = new frmMain();
                     cfgForm.ShowDialog();
                     Logger.Close();
                     if (!cfgForm.Execute)
                     {
                         mutex.ReleaseMutex(); GC.Collect();
-                        if (cfgForm.restartAsAdmin)
+                        if (!cfgForm.RestartAsAdmin) return 0;
+                        var startInfo = new ProcessStartInfo()
                         {
-                            ProcessStartInfo startInfo = new ProcessStartInfo()
-                            {
-                                FileName = Helper.Epg123ExePath,
-                                WorkingDirectory = Helper.ExecutablePath,
-                                UseShellExecute = true,
-                                Verb = "runas"
-                            };
-                            Process proc = Process.Start(startInfo);
-                        }
+                            FileName = Helper.Epg123ExePath,
+                            WorkingDirectory = Helper.ExecutablePath,
+                            UseShellExecute = true,
+                            Verb = "runas"
+                        };
+                        Process.Start(startInfo);
                         return 0;
                     }
                     Logger.Initialize("Media Center", "EPG123");
-                    config = cfgForm.config;
-                    import = cfgForm.import;
-                    match = cfgForm.match;
+                    config = cfgForm.Config;
+                    import = cfgForm.Import;
+                    match = cfgForm.Match;
                 }
 
                 // prevent machine from entering sleep mode
-                uint prevThreadState = NativeMethods.SetThreadExecutionState((uint)ExecutionFlags.ES_CONTINUOUS |
-                                                                             (uint)ExecutionFlags.ES_SYSTEM_REQUIRED |
-                                                                             (uint)ExecutionFlags.ES_AWAYMODE_REQUIRED);
+                var prevThreadState = NativeMethods.SetThreadExecutionState((uint)ExecutionFlags.ES_CONTINUOUS |
+                                                                            (uint)ExecutionFlags.ES_SYSTEM_REQUIRED |
+                                                                            (uint)ExecutionFlags.ES_AWAYMODE_REQUIRED);
 
                 Logger.WriteMessage("===============================================================================");
-                Logger.WriteMessage(string.Format(" Beginning epg123 update execution. version {0}", Helper.epg123Version));
+                Logger.WriteMessage($" Beginning epg123 update execution. version {Helper.Epg123Version}");
                 Logger.WriteMessage("===============================================================================");
 
                 // bring in the configuration
@@ -167,9 +132,9 @@ namespace epg123
                 {
                     try
                     {
-                        using (StreamReader stream = new StreamReader(Helper.Epg123CfgPath, Encoding.Default))
+                        using (var stream = new StreamReader(Helper.Epg123CfgPath, Encoding.Default))
                         {
-                            XmlSerializer serializer = new XmlSerializer(typeof(epgConfig));
+                            var serializer = new XmlSerializer(typeof(epgConfig));
                             TextReader reader = new StringReader(stream.ReadToEnd());
                             config = (epgConfig)serializer.Deserialize(reader);
                             reader.Close();
@@ -177,7 +142,7 @@ namespace epg123
                     }
                     catch (IOException ex)
                     {
-                        Logger.WriteError(string.Format("Failed to open configuration file during initialization due to IO exception. message: {0}", ex.Message));
+                        Logger.WriteError($"Failed to open configuration file during initialization due to IO exception. message: {ex.Message}");
                         Logger.Close();
                         NativeMethods.SetThreadExecutionState(prevThreadState | (uint)ExecutionFlags.ES_CONTINUOUS);
                         mutex.ReleaseMutex(); GC.Collect();
@@ -185,7 +150,7 @@ namespace epg123
                     }
                     catch (Exception ex)
                     {
-                        Logger.WriteError(string.Format("Failed to open configuration file during initialization with unknown exception. message: {0}", ex.Message));
+                        Logger.WriteError($"Failed to open configuration file during initialization with unknown exception. message: {ex.Message}");
                         Logger.Close();
                         NativeMethods.SetThreadExecutionState(prevThreadState | (uint)ExecutionFlags.ES_CONTINUOUS);
                         mutex.ReleaseMutex(); GC.Collect();
@@ -195,28 +160,28 @@ namespace epg123
 
                 // let's do this
                 Helper.SendPipeMessage("Downloading|Initializing...");
-                DateTime startTime = DateTime.UtcNow;
+                var startTime = DateTime.UtcNow;
                 if (showGui || showProgress)
                 {
-                    frmProgress build = new frmProgress(config);
+                    var build = new frmProgress(config);
                     build.ShowDialog();
                 }
                 else
                 {
-                    sdJson2mxf.Build(config);
-                    if (!sdJson2mxf.success)
+                    sdJson2mxf.sdJson2Mxf.Build(config);
+                    if (!sdJson2mxf.sdJson2Mxf.Success)
                     {
                         Logger.WriteError("Failed to create MXF file. Exiting.");
                     }
                 }
 
                 // close the logger and restore power/sleep settings
-                Logger.WriteVerbose(string.Format("epg123 update execution time was {0}.", DateTime.UtcNow - startTime));
+                Logger.WriteVerbose($"epg123 update execution time was {DateTime.UtcNow - startTime}.");
                 Logger.Close();
                 NativeMethods.SetThreadExecutionState(prevThreadState | (uint)ExecutionFlags.ES_CONTINUOUS);
 
                 // did a Save&Execute from GUI ... perform import and automatch as well if requested
-                if (sdJson2mxf.success && import)
+                if (!sdJson2mxf.sdJson2Mxf.Success || !import) return 0;
                 {
                     // verify output file exists
                     if (!File.Exists(Helper.Epg123MxfPath) || !File.Exists(Helper.Epg123ClientExePath))
@@ -226,27 +191,28 @@ namespace epg123
                     }
 
                     // epg123client
-                    ProcessStartInfo startInfo = new ProcessStartInfo()
+                    var startInfo = new ProcessStartInfo()
                     {
                         FileName = "epg123Client.exe",
-                        Arguments = "-i \"" + Helper.Epg123MxfPath + "\" -nogc -noverify" + (match ? " -match" : string.Empty) + (showGui ? " -p" : string.Empty),
+                        Arguments = "-i \"" + Helper.Epg123MxfPath + "\" -nogc -noverify -p" + (match ? " -match" : string.Empty),
                         UseShellExecute = false,
                         CreateNoWindow = true
                     };
-                    Process proc = Process.Start(startInfo);
-                    proc.WaitForExit();
+                    var proc = Process.Start(startInfo);
+                    proc?.WaitForExit();
                 }
                 return 0;
             }
         }
 
-        static void MyUnhandledException(object sender, UnhandledExceptionEventArgs e)
+        private static void MyUnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
-            Logger.WriteError(string.Format("Unhandled exception caught from {0}. message: {1}", AppDomain.CurrentDomain.FriendlyName, (e.ExceptionObject as Exception).Message));
+            Logger.WriteError($"Unhandled exception caught from {AppDomain.CurrentDomain.FriendlyName}. message: {(e.ExceptionObject as Exception)?.Message}");
         }
-        static void MyThreadException(object sender, ThreadExceptionEventArgs e)
+
+        private static void MyThreadException(object sender, ThreadExceptionEventArgs e)
         {
-            Logger.WriteError(string.Format("Unhandled thread exception caught from {0}. message: {1}", AppDomain.CurrentDomain.FriendlyName, e.Exception.Message));
+            Logger.WriteError($"Unhandled thread exception caught from {AppDomain.CurrentDomain.FriendlyName}. message: {e.Exception.Message}");
         }
     }
 }

@@ -1,12 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Xml.Serialization;
 
-namespace XmltvXml
+namespace hdhr2mxf.XMLTV
 {
-    /// <summary>
-    /// <!ELEMENT rating(value, icon*)>
-    /// <!ATTLIST rating system CDATA #IMPLIED>
-    /// </summary>
     public class XmltvRating
     {
         [XmlElement("value")]

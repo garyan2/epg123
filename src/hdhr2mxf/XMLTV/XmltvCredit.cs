@@ -1,24 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Xml.Serialization;
 
-namespace XmltvXml
+namespace hdhr2mxf.XMLTV
 {
-    /// <summary>
-    /// <!ELEMENT credits(director*, actor*, writer*, adapter*, producer*,
-    ///                   composer*, editor*, presenter*, commentator*,
-    ///                   guest* )>
-    /// <!ELEMENT director    (#PCDATA)>
-    /// <!ELEMENT actor       (#PCDATA)>
-    /// <!ATTLIST actor role  CDATA #IMPLIED>
-    /// <!ELEMENT writer      (#PCDATA)>
-    /// <!ELEMENT adapter     (#PCDATA)>
-    /// <!ELEMENT producer    (#PCDATA)>
-    /// <!ELEMENT composer    (#PCDATA)>
-    /// <!ELEMENT editor      (#PCDATA)>
-    /// <!ELEMENT presenter   (#PCDATA)>
-    /// <!ELEMENT commentator (#PCDATA)>
-    /// <!ELEMENT guest       (#PCDATA)>
-    /// </summary>
     public class XmltvCredit
     {
         [XmlElement("director")]

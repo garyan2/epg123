@@ -1,7 +1,7 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
+using Newtonsoft.Json;
 
-namespace epg123
+namespace epg123.SchedulesDirectAPI
 {
     public class sdClientVersionResponse
     {

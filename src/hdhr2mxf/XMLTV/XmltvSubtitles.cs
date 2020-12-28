@@ -1,11 +1,7 @@
 ﻿using System.Xml.Serialization;
 
-namespace XmltvXml
+namespace hdhr2mxf.XMLTV
 {
-    /// <summary>
-    /// <!ELEMENT subtitles(language?)>
-    /// <!ATTLIST subtitles type(teletext | onscreen | deaf-signed) #IMPLIED>
-    /// </summary>
     public class XmltvSubtitles
     {
         [XmlElement("language")]

@@ -1,29 +1,30 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
+using epg123.SchedulesDirectAPI;
 
 namespace epg123
 {
     public partial class frmLineups : Form
     {
-        SdLineupResponse oldLineups;       // existing lineup
+        private readonly SdLineupResponse _oldLineups;       // existing lineup
 
-        public HashSet<string> newLineups = new HashSet<string>();
-        public bool cancel = true;
+        public HashSet<string> NewLineups = new HashSet<string>();
+        public bool Cancel = true;
 
         public frmLineups()
         {
             InitializeComponent();
 
             // get current lineups
-            oldLineups = sdAPI.sdGetLineups();
-            if ((oldLineups == null) || (oldLineups.Lineups == null) || (oldLineups.Lineups.Count == 0)) return;
+            _oldLineups = sdApi.SdGetLineups();
+            if (_oldLineups?.Lineups == null || (_oldLineups.Lineups.Count == 0)) return;
 
             // populate listview with current lineups
-            foreach (SdLineup lineup in oldLineups.Lineups)
+            foreach (var lineup in _oldLineups.Lineups)
             {
-                listView1.Items.Add(new ListViewItem(new string[] { lineup.Transport, lineup.Name, lineup.Location, lineup.Lineup })
+                listView1.Items.Add(new ListViewItem(new[] { lineup.Transport, lineup.Name, lineup.Location, lineup.Lineup })
                 {
                     Tag = lineup.Lineup,
                     ToolTipText = lineup.Lineup
@@ -31,15 +32,13 @@ namespace epg123
             }
 
             // adjust components for screen dpi
-            using (Graphics g = CreateGraphics())
+            using (var g = CreateGraphics())
             {
-                if ((g.DpiX != 96) || (g.DpiY != 96))
+                if ((int)g.DpiX == 96 && (int)g.DpiY == 96) return;
+                // adjust column widths for list views
+                foreach (ColumnHeader column in listView1.Columns)
                 {
-                    // adjust column widths for list views
-                    foreach (ColumnHeader column in listView1.Columns)
-                    {
-                        column.Width = (int)(column.Width * g.DpiX / 96) - 1;
-                    }
+                    column.Width = (int)(column.Width * g.DpiX / 96) - 1;
                 }
             }
         }
@@ -47,38 +46,35 @@ namespace epg123
         private void btnAdd_Click(object sender, EventArgs e)
         {
             // check to see if at capacity
-            if (listView1.Items.Count >= sdAPI.maxLineups)
+            if (listView1.Items.Count >= sdApi.MaxLineups)
             {
                 MessageBox.Show("You are at the maximum number of supported lineups and must\ndelete a lineup from the list in order to add another.");
                 return;
             }
 
             // open the client subform to add new lineup
-            frmLineupAdd subform = new frmLineupAdd();
+            var subform = new frmLineupAdd();
             subform.ShowDialog();
-            if (subform.addLineup == null) return;
+            if (subform.AddLineup == null) return;
 
             // check to see if lineup is already subscribed to
-            foreach (ListViewItem item in listView1.Items)
+            if (listView1.Items.Cast<ListViewItem>().Any(item => (string)item.Tag == subform.AddLineup.Lineup))
             {
-                if ((string)item.Tag == subform.addLineup.Lineup)
-                {
-                    MessageBox.Show("Selected lineup already exists in the list.", "Request Ignored");
-                    return;
-                }
+                MessageBox.Show("Selected lineup already exists in the list.", "Request Ignored");
+                return;
             }
 
             // add the new lineup
-            listView1.Items.Add(new ListViewItem(new string[] { subform.addLineup.Transport, subform.addLineup.Name, subform.addLineup.Location })
+            listView1.Items.Add(new ListViewItem(new[] { subform.AddLineup.Transport, subform.AddLineup.Name, subform.AddLineup.Location })
             {
-                Tag = subform.addLineup.Lineup,
-                ToolTipText = subform.addLineup.Lineup
+                Tag = subform.AddLineup.Lineup,
+                ToolTipText = subform.AddLineup.Lineup
             });
         }
 
         private void btnDelete_Click(object sender, EventArgs e)
         {
-            for (int i = listView1.CheckedItems.Count; i > 0;)
+            for (var i = listView1.CheckedItems.Count; i > 0;)
             {
                 listView1.CheckedItems[--i].Remove();
             }
@@ -87,22 +83,14 @@ namespace epg123
         private void btnApply_Click(object sender, EventArgs e)
         {
             // determine deletions first
-            if ((oldLineups != null) && (oldLineups.Lineups != null))
+            if (_oldLineups?.Lineups != null)
             {
-                foreach (SdLineup lineup in oldLineups.Lineups)
+                foreach (var lineup in _oldLineups.Lineups)
                 {
-                    bool delete = true;
-                    foreach (ListViewItem item in listView1.Items)
-                    {
-                        if ((string)item.Tag == lineup.Lineup)
-                        {
-                            delete = false;
-                            break;
-                        }
-                    }
+                    var delete = listView1.Items.Cast<ListViewItem>().All(item => (string) item.Tag != lineup.Lineup);
                     if (delete)
                     {
-                        sdAPI.removeLineup(lineup.Lineup);
+                        sdApi.RemoveLineup(lineup.Lineup);
                     }
                 }
             }
@@ -110,37 +98,32 @@ namespace epg123
             // add the new lineups
             foreach (ListViewItem item in listView1.Items)
             {
-                bool add = true;
-                if ((oldLineups != null) && (oldLineups.Lineups != null))
+                var add = true;
+                if (_oldLineups?.Lineups != null)
                 {
-                    foreach (SdLineup lineup in oldLineups.Lineups)
+                    if (_oldLineups.Lineups.Any(lineup => (string)item.Tag == lineup.Lineup))
                     {
-                        if ((string)item.Tag == lineup.Lineup)
-                        {
-                            add = false;
-                            break;
-                        }
+                        add = false;
                     }
                 }
-                if (add)
+
+                if (!add) continue;
+                if (sdApi.AddLineup((string)item.Tag))
                 {
-                    if (sdAPI.addLineup((string)item.Tag))
-                    {
-                        newLineups.Add((string)item.Tag);
-                    }
-                    else
-                    {
-                        MessageBox.Show(string.Format("Failed to add lineup \"{0}\" to your account. Check the log for more details.", (string)item.Tag));
-                    }
+                    NewLineups.Add((string)item.Tag);
+                }
+                else
+                {
+                    MessageBox.Show($"Failed to add lineup \"{(string) item.Tag}\" to your account. Check the log for more details.");
                 }
             }
-            cancel = false;
-            this.Close();
+            Cancel = false;
+            Close();
         }
 
         private void btnCancel_Click(object sender, EventArgs e)
         {
-            this.Close();
+            Close();
         }
     }
 }

@@ -5,12 +5,7 @@ namespace epg123.MxfXml
     public class MxfProvider
     {
         [XmlIgnore]
-        public int index;
-
-        /// <summary>
-        /// Provides information and copyright about who provided the listing data.
-        /// </summary>
-        public MxfProvider() { }
+        public int Index { get; set; }
 
         /// <summary>
         /// An ID that is unique to the document and defines this element.
@@ -18,10 +13,7 @@ namespace epg123.MxfXml
         [XmlAttribute("id")]
         public string Id
         {
-            get
-            {
-                return ("provider" + index.ToString());
-            }
+            get => $"provider{Index}";
             set { }
         }
 

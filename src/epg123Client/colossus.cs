@@ -5,16 +5,16 @@ namespace epg123
     [XmlRoot("Channels")]
     public class colossusChannels
     {
-        [XmlElement("Lineup")]
+        [XmlElement("Lineup")] 
         public colossusLineup Colossus { get; set; }
     }
 
     public class colossusLineup
     {
-        [XmlAttribute("epg123")]
-        public bool epg123 { get; set; }
+        [XmlAttribute("epg123")] 
+        public bool Epg123 { get; set; }
 
-        [XmlText()]
+        [XmlText()] 
         public string Lineup { get; set; }
     }
 }

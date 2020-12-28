@@ -1,17 +1,11 @@
 ﻿using System.Xml.Serialization;
 
-namespace MxfXml
+namespace hdhr2mxf.MXF
 {
     public class MxfGuideImage
     {
         [XmlIgnore]
-        public int index;
-
-        /// <summary>
-        /// Specifies an image to be displayed in the Guide.
-        /// A channel logo or program image.
-        /// </summary>
-        public MxfGuideImage() { }
+        public int Index;
 
         /// <summary>
         /// An ID that is unique to the document and defines this element.
@@ -20,10 +14,7 @@ namespace MxfXml
         [XmlAttribute("id")]
         public string Id
         {
-            get
-            {
-                return ("i" + index.ToString());
-            }
+            get => ("i" + Index.ToString());
             set { }
         }
 

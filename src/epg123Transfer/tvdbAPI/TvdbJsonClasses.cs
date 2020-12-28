@@ -2,7 +2,7 @@
 using System.Drawing;
 using Newtonsoft.Json;
 
-namespace epg123Transfer
+namespace epg123Transfer.tvdbAPI
 {
     public class tvdbTokenRequest
     {
@@ -62,7 +62,7 @@ namespace epg123Transfer
         public tvdbSeries Data { get; set; }
 
         [JsonProperty("errors")]
-        public tvdbJsonErrors errors { get; set; }
+        public tvdbJsonErrors Errors { get; set; }
     }
 
     public class tvdbSeries
@@ -135,7 +135,7 @@ namespace epg123Transfer
         public string Status { get; set; }
 
         [JsonProperty("zap2itId")]
-        public string Zap2itId { get; set; }
+        public string Zap2ItId { get; set; }
     }
 
     public class tvdbJsonErrors

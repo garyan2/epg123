@@ -1,52 +1,43 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Xml.Serialization;
 using System.Linq;
+using System.Xml.Serialization;
 
-namespace MxfXml
+namespace hdhr2mxf.MXF
 {
     public class MxfKeywordGroup
     {
         [XmlIgnore]
-        public int index;
+        public int Index;
 
         [XmlIgnore]
-        public string alpha = string.Empty;
+        public string Alpha = string.Empty;
 
         [XmlIgnore]
-        public Dictionary<string, string> cats = new Dictionary<string, string>();
+        public Dictionary<string, string> Cats = new Dictionary<string, string>();
 
         [XmlIgnore]
-        public SortedDictionary<string, string> sorted
+        public SortedDictionary<string, string> Sorted
         {
             get
             {
-                SortedDictionary<string, string> ret = new SortedDictionary<string, string>();
-                for (int i = 2; i < cats.Count; ++i)
+                var ret = new SortedDictionary<string, string>();
+                for (var i = 2; i < Cats.Count; ++i)
                 {
-                    ret.Add(cats.ElementAt(i).Key, cats.ElementAt(i).Value);
+                    ret.Add(Cats.ElementAt(i).Key, Cats.ElementAt(i).Value);
                 }
                 return ret;
             }
             set { }
         }
 
-        public string getKeywordId(string keyword)
+        public string GetKeywordId(string keyword)
         {
-            string ret = string.Empty;
-            if (!cats.TryGetValue(keyword, out ret))
-            {
-                ret = string.Format("k{0}", index++);
-                cats.Add(keyword, ret);
-            }
+            if (Cats.TryGetValue(keyword, out var ret)) return ret;
+            ret = $"k{Index++}";
+            Cats.Add(keyword, ret);
             return ret;
         }
-
-        /// <summary>
-        /// A set, or group, of keywords. The keyword group has a primary keyword name that identifies the group and is used to define the hierarchy in the Search By Category functionality.
-        /// A KeywordGroup might have a Keyword name of Movies, and group the following keywords: Comedy, Drama, Horror, and Sci-Fi.
-        /// </summary>
-        public MxfKeywordGroup() { }
 
         /// <summary>
         /// The value of a Keyword id attribute, and defines the name of the KeywordGroup.
@@ -55,10 +46,7 @@ namespace MxfXml
         [XmlAttribute("groupName")]
         public string GroupName
         {
-            get
-            {
-                return cats.ElementAt(0).Value;
-            }
+            get => Cats.ElementAt(0).Value;
             set { }
         }
 
@@ -69,10 +57,7 @@ namespace MxfXml
         [XmlAttribute("uid")]
         public string Uid
         {
-            get
-            {
-                return ("!KeywordGroup!" + GroupName + alpha);
-            }
+            get => ("!KeywordGroup!" + GroupName + Alpha);
             set { }
         }
 
@@ -85,10 +70,10 @@ namespace MxfXml
         {
             get
             {
-                string ret = cats.ElementAt(1).Value + ",";
-                for (int i = 0; i < Math.Min(sorted.Count, 99); ++i)
+                var ret = Cats.ElementAt(1).Value + ",";
+                for (var i = 0; i < Math.Min(Sorted.Count, 99); ++i)
                 {
-                    ret += sorted.ElementAt(i).Value + ",";
+                    ret += Sorted.ElementAt(i).Value + ",";
                 }
                 ret = ret.TrimEnd(',');
 

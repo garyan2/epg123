@@ -547,7 +547,7 @@
             this.trackBar1.TickFrequency = 5;
             this.trackBar1.TickStyle = System.Windows.Forms.TickStyle.TopLeft;
             this.trackBar1.Value = 100;
-            this.trackBar1.ValueChanged += new System.EventHandler(this.trkOpacityChanged);
+            this.trackBar1.ValueChanged += new System.EventHandler(this.TrkOpacityChanged);
             // 
             // rdoDark
             // 
@@ -559,7 +559,7 @@
             this.rdoDark.Tag = "Dark";
             this.rdoDark.Text = "Dark Accent";
             this.rdoDark.UseVisualStyleBackColor = true;
-            this.rdoDark.CheckedChanged += new System.EventHandler(this.rdoCheckedChanged);
+            this.rdoDark.CheckedChanged += new System.EventHandler(this.RdoCheckedChanged);
             // 
             // rdoLight
             // 
@@ -571,7 +571,7 @@
             this.rdoLight.Tag = "Light";
             this.rdoLight.Text = "Light Accent";
             this.rdoLight.UseVisualStyleBackColor = true;
-            this.rdoLight.CheckedChanged += new System.EventHandler(this.rdoCheckedChanged);
+            this.rdoLight.CheckedChanged += new System.EventHandler(this.RdoCheckedChanged);
             // 
             // rdoNone
             // 
@@ -585,7 +585,7 @@
             this.rdoNone.Tag = "None";
             this.rdoNone.Text = "None";
             this.rdoNone.UseVisualStyleBackColor = true;
-            this.rdoNone.CheckedChanged += new System.EventHandler(this.rdoCheckedChanged);
+            this.rdoNone.CheckedChanged += new System.EventHandler(this.RdoCheckedChanged);
             // 
             // pbStatusLogo
             // 
@@ -613,7 +613,7 @@
             this.btnMovieGuide.TabIndex = 26;
             this.btnMovieGuide.Text = "Enable";
             this.btnMovieGuide.UseVisualStyleBackColor = true;
-            this.btnMovieGuide.Click += new System.EventHandler(this.updateRegistryValues);
+            this.btnMovieGuide.Click += new System.EventHandler(this.UpdateRegistryValues);
             // 
             // label13
             // 
@@ -653,7 +653,7 @@
             0,
             0,
             0});
-            this.numInstantReplay.ValueChanged += new System.EventHandler(this.updateRegistryValues);
+            this.numInstantReplay.ValueChanged += new System.EventHandler(this.UpdateRegistryValues);
             // 
             // numSkipAhead
             // 
@@ -666,7 +666,7 @@
             0,
             0,
             0});
-            this.numSkipAhead.ValueChanged += new System.EventHandler(this.updateRegistryValues);
+            this.numSkipAhead.ValueChanged += new System.EventHandler(this.UpdateRegistryValues);
             // 
             // numBuffer
             // 
@@ -694,7 +694,7 @@
             0,
             0,
             0});
-            this.numBuffer.ValueChanged += new System.EventHandler(this.updateRegistryValues);
+            this.numBuffer.ValueChanged += new System.EventHandler(this.UpdateRegistryValues);
             // 
             // textBox2
             // 
@@ -727,7 +727,7 @@
             this.btnClearPattern.TabIndex = 17;
             this.btnClearPattern.Text = "Clear";
             this.btnClearPattern.UseVisualStyleBackColor = true;
-            this.btnClearPattern.Click += new System.EventHandler(this.btnUpdateFilePattern);
+            this.btnClearPattern.Click += new System.EventHandler(this.BtnUpdateFilePattern);
             // 
             // btnSetPattern
             // 
@@ -737,7 +737,7 @@
             this.btnSetPattern.TabIndex = 16;
             this.btnSetPattern.Text = "Set";
             this.btnSetPattern.UseVisualStyleBackColor = true;
-            this.btnSetPattern.Click += new System.EventHandler(this.btnUpdateFilePattern);
+            this.btnSetPattern.Click += new System.EventHandler(this.BtnUpdateFilePattern);
             // 
             // txtNamePattern
             // 

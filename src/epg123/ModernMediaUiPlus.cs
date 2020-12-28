@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using epg123.SchedulesDirectAPI;
 using Newtonsoft.Json;
 
 namespace epg123
@@ -23,11 +24,11 @@ namespace epg123
                     JsonSerializer serializer = new JsonSerializer() { NullValueHandling = NullValueHandling.Ignore, Formatting = Formatting.Indented };
                     serializer.Serialize(writer, Programs);
 
-                    Logger.WriteInformation(string.Format("Completed save of ModernMedia UI+ JSON support file to \"{0}\".", filepath));
+                    Logger.WriteInformation($"Completed save of ModernMedia UI+ JSON support file to \"{filepath}\".");
                 }
                 catch (Exception ex)
                 {
-                    Logger.WriteError(string.Format("Failed to save the ModernMedia UI+ JSON support file to \"{0}\". Message: {1}", filepath, ex.Message));
+                    Logger.WriteError($"Failed to save the ModernMedia UI+ JSON support file to \"{filepath}\". Message: {ex.Message}");
                 }
             }
         }

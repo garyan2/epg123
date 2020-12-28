@@ -1,12 +1,7 @@
-﻿using System;
-using System.Xml.Serialization;
+﻿using System.Xml.Serialization;
 
 namespace epg123.XmltvXml
 {
-    /// <summary>
-    /// <!ELEMENT audio(present?, stereo?)>
-    /// <!ELEMENT stereo(#PCDATA)>
-    /// </summary>
     public class XmltvAudio
     {
         [XmlElement("present")]

@@ -1,6 +1,6 @@
 ﻿using System.Xml.Serialization;
 
-namespace MxfXml
+namespace hdhr2mxf.MXF
 {
     public class MxfAffiliate
     {
@@ -17,10 +17,7 @@ namespace MxfXml
         [XmlAttribute("uid")]
         public string Uid
         {
-            get
-            {
-                return ("!Affiliate!" + Name);
-            }
+            get => ("!Affiliate!" + Name);
             set { }
         }
 

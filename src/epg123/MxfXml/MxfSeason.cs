@@ -5,16 +5,10 @@ namespace epg123.MxfXml
     public class MxfSeason
     {
         [XmlIgnore]
-        public int index;
+        public int Index;
 
         [XmlIgnore]
-        public string zap2it;
-
-        /// <summary>
-        /// A season of a particular program.
-        /// Example: Lost Season 1
-        /// </summary>
-        public MxfSeason() { }
+        public string Zap2It;
 
         /// <summary>
         /// An ID that is unique to the document and defines this element.
@@ -23,10 +17,7 @@ namespace epg123.MxfXml
         [XmlAttribute("id")]
         public string Id
         {
-            get
-            {
-                return ("sn" + index.ToString());
-            }
+            get => $"sn{Index}";
             set { }
         }
 
@@ -37,10 +28,7 @@ namespace epg123.MxfXml
         [XmlAttribute("uid")]
         public string Uid
         {
-            get
-            {
-                return ("!Season!" + zap2it + "_" + SeasonNumber);
-            }
+            get => $"!Season!{Zap2It}_{SeasonNumber}";
             set { }
         }
 
@@ -61,7 +49,7 @@ namespace epg123.MxfXml
         /// Undocumented
         /// </summary>
         [XmlAttribute("seasonNumber")]
-        public int SeasonNumber { get; set; } = 0;
+        public int SeasonNumber { get; set; }
         public bool ShouldSerializeSeasonNumber() { return SeasonNumber != 0; }
 
         /// <summary>

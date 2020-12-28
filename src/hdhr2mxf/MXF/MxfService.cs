@@ -1,27 +1,21 @@
 ﻿using System.Collections.Generic;
 using System.Xml.Serialization;
 
-namespace MxfXml
+namespace hdhr2mxf.MXF
 {
     public class MxfService
     {
         [XmlIgnore]
-        public int index;
+        public int Index;
 
         [XmlIgnore]
-        public bool isHD;
+        public bool IsHd;
 
         [XmlIgnore]
-        public MxfScheduleEntries mxfScheduleEntries = new MxfScheduleEntries() { ScheduleEntry = new List<MxfScheduleEntry>() };
+        public MxfScheduleEntries MxfScheduleEntries = new MxfScheduleEntries() { ScheduleEntry = new List<MxfScheduleEntry>() };
 
         [XmlIgnore]
-        public string StationID { get; set; }
-
-        /// <summary>
-        /// A content provider.
-        /// Example: KOMO
-        /// </summary>
-        public MxfService() { }
+        public string StationId { get; set; }
 
         /// <summary>
         /// An ID that is unique to the document and defines this element.
@@ -30,10 +24,7 @@ namespace MxfXml
         [XmlAttribute("id")]
         public string Id
         {
-            get
-            {
-                return ("s" + index.ToString());
-            }
+            get => ("s" + Index.ToString());
             set { }
         }
 
@@ -44,10 +35,7 @@ namespace MxfXml
         [XmlAttribute("uid")]
         public string Uid
         {
-            get
-            {
-                return ("!Service!EPG123_" + StationID);
-            }
+            get => ("!Service!EPG123_" + StationId);
             set { }
         }
 

@@ -1,20 +1,10 @@
 ﻿using System.Collections.Generic;
-using System.Xml;
 using System.Xml.Serialization;
 
-namespace XmltvXml
+namespace hdhr2mxf.XMLTV
 {
-    /// <summary>
-    /// <!ELEMENT tv(channel*, programme*)>
-    /// <!ATTLIST tv date CDATA #IMPLIED
-    ///              source-info-url CDATA #IMPLIED
-    ///              source-info-name CDATA #IMPLIED
-    ///              source-data-url CDATA #IMPLIED
-    ///              generator-info-name CDATA #IMPLIED
-    ///              generator-info-url CDATA #IMPLIED >
-    /// </summary>
     [XmlRoot("tv")]
-    public class XMLTV
+    public class xmltv
     {
         [XmlAttribute("date")]
         public string Date { get; set; }

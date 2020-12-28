@@ -3,22 +3,6 @@ using System.Xml.Serialization;
 
 namespace epg123.XmltvXml
 {
-    /// <summary>
-    /// <!ELEMENT programme(title+, sub-title*, desc*, credits?, date?,
-    ///                     category*, keyword*, language?, orig-language?,
-    ///                     length?, icon*, url*, country*, episode-num*,
-    ///                     video?, audio?, previously-shown?, premiere?,
-    ///                     last-chance?, new?, subtitles*, rating*,
-    ///                     star-rating*, review* )>
-    /// <!ATTLIST programme start CDATA #REQUIRED
-    ///                     stop CDATA #IMPLIED
-    ///                     pdc-start CDATA #IMPLIED
-    ///                     vps-start CDATA #IMPLIED
-    ///                     showview CDATA #IMPLIED
-    ///                     videoplus CDATA #IMPLIED
-    ///                     channel CDATA #REQUIRED
-    ///                     clumpidx CDATA "0/1" >
-    /// </summary>
     public class XmltvProgramme
     {
         [XmlAttribute("start")]

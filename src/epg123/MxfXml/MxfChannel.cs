@@ -7,12 +7,10 @@ namespace epg123.MxfXml
         private int _number;
 
         [XmlIgnore]
-        public string lineupUid;
+        public string LineupUid { get; set; }
 
         [XmlIgnore]
-        public string stationId;
-
-        public MxfChannel() { }
+        public string StationId { get; set; }
 
         /// <summary>
         /// A unique ID that is consistent between loads. 
@@ -21,10 +19,7 @@ namespace epg123.MxfXml
         [XmlAttribute("uid")]
         public string Uid
         {
-            get
-            {
-                return ("!Channel!" + lineupUid + "!" + stationId + "_" + Number + "_" + SubNumber);
-            }
+            get => $"!Channel!{LineupUid}!{StationId}_{Number}_{SubNumber}";
             set { }
         }
 
@@ -67,18 +62,8 @@ namespace epg123.MxfXml
         [XmlAttribute("number")]
         public int Number
         {
-            get
-            {
-                if (_number == 0)
-                {
-                    return -1;
-                }
-                else return _number;
-            }
-            set
-            {
-                _number = value;
-            }
+            get => _number == 0 ? -1 : _number;
+            set => _number = value;
         }
 
         /// <summary>

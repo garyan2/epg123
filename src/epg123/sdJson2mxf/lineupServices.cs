@@ -7,44 +7,44 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Serialization;
 using epg123.MxfXml;
+using epg123.SchedulesDirectAPI;
 
-namespace epg123
+namespace epg123.sdJson2mxf
 {
-    public static partial class sdJson2mxf
+    internal static partial class sdJson2Mxf
     {
-        private static HashSet<string> includedStations = new HashSet<string>();
-        private static HashSet<string> excludedStations = new HashSet<string>();
+        private static readonly HashSet<string> IncludedStations = new HashSet<string>();
+        private static readonly HashSet<string> ExcludedStations = new HashSet<string>();
         private static SdStationMapResponse customMap;
 
         private static CustomLineup customLineup;
-        private static HashSet<string> customStations = new HashSet<string>();
-        private static Dictionary<string, SdLineupStation> allStations = new Dictionary<string, SdLineupStation>();
+        private static readonly HashSet<string> CustomStations = new HashSet<string>();
+        private static readonly Dictionary<string, SdLineupStation> AllStations = new Dictionary<string, SdLineupStation>();
 
-        public static System.ComponentModel.BackgroundWorker backgroundDownloader;
-        public static List<KeyValuePair<MxfService, string[]>> stationLogosToDownload = new List<KeyValuePair<MxfService, string[]>>();
-        public static volatile bool stationLogosDownloadComplete = true;
+        public static System.ComponentModel.BackgroundWorker BackgroundDownloader;
+        public static List<KeyValuePair<MxfService, string[]>> StationLogosToDownload = new List<KeyValuePair<MxfService, string[]>>();
+        public static volatile bool StationLogosDownloadComplete = true;
 
-        private static bool buildLineupServices()
+        private static bool BuildLineupServices()
         {
             // query what lineups client is subscribed to
-            SdLineupResponse clientLineups = sdAPI.sdGetLineups();
+            var clientLineups = sdApi.SdGetLineups();
             if (clientLineups == null) return false;
 
             // determine if there are custom lineups to consider
             if (File.Exists(Helper.Epg123CustomLineupsXmlPath))
             {
-                CustomLineups customLineups = new CustomLineups();
-                using (StreamReader stream = new StreamReader(Helper.Epg123CustomLineupsXmlPath, Encoding.Default))
+                CustomLineups customLineups;
+                using (var stream = new StreamReader(Helper.Epg123CustomLineupsXmlPath, Encoding.Default))
                 {
-                    XmlSerializer serializer = new XmlSerializer(typeof(CustomLineups));
+                    var serializer = new XmlSerializer(typeof(CustomLineups));
                     TextReader reader = new StringReader(stream.ReadToEnd());
                     customLineups = (CustomLineups)serializer.Deserialize(reader);
                     reader.Close();
                 }
 
-                foreach (CustomLineup lineup in customLineups.CustomLineup)
+                foreach (var lineup in customLineups.CustomLineup.Where(lineup => config.IncludedLineup.Contains(lineup.Lineup)))
                 {
-                    if (!config.IncludedLineup.Contains(lineup.Lineup)) continue;
                     customLineup = lineup;
 
                     clientLineups.Lineups.Add(new SdLineup()
@@ -57,132 +57,132 @@ namespace epg123
                         IsDeleted = false
                     });
 
-                    customMap = new SdStationMapResponse();
-                    customMap.Map = new List<SdLineupMap>();
-                    customMap.Stations = new List<SdLineupStation>();
-                    customMap.Metadata = new sdMetadata()
+                    customMap = new SdStationMapResponse
                     {
-                        Lineup = lineup.Lineup
+                        Map = new List<SdLineupMap>(),
+                        Stations = new List<SdLineupStation>(),
+                        Metadata = new sdMetadata() {Lineup = lineup.Lineup}
                     };
                 }
             }
 
             // reset counters
             processedObjects = 0; totalObjects = clientLineups.Lineups.Count;
-            reportProgress();
+            ReportProgress();
 
             // process lineups
-            Logger.WriteMessage(string.Format("Entering buildLineupServices() for {0} lineups.", clientLineups.Lineups.Count));
-            foreach (SdLineup clientLineup in clientLineups.Lineups)
+            Logger.WriteMessage($"Entering buildLineupServices() for {clientLineups.Lineups.Count} lineups.");
+            foreach (var clientLineup in clientLineups.Lineups)
             {
-                bool flagCustom = (!string.IsNullOrEmpty(clientLineup.Uri) && clientLineup.Uri.Equals("CUSTOM"));
-                ++processedObjects; reportProgress();
+                var flagCustom = (!string.IsNullOrEmpty(clientLineup.Uri) && clientLineup.Uri.Equals("CUSTOM"));
+                ++processedObjects; ReportProgress();
 
                 // request the lineup's station maps
                 SdStationMapResponse lineupMap = null;
                 if (!flagCustom)
                 {
-                    lineupMap = sdAPI.sdGetStationMaps(clientLineup.Lineup);
+                    lineupMap = sdApi.SdGetStationMaps(clientLineup.Lineup);
                     if (lineupMap == null) continue;
 
-                    foreach (SdLineupStation station in lineupMap.Stations)
+                    foreach (var station in lineupMap.Stations)
                     {
-                        if (!allStations.ContainsKey(station.StationID))
+                        if (!AllStations.ContainsKey(station.StationId))
                         {
-                            allStations.Add(station.StationID, station);
+                            AllStations.Add(station.StationId, station);
                         }
                     }
                 }
 
                 if (!config.IncludedLineup.Contains(clientLineup.Lineup))
                 {
-                    Logger.WriteVerbose(string.Format("Subscribed lineup {0} has been EXCLUDED from download and processing.", clientLineup.Lineup));
+                    Logger.WriteVerbose(
+                        $"Subscribed lineup {clientLineup.Lineup} has been EXCLUDED from download and processing.");
                     continue;
                 }
                 else if (clientLineup.IsDeleted)
                 {
-                    Logger.WriteWarning(string.Format("Subscribed lineup {0} has been DELETED at the headend.", clientLineup.Lineup));
+                    Logger.WriteWarning($"Subscribed lineup {clientLineup.Lineup} has been DELETED at the headend.");
                     continue;
                 }
                 else if (flagCustom)
                 {
-                    foreach (CustomStation station in customLineup.Station)
+                    foreach (var station in customLineup.Station)
                     {
-                        SdLineupStation lineupStation;
-                        if (allStations.TryGetValue(station.StationId, out lineupStation))
+                        if (AllStations.TryGetValue(station.StationId, out var lineupStation))
                         {
                             customMap.Map.Add(new SdLineupMap()
                             {
-                                StationID = station.StationId,
+                                StationId = station.StationId,
                                 AtscMajor = station.Number,
                                 AtscMinor = station.Subnumber
                             });
-                            customStations.Add(station.StationId);
+                            CustomStations.Add(station.StationId);
                             customMap.Stations.Add(lineupStation);
                         }
-                        else if (!string.IsNullOrEmpty(station.Alternate) && allStations.TryGetValue(station.Alternate, out lineupStation))
+                        else if (!string.IsNullOrEmpty(station.Alternate) && AllStations.TryGetValue(station.Alternate, out lineupStation))
                         {
                             customMap.Map.Add(new SdLineupMap()
                             {
-                                StationID = station.Alternate,
+                                StationId = station.Alternate,
                                 AtscMajor = station.Number,
                                 AtscMinor = station.Subnumber
                             });
-                            customStations.Add(station.Alternate);
+                            CustomStations.Add(station.Alternate);
                             customMap.Stations.Add(lineupStation);
                         }
                     }
                     lineupMap = customMap;
-                    Logger.WriteVerbose(string.Format("Successfully retrieved the station mapping for lineup {0}.", clientLineup.Lineup));
+                    Logger.WriteVerbose($"Successfully retrieved the station mapping for lineup {clientLineup.Lineup}.");
                 }
                 if (lineupMap == null) return false;
 
-                int lineupIndex = sdMxf.With[0].Lineups.Count;
-                sdMxf.With[0].Lineups.Add(new MxfLineup()
+                var lineupIndex = SdMxf.With[0].Lineups.Count;
+                SdMxf.With[0].Lineups.Add(new MxfLineup()
                 {
-                    index = lineupIndex + 1,
+                    Index = lineupIndex + 1,
                     Uid = clientLineup.Lineup,
                     Name = "EPG123 " + clientLineup.Name + " (" + clientLineup.Location + ")",
                     channels = new List<MxfChannel>()
                 });
 
                 // build the services and lineup
-                foreach (SdLineupStation station in lineupMap.Stations)
+                foreach (var station in lineupMap.Stations)
                 {
                     // check if station should be downloaded and processed
                     if (!flagCustom)
                     {
-                        if ((station == null) || (excludedStations.Contains(station.StationID) && !customStations.Contains(station.StationID))) continue;
-                        if (!includedStations.Contains(station.StationID) && !config.AutoAddNew)
+                        if ((station == null) || (ExcludedStations.Contains(station.StationId) && !CustomStations.Contains(station.StationId))) continue;
+                        if (!IncludedStations.Contains(station.StationId) && !config.AutoAddNew)
                         {
-                            Logger.WriteWarning(string.Format("**** Lineup {0} ({1}) has added station {2} ({3}). ****", clientLineup.Name, clientLineup.Location, station.StationID, station.Callsign));
+                            Logger.WriteWarning(
+                                $"**** Lineup {clientLineup.Name} ({clientLineup.Location}) has added station {station.StationId} ({station.Callsign}). ****");
                             continue;
                         }
                     }
 
                     // build the service if necessary
-                    MxfService mxfService = sdMxf.With[0].getService(station.StationID);
+                    var mxfService = SdMxf.With[0].GetService(station.StationId);
                     if (string.IsNullOrEmpty(mxfService.CallSign))
                     {
                         // instantiate stationLogo
                         SdStationImage stationLogo = null;
 
                         // add callsign and station name
-                        mxfService.CallSign = checkCustomCallsign(station.StationID) ?? station.Callsign;
-                        mxfService.Name = checkCustomServicename(station.StationID) ?? station.Name;
+                        mxfService.CallSign = CheckCustomCallsign(station.StationId) ?? station.Callsign;
+                        mxfService.Name = CheckCustomServicename(station.StationId) ?? station.Name;
 
                         // add affiliate if available
                         if (!string.IsNullOrEmpty(station.Affiliate))
                         {
-                            mxfService.Affiliate = sdMxf.With[0].getAffiliateId(station.Affiliate);
+                            mxfService.Affiliate = SdMxf.With[0].GetAffiliateId(station.Affiliate);
                         }
 
                         // set the ScheduleEntries service id
-                        mxfService.mxfScheduleEntries.Service = mxfService.Id;
+                        mxfService.MxfScheduleEntries.Service = mxfService.Id;
 
                         // add station logo if available and allowed
-                        string logoPath = string.Format("{0}\\{1}.png", Helper.Epg123LogosFolder, station.Callsign);
-                        if (config.IncludeSDLogos)
+                        var logoPath = $"{Helper.Epg123LogosFolder}\\{station.Callsign}.png";
+                        if (config.IncludeSdLogos)
                         {
                             // make sure logos directory exists
                             if (!Directory.Exists(Helper.Epg123LogosFolder))
@@ -192,8 +192,8 @@ namespace epg123
 
                             if (station.StationLogos != null)
                             {
-                                stationLogo = station.StationLogos.Where(arg => arg.Category != null && arg.Category.Equals(config.PreferredLogoStyle)).FirstOrDefault() ??
-                                              station.StationLogos.Where(arg => arg.Category != null && arg.Category.Equals(config.AlternateLogoStyle)).FirstOrDefault();
+                                stationLogo = station.StationLogos.FirstOrDefault(arg => arg.Category != null && arg.Category.Equals(config.PreferredLogoStyle)) ??
+                                              station.StationLogos.FirstOrDefault(arg => arg.Category != null && arg.Category.Equals(config.AlternateLogoStyle));
 
                                 if (stationLogo != null)
                                 {
@@ -211,8 +211,6 @@ namespace epg123
                                         case "white":
                                             logoPath = logoPath.Replace(".png", "_w.png");
                                             break;
-                                        default:
-                                            break;
                                     }
                                 }
                             }
@@ -224,16 +222,16 @@ namespace epg123
                             // add the existing logo or download the new logo if available
                             if (File.Exists(logoPath))
                             {
-                                mxfService.LogoImage = sdMxf.With[0].getGuideImage("file://" + logoPath, getStringEncodedImage(logoPath)).Id;
+                                mxfService.LogoImage = SdMxf.With[0].GetGuideImage($"file://{logoPath}", GetStringEncodedImage(logoPath)).Id;
                             }
                             else if (stationLogo != null)
                             {
-                                string url = stationLogo.URL;
+                                var url = stationLogo.Url;
 
                                 // download, crop & resize logo image, save and add
                                 if (!string.IsNullOrEmpty(url))
                                 {
-                                    stationLogosToDownload.Add(new KeyValuePair<MxfService, string[]>(mxfService, new string[] { logoPath, url }));
+                                    StationLogosToDownload.Add(new KeyValuePair<MxfService, string[]>(mxfService, new[] { logoPath, url }));
                                 }
                             }
                         }
@@ -241,25 +239,25 @@ namespace epg123
                         // handle xmltv logos
                         if (config.XmltvIncludeChannelLogos.Equals("url") && (stationLogo != null))
                         {
-                            mxfService.logoImage = stationLogo;
+                            mxfService.ServiceLogo = stationLogo;
                         }
                         else if (config.XmltvIncludeChannelLogos.Equals("local"))
                         {
                             if (File.Exists(logoPath))
                             {
-                                Image image = Image.FromFile(logoPath);
-                                mxfService.logoImage = new SdStationImage()
+                                var image = Image.FromFile(logoPath);
+                                mxfService.ServiceLogo = new SdStationImage()
                                 {
-                                    URL = logoPath,
+                                    Url = logoPath,
                                     Height = image.Height,
                                     Width = image.Width
                                 };
                             }
                             else if (stationLogo != null)
                             {
-                                mxfService.logoImage = new SdStationImage()
+                                mxfService.ServiceLogo = new SdStationImage()
                                 {
-                                    URL = logoPath
+                                    Url = logoPath
                                 };
                             }
                         }
@@ -267,147 +265,143 @@ namespace epg123
                         {
                             if (File.Exists(logoPath))
                             {
-                                Image image = Image.FromFile(logoPath);
-                                mxfService.logoImage = new SdStationImage()
+                                var image = Image.FromFile(logoPath);
+                                mxfService.ServiceLogo = new SdStationImage()
                                 {
-                                    URL = string.Format("{0}\\{1}.png", config.XmltvLogoSubstitutePath.TrimEnd('\\'), station.Callsign),
+                                    Url = $"{config.XmltvLogoSubstitutePath.TrimEnd('\\')}\\{station.Callsign}.png",
                                     Height = image.Height,
                                     Width = image.Width
                                 };
                             }
                             else if (stationLogo != null)
                             {
-                                mxfService.logoImage = new SdStationImage()
+                                mxfService.ServiceLogo = new SdStationImage()
                                 {
-                                    URL = logoPath.Replace(Helper.Epg123LogosFolder, config.XmltvLogoSubstitutePath.TrimEnd('\\'))
+                                    Url = logoPath.Replace(Helper.Epg123LogosFolder, config.XmltvLogoSubstitutePath.TrimEnd('\\'))
                                 };
                             }
                         }
                     }
 
                     // use hashset to make sure we don't duplicate channel entries for this station
-                    HashSet<string> channelNumbers = new HashSet<string>();
+                    var channelNumbers = new HashSet<string>();
 
                     // match station with mapping for lineup number and subnumbers
-                    foreach (SdLineupMap map in lineupMap.Map)
+                    foreach (var map in lineupMap.Map)
                     {
-                        int number = -1;
-                        int subnumber = 0;
-                        if (map.StationID.Equals(station.StationID))
+                        var number = -1;
+                        var subnumber = 0;
+                        if (!map.StationId.Equals(station.StationId)) continue;
+
+                        // QAM
+                        if (map.ChannelMajor > 0)
                         {
-                            // QAM
-                            if (map.ChannelMajor > 0)
-                            {
-                                number = map.ChannelMajor;
-                                subnumber = map.ChannelMinor;
-                            }
+                            number = map.ChannelMajor;
+                            subnumber = map.ChannelMinor;
+                        }
 
-                            // ATSC or NTSC
-                            else if (map.AtscMajor > 0)
-                            {
-                                number = map.AtscMajor;
-                                subnumber = map.AtscMinor;
-                            }
-                            else if (map.UhfVhf > 0)
-                            {
-                                number = map.UhfVhf;
-                            }
+                        // ATSC or NTSC
+                        else if (map.AtscMajor > 0)
+                        {
+                            number = map.AtscMajor;
+                            subnumber = map.AtscMinor;
+                        }
+                        else if (map.UhfVhf > 0)
+                        {
+                            number = map.UhfVhf;
+                        }
 
-                            // Cable or Satellite
-                            else if (!string.IsNullOrEmpty(map.Channel))
+                        // Cable or Satellite
+                        else if (!string.IsNullOrEmpty(map.Channel))
+                        {
+                            subnumber = 0;
+                            if (Regex.Match(map.Channel, @"[A-Za-z]{1}[\d]{4}").Length > 0)
                             {
+                                // 4dtv has channels starting with 2 character satellite identifier
+                                number = int.Parse(map.Channel.Substring(2));
+                            }
+                            else if (!int.TryParse(Regex.Replace(map.Channel, "[^0-9.]", ""), out number))
+                            {
+                                // if channel number is not a whole number, must be a decimal number
+                                var numbers = Regex.Replace(map.Channel, "[^0-9.]", "").Replace('_', '.').Replace('-', '.').Split('.');
+                                if (numbers.Length == 2)
+                                {
+                                    number = int.Parse(numbers[0]);
+                                    subnumber = int.Parse(numbers[1]);
+                                }
+                            }
+                        }
+
+                        string matchName = null;
+                        switch (clientLineup.Transport)
+                        {
+                            case "DVB-S":
+                                var m = Regex.Match(lineupMap.Metadata.Lineup, @"\d+\.\d+");
+                                if (m.Success && map.FrequencyHz > 0 && map.NetworkId > 0 && map.TransportId > 0 && map.ServiceId > 0)
+                                {
+                                    while (map.FrequencyHz > 13000)
+                                    {
+                                        map.FrequencyHz /= 1000;
+                                    }
+                                    matchName =
+                                        $"DVBS:{m.Value.Replace(".", "")}:{map.FrequencyHz}:{map.NetworkId}:{map.TransportId}:{map.ServiceId}";
+                                }
+                                number = -1;
                                 subnumber = 0;
-                                if (Regex.Match(map.Channel, @"[A-Za-z]{1}[\d]{4}").Length > 0)
+                                break;
+                            case "DVB-T":
+                                if (map.NetworkId > 0 && map.TransportId > 0 && map.ServiceId > 0)
                                 {
-                                    // 4dtv has channels starting with 2 character satellite identifier
-                                    number = int.Parse(map.Channel.Substring(2));
+                                    matchName = $"DVBT:{map.NetworkId}:{map.TransportId}:{map.ServiceId}";
                                 }
-                                else if (!int.TryParse(Regex.Replace(map.Channel, "[^0-9.]", ""), out number))
+                                break;
+                            case "Antenna":
+                                if (map.AtscMajor > 0 && map.AtscMinor > 0)
                                 {
-                                    // if channel number is not a whole number, must be a decimal number
-                                    string[] numbers = Regex.Replace(map.Channel, "[^0-9.]", "").Replace('_', '.').Replace('-', '.').Split('.');
-                                    if (numbers.Length == 2)
-                                    {
-                                        number = int.Parse(numbers[0]);
-                                        subnumber = int.Parse(numbers[1]);
-                                    }
+                                    matchName = $"OC:{map.AtscMajor}:{map.AtscMinor}";
                                 }
-                            }
+                                break;
+                        }
 
-                            string matchName = null;
-                            switch (clientLineup.Transport)
+                        var channelNumber = number + ((subnumber > 0) ? "." + subnumber : null);
+                        if (channelNumbers.Add(channelNumber + ":" + station.StationId))
+                        {
+                            SdMxf.With[0].Lineups[lineupIndex].channels.Add(new MxfChannel()
                             {
-                                case "DVB-S":
-                                    Match m = Regex.Match(lineupMap.Metadata.Lineup, @"\d+\.\d+");
-                                    if (m.Success && map.FrequencyHz > 0 && map.NetworkID > 0 && map.TransportID > 0 && map.ServiceID > 0)
-                                    {
-                                        while (map.FrequencyHz > 13000)
-                                        {
-                                            map.FrequencyHz /= 1000;
-                                        }
-                                        matchName = string.Format("DVBS:{0}:{1}:{2}:{3}:{4}", m.Value.Replace(".", ""),
-                                                                                              map.FrequencyHz,
-                                                                                              map.NetworkID,
-                                                                                              map.TransportID,
-                                                                                              map.ServiceID);
-                                    }
-                                    number = -1;
-                                    subnumber = 0;
-                                    break;
-                                case "DVB-T":
-                                    if (map.NetworkID > 0 && map.TransportID > 0 && map.ServiceID > 0)
-                                    {
-                                        matchName = string.Format("DVBT:{0}:{1}:{2}", map.NetworkID, map.TransportID, map.ServiceID);
-                                    }
-                                    break;
-                                case "Antenna":
-                                    //if (map.AtscMajor > 0 && map.AtscMinor > 0)
-                                    //{
-                                    //    matchName = string.Format("OC:{0}:{1}", map.AtscMajor, map.AtscMinor);
-                                    //}
-                                    break;
-                                default:
-                                    break;
-                            }
-
-                            string channelNumber = number.ToString() + ((subnumber > 0) ? "." + subnumber.ToString() : null);
-                            if (channelNumbers.Add(channelNumber + ":" + station.StationID))
-                            {
-                                sdMxf.With[0].Lineups[lineupIndex].channels.Add(new MxfChannel()
-                                {
-                                    Lineup = sdMxf.With[0].Lineups[lineupIndex].Id,
-                                    lineupUid = lineupMap.Metadata.Lineup,
-                                    stationId = mxfService.StationID,
-                                    Service = mxfService.Id,
-                                    Number = number,
-                                    SubNumber = subnumber,
-                                    MatchName = matchName
-                                });
-                            }
+                                Lineup = SdMxf.With[0].Lineups[lineupIndex].Id,
+                                LineupUid = lineupMap.Metadata.Lineup,
+                                StationId = mxfService.StationId,
+                                Service = mxfService.Id,
+                                Number = number,
+                                SubNumber = subnumber,
+                                MatchName = matchName
+                            });
                         }
                     }
                 }
             }
 
-            if (stationLogosToDownload.Count > 0)
+            if (StationLogosToDownload.Count > 0)
             {
-                stationLogosDownloadComplete = false;
-                Logger.WriteInformation(string.Format("Kicking off background worker to download and process {0} station logos.", stationLogosToDownload.Count));
-                backgroundDownloader = new System.ComponentModel.BackgroundWorker();
-                backgroundDownloader.DoWork += BackgroundDownloader_DoWork;
-                backgroundDownloader.RunWorkerCompleted += BackgroundDownloader_RunWorkerCompleted;
-                backgroundDownloader.WorkerSupportsCancellation = true;
-                backgroundDownloader.RunWorkerAsync();
+                StationLogosDownloadComplete = false;
+                Logger.WriteInformation(
+                    $"Kicking off background worker to download and process {StationLogosToDownload.Count} station logos.");
+                BackgroundDownloader = new System.ComponentModel.BackgroundWorker();
+                BackgroundDownloader.DoWork += BackgroundDownloader_DoWork;
+                BackgroundDownloader.RunWorkerCompleted += BackgroundDownloader_RunWorkerCompleted;
+                BackgroundDownloader.WorkerSupportsCancellation = true;
+                BackgroundDownloader.RunWorkerAsync();
             }
 
-            if (sdMxf.With[0].Services.Count > 0)
+            if (SdMxf.With[0].Services.Count > 0)
             {
                 Logger.WriteMessage("Exiting buildLineupServices(). SUCCESS.");
                 return true;
             }
             else
             {
-                Logger.WriteError(string.Format("There are 0 stations queued for download from {0} subscribed lineups. Exiting.", clientLineups.Lineups.Count));
+                Logger.WriteError(
+                    $"There are 0 stations queued for download from {clientLineups.Lineups.Count} subscribed lineups. Exiting.");
                 Logger.WriteError("Check that lineups are 'INCLUDED' and stations are selected in the EPG123 GUI.");
                 return false;
             }
@@ -421,58 +415,56 @@ namespace epg123
             }
             else if (e.Error != null)
             {
-                Logger.WriteError(string.Format("The background worker to download station logos threw an exception. Message: {0}", e.Error.Message));
+                Logger.WriteError(
+                    $"The background worker to download station logos threw an exception. Message: {e.Error.Message}");
             }
-            stationLogosDownloadComplete = true;
+            StationLogosDownloadComplete = true;
         }
 
         private static void BackgroundDownloader_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
         {
-            foreach (KeyValuePair<MxfService, string[]> keyValuePair in stationLogosToDownload)
+            foreach (var keyValuePair in StationLogosToDownload)
             {
-                string logoPath = keyValuePair.Value[0];
-                if (downloadSDLogo(keyValuePair.Value[1], logoPath))
+                var logoPath = keyValuePair.Value[0];
+                if (DownloadSdLogo(keyValuePair.Value[1], logoPath))
                 {
-                    keyValuePair.Key.LogoImage = sdMxf.With[0].getGuideImage("file://" + logoPath, getStringEncodedImage(logoPath)).Id;
+                    keyValuePair.Key.LogoImage = SdMxf.With[0].GetGuideImage("file://" + logoPath, GetStringEncodedImage(logoPath)).Id;
                 }
 
-                if (backgroundDownloader.CancellationPending)
-                {
-                    e.Cancel = true;
-                    break;
-                }
+                if (!BackgroundDownloader.CancellationPending) continue;
+                e.Cancel = true;
+                break;
             }
         }
 
-        private static bool downloadSDLogo(string uri, string filepath)
+        private static bool DownloadSdLogo(string uri, string filepath)
         {
             try
             {
                 // set target image size
-                int tgtWidth = 360;
-                int tgtHeight = 270;
+                const int tgtWidth = 360;
+                const int tgtHeight = 270;
 
                 // set target aspect/image size
-                double tgtAspect = 3.0;
+                const double tgtAspect = 3.0;
 
-                System.Net.WebClient wc = new System.Net.WebClient();
-                using (MemoryStream stream = new MemoryStream(wc.DownloadData(uri)))
+                var wc = new System.Net.WebClient();
+                using (var stream = new MemoryStream(wc.DownloadData(uri)))
                 {
                     // crop image
-                    Bitmap cropImg;
-                    using (Bitmap origImg = Bitmap.FromStream(stream) as Bitmap)
+                    using (var origImg = Image.FromStream(stream) as Bitmap)
                     {
                         // Find the min/max non-transparent pixels
-                        Point min = new Point(int.MaxValue, int.MaxValue);
-                        Point max = new Point(int.MinValue, int.MinValue);
+                        var min = new Point(int.MaxValue, int.MaxValue);
+                        var max = new Point(int.MinValue, int.MinValue);
 
-                        for (int x = 0; x < origImg.Width; ++x)
-                        {
-                            for (int y = 0; y < origImg.Height; ++y)
+                        if (origImg != null)
+                            for (var x = 0; x < origImg.Width; ++x)
                             {
-                                Color pixelColor = origImg.GetPixel(x, y);
-                                if (pixelColor.A > 0) //== 255)
+                                for (var y = 0; y < origImg.Height; ++y)
                                 {
+                                    var pixelColor = origImg.GetPixel(x, y);
+                                    if (pixelColor.A <= 0) continue;
                                     if (x < min.X) min.X = x;
                                     if (y < min.Y) min.Y = y;
 
@@ -480,30 +472,32 @@ namespace epg123
                                     if (y > max.Y) max.Y = y;
                                 }
                             }
-                        }
 
                         // Create a new bitmap from the crop rectangle and increase canvas size if necessary
-                        int offsetY = 0;
-                        Rectangle cropRectangle = new Rectangle(min.X, min.Y, max.X - min.X + 1, max.Y - min.Y + 1);
-                        if (((double)(max.X - min.X + 1) / tgtAspect) > (max.Y - min.Y + 1))
+                        var offsetY = 0;
+                        var cropRectangle = new Rectangle(min.X, min.Y, max.X - min.X + 1, max.Y - min.Y + 1);
+                        if ((max.X - min.X + 1) / tgtAspect > (max.Y - min.Y + 1))
                         {
                             offsetY = (int)((max.X - min.X + 1) / tgtAspect - (max.Y - min.Y + 1) + 0.5) / 2;
                         }
 
-                        cropImg = new Bitmap(cropRectangle.Width, cropRectangle.Height + offsetY * 2);
-                        cropImg.SetResolution(origImg.HorizontalResolution, origImg.VerticalResolution);
-                        using (Graphics g = Graphics.FromImage(cropImg))
+                        var cropImg = new Bitmap(cropRectangle.Width, cropRectangle.Height + offsetY * 2);
+                        if (origImg != null)
                         {
-                            g.DrawImage(origImg, 0, offsetY, cropRectangle, GraphicsUnit.Pixel);
+                            cropImg.SetResolution(origImg.HorizontalResolution, origImg.VerticalResolution);
+                            using (var g = Graphics.FromImage(cropImg))
+                            {
+                                g.DrawImage(origImg, 0, offsetY, cropRectangle, GraphicsUnit.Pixel);
+                            }
                         }
 
                         // resize image if needed
                         if (tgtHeight < cropImg.Height)
                         {
-                            int destWidth = Math.Min((int)((double)tgtHeight / (double)cropImg.Height * (double)cropImg.Width), tgtWidth);
-                            Bitmap destImg = new Bitmap(destWidth, tgtHeight);
+                            var destWidth = Math.Min((int)(tgtHeight / (double)cropImg.Height * cropImg.Width), tgtWidth);
+                            var destImg = new Bitmap(destWidth, tgtHeight);
                             destImg.SetResolution(cropImg.HorizontalResolution, cropImg.VerticalResolution);
-                            using (Graphics g = Graphics.FromImage(destImg))
+                            using (var g = Graphics.FromImage(destImg))
                             {
                                 g.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceCopy;
                                 g.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
@@ -527,57 +521,55 @@ namespace epg123
             }
             catch (Exception ex)
             {
-                Logger.WriteVerbose(string.Format("An exception occurred during downloadSDLogo(). {0}", ex.Message));
+                Logger.WriteVerbose($"An exception occurred during downloadSDLogo(). {ex.Message}");
             }
             return false;
         }
 
-        private static string getStringEncodedImage(string path)
+        private static string GetStringEncodedImage(string path)
         {
-            if (!string.IsNullOrEmpty(path) && File.Exists(path))
+            if (string.IsNullOrEmpty(path) || !File.Exists(path)) return null;
+            try
             {
-                try
+                using (var ms = new MemoryStream())
                 {
-                    using (var ms = new MemoryStream())
-                    {
-                        Image.FromFile(path).Save(ms, System.Drawing.Imaging.ImageFormat.Png);
-                        return Convert.ToBase64String(ms.ToArray());
-                    }
+                    Image.FromFile(path).Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+                    return Convert.ToBase64String(ms.ToArray());
                 }
-                catch { }
             }
+            catch
+            {
+                // ignored
+            }
+
             return null;
         }
 
-        private static void populateIncludedExcludedStations(List<SdChannelDownload> list)
+        private static void PopulateIncludedExcludedStations(List<SdChannelDownload> list)
         {
-            if (list != null)
+            if (list == null) return;
+            foreach (var station in list)
             {
-                foreach (SdChannelDownload station in list)
+                if (station.StationId.StartsWith("-"))
                 {
-                    if (station.StationID.StartsWith("-"))
-                    {
-                        excludedStations.Add(station.StationID.Replace("-", ""));
-                    }
-                    else
-                    {
-                        includedStations.Add(station.StationID);
-                    }
+                    ExcludedStations.Add(station.StationId.Replace("-", ""));
+                }
+                else
+                {
+                    IncludedStations.Add(station.StationId);
                 }
             }
         }
 
-        private static string checkCustomCallsign(string stationId)
+        private static string CheckCustomCallsign(string stationId)
         {
-            var cus = config.StationID.Where(arg => arg.StationID == stationId).SingleOrDefault();
-            if (string.IsNullOrEmpty(cus?.customCallSign)) return null;
-            return cus.customCallSign;
+            var cus = config.StationId.SingleOrDefault(arg => arg.StationId == stationId);
+            return string.IsNullOrEmpty(cus?.CustomCallSign) ? null : cus.CustomCallSign;
         }
-        private static string checkCustomServicename(string stationId)
+        private static string CheckCustomServicename(string stationId)
         {
-            var cus = config.StationID.Where(arg => arg.StationID == stationId).SingleOrDefault();
-            if (string.IsNullOrEmpty(cus?.customServiceName)) return null;
-            return cus.customServiceName;
+            var cus = config.StationId.SingleOrDefault(arg => arg.StationId == stationId);
+            return string.IsNullOrEmpty(cus?.CustomServiceName) ? null : cus.CustomServiceName;
         }
     }
 }

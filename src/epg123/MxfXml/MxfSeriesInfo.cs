@@ -1,33 +1,32 @@
 ﻿using System.Collections.Generic;
 using System.Xml.Serialization;
 using System;
+using epg123.SchedulesDirectAPI;
 
 namespace epg123.MxfXml
 {
     public class MxfSeriesInfo
     {
-        private DateTime _startAirdate { get; set; } = DateTime.MinValue;
+        private DateTime _seriesStartDate = DateTime.MinValue;
+        private DateTime _seriesEndDate = DateTime.MinValue;
 
         [XmlIgnore]
-        public int index;
+        public int Index { get; set; }
 
         [XmlIgnore]
-        public IList<sdImage> seriesImages;
+        public IList<sdImage> SeriesImages { get; set; }
 
         /// <summary>
         /// 8 digit number unique to the series
         /// </summary>
         [XmlIgnore]
-        public string tmsSeriesId;
-
-        [XmlIgnore]
-        public string tvdbSeriesId;
+        public string TmsSeriesId { get; set; }
 
         /// <summary>
-        /// A series of a particular program.
-        /// Example: Lost
+        /// The seried ID value for this series from thetvdb.com
         /// </summary>
-        public MxfSeriesInfo() { }
+        [XmlIgnore]
+        public string TvdbSeriesId { get; set; }
 
         /// <summary>
         /// An ID that is unique to the document and defines this element.
@@ -36,10 +35,7 @@ namespace epg123.MxfXml
         [XmlAttribute("id")]
         public string Id
         {
-            get
-            {
-                return ("si" + index.ToString());
-            }
+            get => $"si{Index}";
             set { }
         }
 
@@ -50,10 +46,7 @@ namespace epg123.MxfXml
         [XmlAttribute("uid")]
         public string Uid
         {
-            get
-            {
-                return ("!Series!" + tmsSeriesId);
-            }
+            get => $"!Series!{TmsSeriesId}";
             set { }
         }
 
@@ -92,25 +85,19 @@ namespace epg123.MxfXml
         [XmlAttribute("startAirdate")]
         public string StartAirdate
         {
-            get
-            {
-                if (_startAirdate != DateTime.MinValue)
-                {
-                    return _startAirdate.ToString("yyyy-MM-dd");
-                }
-                return null;
-            }
-            set
-            {
-                _startAirdate = DateTime.Parse(value);
-            }
+            get => _seriesStartDate != DateTime.MinValue ? _seriesStartDate.ToString("yyyy-MM-dd") : null;
+            set => _seriesStartDate = DateTime.Parse(value);
         }
 
         /// <summary>
-        /// The date the series ended.
+        /// 
         /// </summary>
-        //[XmlAttribute("endAirdate")]
-        //public string EndAirdate { get; set; }
+        [XmlAttribute("endAirdate")]
+        public string EndAirdate
+        {
+            get => _seriesEndDate != DateTime.MinValue? _seriesEndDate.ToString("yyyy-MM-dd") : null;
+            set => _seriesEndDate = DateTime.Parse(value);
+        }
 
         /// <summary>
         /// An image to show for the series.
@@ -120,9 +107,10 @@ namespace epg123.MxfXml
         public string GuideImage { get; set; }
 
         /// <summary>
-        /// Undocumented
+        /// The name of the studio that created this season.
+        /// The maximum length is 512 characters.
         /// </summary>
-        //[XmlAttribute("studio")]
-        //public string Studio { get; set; }
+        [XmlAttribute("studio")]
+        public string Studio { get; set; }
     }
 }

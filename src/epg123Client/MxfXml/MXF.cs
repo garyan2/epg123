@@ -1,36 +1,27 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Xml.Serialization;
 
-namespace epg123.MxfXml
+namespace epg123Client.MxfXml
 {
     [XmlRoot("MXF")]
-    public class MXF
+    public class mxf
     {
-        /// <summary>
-        /// Definitions for MXF xml format can be located at
-        /// https://msdn.microsoft.com/en-us/library/dd776338.aspx
-        /// </summary>
-        public MXF()
-        {
-        }
-
-        [XmlArrayItem("Provider")]
+        [XmlArrayItem("Provider")] 
         public List<MxfProvider> Providers { get; set; }
 
-        [XmlElement("With")]
+        [XmlElement("With")] 
         public List<MxfWith> With { get; set; }
     }
 
     public class MxfWith
     {
-        [XmlArrayItem("Program")]
+        [XmlArrayItem("Program")] 
         public List<MxfProgram> Programs { get; set; }
 
-        [XmlArrayItem("Service")]
+        [XmlArrayItem("Service")] 
         public List<MxfService> Services { get; set; }
 
-        [XmlElement("ScheduleEntries")]
+        [XmlElement("ScheduleEntries")] 
         public List<MxfScheduleEntries> ScheduleEntries { get; set; }
     }
 }

@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace epg123
+namespace epg123.SchedulesDirectAPI
 {
     public class sdScheduleRequest
     {
         [JsonProperty("stationID")]
-        public string StationID { get; set; }
+        public string StationId { get; set; }
 
         [JsonProperty("date")]
         public string[] Date { get; set; }
@@ -16,7 +16,7 @@ namespace epg123
     public class sdScheduleResponse
     {
         [JsonProperty("stationID")]
-        public string StationID { get; set; }
+        public string StationId { get; set; }
 
         //[JsonProperty("serverID")]
         //public string ServerID { get; set; }
@@ -70,7 +70,7 @@ namespace epg123
     public class sdSchedProgram
     {
         [JsonProperty("programID")]
-        public string ProgramID { get; set; }
+        public string ProgramId { get; set; }
 
         [JsonProperty("airDateTime")]
         public DateTime AirDateTime { get; set; }

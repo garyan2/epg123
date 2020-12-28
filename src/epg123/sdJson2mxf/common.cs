@@ -1,61 +1,51 @@
-﻿using System.Reflection;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
-namespace epg123
+namespace epg123.sdJson2mxf
 {
-    public static partial class sdJson2mxf
+    internal static partial class sdJson2Mxf
     {
-        private const int MAXQUERIES = 5000;
-        private const int MAXIMGQUERIES = 500;
-        private const int MAXPARALLELDOWNLOADS = 4;
-        private const int MAXPARALLELCPUTASKS = 8;
+        private const int MaxQueries = 5000;
+        private const int MaxImgQueries = 500;
+        private const int MaxParallelDownloads = 4;
 
-        private static string epg123Version
-        {
-            get
-            {
-                string[] vers = Assembly.GetEntryAssembly().GetName().Version.ToString().Split('.');
-                return string.Format("{0}.{1}.{2}", vers[0], vers[1], vers[2]);
-            }
-        }
-        
         private static List<string> suppressedPrefixes = new List<string>();
 
-        private static int processedObjects = 0;
-        private static int totalObjects = 0;
-        private static int processStage = 0;
-        private static string[] stages = { "TASK: Process subscribed lineups and stations ...",
-                                           "TASK: Build schedules - Stage 1 ...",
-                                           "TASK: Build schedules - Stage 2 ...",
-                                           "TASK: Build programs ...",
-                                           "TASK: Build series descriptions ...",
-                                           "TASK: Build extended series data for MMUI+ ...",
-                                           "TASK: Build movie posters ...",
-                                           "TASK: Build series images ...",
-                                           "TASK: Saving files ...",
-                                           "TASK: Clean and save cache file ..." };
+        private static int processedObjects;
+        private static int totalObjects;
+        private static int processStage;
+        private static readonly string[] Stages = { "TASK: Process subscribed lineups and stations ...",
+                                                    "TASK: Build schedules - Stage 1 ...",
+                                                    "TASK: Build schedules - Stage 2 ...",
+                                                    "TASK: Build programs ...",
+                                                    "TASK: Build series descriptions ...",
+                                                    "TASK: Build extended series data for MMUI+ ...",
+                                                    "TASK: Build movie posters ...",
+                                                    "TASK: Build series images ...",
+                                                    "TASK: Saving files ...",
+                                                    "TASK: Clean and save cache file ..." };
 
-        private static void reportProgress()
+        private static void ReportProgress()
         {
             if (processedObjects == 0)
             {
-                Helper.SendPipeMessage($"Downloading|{processStage + 1}/{stages.Length} {stages[processStage].Substring(6)}");
+                Helper.SendPipeMessage($"Downloading|{processStage + 1}/{Stages.Length} {Stages[processStage].Substring(6)}");
             }
 
             // if the progress form is not shown, nothing to update
-            if (backgroundWorker == null) return;
+            if (BackgroundWorker == null) return;
 
-            int numerator = processedObjects * 100;
-            int denominator = totalObjects;
+            var numerator = processedObjects * 100;
+            var denominator = totalObjects;
             if (denominator == 0)
             {
                 numerator = 0;
                 denominator = 1;
             }
-            string[] textObjects = { stages[processStage],
-                                     string.Format("{0}/{1}", processStage + 1, stages.Length),
-                                     string.Format("{0}/{1}", processedObjects, totalObjects) };
-            backgroundWorker.ReportProgress(numerator / denominator + (processStage + 1) * 10000, textObjects);
+            string[] textObjects = { Stages[processStage],
+                $"{processStage + 1}/{Stages.Length}",
+                $"{processedObjects}/{totalObjects}"
+            };
+            BackgroundWorker.ReportProgress(numerator / denominator + (processStage + 1) * 10000, textObjects);
         }
     }
 }

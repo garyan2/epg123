@@ -1,17 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Xml.Serialization;
+﻿using System.Xml.Serialization;
 
-namespace epg123.MxfXml
+namespace epg123Client.MxfXml
 {
     public class MxfProgram
     {
-        /// <summary>
-        /// A movie or episode.
-        /// Example: An episode of Lost, titled "The others strike".
-        /// </summary>
-        public MxfProgram() { }
-
         /// <summary>
         /// A unique ID that will remain consistent between multiple versions of this document.
         /// This uid should start with "!Program!".

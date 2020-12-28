@@ -1,155 +1,135 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Windows.Forms;
+﻿using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Text;
+using System.Windows.Forms;
 using System.Xml.Serialization;
 using Newtonsoft.Json;
 
-namespace epg123Transfer
+namespace epg123Transfer.SchedulesDirectAPI
 {
-    public static class sdAPI
+    public static class sdApi
     {
-        enum METHODS
+        private enum methods
         {
             GET,
-            GETVERBOSEMAP,
-            POST,
-            PUT,
-            DELETE
+            POST
         };
 
-        public static string jsonBaseUrl = @"https://json.schedulesdirect.org";
-        public static string jsonApi = @"/20141201/";
-        private static string token_;
-        private static string token
+        private const string JsonBaseUrl = @"https://json.schedulesdirect.org";
+        private const string JsonApi = @"/20141201/";
+        private static string sdToken;
+        private static string Token
         {
             get
             {
-                if (string.IsNullOrEmpty(token_))
+                if (!string.IsNullOrEmpty(sdToken)) return sdToken;
+                StreamReader sr = null;
+                if (File.Exists(epg123.Helper.Epg123CfgPath))
                 {
-                    StreamReader sr = null;
-                    if (File.Exists(epg123.Helper.Epg123CfgPath))
+                    epg123.epgConfig config;
+                    using (var stream = new StreamReader(epg123.Helper.Epg123CfgPath, Encoding.Default))
                     {
-                        epg123.epgConfig config;
-                        using (StreamReader stream = new StreamReader(epg123.Helper.Epg123CfgPath, Encoding.Default))
-                        {
-                            XmlSerializer serializer = new XmlSerializer(typeof(epg123.epgConfig));
-                            TextReader reader = new StringReader(stream.ReadToEnd());
-                            config = (epg123.epgConfig)serializer.Deserialize(reader);
-                            reader.Close();
-                        }
-
-                        sr = sdGetRequestResponse(METHODS.POST, "token", new SdTokenRequest() { Username = config.UserAccount.LoginName, Password_hash = config.UserAccount.PasswordHash }, false);
+                        var serializer = new XmlSerializer(typeof(epg123.epgConfig));
+                        TextReader reader = new StringReader(stream.ReadToEnd());
+                        config = (epg123.epgConfig)serializer.Deserialize(reader);
+                        reader.Close();
                     }
 
+                    sr = SdGetRequestResponse(methods.POST, "token", new SdTokenRequest() { Username = config.UserAccount.LoginName, PasswordHash = config.UserAccount.PasswordHash }, false);
+                }
+
+                if (sr == null)
+                {
+                    var form = new frmLogin();
+                    form.ShowDialog();
+
+                    sr = SdGetRequestResponse(methods.POST, "token", new SdTokenRequest() { Username = form.Username, PasswordHash = form.PasswordHash }, false);
                     if (sr == null)
                     {
-                        frmLogin form = new frmLogin();
-                        form.ShowDialog();
-
-                        sr = sdGetRequestResponse(METHODS.POST, "token", new SdTokenRequest() { Username = form.username, Password_hash = form.passwordHash }, false);
-                        if (sr == null)
-                        {
-                            MessageBox.Show("Failed to login to Schedules Direct. Please close this window and try again.", "Login Failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                            return null;
-                        }
+                        MessageBox.Show("Failed to login to Schedules Direct. Please close this window and try again.", "Login Failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return null;
                     }
-
-                    SdTokenResponse ret = JsonConvert.DeserializeObject<SdTokenResponse>(sr.ReadToEnd());
-                    token_ = ret.Token;
                 }
-                return token_;
+
+                var ret = JsonConvert.DeserializeObject<SdTokenResponse>(sr.ReadToEnd());
+                sdToken = ret.Token;
+                return sdToken;
             }
         }
 
-        private static StreamReader sdGetRequestResponse(METHODS method, string uri, object jsonRequest = null, bool tkRequired = true)
+        private static StreamReader SdGetRequestResponse(methods method, string uri, object jsonRequest = null, bool tkRequired = true)
         {
             // build url
-            string url = string.Format("{0}{1}{2}", jsonBaseUrl, jsonApi, uri);
+            var url = $"{JsonBaseUrl}{JsonApi}{uri}";
 
             // send request and get response
             try
             {
                 // create the request with defaults
-                HttpWebRequest req = (HttpWebRequest)WebRequest.Create(url);
+                var req = (HttpWebRequest)WebRequest.Create(url);
                 req.UserAgent = "EPG123";
                 req.AutomaticDecompression = DecompressionMethods.Deflate;
-                req.Timeout = 60000;
+                req.Timeout = 3000;
 
                 // add token if it is required
-                if (tkRequired && !string.IsNullOrEmpty(token))
+                if (tkRequired && !string.IsNullOrEmpty(Token))
                 {
-                    req.Headers.Add("token", token);
+                    req.Headers.Add("token", Token);
                 }
 
                 // setup request
                 switch (method)
                 {
-                    case METHODS.GET:
+                    case methods.GET:
                         req.Method = "GET";
                         break;
-                    case METHODS.GETVERBOSEMAP:
-                        req.Method = "GET";
-                        req.Headers["verboseMap"] = "true";
-                        break;
-                    case METHODS.PUT:
-                        req.Method = "PUT";
-                        break;
-                    case METHODS.DELETE:
-                        req.Method = "DELETE";
-                        break;
-                    case METHODS.POST:
-                        string send = JsonConvert.SerializeObject(jsonRequest);
-                        byte[] body = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(jsonRequest));
+                    case methods.POST:
+                        var body = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(jsonRequest));
                         req.Method = "POST";
                         req.ContentType = "application/json";
                         req.Accept = "application/json";
                         req.ContentLength = body.Length;
 
-                        Stream reqStream = req.GetRequestStream();
+                        var reqStream = req.GetRequestStream();
                         reqStream.Write(body, 0, body.Length);
                         reqStream.Close();
                         break;
-                    default:
-                        break;
                 }
 
-                WebResponse resp = req.GetResponse();
+                var resp = req.GetResponse();
                 return new StreamReader(resp.GetResponseStream(), Encoding.UTF8);
             }
-            catch { }
-            return null;
-        }
-
-        public static IList<sdProgram> sdGetPrograms(string[] request)
-        {
-            StreamReader sr = sdGetRequestResponse(METHODS.POST, "programs", request);
-            if (sr != null)
+            catch
             {
-                return JsonConvert.DeserializeObject<IList<sdProgram>>(sr.ReadToEnd());
+                // ignored
             }
+
             return null;
         }
 
-        public static string sdGetSeriesImageUrl(string id)
+        public static IList<sdProgram> SdGetPrograms(string[] request)
         {
-            string url = string.Empty;
+            var sr = SdGetRequestResponse(methods.POST, "programs", request);
+            return sr != null ? JsonConvert.DeserializeObject<IList<sdProgram>>(sr.ReadToEnd()) : null;
+        }
+
+        public static string SdGetSeriesImageUrl(string id)
+        {
+            var url = string.Empty;
 
             // get available images
-            StreamReader sr = sdGetRequestResponse(METHODS.GET, "metadata/programs/SH" + id, null, false);
-            if (sr == null) return url;
-
-            return determineSeriesImage(JsonConvert.DeserializeObject<IList<sdImage>>(sr.ReadToEnd()));
+            var sr = SdGetRequestResponse(methods.GET, "metadata/programs/SH" + id, null, false);
+            return sr == null ? url : DetermineSeriesImage(JsonConvert.DeserializeObject<IList<sdImage>>(sr.ReadToEnd()));
         }
 
-        private static string determineSeriesImage(IList<sdImage> images)
+        private static string DetermineSeriesImage(IList<sdImage> images)
         {
             if (images == null) return null;
 
-            string[] links = new string[9];
-            foreach (sdImage image in images)
+            var links = new string[9];
+            foreach (var image in images)
             {
                 if ((image.Category == null) || (image.Aspect == null) || (image.Size == null) || (image.Uri == null)) continue;
 
@@ -157,10 +137,10 @@ namespace epg123Transfer
                 if ((image.Aspect.ToLower() == "2x3") && (image.Size.ToLower() == "sm") &&
                     ((image.Tier == null) || (image.Tier.ToLower() == "series") || (image.Tier.ToLower() == "sport") || (image.Tier.ToLower() == "sport event")))
                 {
-                    string url = image.Uri.ToLower();
+                    var url = image.Uri.ToLower();
                     if (!url.StartsWith("http"))
                     {
-                        url = string.Format("{0}{1}image/{2}", sdAPI.jsonBaseUrl, sdAPI.jsonApi, url);
+                        url = $"{JsonBaseUrl}{JsonApi}image/{url}";
                     }
 
                     switch (image.Category.ToLower())
@@ -192,18 +172,12 @@ namespace epg123Transfer
                         case "staple":      // the staple image is intended to cover programs which do not have a unique banner image
                             if (string.IsNullOrEmpty(links[8])) links[8] = url;
                             break;
-                        default:
-                            break;
                     }
                 }
             }
 
             // return the most preferred image
-            foreach (string link in links)
-            {
-                if (!string.IsNullOrEmpty(link)) return link;
-            }
-            return null;
+            return links.FirstOrDefault(link => !string.IsNullOrEmpty(link));
         }
     }
 }

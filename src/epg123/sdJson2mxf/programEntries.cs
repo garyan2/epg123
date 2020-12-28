@@ -1,101 +1,100 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.IO;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 using epg123.MxfXml;
-using System.Data.SqlTypes;
+using epg123.SchedulesDirectAPI;
+using Newtonsoft.Json;
 
-namespace epg123
+namespace epg123.sdJson2mxf
 {
-    public static partial class sdJson2mxf
+    internal static partial class sdJson2Mxf
     {
         private static List<string> programQueue;
         private static ConcurrentBag<sdProgram> programResponses = new ConcurrentBag<sdProgram>();
 
-        private static bool buildAllProgramEntries()
+        private static bool BuildAllProgramEntries()
         {
             // reset counters
             processedObjects = 0;
-            Logger.WriteMessage(string.Format("Entering buildAllProgramEntries() for {0} programs.",
-                                totalObjects = sdMxf.With[0].Programs.Count));
-            ++processStage; reportProgress();
+            Logger.WriteMessage($"Entering buildAllProgramEntries() for {totalObjects = SdMxf.With[0].Programs.Count} programs.");
+            ++processStage; ReportProgress();
 
             // fill mxf programs with cached values and queue the rest
             programQueue = new List<string>();
-            for (int i = 0; i < sdMxf.With[0].Programs.Count; ++i)
+            for (var i = 0; i < SdMxf.With[0].Programs.Count; ++i)
             {
-                string filepath = string.Format("{0}\\{1}", Helper.Epg123CacheFolder, safeFilename(sdMxf.With[0].Programs[i].md5));
-                FileInfo file = new FileInfo(filepath);
-                if (file.Exists && (file.Length > 0) && !epgCache.JsonFiles.ContainsKey(sdMxf.With[0].Programs[i].md5))
+                var filepath = $"{Helper.Epg123CacheFolder}\\{SafeFilename(SdMxf.With[0].Programs[i].Md5)}";
+                var file = new FileInfo(filepath);
+                if (file.Exists && (file.Length > 0) && !epgCache.JsonFiles.ContainsKey(SdMxf.With[0].Programs[i].Md5))
                 {
-                    using (StreamReader reader = File.OpenText(filepath))
+                    using (var reader = File.OpenText(filepath))
                     {
-                        epgCache.AddAsset(sdMxf.With[0].Programs[i].md5, reader.ReadToEnd());
+                        epgCache.AddAsset(SdMxf.With[0].Programs[i].Md5, reader.ReadToEnd());
                     }
                 }
 
-                if (epgCache.JsonFiles.ContainsKey(sdMxf.With[0].Programs[i].md5))
+                if (epgCache.JsonFiles.ContainsKey(SdMxf.With[0].Programs[i].Md5))
                 {
                     try
                     {
-                        using (StringReader reader = new StringReader(epgCache.GetAsset(sdMxf.With[0].Programs[i].md5)))
+                        using (var reader = new StringReader(epgCache.GetAsset(SdMxf.With[0].Programs[i].Md5)))
                         {
-                            JsonSerializer serializer = new JsonSerializer();
-                            sdProgram program = (sdProgram)serializer.Deserialize(reader, typeof(sdProgram));
-                            sdMxf.With[0].Programs[i] = buildMxfProgram(sdMxf.With[0].Programs[i], program);
+                            var serializer = new JsonSerializer();
+                            var program = (sdProgram)serializer.Deserialize(reader, typeof(sdProgram));
+                            SdMxf.With[0].Programs[i] = BuildMxfProgram(SdMxf.With[0].Programs[i], program);
                         }
-                        ++processedObjects; reportProgress();
+                        ++processedObjects; ReportProgress();
                     }
                     catch
                     {
-                        programQueue.Add(sdMxf.With[0].Programs[i].tmsId);
+                        programQueue.Add(SdMxf.With[0].Programs[i].TmsId);
                     }
                 }
                 else
                 {
-                    programQueue.Add(sdMxf.With[0].Programs[i].tmsId);
+                    programQueue.Add(SdMxf.With[0].Programs[i].TmsId);
                 }
             }
-            Logger.WriteVerbose(string.Format("Found {0} cached program descriptions.", processedObjects));
+            Logger.WriteVerbose($"Found {processedObjects} cached program descriptions.");
 
             // maximum 5000 queries at a time
             if (programQueue.Count > 0)
             {
-                Parallel.For(0, (programQueue.Count / MAXQUERIES + 1), new ParallelOptions { MaxDegreeOfParallelism = MAXPARALLELDOWNLOADS }, i =>
+                Parallel.For(0, (programQueue.Count / MaxQueries + 1), new ParallelOptions { MaxDegreeOfParallelism = MaxParallelDownloads }, i =>
                 {
-                    downloadProgramResponses(i * MAXQUERIES);
+                    DownloadProgramResponses(i * MaxQueries);
                 });
 
-                processProgramResponses();
+                ProcessProgramResponses();
                 if (processedObjects != totalObjects)
                 {
                     Logger.WriteWarning("Problem occurred during buildAllProgramEntries(). Did not process all program description responses.");
                 }
             }
-            Logger.WriteInformation(string.Format("Processed {0} program descriptions.", processedObjects));
+            Logger.WriteInformation($"Processed {processedObjects} program descriptions.");
             Logger.WriteMessage("Exiting buildAllProgramEntries(). SUCCESS.");
             programQueue = null; programResponses = null;
             return true;
         }
 
-        private static void downloadProgramResponses(int start)
+        private static void DownloadProgramResponses(int start)
         {
             // reject 0 requests
             if (programQueue.Count - start < 1) return;
 
             // build the array of programs to request for
-            string[] programs = new string[Math.Min(programQueue.Count - start, MAXQUERIES)];
-            for (int i = 0; i < programs.Length; ++i)
+            var programs = new string[Math.Min(programQueue.Count - start, MaxQueries)];
+            for (var i = 0; i < programs.Length; ++i)
             {
                 programs[i] = programQueue[start + i];
             }
 
             // request programs from Schedules Direct
-            IList<sdProgram> responses = sdAPI.sdGetPrograms(programs);
+            var responses = sdApi.SdGetPrograms(programs);
             if (responses != null)
             {
                 Parallel.ForEach(responses, (response) =>
@@ -105,36 +104,39 @@ namespace epg123
             }
         }
 
-        private static void processProgramResponses()
+        private static void ProcessProgramResponses()
         {
             // process request response
-            foreach (sdProgram response in programResponses)
+            foreach (var response in programResponses)
             {
-                ++processedObjects; reportProgress();
+                ++processedObjects; ReportProgress();
 
                 // determine which program this belongs to
-                MxfProgram mxfProgram = sdMxf.With[0].getProgram(response.ProgramID);
+                var mxfProgram = SdMxf.With[0].GetProgram(response.ProgramId);
 
                 // build a standalone program
-                mxfProgram = buildMxfProgram(mxfProgram, response);
+                mxfProgram = BuildMxfProgram(mxfProgram, response);
 
                 // serialize JSON directly to a file
                 if (response.Md5 != null)
                 {
-                    using (StringWriter writer = new StringWriter())
+                    using (var writer = new StringWriter())
                     {
                         try
                         {
-                            JsonSerializer serializer = new JsonSerializer();
+                            var serializer = new JsonSerializer();
                             serializer.Serialize(writer, response);
                             epgCache.AddAsset(response.Md5, writer.ToString());
                         }
-                        catch { }
+                        catch
+                        {
+                            // ignored
+                        }
                     }
                 }
                 else
                 {
-                    Logger.WriteWarning(string.Format("Did not cache program {0} due to missing Md5 hash.", mxfProgram.tmsId));
+                    Logger.WriteWarning($"Did not cache program {mxfProgram.TmsId} due to missing Md5 hash.");
                 }
             }
         }
@@ -142,7 +144,7 @@ namespace epg123
         private static void AddModernMediaUiPlusProgram(sdProgram sd)
         {
             // create entry in ModernMedia UI+ dictionary
-            ModernMediaUiPlus.Programs.Add(sd.ProgramID, new ModernMediaUiPlusPrograms()
+            ModernMediaUiPlus.Programs.Add(sd.ProgramId, new ModernMediaUiPlusPrograms()
             {
                 ContentRating = sd.ContentRating,
                 EventDetails = sd.EventDetails,
@@ -153,47 +155,47 @@ namespace epg123
             });
         }
 
-        private static MxfProgram buildMxfProgram(MxfProgram prg, sdProgram sd)
+        private static MxfProgram BuildMxfProgram(MxfProgram prg, sdProgram sd)
         {
             // populate stuff for xmltv
-            prg.genres = sd.Genres;
+            prg.Genres = sd.Genres;
             if (sd.EventDetails?.Teams != null)
             {
-                prg.teams = new List<string>();
-                foreach (sdProgramEventDetailsTeam team in sd.EventDetails.Teams)
+                prg.Teams = new List<string>();
+                foreach (var team in sd.EventDetails.Teams)
                 {
-                    prg.teams.Add(team.Name);
+                    prg.Teams.Add(team.Name);
                 }
             }
 
             // populate title, short title, description, and short description
-            determineTitlesAndDescriptions(ref prg, sd);
+            DetermineTitlesAndDescriptions(ref prg, sd);
 
             // set program flags
-            setProgramFlags(ref prg, sd);
+            SetProgramFlags(ref prg, sd);
 
             // populate program keywords
-            determineProgramKeywords(ref prg, sd);
+            DetermineProgramKeywords(ref prg, sd);
 
             // determine movie or series information
             if (prg.IsMovie)
             {
                 // populate mpaa and star rating as well as enable extended information
-                determineMovieInfo(ref prg, sd);
+                DetermineMovieInfo(ref prg, sd);
             }
             else
             {
                 // take care of series and episode fields
                 DetermineSeriesInfo(ref prg, sd);
-                determineEpisodeInfo(ref prg, sd);
-                completeEpisodeTitle(ref prg);
+                DetermineEpisodeInfo(ref prg, sd);
+                CompleteEpisodeTitle(ref prg);
             }
 
             // set content reason flags
-            determineContentAdvisory(ref prg, sd);
+            DetermineContentAdvisory(ref prg, sd);
 
             // populate the cast and crew
-            determineCastAndCrew(ref prg, sd);
+            DetermineCastAndCrew(ref prg, sd);
 
             // add program to array for ModernMedia UI+
             if (config.ModernMediaUiPlusSupport)
@@ -204,7 +206,7 @@ namespace epg123
             return prg;
         }
 
-        private static void determineTitlesAndDescriptions(ref MxfProgram prg, sdProgram sd)
+        private static void DetermineTitlesAndDescriptions(ref MxfProgram prg, sdProgram sd)
         {
             // populate titles
             if (sd.Titles != null)
@@ -213,16 +215,15 @@ namespace epg123
             }
             else
             {
-                Logger.WriteWarning(string.Format("Program {0} is missing required content.", sd.ProgramID));
+                Logger.WriteWarning($"Program {sd.ProgramId} is missing required content.");
             }
             prg.EpisodeTitle = sd.EpisodeTitle150;
 
             // populate descriptions and language
             if (sd.Descriptions != null)
             {
-                string lang = string.Empty;
-                prg.ShortDescription = getDescriptions(sd.Descriptions.Description100, out lang);
-                prg.Description = getDescriptions(sd.Descriptions.Description1000, out lang);
+                prg.ShortDescription = GetDescriptions(sd.Descriptions.Description100, out var lang);
+                prg.Description = GetDescriptions(sd.Descriptions.Description1000, out lang);
 
                 // if short description is empty, not a movie, and append episode option is enabled
                 // copy long description into short description
@@ -241,58 +242,58 @@ namespace epg123
             prg.OriginalAirdate = sd.OriginalAirDate.ToString();
         }
 
-        private static string getDescriptions(IList<sdProgramDescription> description, out string language)
+        private static string GetDescriptions(IList<sdProgramDescription> descriptions, out string language)
         {
-            string ret = string.Empty;
+            var ret = string.Empty;
             language = string.Empty;
 
-            if (description != null)
+            if (descriptions == null) return ret;
+
+            foreach (var description in descriptions)
             {
-                for (int i = 0; i < description.Count; ++i)
+                if (description.DescriptionLanguage.Substring(0, 2) == CultureInfo.CurrentUICulture.TwoLetterISOLanguageName)
                 {
-                    if (description[i].DescriptionLanguage.Substring(0, 2) == CultureInfo.CurrentUICulture.TwoLetterISOLanguageName)
-                    {
-                        // optimal selection ... description language matches computer culture settings
-                        language = description[i].DescriptionLanguage;
-                        ret = description[i].Description;
-                        break;
-                    }
-                    else if ((description[i].DescriptionLanguage.Substring(0, 2).ToLower() == "en") || (description[i].DescriptionLanguage.ToLower() == "und"))
-                    {
-                        // without culture match above, english is acceptable alternate
-                        language = description[i].DescriptionLanguage;
-                        ret = description[i].Description;
-                    }
-                    else if (string.IsNullOrEmpty(ret))
-                    {
-                        // first language not of the same culture or english
-                        language = description[i].DescriptionLanguage;
-                        ret = description[i].Description;
-                    }
+                    // optimal selection ... description language matches computer culture settings
+                    language = description.DescriptionLanguage;
+                    ret = description.Description;
+                    break;
+                }
+
+                if (description.DescriptionLanguage.Substring(0, 2).ToLower() == "en" || description.DescriptionLanguage.ToLower() == "und")
+                {
+                    // without culture match above, english is acceptable alternate
+                    language = description.DescriptionLanguage;
+                    ret = description.Description;
+                }
+                else if (string.IsNullOrEmpty(ret))
+                {
+                    // first language not of the same culture or english
+                    language = description.DescriptionLanguage;
+                    ret = description.Description;
                 }
             }
             return ret;
         }
 
-        private static void setProgramFlags(ref MxfProgram prg, sdProgram sd)
+        private static void SetProgramFlags(ref MxfProgram prg, sdProgram sd)
         {
             // transfer genres to mxf program
-            prg.IsAction = Helper.tableContains(sd.Genres, "Action");
-            prg.IsAdultOnly = Helper.tableContains(sd.Genres, "Adults Only");
-            prg.IsComedy = Helper.tableContains(sd.Genres, "Comedy");
-            prg.IsDocumentary = Helper.tableContains(sd.Genres, "Documentary");
-            prg.IsDrama = Helper.tableContains(sd.Genres, "Drama");
-            prg.IsEducational = Helper.tableContains(sd.Genres, "Educational");
-            prg.IsHorror = Helper.tableContains(sd.Genres, "Horror");
+            prg.IsAction = Helper.TableContains(sd.Genres, "Action");
+            prg.IsAdultOnly = Helper.TableContains(sd.Genres, "Adults Only");
+            prg.IsComedy = Helper.TableContains(sd.Genres, "Comedy");
+            prg.IsDocumentary = Helper.TableContains(sd.Genres, "Documentary");
+            prg.IsDrama = Helper.TableContains(sd.Genres, "Drama");
+            prg.IsEducational = Helper.TableContains(sd.Genres, "Educational");
+            prg.IsHorror = Helper.TableContains(sd.Genres, "Horror");
             //prg.IsIndy = null;
-            prg.IsKids = Helper.tableContains(sd.Genres, "Children");
-            prg.IsMusic = Helper.tableContains(sd.Genres, "Music");
-            prg.IsNews = Helper.tableContains(sd.Genres, "News");
-            prg.IsReality = Helper.tableContains(sd.Genres, "Reality");
-            prg.IsRomance = Helper.tableContains(sd.Genres, "Romance");
-            prg.IsScienceFiction = Helper.tableContains(sd.Genres, "Science Fiction");
-            prg.IsSoap = Helper.tableContains(sd.Genres, "Soap");
-            prg.IsThriller = Helper.tableContains(sd.Genres, "Suspense");
+            prg.IsKids = Helper.TableContains(sd.Genres, "Children");
+            prg.IsMusic = Helper.TableContains(sd.Genres, "Music");
+            prg.IsNews = Helper.TableContains(sd.Genres, "News");
+            prg.IsReality = Helper.TableContains(sd.Genres, "Reality");
+            prg.IsRomance = Helper.TableContains(sd.Genres, "Romance");
+            prg.IsScienceFiction = Helper.TableContains(sd.Genres, "Science Fiction");
+            prg.IsSoap = Helper.TableContains(sd.Genres, "Soap");
+            prg.IsThriller = Helper.TableContains(sd.Genres, "Suspense");
 
             // below flags are populated when creating the program in processMd5ScheduleEntry(string md5)
             // prg.IsPremiere
@@ -303,19 +304,21 @@ namespace epg123
 
             // transfer show types to mxf program
             //prg.IsLimitedSeries = null;
-            prg.IsMiniseries = Helper.stringContains(sd.ShowType, "Miniseries");
-            prg.IsMovie = Helper.stringContains(sd.EntityType, "Movie");
-            prg.IsPaidProgramming = Helper.stringContains(sd.ShowType, "Paid Programming");
+            prg.IsMiniseries = Helper.StringContains(sd.ShowType, "Miniseries");
+            prg.IsMovie = Helper.StringContains(sd.EntityType, "Movie");
+            prg.IsPaidProgramming = Helper.StringContains(sd.ShowType, "Paid Programming");
             //prg.IsProgramEpisodic = null;
             //prg.IsSerial = null;
-            prg.IsSeries = Helper.stringContains(sd.ShowType, "Series") || Helper.stringContains(sd.ShowType, "Sports non-event");
-            prg.IsShortFilm = Helper.stringContains(sd.ShowType, "Short Film");
-            prg.IsSpecial = Helper.stringContains(sd.ShowType, "Special");
-            prg.IsSports = Helper.stringContains(sd.ShowType, "Sports event");
+            prg.IsSeries = Helper.StringContains(sd.ShowType, "Series") && !Helper.TableContains(sd.Genres, "Sports talk");
+            prg.IsShortFilm = Helper.StringContains(sd.ShowType, "Short Film");
+            prg.IsSpecial = Helper.StringContains(sd.ShowType, "Special");
+            prg.IsSports = Helper.StringContains(sd.ShowType, "Sports event") || 
+                           Helper.StringContains(sd.ShowType, "Sports non-event") || 
+                           Helper.TableContains(sd.Genres, "Sports talk");
 
             // set isGeneric flag if programID starts with "SH", is a series, is not a miniseries, and is not paid programming
-            if (prg.tmsId.StartsWith("SH") && ((prg.IsSports && !Helper.stringContains(sd.EntityType, "Sports")) ||
-                                               (prg.IsSeries && !prg.IsMiniseries && !prg.IsPaidProgramming)))
+            if (prg.TmsId.StartsWith("SH") && (prg.IsSports && !Helper.StringContains(sd.EntityType, "Sports") ||
+                                               prg.IsSeries && !prg.IsMiniseries && !prg.IsPaidProgramming))
             {
                 prg.IsGeneric = true;
             }
@@ -337,76 +340,75 @@ namespace epg123
             //}
         }
 
-        private static void determineProgramKeywords(ref MxfProgram prg, sdProgram sd)
+        private static void DetermineProgramKeywords(ref MxfProgram prg, sdProgram sd)
         {
             // determine primary group of program
-            GROUPS group = GROUPS.UNKNOWN;
-            if (prg.IsMovie) group = GROUPS.MOVIES;
-            else if (prg.IsPaidProgramming) group = GROUPS.PAIDPROGRAMMING;
-            else if (prg.IsSports) group = GROUPS.SPORTS;
-            else if (prg.IsKids) group = GROUPS.KIDS;
-            else if (prg.IsEducational) group = GROUPS.EDUCATIONAL;
-            else if (prg.IsNews) group = GROUPS.NEWS;
-            else if (prg.IsSpecial) group = GROUPS.SPECIAL;
-            else if (prg.IsReality) group = GROUPS.REALITY;
-            else if (prg.IsSeries) group = GROUPS.SERIES;
+            var group = keygroups.UNKNOWN;
+            if (prg.IsMovie) group = keygroups.MOVIES;
+            else if (prg.IsPaidProgramming) group = keygroups.PAIDPROGRAMMING;
+            else if (prg.IsSports) group = keygroups.SPORTS;
+            else if (prg.IsKids) group = keygroups.KIDS;
+            else if (prg.IsEducational) group = keygroups.EDUCATIONAL;
+            else if (prg.IsNews) group = keygroups.NEWS;
+            else if (prg.IsSpecial) group = keygroups.SPECIAL;
+            else if (prg.IsReality) group = keygroups.REALITY;
+            else if (prg.IsSeries) group = keygroups.SERIES;
 
             // build the keywords/categories
-            if (group != GROUPS.UNKNOWN)
+            if (group == keygroups.UNKNOWN) return;
+            prg.Keywords = $"k{(int) group + 1}";
+
+            // add premiere categories as necessary
+            if (prg.IsSeasonPremiere || prg.IsSeriesPremiere)
             {
-                prg.Keywords = string.Format("k{0}", (int)group + 1);
+                prg.Keywords += $",k{(int) keygroups.PREMIERES + 1}";
+                if (prg.IsSeasonPremiere) prg.Keywords += "," + SdMxf.With[0].KeywordGroups[(int)keygroups.PREMIERES].GetKeywordId("Season Premiere");
+                if (prg.IsSeriesPremiere) prg.Keywords += "," + SdMxf.With[0].KeywordGroups[(int)keygroups.PREMIERES].GetKeywordId("Series Premiere");
+            }
+            else if (prg.IsPremiere)
+            {
+                if (group == keygroups.MOVIES)
+                {
+                    prg.Keywords += "," + SdMxf.With[0].KeywordGroups[(int)group].GetKeywordId("Premiere");
+                }
+                else if (Helper.TableContains(sd.Genres, "miniseries"))
+                {
+                    prg.Keywords += $",k{(int) keygroups.PREMIERES + 1}";
+                    prg.Keywords += "," + SdMxf.With[0].KeywordGroups[(int)keygroups.PREMIERES].GetKeywordId("Miniseries Premiere");
+                }
+            }
 
-                // add premiere categories as necessary
-                if (prg.IsSeasonPremiere || prg.IsSeriesPremiere)
+            // now add the real categories
+            if (sd.Genres != null)
+            {
+                foreach (var genre in sd.Genres)
                 {
-                    prg.Keywords += string.Format(",k{0}", (int)GROUPS.PREMIERES + 1);
-                    if (prg.IsSeasonPremiere) prg.Keywords += "," + sdMxf.With[0].KeywordGroups[(int)GROUPS.PREMIERES].getKeywordId("Season Premiere");
-                    if (prg.IsSeriesPremiere) prg.Keywords += "," + sdMxf.With[0].KeywordGroups[(int)GROUPS.PREMIERES].getKeywordId("Series Premiere");
-                }
-                else if (prg.IsPremiere)
-                {
-                    if (group == GROUPS.MOVIES)
+                    var key = SdMxf.With[0].KeywordGroups[(int)group].GetKeywordId(genre);
+                    var keys = prg.Keywords.Split(',').ToList();
+                    if (!keys.Contains(key))
                     {
-                        prg.Keywords += "," + sdMxf.With[0].KeywordGroups[(int)group].getKeywordId("Premiere");
-                    }
-                    else if (Helper.tableContains(sd.Genres, "miniseries"))
-                    {
-                        prg.Keywords += string.Format(",k{0}", (int)GROUPS.PREMIERES + 1);
-                        prg.Keywords += "," + sdMxf.With[0].KeywordGroups[(int)GROUPS.PREMIERES].getKeywordId("Miniseries Premiere");
+                        prg.Keywords += "," + key;
                     }
                 }
+            }
 
-                // now add the real categories
-                if (sd.Genres != null)
-                {
-                    foreach (string genre in sd.Genres)
-                    {
-                        string key = sdMxf.With[0].KeywordGroups[(int)group].getKeywordId(genre);
-                        List<string> keys = prg.Keywords.Split(',').ToList();
-                        if (!keys.Contains(key))
-                        {
-                            prg.Keywords += "," + key;
-                        }
-                    }
-                }
-                if (prg.Keywords.Length < 5)
-                {
-                    string key = sdMxf.With[0].KeywordGroups[(int)group].getKeywordId("Uncategorized");
-                    prg.Keywords += "," + key;
-                }
+            if (prg.Keywords.Length >= 5) return;
+            {
+                var key = SdMxf.With[0].KeywordGroups[(int)group].GetKeywordId("Uncategorized");
+                prg.Keywords += "," + key;
             }
         }
 
-        private static void determineMovieInfo(ref MxfProgram prg, sdProgram sd)
+        private static void DetermineMovieInfo(ref MxfProgram prg, sdProgram sd)
         {
             // fill MPAA rating
-            prg.MpaaRating = decodeMpaaRating(sd.ContentRating);
+            prg.MpaaRating = DecodeMpaaRating(sd.ContentRating);
 
             // populate movie specific attributes
             if (sd.Movie != null)
             {
                 prg.Year = sd.Movie.Year;
-                prg.HalfStars = decodeStarRating(sd.Movie.QualityRating);
+                prg.HalfStars = DecodeStarRating(sd.Movie.QualityRating);
             }
             else if (!string.IsNullOrEmpty(prg.OriginalAirdate))
             {
@@ -424,23 +426,23 @@ namespace epg123
             // for sports programs that start with "SP", create a series entry based on program title
             // this groups them all together as a series for recordings
             MxfSeriesInfo mxfSeriesInfo;
-            if (mxfProgram.tmsId.StartsWith("SP"))
+            if (mxfProgram.TmsId.StartsWith("SP"))
             {
-                string name = mxfProgram.Title.Replace(' ', '_');
-                mxfSeriesInfo = sdMxf.With[0].getSeriesInfo(name);
-                sportsSeries.Add(name, mxfProgram.tmsId.Substring(0, 10));
+                var name = mxfProgram.Title.Replace(' ', '_');
+                mxfSeriesInfo = SdMxf.With[0].GetSeriesInfo(name);
+                sportsSeries.Add(name, mxfProgram.TmsId.Substring(0, 10));
             }
             else
             {
                 // create a seriesInfo entry if needed
-                mxfSeriesInfo = sdMxf.With[0].getSeriesInfo(mxfProgram.tmsId.Substring(2, 8));
-                if (mxfSeriesInfo.tvdbSeriesId == null && sdProgram.Metadata != null)
+                mxfSeriesInfo = SdMxf.With[0].GetSeriesInfo(mxfProgram.TmsId.Substring(2, 8));
+                if (mxfSeriesInfo.TvdbSeriesId == null && sdProgram.Metadata != null)
                 {
-                    foreach (Dictionary<string, sdProgramMetadataProvider> providers in sdProgram.Metadata)
+                    foreach (var providers in sdProgram.Metadata)
                     {
-                        if (providers.TryGetValue("TheTVDB", out sdProgramMetadataProvider provider))
+                        if (providers.TryGetValue("TheTVDB", out var provider))
                         {
-                            mxfSeriesInfo.tvdbSeriesId = provider.SeriesID.ToString();
+                            mxfSeriesInfo.TvdbSeriesId = provider.SeriesId.ToString();
                         }
                     }
                 }
@@ -448,30 +450,33 @@ namespace epg123
                 if (mxfProgram.IsGeneric)
                 {
                     // go ahead and create/update the cache entry as needed
-                    if (epgCache.JsonFiles.ContainsKey(mxfProgram.tmsId))
+                    if (epgCache.JsonFiles.ContainsKey(mxfProgram.TmsId))
                     {
                         try
                         {
-                            using (StringReader reader = new StringReader(epgCache.GetAsset(mxfProgram.tmsId)))
+                            using (var reader = new StringReader(epgCache.GetAsset(mxfProgram.TmsId)))
                             {
-                                JsonSerializer serializer = new JsonSerializer();
-                                sdGenericDescriptions cached = (sdGenericDescriptions)serializer.Deserialize(reader, typeof(sdGenericDescriptions));
+                                var serializer = new JsonSerializer();
+                                var cached = (sdGenericDescriptions)serializer.Deserialize(reader, typeof(sdGenericDescriptions));
                                 if (cached.StartAirdate == null)
                                 {
                                     cached.StartAirdate = mxfProgram.OriginalAirdate ?? string.Empty;
-                                    using (StringWriter writer = new StringWriter())
+                                    using (var writer = new StringWriter())
                                     {
                                         serializer.Serialize(writer, cached);
-                                        epgCache.UpdateAssetJsonEntry(mxfProgram.tmsId, writer.ToString());
+                                        epgCache.UpdateAssetJsonEntry(mxfProgram.TmsId, writer.ToString());
                                     }
                                 }
                             }
                         }
-                        catch { }
+                        catch
+                        {
+                            // ignored
+                        }
                     }
                     else
                     {
-                        sdGenericDescriptions newEntry = new sdGenericDescriptions()
+                        var newEntry = new sdGenericDescriptions()
                         {
                             Code = 0,
                             Description1000 = mxfProgram.Description,
@@ -479,11 +484,11 @@ namespace epg123
                             StartAirdate = mxfProgram.OriginalAirdate ?? string.Empty
                         };
 
-                        JsonSerializer serializer = new JsonSerializer();
-                        using (StringWriter writer = new StringWriter())
+                        var serializer = new JsonSerializer();
+                        using (var writer = new StringWriter())
                         {
                             serializer.Serialize(writer, newEntry);
-                            epgCache.AddAsset(mxfProgram.tmsId, writer.ToString());
+                            epgCache.AddAsset(mxfProgram.TmsId, writer.ToString());
                         }
                     }
                 }
@@ -493,67 +498,65 @@ namespace epg123
             mxfProgram.Series = mxfSeriesInfo.Id;
         }
 
-        private static void determineEpisodeInfo(ref MxfProgram prg, sdProgram sd)
+        private static void DetermineEpisodeInfo(ref MxfProgram prg, sdProgram sd)
         {
-            if (sd.EntityType == "Episode")
+            if (sd.EntityType != "Episode") return;
+
+            // use the last 4 numbers as a production number
+            var episode = int.Parse(prg.TmsId.Substring(10));
+            if (episode != 0)
             {
-                // use the last 4 numbers as a production number
-                int episode = int.Parse(prg.tmsId.Substring(10));
-                if (episode != 0)
-                {
-                    prg.EpisodeNumber = episode;
-                }
+                prg.EpisodeNumber = episode;
+            }
 
-                if (sd.Metadata != null)
+            if (sd.Metadata != null)
+            {
+                // grab season and episode numbers if available
+                foreach (var providers in sd.Metadata)
                 {
-                    // grab season and episode numbers if available
-                    foreach (Dictionary<string, sdProgramMetadataProvider> providers in sd.Metadata)
+                    if (providers.TryGetValue("Gracenote", out var provider))
                     {
-                        sdProgramMetadataProvider provider;
-                        if (providers.TryGetValue("Gracenote", out provider))
-                        {
-                            if ((provider == null) || (provider.EpisodeNumber == 0)) continue;
+                        if (provider == null || provider.EpisodeNumber == 0) continue;
 
-                            prg.SeasonNumber = provider.SeasonNumber;
-                            prg.EpisodeNumber = provider.EpisodeNumber;
-                            if (!config.TheTVDBNumbers) break;
-                        }
-                        else if (providers.TryGetValue("TheTVDB", out provider))
-                        {
-                            if ((provider == null) || (provider.EpisodeNumber == 0) || (provider.SeasonNumber > DateTime.Now.Year)) continue;
+                        prg.SeasonNumber = provider.SeasonNumber;
+                        prg.EpisodeNumber = provider.EpisodeNumber;
+                        if (!config.TheTvdbNumbers) break;
+                    }
+                    else if (providers.TryGetValue("TheTVDB", out provider))
+                    {
+                        if (provider == null || provider.EpisodeNumber == 0 || provider.SeasonNumber > DateTime.Now.Year) continue;
 
-                            prg.SeasonNumber = provider.SeasonNumber;
-                            prg.EpisodeNumber = provider.EpisodeNumber;
-                            if (config.TheTVDBNumbers) break;
-                        }
+                        prg.SeasonNumber = provider.SeasonNumber;
+                        prg.EpisodeNumber = provider.EpisodeNumber;
+                        if (config.TheTvdbNumbers) break;
                     }
                 }
+            }
 
-                // if there is a season number, create as seasonInfo entry
-                if (prg.SeasonNumber != 0)
-                {
-                    prg.Season = sdMxf.With[0].getSeasonId(prg.tmsId.Substring(2, 8), prg.SeasonNumber);
-                }
+            // if there is a season number, create as seasonInfo entry
+            if (prg.SeasonNumber != 0)
+            {
+                prg.Season = SdMxf.With[0].GetSeasonId(prg.TmsId.Substring(2, 8), prg.SeasonNumber);
             }
         }
 
-        private static void completeEpisodeTitle(ref MxfProgram prg)
+        private static void CompleteEpisodeTitle(ref MxfProgram prg)
         {
             // by request, if there is no episode title, and the program is not generic, duplicate the program title in the episode title
-            if (prg.tmsId.StartsWith("EP") && string.IsNullOrEmpty(prg.EpisodeTitle))
+            if (prg.TmsId.StartsWith("EP") && string.IsNullOrEmpty(prg.EpisodeTitle))
             {
                 prg.EpisodeTitle = prg.Title;
             }
             else if (string.IsNullOrEmpty(prg.EpisodeTitle)) return;
 
-            string se = config.AlternateSEFormat ? "S{0}:E{1} " : "s{0:D2}e{1:D2} ";
+            var se = config.AlternateSEFormat ? "S{0}:E{1} " : "s{0:D2}e{1:D2} ";
             if (prg.SeasonNumber != 0)
             {
                 se = string.Format(se, prg.SeasonNumber, prg.EpisodeNumber);
             }
             else if (prg.EpisodeNumber != 0)
             {
-                se = string.Format("#{0} ", prg.EpisodeNumber);
+                se = $"#{prg.EpisodeNumber} ";
             }
             else se = string.Empty;
 
@@ -588,168 +591,136 @@ namespace epg123
             }
 
             // append part/parts to episode title as needed
-            if (prg._part > 0)
+            if (prg.Part > 0)
             {
-                prg.EpisodeTitle += string.Format(" ({0}/{1})", prg._part, prg._parts);
+                prg.EpisodeTitle += $" ({prg.Part}/{prg.Parts})";
             }
         }
 
-        private static void determineContentAdvisory(ref MxfProgram prg, sdProgram sd)
+        private static void DetermineContentAdvisory(ref MxfProgram prg, sdProgram sd)
         {
             // fill content ratings and advisories; set flags
-            HashSet<string> advisories = new HashSet<string>();
+            var advisories = new HashSet<string>();
             if (sd.ContentRating != null)
             {
-                string[] ratings = !string.IsNullOrEmpty(config.RatingsOrigin) ? config.RatingsOrigin.Split(',') : new string[] { RegionInfo.CurrentRegion.ThreeLetterISORegionName };
-                prg.contentRatings = new Dictionary<string, string>();
-                foreach (sdProgramContentRating rating in sd.ContentRating)
+                var ratings = !string.IsNullOrEmpty(config.RatingsOrigin) ? config.RatingsOrigin.Split(',') : new[] { RegionInfo.CurrentRegion.ThreeLetterISORegionName };
+                prg.ContentRatings = new Dictionary<string, string>();
+                foreach (var rating in sd.ContentRating)
                 {
-                    if (string.IsNullOrEmpty(rating.Country) || Helper.tableContains(ratings, "ALL") || Helper.tableContains(ratings, rating.Country))
+                    if (string.IsNullOrEmpty(rating.Country) || Helper.TableContains(ratings, "ALL") || Helper.TableContains(ratings, rating.Country))
                     {
-                        prg.contentRatings.Add(rating.Body, rating.Code);
+                        prg.ContentRatings.Add(rating.Body, rating.Code);
                     }
 
-                    if (rating.ContentAdvisory != null)
+                    if (rating.ContentAdvisory == null) continue;
+                    foreach (var reason in rating.ContentAdvisory)
                     {
-                        foreach (string reason in rating.ContentAdvisory)
-                        {
-                            advisories.Add(reason);
-                        }
+                        advisories.Add(reason);
                     }
                 }
             }
             if (sd.ContentAdvisory != null)
             {
-                foreach (string reason in sd.ContentAdvisory)
+                foreach (var reason in sd.ContentAdvisory)
                 {
                     advisories.Add(reason);
                 }
             }
 
-            if (advisories.Count > 0)
-            {
-                string[] advisoryTable = advisories.ToArray();
+            if (advisories.Count <= 0) return;
+            var advisoryTable = advisories.ToArray();
 
-                // set flags
-                prg.HasAdult = Helper.tableContains(advisoryTable, "Adult Situations") || Helper.tableContains(advisoryTable, "Dialog");
-                prg.HasBriefNudity = Helper.tableContains(advisoryTable, "Brief Nudity");
-                prg.HasGraphicLanguage = Helper.tableContains(advisoryTable, "Graphic Language");
-                prg.HasGraphicViolence = Helper.tableContains(advisoryTable, "Graphic Violence");
-                prg.HasLanguage = Helper.tableContains(advisoryTable, "Adult Language") || Helper.tableContains(advisoryTable, "Language", true);
-                prg.HasMildViolence = Helper.tableContains(advisoryTable, "Mild Violence");
-                prg.HasNudity = Helper.tableContains(advisoryTable, "Nudity", true);
-                prg.HasRape = Helper.tableContains(advisoryTable, "Rape");
-                prg.HasStrongSexualContent = Helper.tableContains(advisoryTable, "Strong Sexual Content");
-                prg.HasViolence = Helper.tableContains(advisoryTable, "Violence", true);
+            // set flags
+            prg.HasAdult = Helper.TableContains(advisoryTable, "Adult Situations") || Helper.TableContains(advisoryTable, "Dialog");
+            prg.HasBriefNudity = Helper.TableContains(advisoryTable, "Brief Nudity");
+            prg.HasGraphicLanguage = Helper.TableContains(advisoryTable, "Graphic Language");
+            prg.HasGraphicViolence = Helper.TableContains(advisoryTable, "Graphic Violence");
+            prg.HasLanguage = Helper.TableContains(advisoryTable, "Adult Language") || Helper.TableContains(advisoryTable, "Language", true);
+            prg.HasMildViolence = Helper.TableContains(advisoryTable, "Mild Violence");
+            prg.HasNudity = Helper.TableContains(advisoryTable, "Nudity", true);
+            prg.HasRape = Helper.TableContains(advisoryTable, "Rape");
+            prg.HasStrongSexualContent = Helper.TableContains(advisoryTable, "Strong Sexual Content");
+            prg.HasViolence = Helper.TableContains(advisoryTable, "Violence", true);
 
-                prg.contentAdvisories = advisoryTable;
-            }
+            prg.ContentAdvisories = advisoryTable;
         }
 
-        private static void determineCastAndCrew(ref MxfProgram prg, sdProgram sd)
+        private static void DetermineCastAndCrew(ref MxfProgram prg, sdProgram sd)
         {
-            prg.ActorRole = getPersons(sd.Cast, new string[] { "Actor", "Voice", "Judge" });
-            prg.DirectorRole = getPersons(sd.Crew, new string[] { "Director" });
-            prg.GuestActorRole = getPersons(sd.Cast, new string[] { "Guest" }); // "Guest Star", "Guest"
-            prg.HostRole = getPersons(sd.Cast, new string[] { "Anchor", "Host", "Presenter", "Narrator", "Correspondent" });
-            prg.ProducerRole = getPersons(sd.Crew, new string[] { "Executive Producer" }); // "Producer", "Executive Producer", "Co-Executive Producer"
-            prg.WriterRole = getPersons(sd.Crew, new string[] { "Writer", "Story" }); // "Screenwriter", "Writer", "Co-Writer"
+            prg.ActorRole = GetPersons(sd.Cast, new[] { "Actor", "Voice", "Judge" });
+            prg.DirectorRole = GetPersons(sd.Crew, new[] { "Director" });
+            prg.GuestActorRole = GetPersons(sd.Cast, new[] { "Guest" }); // "Guest Star", "Guest"
+            prg.HostRole = GetPersons(sd.Cast, new[] { "Anchor", "Host", "Presenter", "Narrator", "Correspondent" });
+            prg.ProducerRole = GetPersons(sd.Crew, new[] { "Executive Producer" }); // "Producer", "Executive Producer", "Co-Executive Producer"
+            prg.WriterRole = GetPersons(sd.Crew, new[] { "Writer", "Story" }); // "Screenwriter", "Writer", "Co-Writer"
         }
 
-        private static List<MxfPersonRank> getPersons(IList<sdProgramPerson> persons, string[] roles)
+        private static List<MxfPersonRank> GetPersons(IList<sdProgramPerson> persons, string[] roles)
         {
-            if (persons != null)
+            if (persons == null) return null;
+            var personName = new List<string>();
+            var ret = new List<MxfPersonRank>();
+            foreach (var person in persons)
             {
-                List<string> personName = new List<string>();
-                List<MxfPersonRank> ret = new List<MxfPersonRank>();
-                foreach (sdProgramPerson person in persons)
+                if (!roles.Any(role => person.Role.ToLower().Contains(role.ToLower()) && !personName.Contains(person.Name))) continue;
+                ret.Add(new MxfPersonRank()
                 {
-                    foreach (string role in roles)
-                    {
-                        if (person.Role.ToLower().Contains(role.ToLower()) && !personName.Contains(person.Name))
-                        {
-                            ret.Add(new MxfPersonRank()
-                            {
-                                Person = sdMxf.With[0].getPersonId(person.Name),
-                                Rank = int.Parse(person.BillingOrder),
-                                Character = person.CharacterName
-                            });
-                            personName.Add(person.Name);
-                            break;
-                        }
-                    }
-                }
-                return ret;
+                    Person = SdMxf.With[0].GetPersonId(person.Name),
+                    Rank = int.Parse(person.BillingOrder),
+                    Character = person.CharacterName
+                });
+                personName.Add(person.Name);
             }
-            return null;
+            return ret;
         }
 
-        private static int decodeMpaaRating(IList<sdProgramContentRating> sdProgramContentRatings)
+        private static int DecodeMpaaRating(IList<sdProgramContentRating> sdProgramContentRatings)
         {
-            if (sdProgramContentRatings != null)
+            if (sdProgramContentRatings == null) return 0;
+            var maxValue = 0;
+            foreach (var rating in sdProgramContentRatings)
             {
-                int maxValue = 0;
-                foreach (sdProgramContentRating rating in sdProgramContentRatings)
-                {
-                    if (!rating.Body.ToLower().Equals("motion picture association of america")) continue;
+                if (!rating.Body.ToLower().Equals("motion picture association of america")) continue;
 
-                    switch (rating.Code.ToLower().Replace("-", ""))
-                    {
-                        case "g":
-                            maxValue = Math.Max(maxValue, 1);
-                            break;
-                        case "pg":
-                            maxValue = Math.Max(maxValue, 2);
-                            break;
-                        case "pg13":
-                            maxValue = Math.Max(maxValue, 3);
-                            break;
-                        case "r":
-                            maxValue = Math.Max(maxValue, 4);
-                            break;
-                        case "nc17":
-                            maxValue = Math.Max(maxValue, 5);
-                            break;
-                        case "x":
-                            maxValue = Math.Max(maxValue, 6);
-                            break;
-                        case "nr":
-                            maxValue = Math.Max(maxValue, 7);
-                            break;
-                        case "ao":
-                            maxValue = Math.Max(maxValue, 8);
-                            break;
-                        default:
-                            break;
-                    }
+                switch (rating.Code.ToLower().Replace("-", ""))
+                {
+                    case "g":
+                        maxValue = Math.Max(maxValue, 1);
+                        break;
+                    case "pg":
+                        maxValue = Math.Max(maxValue, 2);
+                        break;
+                    case "pg13":
+                        maxValue = Math.Max(maxValue, 3);
+                        break;
+                    case "r":
+                        maxValue = Math.Max(maxValue, 4);
+                        break;
+                    case "nc17":
+                        maxValue = Math.Max(maxValue, 5);
+                        break;
+                    case "x":
+                        maxValue = Math.Max(maxValue, 6);
+                        break;
+                    case "nr":
+                        maxValue = Math.Max(maxValue, 7);
+                        break;
+                    case "ao":
+                        maxValue = Math.Max(maxValue, 8);
+                        break;
                 }
-                return maxValue;
             }
-            return 0;
+            return maxValue;
         }
 
-        private static int decodeStarRating(IList<sdProgramQualityRating> sdProgramQualityRatings)
+        private static int DecodeStarRating(IList<sdProgramQualityRating> sdProgramQualityRatings)
         {
-            if (sdProgramQualityRatings != null)
-            {
-                double maxValue = 0.0;
-                foreach (sdProgramQualityRating rating in sdProgramQualityRatings)
-                {
-                    if (!string.IsNullOrEmpty(rating.MaxRating))
-                    {
-                        double numerator = double.Parse(rating.Rating, CultureInfo.InvariantCulture);
-                        double denominator = double.Parse(rating.MaxRating, CultureInfo.InvariantCulture);
-                        maxValue = Math.Max(numerator / denominator, maxValue);
-                    }
-                    else
-                    {
-                        // with no reference ...
-                    }
-                }
+            if (sdProgramQualityRatings == null) return 0;
 
-                // return rounded number of half stars in a 4 star scale
-                if (maxValue > 0.0) return ((int)(8.0 * maxValue + 0.125));
-            }
+            var maxValue = (from rating in sdProgramQualityRatings where !string.IsNullOrEmpty(rating.MaxRating) let numerator = double.Parse(rating.Rating, CultureInfo.InvariantCulture) let denominator = double.Parse(rating.MaxRating, CultureInfo.InvariantCulture) select numerator / denominator).Concat(new[] {0.0}).Max();
+
+            // return rounded number of half stars in a 4 star scale
+            if (maxValue > 0.0) return (int)(8.0 * maxValue + 0.125);
             return 0;
         }
     }

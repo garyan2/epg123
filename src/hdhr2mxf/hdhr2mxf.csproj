@@ -55,6 +55,9 @@
     <Compile Include="..\epg123\Helper.cs">
       <Link>Helper.cs</Link>
     </Compile>
+    <Compile Include="..\epg123\Logger.cs">
+      <Link>Logger.cs</Link>
+    </Compile>
     <Compile Include="HDHR\HDHRAPI.cs" />
     <Compile Include="HDHR\HDHRJson.cs" />
     <Compile Include="Common.cs" />

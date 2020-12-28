@@ -1,11 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Xml.Serialization;
-using System;
 
-namespace epg123Transfer.MxfXml
+namespace epg123Transfer
 {
     [XmlRoot("MXF")]
-    public class MXF
+    public class mxf
     {
         [XmlElement("Assembly")]
         public List<MxfAssembly> Assembly { get; set; }
@@ -109,10 +109,7 @@ namespace epg123Transfer.MxfXml
         [XmlAttribute("anyLanguage")]
         public string AnyLanguage
         {
-            get
-            {
-                return "true";
-            }
+            get => "true";
             set { }
         }
 

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Windows.Forms;
 using Microsoft.MediaCenter.Guide;
 using epg123;
@@ -9,21 +8,21 @@ namespace epg123Client
 {
     public partial class frmUndelete : Form
     {
-        double dpiScaleFactor = 1.0;
-        private ListViewColumnSorter channelColumnSorter = new ListViewColumnSorter();
-        public bool channelAdded = false;
-        private List<ListViewItem> listViewItems = new List<ListViewItem>();
+        readonly double _dpiScaleFactor = 1.0;
+        private readonly ListViewColumnSorter _channelColumnSorter = new ListViewColumnSorter();
+        public bool ChannelAdded;
+        private readonly List<ListViewItem> _listViewItems = new List<ListViewItem>();
 
         public frmUndelete()
         {
             InitializeComponent();
 
             // adjust components for screen dpi
-            using (Graphics g = CreateGraphics())
+            using (var g = CreateGraphics())
             {
-                if ((g.DpiX != 96) || (g.DpiY != 96))
+                if ((int)g.DpiX != 96 || (int)g.DpiY != 96)
                 {
-                    dpiScaleFactor = g.DpiX / 96;
+                    _dpiScaleFactor = g.DpiX / 96;
                 }
             }
         }
@@ -31,42 +30,41 @@ namespace epg123Client
         private void frmUndelete_Shown(object sender, EventArgs e)
         {
             // reset sorting column and order
-            channelColumnSorter.Order = SortOrder.Ascending;
-            channelColumnSorter.SortColumn = 1;
+            _channelColumnSorter.Order = SortOrder.Ascending;
+            _channelColumnSorter.SortColumn = 1;
 
             // build listview
             listView1.BeginUpdate();
-            buildListView();
+            BuildListView();
             listView1.EndUpdate();
 
-            int[] minWidths = { 100, 60, 100, 100 };
+            int[] minWidths = {100, 60, 100, 100};
             foreach (ColumnHeader header in listView1.Columns)
             {
-                int currentWidth = header.Width;
+                var currentWidth = header.Width;
                 header.Width = -1;
-                header.Width = Math.Max(Math.Max(header.Width, currentWidth), (int)(minWidths[header.Index] * dpiScaleFactor));
+                header.Width = Math.Max(Math.Max(header.Width, currentWidth), (int)(minWidths[header.Index] * _dpiScaleFactor));
             }
         }
 
-        private void buildListView()
+        private void BuildListView()
         {
             // scan all the channels to find any that are orphaned
             // the referencing merged channels will have a null lineup
-            List<Channel> scannedChannels = new Channels(WmcStore.WmcObjectStore).ToList();
-            foreach (Channel scannedChannel in scannedChannels)
+            var scannedChannels = new Channels(WmcStore.WmcObjectStore).ToList();
+            foreach (var scannedChannel in scannedChannels)
             {
                 if ((scannedChannel.ChannelType != ChannelType.CalculatedScanned && scannedChannel.ChannelType != ChannelType.Scanned) ||
                     scannedChannel.Lineup == null) continue;
 
-                bool orphaned = true;
+                var orphaned = true;
 
                 // scan through the referencing primary channels
-                if (orphaned)
+                foreach (MergedChannel channel in scannedChannel.ReferencingPrimaryChannels)
                 {
-                    foreach (MergedChannel channel in scannedChannel.ReferencingPrimaryChannels)
-                    {
-                        if (channel.Lineup != null) { orphaned = false; break; }
-                    }
+                    if (channel.Lineup == null) continue;
+                    orphaned = false;
+                    break;
                 }
 
                 // scan through the referencing secondary channels
@@ -74,37 +72,39 @@ namespace epg123Client
                 {
                     foreach (MergedChannel channel in scannedChannel.ReferencingSecondaryChannels)
                     {
-                        if (channel.Lineup != null) { orphaned = false; break; }
+                        if (channel.Lineup == null) continue;
+                        orphaned = false;
+                        break;
                     }
                 }
 
                 // if all referencing channels have a null lineup, do some magic
                 if (orphaned)
                 {
-                    listViewItems.Add(buildOrphanedChannelLvi(scannedChannel));
+                    _listViewItems.Add(BuildOrphanedChannelLvi(scannedChannel));
                 }
             }
-            listViewItems.Sort(channelColumnSorter);
-            listView1.VirtualListSize = listViewItems.Count;
+            _listViewItems.Sort(_channelColumnSorter);
+            listView1.VirtualListSize = _listViewItems.Count;
         }
 
-        private ListViewItem buildOrphanedChannelLvi(Channel orphanedChannel)
+        private ListViewItem BuildOrphanedChannelLvi(Channel orphanedChannel)
         {
             // build original channel number string
-            string originalChannelNumber = orphanedChannel.OriginalNumber.ToString();
-            if (orphanedChannel.OriginalSubNumber > 0) originalChannelNumber += ("." + orphanedChannel.OriginalSubNumber.ToString());
+            var originalChannelNumber = orphanedChannel.OriginalNumber.ToString();
+            if (orphanedChannel.OriginalSubNumber > 0) originalChannelNumber += "." + orphanedChannel.OriginalSubNumber;
 
             // build tuning info
-            string tuneInfos = WmcStore.GetAllTuningInfos(orphanedChannel);
+            var tuneInfos = WmcStore.GetAllTuningInfos(orphanedChannel);
 
             // build ListViewItem
             try
             {
-                ListViewItem listViewItem = new ListViewItem(new string[]
+                var listViewItem = new ListViewItem(new[]
                 {
                     orphanedChannel.CallSign,
                     originalChannelNumber,
-                    trimScannedLineupName(orphanedChannel.Lineup.Name),
+                    TrimScannedLineupName(orphanedChannel.Lineup.Name),
                     tuneInfos
                 })
                 {
@@ -113,71 +113,68 @@ namespace epg123Client
 
                 return listViewItem;
             }
-            catch { }
+            catch
+            {
+                // ignored
+            }
 
             return null;
         }
 
-        private void lvLineupSort(object sender, ColumnClickEventArgs e)
+        private void LvLineupSort(object sender, ColumnClickEventArgs e)
         {
             // Determine if clicked column is already the column that is being sorted.
-            if (e.Column == channelColumnSorter.SortColumn)
+            if (e.Column == _channelColumnSorter.SortColumn)
             {
                 // Reverse the current sort direction for this column.
-                if (channelColumnSorter.Order == SortOrder.Ascending)
-                {
-                    channelColumnSorter.Order = SortOrder.Descending;
-                }
-                else
-                {
-                    channelColumnSorter.Order = SortOrder.Ascending;
-                }
+                _channelColumnSorter.Order = _channelColumnSorter.Order == SortOrder.Ascending
+                    ? SortOrder.Descending
+                    : SortOrder.Ascending;
             }
             else
             {
                 // Set the column number that is to be sorted; default to ascending.
-                channelColumnSorter.SortColumn = e.Column;
-                channelColumnSorter.Order = SortOrder.Ascending;
+                _channelColumnSorter.SortColumn = e.Column;
+                _channelColumnSorter.Order = SortOrder.Ascending;
             }
 
             // Perform the sort with these new sort options.
-            listViewItems.Sort(channelColumnSorter);
+            _listViewItems.Sort(_channelColumnSorter);
             listView1.Refresh();
         }
 
-        private string trimScannedLineupName(string name)
+        private static string TrimScannedLineupName(string name)
         {
-            string ret = name.Remove(0, 9);
+            var ret = name.Remove(0, 9);
             return ret.Remove(ret.LastIndexOf(')'), 1);
         }
 
         private void btnUndelete_Click(object sender, EventArgs e)
         {
-            foreach (ListViewItem item in listView1.SelectedItems)
+            foreach (int index in listView1.SelectedIndices)
             {
                 try
                 {
-                    Channel channel = (Channel)item.Tag;
-                    channel.Lineup.NotifyChannelAdded(channel);
+                    var channel = (Channel)_listViewItems[index].Tag;
+                    channel.Lineup.NotifyChannelAdded((Channel)_listViewItems[index].Tag);
                 }
                 catch (Exception ex)
                 {
                     Logger.WriteInformation(ex.Message);
                 }
             }
-            channelAdded = true;
-            this.Close();
+            ChannelAdded = true;
+            Close();
         }
 
         private void btnExit_Click(object sender, EventArgs e)
         {
-            this.Close();
+            Close();
         }
 
         private void listView1_RetrieveVirtualItem(object sender, RetrieveVirtualItemEventArgs e)
         {
-            if (listViewItems.Count == 0) e.Item = new ListViewItem();
-            else e.Item = listViewItems[e.ItemIndex];
+            e.Item = _listViewItems.Count == 0 ? new ListViewItem() : _listViewItems[e.ItemIndex];
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Xml;
@@ -15,66 +16,64 @@ namespace epg123
 
         protected epgConfig(epgConfig other)
         {
-            this.version = Helper.epg123Version;
-            this.UserAccount = new SdUserAccount()
+            Version = Helper.Epg123Version;
+            UserAccount = new SdUserAccount
             {
                 LoginName = other.UserAccount.LoginName,
                 PasswordHash = other.UserAccount.PasswordHash
             };
-            this.RatingsOrigin = other.RatingsOrigin;
-            this.DaysToDownload = other.DaysToDownload;
-            this.TheTVDBNumbers = other.TheTVDBNumbers;
-            this.PrefixEpisodeTitle = other.PrefixEpisodeTitle;
-            this.PrefixEpisodeDescription = other.PrefixEpisodeDescription;
-            this.AlternateSEFormat = other.AlternateSEFormat;
-            this.AppendEpisodeDesc = other.AppendEpisodeDesc;
-            this.OADOverride = other.OADOverride;
-            this.SeriesPosterArt = other.SeriesPosterArt;
-            this.TMDbCoverArt = other.TMDbCoverArt;
-            this.IncludeSDLogos = other.IncludeSDLogos;
-            this.PreferredLogoStyle = other.PreferredLogoStyle;
-            this.AlternateLogoStyle = other.AlternateLogoStyle;
-            this.AutoAddNew = other.AutoAddNew;
-            this.AutoImport = other.AutoImport;
-            this.Automatch = other.Automatch;
-            this.CreateXmltv = other.CreateXmltv;
-            this.XmltvIncludeChannelNumbers = other.XmltvIncludeChannelNumbers;
-            this.XmltvIncludeChannelLogos = other.XmltvIncludeChannelLogos;
-            this.XmltvLogoSubstitutePath = other.XmltvLogoSubstitutePath;
-            this.XmltvAddFillerData = other.XmltvAddFillerData;
-            this.XmltvFillerProgramLength = other.XmltvFillerProgramLength;
-            this.XmltvFillerProgramDescription = other.XmltvFillerProgramDescription;
-            this.XmltvExtendedInfoInTitleDescriptions = other.XmltvExtendedInfoInTitleDescriptions;
-            this.XmltvOutputFile = other.XmltvOutputFile;
-            this.ModernMediaUiPlusSupport = other.ModernMediaUiPlusSupport;
-            this.BrandLogoImage = other.BrandLogoImage;
-            this.SuppressStationEmptyWarnings = other.SuppressStationEmptyWarnings;
+            RatingsOrigin = other.RatingsOrigin;
+            DaysToDownload = other.DaysToDownload;
+            TheTvdbNumbers = other.TheTvdbNumbers;
+            PrefixEpisodeTitle = other.PrefixEpisodeTitle;
+            PrefixEpisodeDescription = other.PrefixEpisodeDescription;
+            AlternateSEFormat = other.AlternateSEFormat;
+            AppendEpisodeDesc = other.AppendEpisodeDesc;
+            OadOverride = other.OadOverride;
+            SeriesPosterArt = other.SeriesPosterArt;
+            TMDbCoverArt = other.TMDbCoverArt;
+            IncludeSdLogos = other.IncludeSdLogos;
+            PreferredLogoStyle = other.PreferredLogoStyle;
+            AlternateLogoStyle = other.AlternateLogoStyle;
+            AutoAddNew = other.AutoAddNew;
+            AutoImport = other.AutoImport;
+            Automatch = other.Automatch;
+            CreateXmltv = other.CreateXmltv;
+            XmltvIncludeChannelNumbers = other.XmltvIncludeChannelNumbers;
+            XmltvIncludeChannelLogos = other.XmltvIncludeChannelLogos;
+            XmltvLogoSubstitutePath = other.XmltvLogoSubstitutePath;
+            XmltvAddFillerData = other.XmltvAddFillerData;
+            XmltvFillerProgramLength = other.XmltvFillerProgramLength;
+            XmltvFillerProgramDescription = other.XmltvFillerProgramDescription;
+            XmltvExtendedInfoInTitleDescriptions = other.XmltvExtendedInfoInTitleDescriptions;
+            XmltvOutputFile = other.XmltvOutputFile;
+            ModernMediaUiPlusSupport = other.ModernMediaUiPlusSupport;
+            BrandLogoImage = other.BrandLogoImage;
+            SuppressStationEmptyWarnings = other.SuppressStationEmptyWarnings;
 
             if (other.IncludedLineup != null)
             {
-                this.IncludedLineup = new List<string>();
-                foreach (string lineup in other.IncludedLineup)
+                IncludedLineup = new List<string>();
+                foreach (var lineup in other.IncludedLineup)
                 {
-                    this.IncludedLineup.Add(lineup);
+                    IncludedLineup.Add(lineup);
                 }
             }
 
-            this.ExpectedServicecount = other.ExpectedServicecount;
-            if (other.StationID != null)
+            ExpectedServicecount = other.ExpectedServicecount;
+            if (other.StationId == null) return;
+            StationId = new List<SdChannelDownload>();
+            foreach (var station in other.StationId)
             {
-                this.StationID = new List<SdChannelDownload>();
-                foreach (SdChannelDownload station in other.StationID)
+                StationId.Add(new SdChannelDownload
                 {
-                    this.StationID.Add(new SdChannelDownload()
-                    {
-                        CallSign = station.CallSign,
-                        customCallSign = station.customCallSign,
-                        customServiceName = station.customServiceName,
-                        HDOverride = station.HDOverride,
-                        SDOverride = station.SDOverride,
-                        StationID = station.StationID
-                    });
-                }
+                    CallSign = station.CallSign,
+                    CustomCallSign = station.CustomCallSign,
+                    CustomServiceName = station.CustomServiceName,
+                    HdOverride = station.HdOverride,
+                    SdOverride = station.SdOverride,
+                    StationId = station.StationId
+                });
             }
         }
 
@@ -88,81 +87,55 @@ namespace epg123
             if (other == null) return false;
             if (ReferenceEquals(this, other)) return true;
 
-            if (!this.version.Equals(other.version)) return false;
-            if (!this.UserAccount.LoginName.Equals(other.UserAccount?.LoginName)) return false;
-            if (!this.UserAccount.PasswordHash.Equals(other.UserAccount?.PasswordHash)) return false;
-            if (!this.RatingsOrigin.Equals(other.RatingsOrigin)) return false;
-            if (!this.DaysToDownload.Equals(other.DaysToDownload)) return false;
-            if (!this.TheTVDBNumbers.Equals(other.TheTVDBNumbers)) return false;
-            if (!this.PrefixEpisodeTitle.Equals(other.PrefixEpisodeTitle)) return false;
-            if (!this.PrefixEpisodeDescription.Equals(other.PrefixEpisodeDescription)) return false;
-            if (!this.AlternateSEFormat.Equals(other.AlternateSEFormat)) return false;
-            if (!this.AppendEpisodeDesc.Equals(other.AppendEpisodeDesc)) return false;
-            if (!this.OADOverride.Equals(other.OADOverride)) return false;
-            if (!this.SeriesPosterArt.Equals(other.SeriesPosterArt)) return false;
-            if (!this.TMDbCoverArt.Equals(other.TMDbCoverArt)) return false;
-            if (!this.IncludeSDLogos.Equals(other.IncludeSDLogos)) return false;
-            if (!this.PreferredLogoStyle.Equals(other.PreferredLogoStyle)) return false;
-            if (!this.AlternateLogoStyle.Equals(other.AlternateLogoStyle)) return false;
-            if (!this.AutoAddNew.Equals(other.AutoAddNew)) return false;
-            if (!this.AutoImport.Equals(other.AutoImport)) return false;
-            if (!this.Automatch.Equals(other.Automatch)) return false;
-            if (!this.CreateXmltv.Equals(other.CreateXmltv)) return false;
-            if (!this.XmltvIncludeChannelNumbers.Equals(other.XmltvIncludeChannelNumbers)) return false;
-            if (!this.XmltvIncludeChannelLogos.Equals(other.XmltvIncludeChannelLogos)) return false;
-            if (!this.XmltvLogoSubstitutePath.Equals(other.XmltvLogoSubstitutePath)) return false;
-            if (!this.XmltvAddFillerData.Equals(other.XmltvAddFillerData)) return false;
-            if (!this.XmltvFillerProgramLength.Equals(other.XmltvFillerProgramLength)) return false;
-            if (!this.XmltvFillerProgramDescription.Equals(other.XmltvFillerProgramDescription)) return false;
-            if (!this.XmltvExtendedInfoInTitleDescriptions.Equals(other.XmltvExtendedInfoInTitleDescriptions)) return false;
-            if (!this.XmltvOutputFile.Equals(other.XmltvOutputFile)) return false;
-            if (!this.ModernMediaUiPlusSupport.Equals(other.ModernMediaUiPlusSupport)) return false;
-            if (!this.BrandLogoImage.Equals(other.BrandLogoImage)) return false;
-            if (!this.SuppressStationEmptyWarnings.Equals(other.SuppressStationEmptyWarnings)) return false;
-            if (!this.ExpectedServicecount.Equals(other.ExpectedServicecount)) return false;
+            if (!Version.Equals(other.Version)) return false;
+            if (!UserAccount.LoginName.Equals(other.UserAccount?.LoginName)) return false;
+            if (!UserAccount.PasswordHash.Equals(other.UserAccount?.PasswordHash)) return false;
+            if (!RatingsOrigin.Equals(other.RatingsOrigin)) return false;
+            if (!DaysToDownload.Equals(other.DaysToDownload)) return false;
+            if (!TheTvdbNumbers.Equals(other.TheTvdbNumbers)) return false;
+            if (!PrefixEpisodeTitle.Equals(other.PrefixEpisodeTitle)) return false;
+            if (!PrefixEpisodeDescription.Equals(other.PrefixEpisodeDescription)) return false;
+            if (!AlternateSEFormat.Equals(other.AlternateSEFormat)) return false;
+            if (!AppendEpisodeDesc.Equals(other.AppendEpisodeDesc)) return false;
+            if (!OadOverride.Equals(other.OadOverride)) return false;
+            if (!SeriesPosterArt.Equals(other.SeriesPosterArt)) return false;
+            if (!TMDbCoverArt.Equals(other.TMDbCoverArt)) return false;
+            if (!IncludeSdLogos.Equals(other.IncludeSdLogos)) return false;
+            if (!PreferredLogoStyle.Equals(other.PreferredLogoStyle)) return false;
+            if (!AlternateLogoStyle.Equals(other.AlternateLogoStyle)) return false;
+            if (!AutoAddNew.Equals(other.AutoAddNew)) return false;
+            if (!AutoImport.Equals(other.AutoImport)) return false;
+            if (!Automatch.Equals(other.Automatch)) return false;
+            if (!CreateXmltv.Equals(other.CreateXmltv)) return false;
+            if (!XmltvIncludeChannelNumbers.Equals(other.XmltvIncludeChannelNumbers)) return false;
+            if (!XmltvIncludeChannelLogos.Equals(other.XmltvIncludeChannelLogos)) return false;
+            if (!XmltvLogoSubstitutePath.Equals(other.XmltvLogoSubstitutePath)) return false;
+            if (!XmltvAddFillerData.Equals(other.XmltvAddFillerData)) return false;
+            if (!XmltvFillerProgramLength.Equals(other.XmltvFillerProgramLength)) return false;
+            if (!XmltvFillerProgramDescription.Equals(other.XmltvFillerProgramDescription)) return false;
+            if (!XmltvExtendedInfoInTitleDescriptions.Equals(other.XmltvExtendedInfoInTitleDescriptions)) return false;
+            if (!XmltvOutputFile.Equals(other.XmltvOutputFile)) return false;
+            if (!ModernMediaUiPlusSupport.Equals(other.ModernMediaUiPlusSupport)) return false;
+            if (!BrandLogoImage.Equals(other.BrandLogoImage)) return false;
+            if (!SuppressStationEmptyWarnings.Equals(other.SuppressStationEmptyWarnings)) return false;
+            if (!ExpectedServicecount.Equals(other.ExpectedServicecount)) return false;
 
-            if (this.IncludedLineup != null && other.IncludedLineup != null)
+            if (IncludedLineup != null && other.IncludedLineup != null)
             {
-                foreach (string lineup in this.IncludedLineup)
-                {
-                    if (!other.IncludedLineup.Contains(lineup)) return false;
-                }
-                foreach (string lineup in other.IncludedLineup)
-                {
-                    if (!this.IncludedLineup.Contains(lineup)) return false;
-                }
+                if (IncludedLineup.Any(lineup => !other.IncludedLineup.Contains(lineup))) return false;
+                if (other.IncludedLineup.Any(lineup => !IncludedLineup.Contains(lineup))) return false;
             }
-            else if (this.IncludedLineup == null ^ other.IncludedLineup == null) return false;
+            else if (IncludedLineup == null ^ other.IncludedLineup == null) return false;
 
-            if (this.StationID != null && other.StationID != null)
-            {
-                List<string> thisStationId = new List<string>();
-                foreach (SdChannelDownload stationId in this.StationID)
-                {
-                    thisStationId.Add(stationId.StationID);
-                }
-                List<string> otherStationId = new List<string>();
-                foreach (SdChannelDownload stationId in other.StationID)
-                {
-                    otherStationId.Add(stationId.StationID);
-                }
+            if (StationId == null || other.StationId == null) return !(StationId == null ^ other.StationId == null);
+            var thisStationId = StationId.Select(stationId => stationId.StationId).ToList();
+            var otherStationId = other.StationId.Select(stationId => stationId.StationId).ToList();
 
-                foreach (string stationId in thisStationId)
-                {
-                    if (!otherStationId.Contains(stationId)) return false;
-                }
-                foreach (string stationId in otherStationId)
-                {
-                    if (!thisStationId.Contains(stationId)) return false;
-                }
-            }
-            else if (this.StationID == null ^ other.StationID == null) return false;
-
-            return true;
+            return thisStationId.All(stationId => otherStationId.Contains(stationId)) && otherStationId.All(stationId => thisStationId.Contains(stationId));
         }
 
         [XmlAttribute("version")]
-        public string version { get; set; } = Helper.epg123Version;
+        public string Version { get; set; } = Helper.Epg123Version;
 
         [XmlElement("UserAccount")]
         public SdUserAccount UserAccount { get; set; }
@@ -174,31 +147,31 @@ namespace epg123
         public int DaysToDownload { get; set; } = 14;
 
         [XmlElement("TheTVDBNumbers")]
-        public bool TheTVDBNumbers { get; set; } = true;
+        public bool TheTvdbNumbers { get; set; } = true;
 
         [XmlElement("PrefixEpisodeTitle")]
-        public bool PrefixEpisodeTitle { get; set; } = false;
+        public bool PrefixEpisodeTitle { get; set; }
 
         [XmlElement("PrefixEpisodeDescription")]
-        public bool PrefixEpisodeDescription { get; set; } = false;
+        public bool PrefixEpisodeDescription { get; set; }
 
         [XmlElement("AlternateSEFormat")]
-        public bool AlternateSEFormat { get; set; } = false;
+        public bool AlternateSEFormat { get; set; }
 
         [XmlElement("AppendEpisodeDesc")]
-        public bool AppendEpisodeDesc { get; set; } = false;
+        public bool AppendEpisodeDesc { get; set; }
 
         [XmlElement("OADOverride")]
-        public bool OADOverride { get; set; } = true;
+        public bool OadOverride { get; set; } = true;
 
         [XmlElement("SeriesPosterArt")]
-        public bool SeriesPosterArt { get; set; } = false;
+        public bool SeriesPosterArt { get; set; }
 
         [XmlElement("TMDbCoverArt")]
         public bool TMDbCoverArt { get; set; } = true;
 
         [XmlElement("IncludeSDLogos")]
-        public bool IncludeSDLogos { get; set; } = true;
+        public bool IncludeSdLogos { get; set; } = true;
 
         [XmlElement("PreferredLogoStyle")]
         public string PreferredLogoStyle { get; set; } = "dark";
@@ -216,7 +189,7 @@ namespace epg123
         public bool Automatch { get; set; } = true;
 
         [XmlElement("CreateXmltv")]
-        public bool CreateXmltv { get; set; } = false;
+        public bool CreateXmltv { get; set; }
 
         [XmlElement("XmltvIncludeChannelNumbers")]
         public bool XmltvIncludeChannelNumbers { get; set; } = true;
@@ -237,13 +210,13 @@ namespace epg123
         public string XmltvFillerProgramDescription { get; set; } = "This program was generated by EPG123 to provide filler data for stations that did not receive any guide listings from the upstream source.";
 
         [XmlElement("XmltvExtendedInfoInTitleDescriptions")]
-        public bool XmltvExtendedInfoInTitleDescriptions { get; set; } = false;
+        public bool XmltvExtendedInfoInTitleDescriptions { get; set; }
 
         [XmlElement("XmltvOutputFile")]
         public string XmltvOutputFile { get; set; } = Helper.Epg123XmltvPath;
 
         [XmlElement("ModernMediaUiPlusSupport")]
-        public bool ModernMediaUiPlusSupport { get; set; } = false;
+        public bool ModernMediaUiPlusSupport { get; set; }
 
         [XmlElement("ModernMediaUiPlusJsonFilepath")]
         public string ModernMediaUiPlusJsonFilepath { get; set; }
@@ -252,7 +225,8 @@ namespace epg123
         public string BrandLogoImage { get; set; } = "none";
 
         [XmlAnyElement("SuppressStationEmptyWarningsComment")]
-        public XmlComment SuppressStationEmptyWarningsComment { get { return new XmlDocument().CreateComment(" SuppressStationEmptyWarnings: Enter specific station callsigns, comma delimited, to suppress warnings for no guide data, or use a wildcard (*) for a group of callsigns. A solitary wildcard means all station warnings will be suppressed."); } set { } }
+        public XmlComment SuppressStationEmptyWarningsComment { get => new XmlDocument().CreateComment(" SuppressStationEmptyWarnings: Enter specific station callsigns, comma delimited, to suppress warnings for no guide data, or use a wildcard (*) for a group of callsigns. A solitary wildcard means all station warnings will be suppressed.");
+            set { } }
         [XmlElement("SuppressStationEmptyWarnings")]
         public string SuppressStationEmptyWarnings { get; set; } = "GOAC*,LOOR*,EDAC*,LEAC*,PEG*,LOAC*,PPV*,PUAC*,SPALT*,INFO*";
 
@@ -260,29 +234,27 @@ namespace epg123
         public List<string> IncludedLineup { get; set; }
 
         [XmlElement("ExpectedServiceCount")]
-        public int ExpectedServicecount { get; set; } = 0;
+        public int ExpectedServicecount { get; set; }
 
         [XmlAnyElement("StationIDComment")]
-        public XmlComment StationIDComment
+        public XmlComment StationIdComment
         {
-            get
-            {
-                return new XmlDocument().CreateComment("StationID attributes: You can add the following attributes to any station to customize your guide further.\n" +
-                                                       "      HDOverride=\"true\" - flags all programs on this station to be HD\n" +
-                                                       "      SDOverride=\"true\" - flags all programs on this station to be SD\n" +
-                                                       "      customCallSign=\"H and I\" - will replace the call sign provided by Schedules Direct with \"H and I\"\n" +
-                                                       "      customServiceName=\"Heroes &amp; Icons\" - will replace the station name provided by Schedules Direct with \"Heroes & Icons\"\n" +
-                                                       "      Note: special characters in XML will need to be escaped.\n" +
-                                                       "            ampersand = &amp;\n" +
-                                                       "            less-than = &lt;\n" +
-                                                       "            greater-than = &gt;\n" +
-                                                       "            quotation = &quot;\n" +
-                                                       "            apostrophe = &apos; ");
-            }
+            get =>
+                new XmlDocument().CreateComment("StationID attributes: You can add the following attributes to any station to customize your guide further.\n" +
+                                                "      HDOverride=\"true\" - flags all programs on this station to be HD\n" +
+                                                "      SDOverride=\"true\" - flags all programs on this station to be SD\n" +
+                                                "      customCallSign=\"H and I\" - will replace the call sign provided by Schedules Direct with \"H and I\"\n" +
+                                                "      customServiceName=\"Heroes &amp; Icons\" - will replace the station name provided by Schedules Direct with \"Heroes & Icons\"\n" +
+                                                "      Note: special characters in XML will need to be escaped.\n" +
+                                                "            ampersand = &amp;\n" +
+                                                "            less-than = &lt;\n" +
+                                                "            greater-than = &gt;\n" +
+                                                "            quotation = &quot;\n" +
+                                                "            apostrophe = &apos; ");
             set { }
         }
         [XmlElement("StationID")]
-        public List<SdChannelDownload> StationID { get; set; } = new List<SdChannelDownload>();
+        public List<SdChannelDownload> StationId { get; set; } = new List<SdChannelDownload>();
     }
 
     public class SdUserAccount
@@ -290,16 +262,16 @@ namespace epg123
         [XmlIgnore]
         private string _passwordHash;
 
-        private string HashPassword(string password)
+        private static string HashPassword(string password)
         {
-            byte[] bytes = Encoding.UTF8.GetBytes(password);
-            byte[] hashBytes = SHA1.Create().ComputeHash(bytes);
+            var bytes = Encoding.UTF8.GetBytes(password);
+            var hashBytes = SHA1.Create().ComputeHash(bytes);
             return HexStringFromBytes(hashBytes);
         }
-        private string HexStringFromBytes(byte[] bytes)
+        private static string HexStringFromBytes(byte[] bytes)
         {
-            StringBuilder sb = new StringBuilder();
-            foreach (byte b in bytes)
+            var sb = new StringBuilder();
+            foreach (var b in bytes)
             {
                 sb.Append(b.ToString("x2"));
             }
@@ -312,23 +284,14 @@ namespace epg123
         [XmlElement("PasswordHash")]
         public string PasswordHash
         {
-            get
-            {
-                return _passwordHash;
-            }
-            set
-            {
-                _passwordHash = value;
-            }
+            get => _passwordHash;
+            set => _passwordHash = value;
         }
 
         [XmlIgnore]
         public string Password
         {
-            set
-            {
-                _passwordHash = HashPassword(value);
-            }
+            set => _passwordHash = HashPassword(value);
         }
     }
 
@@ -337,8 +300,8 @@ namespace epg123
         [XmlAttribute("Lineup")]
         public string Lineup { get; set; }
 
-        [XmlText()]
-        public string LineupID { get; set; }
+        [XmlText]
+        public string LineupId { get; set; }
     }
 
     public class SdChannelDownload
@@ -347,20 +310,20 @@ namespace epg123
         public string CallSign { get; set; }
 
         [XmlAttribute("HDOverride")]
-        public bool HDOverride { get; set; } = false;
-        public bool ShouldSerializeHDOverride() { return HDOverride; }
+        public bool HdOverride { get; set; }
+        public bool ShouldSerializeHdOverride() { return HdOverride; }
 
         [XmlAttribute("SDOverride")]
-        public bool SDOverride { get; set; } = false;
-        public bool ShouldSerializeSDOverride() { return SDOverride; }
+        public bool SdOverride { get; set; }
+        public bool ShouldSerializeSdOverride() { return SdOverride; }
 
         [XmlAttribute("customCallSign")]
-        public string customCallSign { get; set; }
+        public string CustomCallSign { get; set; }
 
         [XmlAttribute("customServiceName")]
-        public string customServiceName { get; set; }
+        public string CustomServiceName { get; set; }
 
-        [XmlText()]
-        public string StationID { get; set; }
+        [XmlText]
+        public string StationId { get; set; }
     }
 }

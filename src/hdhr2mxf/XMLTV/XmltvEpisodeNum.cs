@@ -1,14 +1,13 @@
-﻿using System;
-using System.Xml.Serialization;
+﻿using System.Xml.Serialization;
 
-namespace XmltvXml
+namespace hdhr2mxf.XMLTV
 {
     public class XmltvEpisodeNum
     {
         [XmlAttribute("system")]
-        public String System { get; set; }
+        public string System { get; set; }
 
         [XmlText]
-        public String Text { get; set; }
+        public string Text { get; set; }
     }
 }

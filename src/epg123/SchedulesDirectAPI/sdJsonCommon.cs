@@ -1,7 +1,7 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
+using Newtonsoft.Json;
 
-namespace epg123
+namespace epg123.SchedulesDirectAPI
 {
     public class sdError
     {
@@ -12,7 +12,7 @@ namespace epg123
         public int Code { get; set; }
 
         [JsonProperty("serverID")]
-        public string ServerID { get; set; }
+        public string ServerId { get; set; }
 
         [JsonProperty("message")]
         public string Message { get; set; }

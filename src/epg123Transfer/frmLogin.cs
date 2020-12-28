@@ -1,9 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Windows.Forms;
@@ -17,26 +13,26 @@ namespace epg123Transfer
             InitializeComponent();
         }
 
-        public string username;
-        public string passwordHash;
+        public string Username;
+        public string PasswordHash;
 
         private void btnLogin_Click(object sender, EventArgs e)
         {
-            username = txtLoginName.Text;
-            passwordHash = HashPassword(txtPassword.Text);
-            this.Close();
+            Username = txtLoginName.Text;
+            PasswordHash = HashPassword(txtPassword.Text);
+            Close();
         }
 
-        private string HashPassword(string password)
+        private static string HashPassword(string password)
         {
-            byte[] bytes = Encoding.UTF8.GetBytes(password);
-            byte[] hashBytes = SHA1.Create().ComputeHash(bytes);
+            var bytes = Encoding.UTF8.GetBytes(password);
+            var hashBytes = SHA1.Create().ComputeHash(bytes);
             return HexStringFromBytes(hashBytes);
         }
-        private string HexStringFromBytes(byte[] bytes)
+        private static string HexStringFromBytes(IEnumerable<byte> bytes)
         {
-            StringBuilder sb = new StringBuilder();
-            foreach (byte b in bytes)
+            var sb = new StringBuilder();
+            foreach (var b in bytes)
             {
                 sb.Append(b.ToString("x2"));
             }

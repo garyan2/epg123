@@ -1,14 +1,9 @@
 ﻿using System.Xml.Serialization;
 
-namespace epg123.MxfXml
+namespace epg123Client.MxfXml
 {
     public class MxfProvider
     {
-        /// <summary>
-        /// Provides information and copyright about who provided the listing data.
-        /// </summary>
-        public MxfProvider() { }
-
         /// <summary>
         /// The name of the supplier of the listings.
         /// The maximum length is 255 characters.

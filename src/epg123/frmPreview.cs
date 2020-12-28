@@ -1,43 +1,40 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
+using epg123.SchedulesDirectAPI;
 
 namespace epg123
 {
     public partial class frmPreview : Form
     {
-        ListViewColumnSorter sorter = new ListViewColumnSorter();
+        readonly ListViewColumnSorter _sorter = new ListViewColumnSorter();
 
-        private string previewLineup;
+        private readonly string _previewLineup;
         public frmPreview(string lineup)
         {
             InitializeComponent();
-            previewLineup = lineup;
-            this.Text = previewLineup;
+            _previewLineup = lineup;
+            Text = _previewLineup;
 
-            listView1.ListViewItemSorter = sorter;
+            listView1.ListViewItemSorter = _sorter;
         }
 
-        private void buildLineupServices(string lineup)
+        public sealed override string Text
         {
-            IList<sdLineupPreviewChannel> channels = sdAPI.sdPreviewLineupChannels(lineup);
+            get { return base.Text; }
+            set { base.Text = value; }
+        }
+
+        private void BuildLineupServices(string lineup)
+        {
+            var channels = sdApi.SdPreviewLineupChannels(lineup);
             if (channels == null)
             {
                 MessageBox.Show("There was an error retrieving channels for requested lineup. See trace.log file for more detail.", "Response Error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 return;
             }
 
-            List<ListViewItem> items = new List<ListViewItem>();
-            foreach (sdLineupPreviewChannel channel in channels)
-            {
-                items.Add(new ListViewItem(new string[]
-                {
-                        channel.Channel.TrimStart('0'),
-                        channel.Callsign,
-                        channel.Name
-                }));
-            }
+            var items = channels.Select(channel => new ListViewItem(new[] {channel.Channel.TrimStart('0'), channel.Callsign, channel.Name})).ToList();
 
             if (items.Count > 0)
             {
@@ -51,36 +48,29 @@ namespace epg123
 
         private void frmPreview_Shown(object sender, EventArgs e)
         {
-            this.Cursor = Cursors.WaitCursor;
-            buildLineupServices(previewLineup);
-            this.Cursor = Cursors.Arrow;
+            Cursor = Cursors.WaitCursor;
+            BuildLineupServices(_previewLineup);
+            Cursor = Cursors.Arrow;
 
             if (listView1.Items.Count == 0)
             {
-                this.Close();
+                Close();
             }
         }
 
         private void listView1_ColumnClick(object sender, ColumnClickEventArgs e)
         {
             // Determine if clicked column is already the column that is being sorted.
-            if (e.Column == sorter.SortColumn)
+            if (e.Column == _sorter.SortColumn)
             {
                 // Reverse the current sort direction for this column.
-                if (sorter.Order == SortOrder.Ascending)
-                {
-                    sorter.Order = SortOrder.Descending;
-                }
-                else
-                {
-                    sorter.Order = SortOrder.Ascending;
-                }
+                _sorter.Order = _sorter.Order == SortOrder.Ascending ? SortOrder.Descending : SortOrder.Ascending;
             }
             else
             {
                 // Set the column number that is to be sorted; default to ascending.
-                sorter.SortColumn = e.Column;
-                sorter.Order = SortOrder.Ascending;
+                _sorter.SortColumn = e.Column;
+                _sorter.Order = SortOrder.Ascending;
             }
 
             // Perform the sort with these new sort options.
@@ -92,15 +82,13 @@ namespace epg123
         {
 
             // adjust components for screen dpi
-            using (Graphics g = CreateGraphics())
+            using (var g = CreateGraphics())
             {
-                if ((g.DpiX != 96) || (g.DpiY != 96))
+                if ((int)g.DpiX == 96 && (int)g.DpiY == 96) return;
+                // adjust column widths for list views
+                foreach (ColumnHeader column in listView1.Columns)
                 {
-                    // adjust column widths for list views
-                    foreach (ColumnHeader column in listView1.Columns)
-                    {
-                        column.Width = (int)(column.Width * g.DpiX / 96) - 1;
-                    }
+                    column.Width = (int)(column.Width * g.DpiX / 96) - 1;
                 }
             }
         }

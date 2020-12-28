@@ -4,23 +4,23 @@ using System.IO;
 using System.Linq;
 using System.Xml.Serialization;
 using epg123;
-using epg123.MxfXml;
+using epg123Client.MxfXml;
 using Microsoft.MediaCenter.Guide;
 
 namespace epg123Client
 {
     public class VerifyLoad
     {
-        MXF mxf;
         public VerifyLoad(string mxfFile, bool verbose = false)
         {
+            mxf mxf;
             Logger.WriteMessage("Entering VerifyLoad()");
             Helper.SendPipeMessage("Importing|Verifying MXF Load...");
-            using (StreamReader stream = new StreamReader(mxfFile))
+            using (var stream = new StreamReader(mxfFile))
             {
-                XmlSerializer serializer = new XmlSerializer(typeof(MXF));
+                var serializer = new XmlSerializer(typeof(mxf));
                 TextReader reader = new StringReader(stream.ReadToEnd());
-                mxf = (MXF)serializer.Deserialize(reader);
+                mxf = (mxf) serializer.Deserialize(reader);
                 reader.Close();
             }
             if (!(mxf.Providers[0]?.Name ?? string.Empty).Equals("EPG123"))
@@ -30,9 +30,9 @@ namespace epg123Client
                 return;
             }
 
-            int entriesChecked = 0;
-            int correctedCount = 0;
-            foreach (MxfService mxfService in mxf.With[0].Services)
+            var entriesChecked = 0;
+            var correctedCount = 0;
+            foreach (var mxfService in mxf.With[0].Services)
             {
                 // get wmcService that matches mxfService using the UId
                 Service wmcService = null;
@@ -40,7 +40,11 @@ namespace epg123Client
                 {
                     wmcService = WmcStore.WmcObjectStore.UIds[mxfService.Uid].Target as Service;
                 }
-                catch { }
+                catch
+                {
+                    // ignored
+                }
+
                 if (wmcService == null)
                 {
                     Logger.WriteError($"Service {mxfService.Uid}: {mxfService.CallSign} is not present in the WMC database.");
@@ -48,15 +52,8 @@ namespace epg123Client
                 }
 
                 // get schedule entries for service
-                MxfScheduleEntries mxfScheduleEntries = null;
-                foreach (MxfScheduleEntries scheduleEntries in mxf.With[0].ScheduleEntries)
-                {
-                    if (scheduleEntries.Service != null && scheduleEntries.Service.Equals(mxfService.Id))
-                    {
-                        mxfScheduleEntries = scheduleEntries;
-                        break;
-                    }
-                }
+                var mxfScheduleEntries = mxf.With[0].ScheduleEntries.FirstOrDefault(scheduleEntries =>
+                    scheduleEntries.Service != null && scheduleEntries.Service.Equals(mxfService.Id));
                 if (mxfScheduleEntries == null || mxfScheduleEntries.ScheduleEntry.Count == 0) continue;
 
                 // check to see if the service has any schedule entries
@@ -67,19 +64,18 @@ namespace epg123Client
                 }
 
                 // check mxf file for discontinuities
-                int discontinuities = -1;
-                DateTime mxfStartTime = DateTime.MinValue;
-                foreach (MxfScheduleEntry entry in mxfScheduleEntries.ScheduleEntry)
+                var discontinuities = -1;
+                var mxfStartTime = DateTime.MinValue;
+                foreach (var entry in mxfScheduleEntries.ScheduleEntry.Where(entry =>
+                    entry.StartTime != DateTime.MinValue))
                 {
-                    if (entry.StartTime != DateTime.MinValue)
-                    {
-                        if (mxfStartTime == DateTime.MinValue) mxfStartTime = entry.StartTime;
-                        ++discontinuities;
-                    }
+                    if (mxfStartTime == DateTime.MinValue) mxfStartTime = entry.StartTime;
+                    ++discontinuities;
                 }
                 if (discontinuities > 0)
                 {
-                    Logger.WriteInformation($"Service {mxfService.CallSign} has a time discontinuity. Skipping verification of this station's schedule entries.");
+                    Logger.WriteInformation(
+                        $"Service {mxfService.CallSign} has a time discontinuity. Skipping verification of this station's schedule entries.");
                     continue;
                 }
                 if (mxfStartTime > DateTime.UtcNow)
@@ -88,7 +84,7 @@ namespace epg123Client
                 }
 
                 // build a list of wmc schedule entries based on start times
-                Dictionary<DateTime, ScheduleEntry> wmcScheduleEntryTimes = new Dictionary<DateTime, ScheduleEntry>(wmcService.ScheduleEntries.Count());
+                var wmcScheduleEntryTimes = new Dictionary<DateTime, ScheduleEntry>(wmcService.ScheduleEntries.Count());
                 foreach (ScheduleEntry wmcScheduleEntry in wmcService.ScheduleEntries)
                 {
                     try
@@ -107,15 +103,18 @@ namespace epg123Client
                             wmcScheduleEntry.Unlock();
                             wmcScheduleEntry.Update();
                         }
-                        catch { }
+                        catch
+                        {
+                            // ignored
+                        }
                     }
                 }
 
                 // make everything right
                 try
                 {
-                    DateTime mxfLastStartTime = DateTime.MinValue;
-                    foreach (MxfScheduleEntry mxfScheduleEntry in mxfScheduleEntries.ScheduleEntry)
+                    var mxfLastStartTime = DateTime.MinValue;
+                    foreach (var mxfScheduleEntry in mxfScheduleEntries.ScheduleEntry)
                     {
                         ++entriesChecked;
 
@@ -126,7 +125,7 @@ namespace epg123Client
                         }
 
                         // only verify programs that are in the future and not currently showing or is the next showing
-                        if (mxfStartTime < DateTime.UtcNow || (DateTime.UtcNow > mxfLastStartTime && DateTime.UtcNow < (mxfStartTime + TimeSpan.FromSeconds(mxfScheduleEntry.Duration))))
+                        if (mxfStartTime < DateTime.UtcNow || DateTime.UtcNow > mxfLastStartTime && DateTime.UtcNow < mxfStartTime + TimeSpan.FromSeconds(mxfScheduleEntry.Duration))
                         {
                             wmcScheduleEntryTimes.Remove(mxfStartTime);
                             mxfLastStartTime = mxfStartTime;
@@ -135,16 +134,16 @@ namespace epg123Client
                         }
 
                         // find the program in the MXF file for this schedule entry
-                        MxfProgram mxfProgram = mxf.With[0].Programs[int.Parse(mxfScheduleEntry.Program) - 1];
+                        var mxfProgram = mxf.With[0].Programs[int.Parse(mxfScheduleEntry.Program) - 1];
 
                         // verify a schedule entry exists matching the MXF file and determine whether there needs to be intervention
-                        if (!wmcScheduleEntryTimes.TryGetValue(mxfStartTime, out ScheduleEntry wmcScheduleEntry))
+                        if (!wmcScheduleEntryTimes.TryGetValue(mxfStartTime, out var wmcScheduleEntry))
                         {
                             try
                             {
                                 if (verbose) Logger.WriteInformation($"Service {mxfService.CallSign}: Adding schedule entry from {mxfStartTime.ToLocalTime()} to {mxfStartTime.ToLocalTime() + TimeSpan.FromSeconds(mxfScheduleEntry.Duration)} for program [{mxfProgram.Uid.Replace("!Program!", "")} - [{mxfProgram.Title}] - [{mxfProgram.EpisodeTitle}]].");
-                                Microsoft.MediaCenter.Guide.Program addProgram = WmcStore.WmcObjectStore.UIds[mxfProgram.Uid].Target as Microsoft.MediaCenter.Guide.Program;
-                                ScheduleEntry addScheduleEntry = new ScheduleEntry(addProgram, wmcService, mxfStartTime, TimeSpan.FromSeconds(mxfScheduleEntry.Duration), mxfScheduleEntry.Part, mxfScheduleEntry.Parts);
+                                var addProgram = WmcStore.WmcObjectStore.UIds[mxfProgram.Uid].Target as Microsoft.MediaCenter.Guide.Program;
+                                var addScheduleEntry = new ScheduleEntry(addProgram, wmcService, mxfStartTime, TimeSpan.FromSeconds(mxfScheduleEntry.Duration), mxfScheduleEntry.Part, mxfScheduleEntry.Parts);
                                 UpdateScheduleEntryTags(addScheduleEntry, mxfScheduleEntry);
                                 WmcStore.WmcObjectStore.Add(addScheduleEntry);
                                 ++correctedCount;
@@ -157,11 +156,11 @@ namespace epg123Client
                         }
                         else
                         {
-                            if (wmcScheduleEntry.Duration.TotalSeconds != mxfScheduleEntry.Duration)
+                            if (Math.Abs(wmcScheduleEntry.Duration.TotalSeconds - mxfScheduleEntry.Duration) > 1.0)
                             {
                                 // change the start time of the next wmc schedule entry if possible/needed
                                 if (!wmcScheduleEntryTimes.ContainsKey(mxfScheduleEntry.StartTime + TimeSpan.FromSeconds(mxfScheduleEntry.Duration)) &&
-                                     wmcScheduleEntryTimes.TryGetValue(wmcScheduleEntry.EndTime, out ScheduleEntry scheduleEntry))
+                                    wmcScheduleEntryTimes.TryGetValue(wmcScheduleEntry.EndTime, out var scheduleEntry))
                                 {
                                     try
                                     {
@@ -171,7 +170,10 @@ namespace epg123Client
                                         scheduleEntry.Update();
                                         wmcScheduleEntryTimes.Add(scheduleEntry.StartTime, scheduleEntry);
                                     }
-                                    catch { }
+                                    catch
+                                    {
+                                        // ignored
+                                    }
                                 }
 
                                 // correct the end time of current wmc schedule entry
@@ -216,19 +218,17 @@ namespace epg123Client
                     }
 
                     // remove orphaned wmcScheduleEntries
-                    foreach (KeyValuePair<DateTime, ScheduleEntry> keyValuePair in wmcScheduleEntryTimes)
+                    foreach (var keyValuePair in wmcScheduleEntryTimes)
                     {
                         try
                         {
-                            if (keyValuePair.Value.StartTime > DateTime.UtcNow && keyValuePair.Value.StartTime < mxfStartTime)
-                            {
-                                if (verbose) Logger.WriteInformation($"Service {mxfService.CallSign} at {keyValuePair.Value.StartTime.ToLocalTime()}: Removing [{keyValuePair.Value.Program.GetUIdValue().Replace("!Program!", "")} - [{keyValuePair.Value.Program.Title}]-[{keyValuePair.Value.Program.EpisodeTitle}]] due to being overlapped by another schedule entry.");
-                                keyValuePair.Value.Refresh();
-                                keyValuePair.Value.Service = null;
-                                keyValuePair.Value.Program = null;
-                                keyValuePair.Value.Unlock();
-                                keyValuePair.Value.Update();
-                            }
+                            if (keyValuePair.Value.StartTime <= DateTime.UtcNow || keyValuePair.Value.StartTime >= mxfStartTime) continue;
+                            if (verbose) Logger.WriteInformation($"Service {mxfService.CallSign} at {keyValuePair.Value.StartTime.ToLocalTime()}: Removing [{keyValuePair.Value.Program.GetUIdValue().Replace("!Program!", "")} - [{keyValuePair.Value.Program.Title}]-[{keyValuePair.Value.Program.EpisodeTitle}]] due to being overlapped by another schedule entry.");
+                            keyValuePair.Value.Refresh();
+                            keyValuePair.Value.Service = null;
+                            keyValuePair.Value.Program = null;
+                            keyValuePair.Value.Unlock();
+                            keyValuePair.Value.Update();
                         }
                         catch (Exception e)
                         {
@@ -248,12 +248,12 @@ namespace epg123Client
             Logger.WriteMessage("Exiting VerifyLoad()");
         }
 
-        private void UpdateScheduleEntryTags(ScheduleEntry wmc, MxfScheduleEntry mxf)
+        private static void UpdateScheduleEntryTags(ScheduleEntry wmc, MxfScheduleEntry mxf)
         {
             wmc.AudioFormat = (AudioFormat)mxf.AudioFormat;
             wmc.Is3D = mxf.Is3D;
             wmc.IsBlackout = mxf.IsBlackout;
-            wmc.IsCC = mxf.IsCC;
+            wmc.IsCC = mxf.IsCc;
             wmc.IsClassroom = mxf.IsClassroom;
             wmc.IsDelay = mxf.IsDelay;
             wmc.IsDvs = mxf.IsDvs;

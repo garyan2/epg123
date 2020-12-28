@@ -1,16 +1,11 @@
 ﻿using System.Xml.Serialization;
 
-namespace MxfXml
+namespace hdhr2mxf.MXF
 {
     public class MxfPerson
     {
         [XmlIgnore]
-        public int index;
-
-        /// <summary>
-        /// A name of a person associated with the program.
-        /// </summary>
-        public MxfPerson() { }
+        public int Index;
 
         /// <summary>
         /// An ID that is unique to the document and defines this element.
@@ -19,10 +14,7 @@ namespace MxfXml
         [XmlAttribute("id")]
         public string Id
         {
-            get
-            {
-                return ("p" + index.ToString());
-            }
+            get => ("p" + Index.ToString());
             set { }
         }
 
@@ -40,10 +32,7 @@ namespace MxfXml
         [XmlAttribute("uid")]
         public string Uid
         {
-            get
-            {
-                return ("!Person!" + Name);
-            }
+            get => ("!Person!" + Name);
             set { }
         }
     }

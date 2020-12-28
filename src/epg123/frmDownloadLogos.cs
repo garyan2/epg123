@@ -8,7 +8,7 @@ namespace epg123
 {
     public partial class frmDownloadLogos : Form
     {
-        private bool cancelDownload;
+        private bool _cancelDownload;
 
         public frmDownloadLogos(Dictionary<string, string> sdLogos)
         {
@@ -20,39 +20,39 @@ namespace epg123
 
         private void backgroundWorker1_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
         {
-            Dictionary<string, string> sdlogos = (Dictionary<string, string>)e.Argument;
+            var sdlogos = (Dictionary<string, string>)e.Argument;
             if (!Directory.Exists(Helper.Epg123SdLogosFolder))
             {
                 Directory.CreateDirectory(Helper.Epg123SdLogosFolder);
             }
 
-            int processedLogo = 0;
-            int totalLogos = sdlogos.Count;
-            foreach (KeyValuePair<string, string> station in sdlogos)
+            var processedLogo = 0;
+            var totalLogos = sdlogos.Count;
+            foreach (var station in sdlogos)
             {
-                if (cancelDownload) break;
+                if (_cancelDownload) break;
 
-                string logo = station.Key.Split('-')[0];
-                backgroundWorker1.ReportProgress(++processedLogo * 100 / totalLogos, string.Format("Downloading logos for station {0} ({1}/{2})", logo, processedLogo, totalLogos));
-                string file = string.Format("{0}\\{1}.png", Helper.Epg123SdLogosFolder, station.Key);
+                var logo = station.Key.Split('-')[0];
+                backgroundWorker1.ReportProgress(++processedLogo * 100 / totalLogos, $"Downloading logos for station {logo} ({processedLogo}/{totalLogos})");
+                var file = $"{Helper.Epg123SdLogosFolder}\\{station.Key}.png";
                 try
                 {
-                    System.Net.WebClient wc = new System.Net.WebClient();
-                    using (MemoryStream stream = new MemoryStream(wc.DownloadData(station.Value)))
+                    var wc = new System.Net.WebClient();
+                    using (var stream = new MemoryStream(wc.DownloadData(station.Value)))
                     {
                         // crop image
                         Bitmap cropImg;
-                        using (Bitmap origImg = Bitmap.FromStream(stream) as Bitmap)
+                        using (var origImg = Image.FromStream(stream) as Bitmap)
                         {
                             // Find the min/max non-transparent pixels
-                            Point min = new Point(int.MaxValue, int.MaxValue);
-                            Point max = new Point(int.MinValue, int.MinValue);
+                            var min = new Point(int.MaxValue, int.MaxValue);
+                            var max = new Point(int.MinValue, int.MinValue);
 
-                            for (int x = 0; x < origImg.Width; ++x)
+                            for (var x = 0; x < origImg.Width; ++x)
                             {
-                                for (int y = 0; y < origImg.Height; ++y)
+                                for (var y = 0; y < origImg.Height; ++y)
                                 {
-                                    Color pixelColor = origImg.GetPixel(x, y);
+                                    var pixelColor = origImg.GetPixel(x, y);
                                     if (pixelColor.A > 0)
                                     {
                                         if (x < min.X) min.X = x;
@@ -65,10 +65,10 @@ namespace epg123
                             }
 
                             // Create a new bitmap from the crop rectangle
-                            Rectangle cropRectangle = new Rectangle(min.X, min.Y, max.X - min.X + 1, max.Y - min.Y + 1);
+                            var cropRectangle = new Rectangle(min.X, min.Y, max.X - min.X + 1, max.Y - min.Y + 1);
                             cropImg = new Bitmap(cropRectangle.Width, cropRectangle.Height);
                             cropImg.SetResolution(origImg.HorizontalResolution, origImg.VerticalResolution);
-                            using (Graphics g = Graphics.FromImage(cropImg))
+                            using (var g = Graphics.FromImage(cropImg))
                             {
                                 g.DrawImage(origImg, 0, 0, cropRectangle, GraphicsUnit.Pixel);
                             }
@@ -86,27 +86,22 @@ namespace epg123
         private void backgroundWorker1_ProgressChanged(object sender, System.ComponentModel.ProgressChangedEventArgs e)
         {
             label2.Text = (string)e.UserState;
-            if (progressBarTask.Value != e.ProgressPercentage)
-            {
-                progressBarTask.Value = e.ProgressPercentage;
-                lblTaskProgress.Text = string.Format("{0}%", e.ProgressPercentage);
-            }
+            if (progressBarTask.Value == e.ProgressPercentage) return;
+            progressBarTask.Value = e.ProgressPercentage;
+            lblTaskProgress.Text = $"{e.ProgressPercentage}%";
         }
 
         private void backgroundWorker1_RunWorkerCompleted(object sender, System.ComponentModel.RunWorkerCompletedEventArgs e)
         {
-            this.Close();
+            Close();
         }
 
         private void frmDownloadLogos_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (backgroundWorker1.IsBusy)
-            {
-                backgroundWorker1.CancelAsync();
-                cancelDownload = true;
-                e.Cancel = true;
-                return;
-            }
+            if (!backgroundWorker1.IsBusy) return;
+            backgroundWorker1.CancelAsync();
+            _cancelDownload = true;
+            e.Cancel = true;
         }
     }
 }

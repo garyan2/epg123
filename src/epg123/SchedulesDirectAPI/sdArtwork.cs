@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace epg123
+namespace epg123.SchedulesDirectAPI
 {
     public class sdArtworkResponse
     {
         [JsonProperty("programID")]
-        public string ProgramID { get; set; }
+        public string ProgramId { get; set; }
 
         [JsonProperty("data")]
         [JsonConverter(typeof(SingleOrArrayConverter<sdImage>))]
@@ -54,18 +54,11 @@ namespace epg123
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
-            JToken token = JToken.Load(reader);
-            if (token.Type == JTokenType.Array)
-            {
-                return token.ToObject<List<T>>();
-            }
-            return new List<T> { token.ToObject<T>() };
+            var token = JToken.Load(reader);
+            return token.Type == JTokenType.Array ? token.ToObject<List<T>>() : new List<T> { token.ToObject<T>() };
         }
 
-        public override bool CanWrite
-        {
-            get { return false; }
-        }
+        public override bool CanWrite => false;
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {

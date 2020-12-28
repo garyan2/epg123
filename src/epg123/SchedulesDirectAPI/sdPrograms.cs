@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace epg123
+namespace epg123.SchedulesDirectAPI
 {
     public class sdProgram
     {
         [JsonProperty("programID")]
-        public string ProgramID { get; set; }
+        public string ProgramId { get; set; }
 
         //[JsonProperty("resourceID")]
         //public string ResourceID { get; set; }
@@ -171,11 +171,11 @@ namespace epg123
     {
         // TheTVDB only
         [JsonProperty("seriesID")]
-        public uint SeriesID { get; set; }
+        public uint SeriesId { get; set; }
 
         // TheTVDB only
         [JsonProperty("episodeID")]
-        public int EpisodeID { get; set; }
+        public int EpisodeId { get; set; }
 
         [JsonProperty("season")]
         public int SeasonNumber { get; set; }
@@ -254,12 +254,12 @@ namespace epg123
         public string CharacterName { get; set; }
     }
 
-    public class sdProgramRecommendation
-    {
-        //[JsonProperty("programID")]
-        //public string ProgramID { get; set; }
+    //public class sdProgramRecommendation
+    //{
+    //    [JsonProperty("programID")]
+    //    public string ProgramID { get; set; }
 
-        //[JsonProperty("title120")]
-        //public string Title120 { get; set; }
-    }
+    //    [JsonProperty("title120")]
+    //    public string Title120 { get; set; }
+    //}
 }

@@ -3,54 +3,43 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using epg123.SchedulesDirectAPI;
 using Newtonsoft.Json;
-using epg123.MxfXml;
 
-namespace epg123
+namespace epg123.sdJson2mxf
 {
-    public static partial class sdJson2mxf
+    internal static partial class sdJson2Mxf
     {
         private static List<string> seriesDescriptionQueue = new List<string>();
         private static ConcurrentDictionary<string, sdGenericDescriptions> seriesDescriptionResponses = new ConcurrentDictionary<string, sdGenericDescriptions>();
 
-        private static bool buildAllGenericSeriesInfoDescriptions()
+        private static bool BuildAllGenericSeriesInfoDescriptions()
         {
             // reset counters
             processedObjects = 0;
-            Logger.WriteMessage(string.Format("Entering buildAllGenericSeriesInfoDescriptions() for {0} series.",
-                                totalObjects = sdMxf.With[0].SeriesInfos.Count));
-            ++processStage; reportProgress();
+            Logger.WriteMessage($"Entering buildAllGenericSeriesInfoDescriptions() for {totalObjects = SdMxf.With[0].SeriesInfos.Count} series.");
+            ++processStage; ReportProgress();
 
             // fill mxf programs with cached values and queue the rest
-            foreach (MxfSeriesInfo series in sdMxf.With[0].SeriesInfos)
+            foreach (var series in SdMxf.With[0].SeriesInfos)
             {
                 // sports events will not have a generic description
-                if (series.tmsSeriesId.StartsWith("SP"))
+                if (series.TmsSeriesId.StartsWith("SP"))
                 {
-                    ++processedObjects; reportProgress();
+                    ++processedObjects; ReportProgress();
                     continue;
                 }
 
                 // import the cached description if exists, otherwise queue it up
-                string seriesId = $"SH{series.tmsSeriesId}0000";
-                string filepath = $"{Helper.Epg123CacheFolder}\\{seriesId}";
-                FileInfo file = new FileInfo(filepath);
-                if (file.Exists && (file.Length > 0) && !epgCache.JsonFiles.ContainsKey(seriesId))
-                {
-                    using (StreamReader reader = File.OpenText(filepath))
-                    {
-                        epgCache.AddAsset(seriesId, reader.ReadToEnd());
-                    }
-                }
-
+                var seriesId = $"SH{series.TmsSeriesId}0000";
                 if (epgCache.JsonFiles.ContainsKey(seriesId))
                 {
                     try
                     {
-                        using (StringReader reader = new StringReader(epgCache.GetAsset(seriesId)))
+                        using (var reader = new StringReader(epgCache.GetAsset(seriesId)))
                         {
-                            JsonSerializer serializer = new JsonSerializer();
-                            sdGenericDescriptions cached = (sdGenericDescriptions)serializer.Deserialize(reader, typeof(sdGenericDescriptions));
+                            var serializer = new JsonSerializer();
+                            var cached = (sdGenericDescriptions)serializer.Deserialize(reader, typeof(sdGenericDescriptions));
                             if (cached.Code == 0)
                             {
                                 series.ShortDescription = cached.Description100;
@@ -61,29 +50,29 @@ namespace epg123
                                 }
                             }
                         }
-                        ++processedObjects; reportProgress();
+                        ++processedObjects; ReportProgress();
                     }
                     catch
                     {
-                        if (int.TryParse(series.tmsSeriesId, out int dummy))
+                        if (int.TryParse(series.TmsSeriesId, out var dummy))
                         {
                             // must use EP to query generic series description
-                            seriesDescriptionQueue.Add($"EP{series.tmsSeriesId}0000");
+                            seriesDescriptionQueue.Add($"EP{series.TmsSeriesId}0000");
                         }
                         else
                         {
-                            ++processedObjects; reportProgress();
+                            ++processedObjects; ReportProgress();
                         }
                     }
                 }
-                else if (!int.TryParse(series.tmsSeriesId, out int dummy))
+                else if (!int.TryParse(series.TmsSeriesId, out var dummy))
                 {
-                    ++processedObjects; reportProgress();
+                    ++processedObjects; ReportProgress();
                 }
                 else
                 {
                     // must use EP to query generic series description
-                    seriesDescriptionQueue.Add($"EP{series.tmsSeriesId}0000");
+                    seriesDescriptionQueue.Add($"EP{series.TmsSeriesId}0000");
                 }
             }
             Logger.WriteVerbose($"Found {processedObjects} cached series descriptions.");
@@ -91,12 +80,12 @@ namespace epg123
             // maximum 500 queries at a time
             if (seriesDescriptionQueue.Count > 0)
             {
-                Parallel.For(0, (seriesDescriptionQueue.Count / MAXIMGQUERIES + 1), new ParallelOptions { MaxDegreeOfParallelism = MAXPARALLELDOWNLOADS }, i =>
+                Parallel.For(0, (seriesDescriptionQueue.Count / MaxImgQueries + 1), new ParallelOptions { MaxDegreeOfParallelism = MaxParallelDownloads }, i =>
                 {
-                    downloadGenericSeriesDescriptions(i * MAXIMGQUERIES);
+                    DownloadGenericSeriesDescriptions(i * MaxImgQueries);
                 });
 
-                processSeriesDescriptionsResponses();
+                ProcessSeriesDescriptionsResponses();
                 if (processedObjects != totalObjects)
                 {
                     Logger.WriteInformation("Problem occurred during buildGenericSeriesInfoDescriptions(). Did not process all series descriptions.");
@@ -108,17 +97,17 @@ namespace epg123
             return true;
         }
 
-        private static void downloadGenericSeriesDescriptions(int start = 0)
+        private static void DownloadGenericSeriesDescriptions(int start = 0)
         {
             // build the array of series to request descriptions for
-            string[] series = new string[Math.Min(seriesDescriptionQueue.Count - start, MAXIMGQUERIES)];
-            for (int i = 0; i < series.Length; ++i)
+            var series = new string[Math.Min(seriesDescriptionQueue.Count - start, MaxImgQueries)];
+            for (var i = 0; i < series.Length; ++i)
             {
                 series[i] = seriesDescriptionQueue[start + i];
             }
 
             // request descriptions from Schedules Direct
-            Dictionary<string, sdGenericDescriptions> responses = sdAPI.sdGetProgramGenericDescription(series);
+            var responses = sdApi.SdGetProgramGenericDescription(series);
             if (responses != null)
             {
                 Parallel.ForEach(responses, (response) =>
@@ -128,86 +117,88 @@ namespace epg123
             }
         }
 
-        private static void processSeriesDescriptionsResponses()
+        private static void ProcessSeriesDescriptionsResponses()
         {
             // process request response
-            foreach (KeyValuePair<string, sdGenericDescriptions> response in seriesDescriptionResponses)
+            foreach (var response in seriesDescriptionResponses)
             {
-                ++processedObjects; reportProgress();
+                ++processedObjects; ReportProgress();
 
-                string series_id = response.Key.Replace("EP", "SH");
-                sdGenericDescriptions description = response.Value;
+                var seriesId = response.Key.Replace("EP", "SH");
+                var description = response.Value;
 
                 // determine which seriesInfo this belongs to
-                MxfSeriesInfo mxfSeriesInfo = sdMxf.With[0].getSeriesInfo(series_id.Substring(2, 8));
+                var mxfSeriesInfo = SdMxf.With[0].GetSeriesInfo(seriesId.Substring(2, 8));
 
                 // populate descriptions
                 mxfSeriesInfo.ShortDescription = description.Description100;
                 mxfSeriesInfo.Description = description.Description1000;
 
                 // serialize JSON directly to a file
-                using (StringWriter writer = new StringWriter())
+                using (var writer = new StringWriter())
                 {
                     try
                     {
-                        JsonSerializer serializer = new JsonSerializer();
+                        var serializer = new JsonSerializer();
                         serializer.Serialize(writer, description);
-                        epgCache.AddAsset(series_id, writer.ToString());
+                        epgCache.AddAsset(seriesId, writer.ToString());
                     }
-                    catch { }
+                    catch
+                    {
+                        // ignored
+                    }
                 }
             }
         }
 
-        private static bool buildAllExtendedSeriesDataForUiPlus()
+        private static bool BuildAllExtendedSeriesDataForUiPlus()
         {
             // reset counters
             processedObjects = 0;
-            ++processStage; reportProgress();
+            ++processStage; ReportProgress();
             seriesDescriptionQueue = new List<string>();
 
             if (!config.ModernMediaUiPlusSupport) return true;
-            Logger.WriteMessage(string.Format("Entering buildAllExtendedSeriesDataForUiPlus() for {0} series.",
-                                totalObjects = sdMxf.With[0].SeriesInfos.Count));
+            Logger.WriteMessage($"Entering buildAllExtendedSeriesDataForUiPlus() for {totalObjects = SdMxf.With[0].SeriesInfos.Count} series.");
 
             // read in cached ui+ extended information
-            Dictionary<string, ModernMediaUiPlusPrograms> oldPrograms = new Dictionary<string, ModernMediaUiPlusPrograms>();
+            var oldPrograms = new Dictionary<string, ModernMediaUiPlusPrograms>();
             if (File.Exists(Helper.Epg123MmuiplusJsonPath))
             {
-                using (StreamReader sr = new StreamReader(Helper.Epg123MmuiplusJsonPath))
+                using (var sr = new StreamReader(Helper.Epg123MmuiplusJsonPath))
                 {
                     oldPrograms = JsonConvert.DeserializeObject<Dictionary<string, ModernMediaUiPlusPrograms>>(sr.ReadToEnd());
                 }
             }
 
             // fill mxf programs with cached values and queue the rest
-            foreach (MxfSeriesInfo series in sdMxf.With[0].SeriesInfos)
+            foreach (var series in SdMxf.With[0].SeriesInfos)
             {
-                string seriesId = $"SH{series.tmsSeriesId}0000";
+                var seriesId = $"SH{series.TmsSeriesId}0000";
 
                 // sports events will not have a generic description
-                if (series.tmsSeriesId.StartsWith("SP"))
+                if (series.TmsSeriesId.StartsWith("SP"))
                 {
-                    ++processedObjects; reportProgress();
+                    ++processedObjects; ReportProgress();
                     continue;
                 }
+
                 // generic series information already in support file array
-                else if (ModernMediaUiPlus.Programs.ContainsKey(seriesId))
+                if (ModernMediaUiPlus.Programs.ContainsKey(seriesId))
                 {
-                    ++processedObjects; reportProgress();
-                    ModernMediaUiPlusPrograms program;
-                    if (ModernMediaUiPlus.Programs.TryGetValue(seriesId, out program) && program.OriginalAirDate != null)
+                    ++processedObjects; ReportProgress();
+                    if (ModernMediaUiPlus.Programs.TryGetValue(seriesId, out var program) && program.OriginalAirDate != null)
                     {
                         UpdateSeriesAirdate(seriesId, program.OriginalAirDate);
                     }
                     continue;
                 }
+
                 // extended information in current json file
-                else if (oldPrograms.ContainsKey(seriesId))
+                if (oldPrograms.ContainsKey(seriesId))
                 {
-                    ++processedObjects; reportProgress();
-                    ModernMediaUiPlusPrograms program;
-                    if (oldPrograms.TryGetValue(seriesId, out program) && !string.IsNullOrEmpty(program.OriginalAirDate))
+                    ++processedObjects; ReportProgress();
+                    if (oldPrograms.TryGetValue(seriesId, out var program) && !string.IsNullOrEmpty(program.OriginalAirDate))
                     {
                         ModernMediaUiPlus.Programs.Add(seriesId, program);
                         UpdateSeriesAirdate(seriesId, program.OriginalAirDate);
@@ -223,13 +214,11 @@ namespace epg123
             // maximum 5000 queries at a time
             if (seriesDescriptionQueue.Count > 0)
             {
-                for (int i = 0; i < seriesDescriptionQueue.Count; i += MAXQUERIES)
+                for (var i = 0; i < seriesDescriptionQueue.Count; i += MaxQueries)
                 {
-                    if (!GetExtendedSeriesDataForUiPlus(i))
-                    {
-                        Logger.WriteInformation("Problem occurred during buildAllExtendedSeriesDataForUiPlus(). Exiting.");
-                        return true;
-                    }
+                    if (GetExtendedSeriesDataForUiPlus(i)) continue;
+                    Logger.WriteInformation("Problem occurred during buildAllExtendedSeriesDataForUiPlus(). Exiting.");
+                    return true;
                 }
             }
             Logger.WriteInformation($"Processed {processedObjects} extended series descriptions.");
@@ -239,35 +228,35 @@ namespace epg123
         private static bool GetExtendedSeriesDataForUiPlus(int start = 0)
         {
             // build the array of programs to request for
-            string[] programs = new string[Math.Min(seriesDescriptionQueue.Count - start, MAXQUERIES)];
-            for (int i = 0; i < programs.Length; ++i)
+            var programs = new string[Math.Min(seriesDescriptionQueue.Count - start, MaxQueries)];
+            for (var i = 0; i < programs.Length; ++i)
             {
                 programs[i] = seriesDescriptionQueue[start + i];
             }
 
             // request programs from Schedules Direct
-            IList<sdProgram> responses = sdAPI.sdGetPrograms(programs);
+            var responses = sdApi.SdGetPrograms(programs);
             if (responses == null) return false;
 
             // process request response
-            int idx = 0;
-            foreach (sdProgram response in responses)
+            var idx = 0;
+            foreach (var response in responses)
             {
                 if (response == null)
                 {
                     Logger.WriteInformation($"Did not receive data for program {programs[idx++]}.");
                     continue;
                 }
-                ++idx; ++processedObjects; reportProgress();
+                ++idx; ++processedObjects; ReportProgress();
 
                 // add the series extended data to the file if not already present from program builds
-                if (!ModernMediaUiPlus.Programs.ContainsKey(response.ProgramID))
+                if (!ModernMediaUiPlus.Programs.ContainsKey(response.ProgramId))
                 {
                     AddModernMediaUiPlusProgram(response);
                 }
 
                 // add the series start air date if available
-                UpdateSeriesAirdate(response.ProgramID, response.OriginalAirDate);
+                UpdateSeriesAirdate(response.ProgramId, response.OriginalAirDate);
             }
             return true;
         }
@@ -278,27 +267,28 @@ namespace epg123
         private static void UpdateSeriesAirdate(string seriesId, DateTime airdate)
         {
             // write the mxf entry
-            sdMxf.With[0].getSeriesInfo(seriesId.Substring(2, 8)).StartAirdate = airdate.ToString();
+            SdMxf.With[0].GetSeriesInfo(seriesId.Substring(2, 8)).StartAirdate = airdate.ToString("yyyy-MM-dd");
 
             // update cache if needed
             try
             {
-                using (StringReader reader = new StringReader(epgCache.GetAsset(seriesId)))
+                using (var reader = new StringReader(epgCache.GetAsset(seriesId)))
                 {
-                    JsonSerializer serializer = new JsonSerializer();
-                    sdGenericDescriptions cached = (sdGenericDescriptions)serializer.Deserialize(reader, typeof(sdGenericDescriptions));
-                    if (string.IsNullOrEmpty(cached.StartAirdate))
+                    var serializer = new JsonSerializer();
+                    var cached = (sdGenericDescriptions)serializer.Deserialize(reader, typeof(sdGenericDescriptions));
+                    if (!string.IsNullOrEmpty(cached.StartAirdate)) return;
+                    cached.StartAirdate = airdate.Equals(DateTime.MinValue) ? "" : airdate.ToString("yyyy-MM-dd");
+                    using (var writer = new StringWriter())
                     {
-                        cached.StartAirdate = airdate.Equals(DateTime.MinValue) ? "" : airdate.ToString("yyyy-MM-dd");
-                        using (StringWriter writer = new StringWriter())
-                        {
-                            serializer.Serialize(writer, cached);
-                            epgCache.UpdateAssetJsonEntry(seriesId, writer.ToString());
-                        }
+                        serializer.Serialize(writer, cached);
+                        epgCache.UpdateAssetJsonEntry(seriesId, writer.ToString());
                     }
                 }
             }
-            catch { }
+            catch
+            {
+                // ignored
+            }
         }
     }
 }

@@ -1,40 +1,35 @@
 ﻿using System.Collections.Generic;
 using System.Xml.Serialization;
+using epg123.SchedulesDirectAPI;
 
 namespace epg123.MxfXml
 {
     public class MxfService
     {
         [XmlIgnore]
-        public int index;
+        public int Index;
 
         [XmlIgnore]
-        public MxfScheduleEntries mxfScheduleEntries = new MxfScheduleEntries() { ScheduleEntry = new List<MxfScheduleEntry>() };
+        public MxfScheduleEntries MxfScheduleEntries = new MxfScheduleEntries() { ScheduleEntry = new List<MxfScheduleEntry>() };
 
         [XmlIgnore]
-        public string StationID { get; set; }
+        public string StationId { get; set; }
 
         [XmlIgnore]
-        public SdStationImage logoImage;
+        public SdStationImage ServiceLogo;
 
         [XmlIgnore]
-        public string xmltvChannelID
+        public string XmltvChannelId
         {
             get
             {
-                if (!string.IsNullOrEmpty(StationID))
+                if (!string.IsNullOrEmpty(StationId))
                 {
-                    return "EPG123." + StationID + ".schedulesdirect.org";
+                    return "EPG123." + StationId + ".schedulesdirect.org";
                 }
                 return null;
             }
         }
-
-        /// <summary>
-        /// A content provider.
-        /// Example: KOMO
-        /// </summary>
-        public MxfService() { }
 
         /// <summary>
         /// An ID that is unique to the document and defines this element.
@@ -43,10 +38,7 @@ namespace epg123.MxfXml
         [XmlAttribute("id")]
         public string Id
         {
-            get
-            {
-                return ("s" + index.ToString());
-            }
+            get => $"s{Index}";
             set { }
         }
 
@@ -57,10 +49,7 @@ namespace epg123.MxfXml
         [XmlAttribute("uid")]
         public string Uid
         {
-            get
-            {
-                return ("!Service!EPG123_" + StationID);
-            }
+            get => $"!Service!EPG123_{StationId}";
             set { }
         }
 

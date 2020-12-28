@@ -4,42 +4,42 @@ using System.IO;
 using System.Text;
 using System.Xml.Serialization;
 using epg123.MxfXml;
+using epg123.SchedulesDirectAPI;
+using epg123.TheMovieDbAPI;
 using epg123.XmltvXml;
 
-namespace epg123
+namespace epg123.sdJson2mxf
 {
-    public static partial class sdJson2mxf
+    internal static partial class sdJson2Mxf
     {
-        public static System.ComponentModel.BackgroundWorker backgroundWorker;
-        public static bool success = false;
-        public static DateTime startTime = DateTime.UtcNow;
+        public static System.ComponentModel.BackgroundWorker BackgroundWorker;
+        public static bool Success;
 
         private static epgConfig config;
-        public static MXF sdMxf = new MXF();
+        public static Mxf SdMxf = new Mxf();
 
         public static void Build(epgConfig configuration)
         {
-            string errString = string.Empty;
+            var errString = string.Empty;
 
             // initialize schedules direct API
-            sdAPI.Initialize("EPG123", epg123Version);
+            sdApi.Initialize("EPG123", Helper.SdGrabberVersion);
 
             // copy configuration to local variable
             config = configuration;
 
             // initialize event buffer
-            Logger.WriteInformation(string.Format("Beginning EPG123 update execution. {0:u}", DateTime.Now.ToUniversalTime()));
-            Logger.WriteVerbose(string.Format("DaysToDownload: {0} , TheTVDBNumbers : {1} , PrefixEpisodeTitle: {2} , PrefixEpisodeDescription : {3} , AppendEpisodeDesc: {4} , OADOverride : {5} , TMDbCoverArt: {6} , IncludeSDLogos : {7} , AutoAddNew: {8} , CreateXmltv: {9} , ModernMediaUiPlusSupport: {10}",
-                                config.DaysToDownload, config.TheTVDBNumbers, config.PrefixEpisodeTitle, config.PrefixEpisodeDescription, config.AppendEpisodeDesc, config.OADOverride, config.TMDbCoverArt, config.IncludeSDLogos, config.AutoAddNew, config.CreateXmltv, config.ModernMediaUiPlusSupport));
+            Logger.WriteInformation($"Beginning EPG123 update execution. {DateTime.Now.ToUniversalTime():u}");
+            Logger.WriteVerbose($"DaysToDownload: {config.DaysToDownload} , TheTVDBNumbers : {config.TheTvdbNumbers} , PrefixEpisodeTitle: {config.PrefixEpisodeTitle} , PrefixEpisodeDescription : {config.PrefixEpisodeDescription} , AppendEpisodeDesc: {config.AppendEpisodeDesc} , OADOverride : {config.OadOverride} , TMDbCoverArt: {config.TMDbCoverArt} , IncludeSDLogos : {config.IncludeSdLogos} , AutoAddNew: {config.AutoAddNew} , CreateXmltv: {config.CreateXmltv} , ModernMediaUiPlusSupport: {config.ModernMediaUiPlusSupport}");
 
             // populate station prefixes to suppress
             suppressedPrefixes = new List<string>(config.SuppressStationEmptyWarnings.Split(','));
 
             // login to Schedules Direct and build the mxf file
-            if (sdAPI.sdGetToken(config.UserAccount.LoginName, config.UserAccount.PasswordHash, ref errString))
+            if (sdApi.SdGetToken(config.UserAccount.LoginName, config.UserAccount.PasswordHash, ref errString))
             {
                 // check server status
-                sdUserStatusResponse susr = sdAPI.sdGetStatus();
+                var susr = sdApi.SdGetStatus();
                 if (susr == null) return;
                 else if (susr.SystemStatus[0].Status.ToLower().Equals("offline"))
                 {
@@ -48,14 +48,14 @@ namespace epg123
                 }
 
                 // check for latest version and update the display name that shows in About Guide
-                sdClientVersionResponse scvr = sdAPI.sdCheckVersion();
-                if ((scvr != null) && !string.IsNullOrEmpty(scvr.Version))
+                var scvr = sdApi.SdCheckVersion();
+                if (scvr != null && !string.IsNullOrEmpty(scvr.Version))
                 {
-                    sdMxf.Providers[0].DisplayName += " v" + epg123Version;
-                    if (epg123Version != scvr.Version)
+                    SdMxf.Providers[0].DisplayName += " v" + Helper.Epg123Version;
+                    if (Helper.SdGrabberVersion != scvr.Version)
                     {
-                        sdMxf.Providers[0].DisplayName += string.Format(" (v{0} Available)", scvr.Version);
-                        BrandLogo.updateAvailable = true;
+                        SdMxf.Providers[0].DisplayName += $" (v{scvr.Version} Available)";
+                        BrandLogo.UpdateAvailable = true;
                     }
                 }
 
@@ -69,67 +69,58 @@ namespace epg123
                 // initialize tmdb api
                 if (config.TMDbCoverArt)
                 {
-                    tmdbAPI.Initialize(false);
+                    tmdbApi.Initialize(false);
                 }
 
                 // prepopulate keyword groups
-                initializeKeywordGroups();
-
-                // read all image links archived in file
-                getImageArchive();
+                InitializeKeywordGroups();
 
                 // read all included and excluded station from configuration
-                populateIncludedExcludedStations(config.StationID);
+                PopulateIncludedExcludedStations(config.StationId);
 
                 // if all components of the mxf file have been successfully created, save the file
-                if (success = buildLineupServices() && serviceCountSafetyCheck() &&
-                              getAllScheduleEntryMd5s(config.DaysToDownload) &&
-                              buildAllProgramEntries() &&
-                              buildAllGenericSeriesInfoDescriptions() && buildAllExtendedSeriesDataForUiPlus() &&
-                              getAllMoviePosters() &&
-                              getAllSeriesImages() &&
-                              buildKeywords() &&
-                              writeMxf())
+                if (BuildLineupServices() && ServiceCountSafetyCheck() &&
+                      GetAllScheduleEntryMd5S(config.DaysToDownload) &&
+                      BuildAllProgramEntries() &&
+                      BuildAllGenericSeriesInfoDescriptions() && BuildAllExtendedSeriesDataForUiPlus() &&
+                      GetAllMoviePosters() &&
+                      GetAllSeriesImages() &&
+                      BuildKeywords() &&
+                      WriteMxf())
                 {
+                    Success = true;
+
                     // create the xmltv file if desired
                     if (config.CreateXmltv && CreateXmltvFile())
                     {
-                        writeXmltv();
-                        ++processedObjects; reportProgress();
+                        WriteXmltv();
+                        ++processedObjects; ReportProgress();
                     }
 
                     // remove the guide images xml file
-                    if (File.Exists(Helper.Epg123GuideImagesXmlPath))
-                    {
-                        try
-                        {
-                            File.Delete(Helper.Epg123GuideImagesXmlPath);
-                        }
-                        catch { }
-                    }
+                    Helper.DeleteFile(Helper.Epg123GuideImagesXmlPath);
 
                     // create the ModernMedia UI+ json file if desired
                     if (config.ModernMediaUiPlusSupport)
                     {
                         ModernMediaUiPlus.WriteModernMediaUiPlusJson(config.ModernMediaUiPlusJsonFilepath ?? null);
-                        ++processedObjects; reportProgress();
+                        ++processedObjects; ReportProgress();
                     }
 
                     // clean the cache folder of stale data
-                    cleanCacheFolder();
+                    CleanCacheFolder();
                     epgCache.WriteCache();
 
-                    Logger.WriteVerbose(string.Format("Downloaded and processed {0} of data from Schedules Direct.", sdAPI.TotalDownloadBytes));
-                    Logger.WriteVerbose(string.Format("Generated .mxf file contains {0} services, {1} series, {2} programs, and {3} people with {4} image links.",
-                                        sdMxf.With[0].Services.Count - 1, sdMxf.With[0].SeriesInfos.Count, sdMxf.With[0].Programs.Count, sdMxf.With[0].People.Count, sdMxf.With[0].GuideImages.Count));
+                    Logger.WriteVerbose($"Downloaded and processed {sdApi.TotalDownloadBytes} of data from Schedules Direct.");
+                    Logger.WriteVerbose($"Generated .mxf file contains {SdMxf.With[0].Services.Count - 1} services, {SdMxf.With[0].SeriesInfos.Count} series, {SdMxf.With[0].Programs.Count} programs, and {SdMxf.With[0].People.Count} people with {SdMxf.With[0].GuideImages.Count} image links.");
                     Logger.WriteInformation("Completed EPG123 update execution. SUCCESS.");
                 }
             }
             else
             {
-                Logger.WriteError(string.Format("Failed to retrieve token from Schedules Direct. message: {0}", errString));
+                Logger.WriteError($"Failed to retrieve token from Schedules Direct. message: {errString}");
             }
-            sdMxf = null;
+            SdMxf = null;
             GC.Collect();
             Helper.SendPipeMessage("Download Complete");
         }
@@ -137,143 +128,124 @@ namespace epg123
         {
             using (var ms = new MemoryStream())
             {
-                BrandLogo.statusImage(config.BrandLogoImage).Save(ms, System.Drawing.Imaging.ImageFormat.Png);
-                sdMxf.DeviceGroup.guideImage.Image = Convert.ToBase64String(ms.ToArray());
+                BrandLogo.StatusImage(config.BrandLogoImage).Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+                SdMxf.DeviceGroup.GuideImage.Image = Convert.ToBase64String(ms.ToArray());
             }
         }
 
-        private static bool serviceCountSafetyCheck()
+        private static bool ServiceCountSafetyCheck()
         {
-            if ((double)sdMxf.With[0].Services.Count < config.ExpectedServicecount * 0.95)
-            {
-                Logger.WriteError(string.Format("The expected number of stations to download is {0} but there are only {1} stations available from Schedules Direct. Aborting update for review by user.",
-                                  config.ExpectedServicecount, sdMxf.With[0].Services.Count));
-                return false;
-            }
-            return true;
+            if (!(SdMxf.With[0].Services.Count < config.ExpectedServicecount * 0.95)) return true;
+            Logger.WriteError($"The expected number of stations to download is {config.ExpectedServicecount} but there are only {SdMxf.With[0].Services.Count} stations available from Schedules Direct. Aborting update for review by user.");
+            return false;
         }
 
-        private static bool writeMxf()
+        private static bool WriteMxf()
         {
             // add dummy lineup with dummy channel
-            MxfService service = sdMxf.With[0].getService("DUMMY");
+            var service = SdMxf.With[0].GetService("DUMMY");
             service.CallSign = "DUMMY";
             service.Name = "DUMMY Station";
 
-            sdMxf.With[0].Lineups.Add(new MxfLineup()
+            SdMxf.With[0].Lineups.Add(new MxfLineup()
             {
-                index = sdMxf.With[0].Lineups.Count + 1,
+                Index = SdMxf.With[0].Lineups.Count + 1,
                 Uid = "ZZZ-DUMMY-EPG123",
                 Name = "ZZZ123 Dummy Lineup",
                 channels = new List<MxfChannel>()
             });
 
-            int lineupIndex = sdMxf.With[0].Lineups.Count - 1;
-            sdMxf.With[0].Lineups[lineupIndex].channels.Add(new MxfChannel()
+            var lineupIndex = SdMxf.With[0].Lineups.Count - 1;
+            SdMxf.With[0].Lineups[lineupIndex].channels.Add(new MxfChannel()
             {
-                Lineup = sdMxf.With[0].Lineups[lineupIndex].Id,
-                lineupUid = "ZZZ-DUMMY-EPG123",
-                stationId = service.StationID,
+                Lineup = SdMxf.With[0].Lineups[lineupIndex].Id,
+                LineupUid = "ZZZ-DUMMY-EPG123",
+                StationId = service.StationId,
                 Service = service.Id
             });
 
             // make sure background worker to download station logos is complete
-            int waits = 0;
-            while (!stationLogosDownloadComplete)
+            var waits = 0;
+            while (!StationLogosDownloadComplete)
             {
                 ++waits;
                 System.Threading.Thread.Sleep(100);
             }
             if (waits > 0)
             {
-                Logger.WriteInformation(string.Format("Waited {0} seconds for the background worker to complete station logo downloads prior to saving files.", waits * 0.1));
+                Logger.WriteInformation($"Waited {waits * 0.1} seconds for the background worker to complete station logo downloads prior to saving files.");
             }
 
             // reset counters
             processedObjects = 0; totalObjects = 1 + (config.CreateXmltv ? 1 : 0) + (config.ModernMediaUiPlusSupport ? 1 : 0);
-            ++processStage; reportProgress();
+            ++processStage; ReportProgress();
 
             AddBrandLogoToMxf();
-            sdMxf.Providers[0].Status = Logger.eventID.ToString();
+            SdMxf.Providers[0].Status = Logger.EventId.ToString();
             try
             {
-                using (StreamWriter stream = new StreamWriter(Helper.Epg123MxfPath, false, Encoding.UTF8))
+                using (var stream = new StreamWriter(Helper.Epg123MxfPath, false, Encoding.UTF8))
                 {
-                    XmlSerializer serializer = new XmlSerializer(typeof(MXF));
-                    XmlSerializerNamespaces ns = new XmlSerializerNamespaces();
+                    var serializer = new XmlSerializer(typeof(Mxf));
+                    var ns = new XmlSerializerNamespaces();
                     ns.Add("", "");
                     TextWriter writer = stream;
-                    serializer.Serialize(writer, sdMxf, ns);
+                    serializer.Serialize(writer, SdMxf, ns);
                 }
 
-                Logger.WriteInformation(string.Format("Completed save of the MXF file to \"{0}\".", Helper.Epg123MxfPath));
-                ++processedObjects; reportProgress();
+                Logger.WriteInformation($"Completed save of the MXF file to \"{Helper.Epg123MxfPath}\".");
+                ++processedObjects; ReportProgress();
                 return true;
             }
             catch (Exception ex)
             {
-                Logger.WriteError(string.Format("Failed to save the MXF file to \"{0}\". Message: {1}", Helper.Epg123MxfPath, ex.Message));
+                Logger.WriteError($"Failed to save the MXF file to \"{Helper.Epg123MxfPath}\". Message: {ex.Message}");
             }
             return false;
         }
 
-        private static void cleanCacheFolder()
+        private static void CleanCacheFolder()
         {
-            int delCnt = 0;
-            string[] cacheFiles = Directory.GetFiles(Helper.Epg123CacheFolder, "*.*");
+            var delCnt = 0;
+            var cacheFiles = Directory.GetFiles(Helper.Epg123CacheFolder, "*.*");
 
             // reset counters
             processedObjects = 0; totalObjects = cacheFiles.Length;
-            ++processStage; reportProgress();
+            ++processStage; ReportProgress();
 
-            foreach (string file in cacheFiles)
+            foreach (var file in cacheFiles)
             {
-                ++processedObjects; reportProgress();
+                ++processedObjects; ReportProgress();
                 if (file.Equals(Helper.Epg123CacheJsonPath)) continue;
                 if (file.Equals(Helper.Epg123CompressCachePath)) continue;
-
-                //if (File.GetLastAccessTimeUtc(file) < startTime)
-                {
-                    try
-                    {
-                        File.Delete(file);
-                        ++delCnt;
-                    }
-                    catch { }
-                }
+                if (Helper.DeleteFile(file)) ++delCnt;
             }
 
             if (delCnt > 0)
             {
-                Logger.WriteInformation(string.Format("{0} files deleted from the cache directory during cleanup.", delCnt));
+                Logger.WriteInformation($"{delCnt} files deleted from the cache directory during cleanup.");
             }
         }
 
-        private static bool writeXmltv()
+        private static void WriteXmltv()
         {
-            if (config.CreateXmltv)
+            if (!config.CreateXmltv) return;
+            try
             {
-                try
+                using (var stream = new StreamWriter(config.XmltvOutputFile, false, Encoding.UTF8))
                 {
-                    using (StreamWriter stream = new StreamWriter(config.XmltvOutputFile, false, Encoding.UTF8))
-                    {
-                        XmlSerializer serializer = new XmlSerializer(typeof(XMLTV));
-                        XmlSerializerNamespaces ns = new XmlSerializerNamespaces();
-                        ns.Add("", "");
-                        TextWriter writer = stream;
-                        serializer.Serialize(writer, xmltv, ns);
-                    }
-
-                    Logger.WriteInformation(string.Format("Completed save of the XMLTV file to \"{0}\".", Helper.Epg123XmltvPath));
-                    return true;
+                    var serializer = new XmlSerializer(typeof(xmltv));
+                    var ns = new XmlSerializerNamespaces();
+                    ns.Add("", "");
+                    TextWriter writer = stream;
+                    serializer.Serialize(writer, xmltv, ns);
                 }
-                catch (Exception ex)
-                {
-                    Logger.WriteError(string.Format("Failed to save the XMLTV file to \"{0}\". Message: {1}", Helper.Epg123XmltvPath, ex.Message));
-                }
+                Logger.WriteInformation($"Completed save of the XMLTV file to \"{Helper.Epg123XmltvPath}\".");
             }
-
-            return false;
+            catch (Exception ex)
+            {
+                Logger.WriteError($"Failed to save the XMLTV file to \"{Helper.Epg123XmltvPath}\". Message: {ex.Message}");
+            }
         }
     }
 }

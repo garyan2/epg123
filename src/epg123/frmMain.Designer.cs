@@ -949,7 +949,7 @@
             this.lvL1Lineup.TabIndex = 1;
             this.lvL1Lineup.UseCompatibleStateImageBehavior = false;
             this.lvL1Lineup.View = System.Windows.Forms.View.Details;
-            this.lvL1Lineup.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.lvLineupSort);
+            this.lvL1Lineup.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.LvLineupSort);
             this.lvL1Lineup.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.lvLineup_ItemCheck);
             // 
             // columnHeader1
@@ -1096,7 +1096,7 @@
             this.lvL2Lineup.TabIndex = 5;
             this.lvL2Lineup.UseCompatibleStateImageBehavior = false;
             this.lvL2Lineup.View = System.Windows.Forms.View.Details;
-            this.lvL2Lineup.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.lvLineupSort);
+            this.lvL2Lineup.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.LvLineupSort);
             this.lvL2Lineup.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.lvLineup_ItemCheck);
             // 
             // columnHeader4
@@ -1225,7 +1225,7 @@
             this.lvL3Lineup.TabIndex = 7;
             this.lvL3Lineup.UseCompatibleStateImageBehavior = false;
             this.lvL3Lineup.View = System.Windows.Forms.View.Details;
-            this.lvL3Lineup.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.lvLineupSort);
+            this.lvL3Lineup.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.LvLineupSort);
             this.lvL3Lineup.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.lvLineup_ItemCheck);
             // 
             // columnHeader7
@@ -1353,7 +1353,7 @@
             this.lvL4Lineup.TabIndex = 7;
             this.lvL4Lineup.UseCompatibleStateImageBehavior = false;
             this.lvL4Lineup.View = System.Windows.Forms.View.Details;
-            this.lvL4Lineup.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.lvLineupSort);
+            this.lvL4Lineup.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.LvLineupSort);
             this.lvL4Lineup.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.lvLineup_ItemCheck);
             // 
             // columnHeader10
@@ -1481,7 +1481,7 @@
             this.lvL5Lineup.TabIndex = 9;
             this.lvL5Lineup.UseCompatibleStateImageBehavior = false;
             this.lvL5Lineup.View = System.Windows.Forms.View.Details;
-            this.lvL5Lineup.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.lvLineupSort);
+            this.lvL5Lineup.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.LvLineupSort);
             this.lvL5Lineup.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.lvL5Lineup_ItemCheck);
             // 
             // columnHeader17

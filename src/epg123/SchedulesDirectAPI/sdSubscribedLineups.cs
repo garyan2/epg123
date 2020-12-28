@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace epg123
+namespace epg123.SchedulesDirectAPI
 {
     public class SdLineupResponse
     {

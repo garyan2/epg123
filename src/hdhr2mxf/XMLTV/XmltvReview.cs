@@ -1,14 +1,7 @@
 ﻿using System.Xml.Serialization;
 
-namespace XmltvXml
+namespace hdhr2mxf.XMLTV
 {
-    /// <summary>
-    /// <!ELEMENT review(#PCDATA)>
-    /// <!ATTLIST review type     (text | url) #REQUIRED
-    ///                  source   CDATA        #IMPLIED
-    ///                  reviewer CDATA        #IMPLIED
-    ///                  lang     CDATA        #IMPLIED>
-    /// </summary>
     public class XmltvReview
     {
         [XmlAttribute("type")]

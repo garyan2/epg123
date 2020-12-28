@@ -3,40 +3,38 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Xml.Serialization;
-using HDHomeRunTV;
-using MxfXml;
+using epg123;
+using hdhr2mxf.MXF;
 
 namespace hdhr2mxf
 {
     class Program
     {
-        //static bool xmltvOnly = false;
-        static bool automaticallyImport = false;
-        static string outputFile = "hdhr2mxf.mxf";
+        private static bool automaticallyImport;
+        private static string outputFile = "hdhr2mxf.mxf";
 
-        static int Main(string[] args)
+        private static int Main(string[] args)
         {
             // set the base path and the working directory
-            epg123.Helper.ExecutablePath = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
-            Directory.SetCurrentDirectory(epg123.Helper.ExecutablePath);
+            Helper.ExecutablePath = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+            if (!string.IsNullOrEmpty(Helper.ExecutablePath)) Directory.SetCurrentDirectory(Helper.ExecutablePath);
 
-            DateTime starttime = DateTime.UtcNow;
+            var starttime = DateTime.UtcNow;
             if (args != null)
             {
-                for (int i = 0; i < args.Length; ++i)
+                for (var i = 0; i < args.Length; ++i)
                 {
                     switch (args[i].ToLower())
                     {
                         case "-o":
-                            if ((i + 1) < args.Length && string.IsNullOrEmpty(epg123.Helper.outputPathOverride))
+                            if ((i + 1) < args.Length && string.IsNullOrEmpty(Helper.OutputPathOverride))
                             {
                                 outputFile = args[++i].Replace("\"", "");
-                                string path = Path.GetDirectoryName(outputFile);
+                                var path = Path.GetDirectoryName(outputFile);
                                 if (!string.IsNullOrEmpty(path))
                                 {
-                                    epg123.Helper.outputPathOverride = path;
+                                    Helper.OutputPathOverride = path;
                                     if (!Directory.Exists(path)) Directory.CreateDirectory(path);
                                 }
                             }
@@ -47,50 +45,48 @@ namespace hdhr2mxf
                             }
                             break;
                         case "-nologos":
-                            Common.noLogos = true;
+                            Common.NoLogos = true;
                             break;
                         case "-import":
                             automaticallyImport = true;
                             break;
                         case "-update":
-                            epg123.Helper.outputPathOverride = epg123.Helper.Epg123OutputFolder;
-                            outputFile = epg123.Helper.Epg123MxfPath;
-                            //xmltvOnly = true;
+                            Helper.OutputPathOverride = Helper.Epg123OutputFolder;
+                            outputFile = Helper.Epg123MxfPath;
                             
-                            string[] folders = { epg123.Helper.Epg123OutputFolder };
-                            foreach (string folder in folders)
+                            string[] folders = { Helper.Epg123OutputFolder };
+                            foreach (var folder in folders)
                             {
                                 if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
                             }
                             break;
-                        default:
-                            break;
                     }
                 }
             }
-            if (string.IsNullOrEmpty(epg123.Helper.outputPathOverride))
+            if (string.IsNullOrEmpty(Helper.OutputPathOverride))
             {
-                epg123.Helper.outputPathOverride = epg123.Helper.ExecutablePath;
+                Helper.OutputPathOverride = Helper.ExecutablePath;
             }
 
             // initialize keyword groups
-            Common.initializeKeywordGroups();
+            Common.InitializeKeywordGroups();
 
             try
             {
-                epg123.Helper.SendPipeMessage("Downloading|Requesting XMLTV from SiliconDust...");
+                Helper.SendPipeMessage("Downloading|Requesting XMLTV from SiliconDust...");
                 if (DetermineUpdateMethod())
                 {
-                    epg123.Helper.SendPipeMessage("Downloading|Building and saving MXF file...");
-                    Common.buildKeywords();
-                    writeMxf();
-                    epg123.Helper.SendPipeMessage("Downloading Complete");
+                    Common.BuildKeywords();
+                    WriteMxf();
+                    Helper.SendPipeMessage("Download Complete");
 
                     if (automaticallyImport)
                     {
                         ImportMxfStream();
                     }
                 }
+                else
+                    Helper.SendPipeMessage("Download Complete");
             }
             catch (Exception ex)
             {
@@ -99,90 +95,84 @@ namespace hdhr2mxf
                 Console.WriteLine(ex.StackTrace);
             }
 
-            Console.WriteLine(string.Format("\nGenerated .mxf file contains {5} lineups, {0} services, {1} series, {2} programs, and {3} people with {4} image links.",
-                    Common.mxf.With[0].Services.Count, Common.mxf.With[0].SeriesInfos.Count, Common.mxf.With[0].Programs.Count, Common.mxf.With[0].People.Count,
-                    Common.mxf.With[0].GuideImages.Count, Common.mxf.With[0].Lineups.Count));
-            Console.WriteLine(string.Format("Execution time was {0}", DateTime.UtcNow - starttime));
+            Console.WriteLine("\nGenerated .mxf file contains {5} lineups, {0} services, {1} series, {2} programs, and {3} people with {4} image links.", Common.Mxf.With[0].Services.Count, Common.Mxf.With[0].SeriesInfos.Count, Common.Mxf.With[0].Programs.Count, Common.Mxf.With[0].People.Count, Common.Mxf.With[0].GuideImages.Count, Common.Mxf.With[0].Lineups.Count);
+            Console.WriteLine($"Execution time was {DateTime.UtcNow - starttime}");
 
             return 0;
         }
 
-        static void ImportMxfStream()
+        private static void ImportMxfStream()
         {
-            ProcessStartInfo startInfo = new ProcessStartInfo()
+            var startInfo = new ProcessStartInfo()
             {
                 Arguments = "-i " + outputFile,
                 FileName = Environment.GetEnvironmentVariable("systemroot") + @"\ehome\loadmxf.exe",
             };
-            Process.Start(startInfo).WaitForExit();
+            Process.Start(startInfo)?.WaitForExit();
 
             startInfo = new ProcessStartInfo()
             {
                 FileName = "schtasks.exe",
                 Arguments = "/run /tn \"Microsoft\\Windows\\Media Center\\ReindexSearchRoot\"",
             };
-            Process.Start(startInfo).WaitForExit();
+            Process.Start(startInfo)?.WaitForExit();
         }
-        static bool DetermineUpdateMethod()
+
+        private static bool DetermineUpdateMethod()
         {
             // find all HDHomeRun tuning devices on the network
-            var homeruns = Common.api.DiscoverDevices();
-            if (homeruns == null || homeruns.Count() == 0)
+            var homeruns = Common.Api.DiscoverDevices();
+            if (homeruns == null || !homeruns.Any())
             {
                 Console.WriteLine("No HDHomeRun devices were found.");
                 return false;
             }
 
             // determine if DVR Service is active
-            bool dvrActive = false;
-            foreach (HDHRDiscover homerun in homeruns)
+            var dvrActive = false;
+            foreach (var device in homeruns.Select(homerun => Common.Api.ConnectDevice(homerun.DiscoverUrl)))
             {
-                HDHRDevice device = Common.api.ConnectDevice(homerun.DiscoverURL);
                 if (device == null) continue;
-                else Console.WriteLine(string.Format("Found {0} {1} ({2}) with firmware {3}.", device.FriendlyName, device.ModelNumber, device.DeviceID, device.FirmwareVersion));
-
-                dvrActive |= Common.api.IsDvrActive(device.DeviceAuth);
+                Console.WriteLine($"Found {device.FriendlyName} {device.ModelNumber} ({device.DeviceId}) with firmware {device.FirmwareVersion}.");
+                dvrActive |= Common.Api.IsDvrActive(device.DeviceAuth);
             }
-            Console.WriteLine(string.Format("HDHomeRun DVR Service is {0}active.", dvrActive ? string.Empty : "not "));
+            Console.WriteLine($"HDHomeRun DVR Service is {(dvrActive ? string.Empty : "not ")}active.");
 
             // if DVR Service is active, use XMLTV; otherwise use iterative load from slice guide
             if (dvrActive)
             {
                 Console.WriteLine("Using available 14-day XMLTV file from SiliconDust.");
+                Helper.SendPipeMessage("Downloading|Building and saving MXF file...");
                 return XmltvMxf.BuildMxfFromXmltvGuide(homeruns.ToList());
             }
-            //else if (false)// (!xmltvOnly)
+            //else
             //{
             //    Console.WriteLine("Using available 24-hour slice guide data from SiliconDust.");
             //    return SliceMxf.BuildMxfFromSliceGuide(homeruns.ToList());
             //}
-            else
-            {
-                Console.WriteLine("HDHR2MXF is not configured to download guide data using JSON from SiliconDust.");
-                return false;
-            }
+
+            Console.WriteLine("HDHR2MXF is not configured to download guide data using JSON from SiliconDust.");
+            return false;
         }
 
-        private static bool writeMxf()
+        private static void WriteMxf()
         {
-            Console.WriteLine(string.Format("Writing the MXF file to \"{0}\"", outputFile));
+            Console.WriteLine($"Writing the MXF file to \"{outputFile}\"");
             try
             {
-                using (StreamWriter stream = new StreamWriter(outputFile, false, Encoding.UTF8))
+                using (var stream = new StreamWriter(outputFile, false, Encoding.UTF8))
                 {
-                    XmlSerializer serializer = new XmlSerializer(typeof(MXF));
-                    XmlSerializerNamespaces ns = new XmlSerializerNamespaces();
+                    var serializer = new XmlSerializer(typeof(mxf));
+                    var ns = new XmlSerializerNamespaces();
                     ns.Add("", "");
                     TextWriter writer = stream;
-                    serializer.Serialize(writer, Common.mxf, ns);
+                    serializer.Serialize(writer, Common.Mxf, ns);
                 }
-                return true;
             }
             catch (Exception ex)
             {
-                Console.WriteLine(string.Format("Failed to save the MXF file to \"{0}\". Message: {1}", outputFile, ex.Message));
+                Console.WriteLine($"Failed to save the MXF file to \"{outputFile}\". Message: {ex.Message}");
             }
-            return false;
         }
     }
 }

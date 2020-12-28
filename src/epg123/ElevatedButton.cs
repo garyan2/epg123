@@ -8,7 +8,7 @@ namespace epg123
     /// <summary>
     /// Is a button with the UAC shield
     /// </summary>
-    public partial class ElevatedButton : Button
+    public class ElevatedButton : Button
     {
         /// <summary>
         /// The constructor to create the button with a UAC shield if necessary.
@@ -23,15 +23,15 @@ namespace epg123
 
         private bool IsElevated()
         {
-            WindowsIdentity identity = WindowsIdentity.GetCurrent();
-            WindowsPrincipal principal = new WindowsPrincipal(identity);
+            var identity = WindowsIdentity.GetCurrent();
+            var principal = new WindowsPrincipal(identity);
             return principal.IsInRole(WindowsBuiltInRole.Administrator);
         }
 
         public void ShowShield()
         {
-            IntPtr wParam = new IntPtr(0);
-            IntPtr lParam = new IntPtr(1);
+            var wParam = new IntPtr(0);
+            var lParam = new IntPtr(1);
             NativeMethods.SendMessage(new HandleRef(this, Handle), BCM_SETSHIELD, wParam, lParam);
         }
     }

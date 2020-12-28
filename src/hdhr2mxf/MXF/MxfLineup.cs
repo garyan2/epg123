@@ -1,20 +1,15 @@
 ﻿using System.Collections.Generic;
 using System.Xml.Serialization;
 
-namespace MxfXml
+namespace hdhr2mxf.MXF
 {
     public class MxfLineup
     {
         [XmlIgnore]
-        public int index;
+        public int Index;
 
         [XmlIgnore]
-        public string uid_;
-
-        /// <summary>
-        /// Defines a collection of channels.
-        /// </summary>
-        public MxfLineup() { }
+        public string UniqueId;
 
         /// <summary>
         /// An ID that is unique to the document and defines this element.
@@ -23,10 +18,7 @@ namespace MxfXml
         [XmlAttribute("id")]
         public string Id
         {
-            get
-            {
-                return ("l" + index.ToString());
-            }
+            get => ("l" + Index.ToString());
             set { }
         }
 
@@ -38,14 +30,8 @@ namespace MxfXml
         [XmlAttribute("uid")]
         public string Uid
         {
-            get
-            {
-                return ("!MCLineup!" + uid_);
-            }
-            set
-            {
-                uid_ = value;
-            }
+            get => ("!MCLineup!" + UniqueId);
+            set => UniqueId = value;
         }
 
         /// <summary>
@@ -61,18 +47,11 @@ namespace MxfXml
         [XmlAttribute("primaryProvider")]
         public string PrimaryProvider
         {
-            get
-            {
-                if (index == 1)
-                {
-                    return "!MCLineup!MainLineup";
-                }
-                return null;
-            }
+            get => Index == 1 ? "!MCLineup!MainLineup" : null;
             set { }
         }
 
         [XmlArrayItem("Channel")]
-        public List<MxfChannel> channels { get; set; }
+        public List<MxfChannel> Channels { get; set; }
     }
 }

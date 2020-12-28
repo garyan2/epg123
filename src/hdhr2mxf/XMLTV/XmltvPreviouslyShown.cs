@@ -1,6 +1,6 @@
 ﻿using System.Xml.Serialization;
 
-namespace XmltvXml
+namespace hdhr2mxf.XMLTV
 {
     public class XmltvPreviouslyShown
     {

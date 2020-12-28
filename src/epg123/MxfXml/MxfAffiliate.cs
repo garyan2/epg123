@@ -17,10 +17,7 @@ namespace epg123.MxfXml
         [XmlAttribute("uid")]
         public string Uid
         {
-            get
-            {
-                return ("!Affiliate!" + Name);
-            }
+            get => $"!Affiliate!{Name}";
             set { }
         }
 

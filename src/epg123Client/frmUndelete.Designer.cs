@@ -60,7 +60,7 @@
             this.listView1.UseCompatibleStateImageBehavior = false;
             this.listView1.View = System.Windows.Forms.View.Details;
             this.listView1.VirtualMode = true;
-            this.listView1.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.lvLineupSort);
+            this.listView1.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.LvLineupSort);
             this.listView1.RetrieveVirtualItem += new System.Windows.Forms.RetrieveVirtualItemEventHandler(this.listView1_RetrieveVirtualItem);
             // 
             // colCallSign

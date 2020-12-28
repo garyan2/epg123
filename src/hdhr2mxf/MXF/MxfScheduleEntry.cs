@@ -2,25 +2,22 @@
 using System.Collections.Generic;
 using System.Xml.Serialization;
 
-namespace MxfXml
+namespace hdhr2mxf.MXF
 {
     public class MxfScheduleEntries
     {
-        public DateTime endTime
+        public DateTime EndTime
         {
             get
             {
-                if (ScheduleEntry.Count > 0)
+                if (ScheduleEntry.Count <= 0) return DateTime.MinValue;
+                var s = ScheduleEntry.Count;
+                var totalSeconds = 0;
+                do
                 {
-                    int s = ScheduleEntry.Count;
-                    int totalSeconds = 0;
-                    do
-                    {
-                        totalSeconds += ScheduleEntry[--s].Duration;
-                    } while (ScheduleEntry[s].StartTime == null);
-                    return DateTime.Parse(ScheduleEntry[s].StartTime) + TimeSpan.FromSeconds(totalSeconds);
-                }
-                return DateTime.MinValue;
+                    totalSeconds += ScheduleEntry[--s].Duration;
+                } while (ScheduleEntry[s].StartTime == null);
+                return DateTime.Parse(ScheduleEntry[s].StartTime) + TimeSpan.FromSeconds(totalSeconds);
             }
         }
 
@@ -56,7 +53,7 @@ namespace MxfXml
         /// Indicates whether this broadcast is closed captioned.
         /// </summary>
         [XmlAttribute("isCC")]
-        public string IsCC { get; set; }
+        public string IsCc { get; set; }
 
         /// <summary>
         /// Indicates whether this broadcast is deaf-signed

@@ -6,15 +6,10 @@ namespace epg123.MxfXml
     public class MxfLineup
     {
         [XmlIgnore]
-        public int index;
+        public int Index;
 
         [XmlIgnore]
         private string _uid;
-
-        /// <summary>
-        /// Defines a collection of channels.
-        /// </summary>
-        public MxfLineup() { }
 
         /// <summary>
         /// An ID that is unique to the document and defines this element.
@@ -23,10 +18,7 @@ namespace epg123.MxfXml
         [XmlAttribute("id")]
         public string Id
         {
-            get
-            {
-                return ("l" + index.ToString());
-            }
+            get => $"l{Index}";
             set { }
         }
 
@@ -38,14 +30,8 @@ namespace epg123.MxfXml
         [XmlAttribute("uid")]
         public string Uid
         {
-            get
-            {
-                return ("!MCLineup!" + _uid);
-            }
-            set
-            {
-                _uid = value;
-            }
+            get => $"!MCLineup!{_uid}";
+            set => _uid = value;
         }
 
         /// <summary>
@@ -61,14 +47,7 @@ namespace epg123.MxfXml
         [XmlAttribute("primaryProvider")]
         public string PrimaryProvider
         {
-            get
-            {
-                if (index == 1)
-                {
-                    return "!MCLineup!MainLineup";
-                }
-                return null;
-            }
+            get => (Index == 1) ? "!MCLineup!MainLineup" : null;
             set { }
         }
 

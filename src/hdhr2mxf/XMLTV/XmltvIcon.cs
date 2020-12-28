@@ -1,16 +1,16 @@
 ﻿using System.Xml.Serialization;
 
-namespace XmltvXml
+namespace hdhr2mxf.XMLTV
 {
     public class XmltvIcon
     {
         [XmlAttribute("src")]
-        public string src { get; set; }
+        public string Src { get; set; }
 
         [XmlAttribute("width")]
-        public string width { get; set; }
+        public string Width { get; set; }
 
         [XmlAttribute("height")]
-        public string height { get; set; }
+        public string Height { get; set; }
     }
 }

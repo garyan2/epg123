@@ -3,10 +3,6 @@ using System.Xml.Serialization;
 
 namespace epg123.XmltvXml
 {
-    /// <summary>
-    /// <!ELEMENT channel(display-name+, icon*, url*) >
-    /// <!ATTLIST channel id CDATA #REQUIRED >
-    /// </summary>
     public class XmltvChannel
     {
         [XmlAttribute("id")]

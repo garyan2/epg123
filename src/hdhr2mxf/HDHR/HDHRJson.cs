@@ -1,27 +1,27 @@
 ﻿using System;
 using Newtonsoft.Json;
 
-namespace HDHomeRunTV
+namespace hdhr2mxf.HDHR
 {
-    public class HDHRDiscover
+    public class hdhrDiscover
     {
         [JsonProperty("DeviceID")]
-        public string DeviceID { get; set; }
+        public string DeviceId { get; set; }
 
         [JsonProperty("LocalIP")]
-        public string LocalIP { get; set; }
+        public string LocalIp { get; set; }
 
         [JsonProperty("BaseURL")]
-        public string BaseURL { get; set; }
+        public string BaseUrl { get; set; }
 
         [JsonProperty("DiscoverURL")]
-        public string DiscoverURL { get; set; }
+        public string DiscoverUrl { get; set; }
 
         [JsonProperty("LineupURL")]
-        public string LineupURL { get; set; }
+        public string LineupUrl { get; set; }
     }
 
-    public class HDHRDevice
+    public class hdhrDevice
     {
         [JsonProperty("FriendlyName")]
         public string FriendlyName { get; set; }
@@ -36,7 +36,7 @@ namespace HDHomeRunTV
         public string FirmwareVersion { get; set; }
 
         [JsonProperty("DeviceID")]
-        public string DeviceID { get; set; }
+        public string DeviceId { get; set; }
 
         [JsonProperty("DeviceAuth")]
         public string DeviceAuth { get; set; }
@@ -45,13 +45,13 @@ namespace HDHomeRunTV
         public int TunerCount { get; set; }
 
         [JsonProperty("BaseURL")]
-        public string BaseURL { get; set; }
+        public string BaseUrl { get; set; }
 
         [JsonProperty("LineupURL")]
-        public string LineupURL { get; set; }
+        public string LineupUrl { get; set; }
     }
 
-    public class HDHRChannel
+    public class hdhrChannel
     {
         [JsonProperty("GuideNumber")]
         public string GuideNumber { get; set; }
@@ -66,17 +66,17 @@ namespace HDHomeRunTV
         public string AudioCodec { get; set; }
 
         [JsonProperty("HD")]
-        public bool HD { get; set; }
+        public bool Hd { get; set; }
 
         [JsonProperty("Favorite")]
         public bool Favorite { get; set; }
 
         [JsonProperty("URL")]
-        public string URL { get; set; }
+        public string Url { get; set; }
 
         // the below items are returned with the ?tuning option in the request
         [JsonProperty("TransportStreamID")]
-        public string TransportStreamID { get; set; }
+        public string TransportStreamId { get; set; }
 
         [JsonProperty("Modulation")]
         public string Modulation { get; set; }
@@ -88,13 +88,13 @@ namespace HDHomeRunTV
         public string ProgramNumber { get; set; }
 
         [JsonProperty("OriginalNetworkID")]
-        public string OriginalNetworkID { get; set; }
+        public string OriginalNetworkId { get; set; }
     }
 
     /// <summary>
     /// This is similar to MXF Service entry
     /// </summary>
-    public class HDHRChannelGuide
+    public class hdhrChannelGuide
     {
         [JsonProperty("GuideNumber")]
         public string GuideNumber { get; set; }
@@ -106,13 +106,13 @@ namespace HDHomeRunTV
         public string Affiliate { get; set; }
 
         [JsonProperty("ImageURL")]
-        public string ImageURL { get; set; }
+        public string ImageUrl { get; set; }
 
         [JsonProperty("Guide")]
-        public HDHRProgram[] Guide { get; set; }
+        public hdhrProgram[] Guide { get; set; }
     }
 
-    public class HDHRAccount
+    public class hdhrAccount
     {
         [JsonProperty("AccountEmail")]
         public string AccountEmail { get; set; }
@@ -126,17 +126,17 @@ namespace HDHomeRunTV
         [JsonProperty("AccountState")]
         public string AccountState { get; set; }
     }
-    public class HDHRProgram
+    public class hdhrProgram
     {
         public override int GetHashCode()
         {
-            int ret = (Title != null) ? Title.GetHashCode() : 0;
-            ret = (ret * 397) ^ ((EpisodeNumber != null) ? EpisodeNumber.GetHashCode() : 0);
-            ret = (ret * 397) ^ ((EpisodeTitle != null) ? EpisodeTitle.GetHashCode() : 0);
-            ret = (ret * 397) ^ ((Synopsis != null) ? Synopsis.GetHashCode() : 0);
-            ret = (ret * 397) ^ ((Team1 != null) ? Team1.GetHashCode() : 0);
-            ret = (ret * 397) ^ ((Team2 != null) ? Team2.GetHashCode() : 0);
-            ret = (ret * 397) ^ SeriesID.GetHashCode();
+            var ret = (Title != null) ? Title.GetHashCode() : 0;
+            ret = (ret * 397) ^ (EpisodeNumber != null ? EpisodeNumber.GetHashCode() : 0);
+            ret = (ret * 397) ^ (EpisodeTitle != null ? EpisodeTitle.GetHashCode() : 0);
+            ret = (ret * 397) ^ (Synopsis != null ? Synopsis.GetHashCode() : 0);
+            ret = (ret * 397) ^ (Team1 != null ? Team1.GetHashCode() : 0);
+            ret = (ret * 397) ^ (Team2 != null ? Team2.GetHashCode() : 0);
+            ret = (ret * 397) ^ SeriesId.GetHashCode();
             ret &= 0x7fffffff;
 
             return ret;
@@ -144,23 +144,11 @@ namespace HDHomeRunTV
 
         [JsonProperty("StartTime")]
         public int StartTime { get; set; }
-        public DateTime StartDateTime
-        {
-            get
-            {
-                return (new DateTime(1970, 1, 1) + TimeSpan.FromSeconds((double)StartTime));
-            }
-        }
+        public DateTime StartDateTime => (new DateTime(1970, 1, 1) + TimeSpan.FromSeconds(StartTime));
 
         [JsonProperty("EndTime")]
         public int EndTime { get; set; }
-        public DateTime EndDateTime
-        {
-            get
-            {
-                return (new DateTime(1970, 1, 1) + TimeSpan.FromSeconds((double)EndTime));
-            }
-        }
+        //public DateTime EndDateTime => (new DateTime(1970, 1, 1) + TimeSpan.FromSeconds(EndTime));
 
         [JsonProperty("Title")]
         public string Title { get; set; }
@@ -188,19 +176,18 @@ namespace HDHomeRunTV
             {
                 if (OriginalAirdate != null)
                     return (new DateTime(1970, 1, 1) + TimeSpan.FromSeconds((double)OriginalAirdate));
-                else
-                    return new DateTime(1970, 1, 1);
+                return new DateTime(1970, 1, 1);
             }
         }
 
         [JsonProperty("ImageURL")]
-        public string ImageURL { get; set; }
+        public string ImageUrl { get; set; }
 
         [JsonProperty("PosterURL")]
-        public string PosterURL { get; set; }
+        public string PosterUrl { get; set; }
 
         [JsonProperty("SeriesID")]
-        public string SeriesID { get; set; }
+        public string SeriesId { get; set; }
 
         [JsonProperty("Filter")]
         public string[] Filters { get; set; }

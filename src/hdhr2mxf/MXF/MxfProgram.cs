@@ -1,18 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Xml.Serialization;
 
-namespace MxfXml
+namespace hdhr2mxf.MXF
 {
     public class MxfProgram
     {
         public struct ProgramEpisodeInfo
         {
-            public string TMSID;
+            public string TmsId;
             public string Type;
-            public string SeriesID;
+            public string SeriesId;
             public int ProductionNumber;
             public int SeasonNumber;
             public int EpisodeNumber;
@@ -21,25 +18,19 @@ namespace MxfXml
         }
 
         [XmlIgnore]
-        public ProgramEpisodeInfo episodeInfo;
+        public ProgramEpisodeInfo EpisodeInfo;
 
         [XmlIgnore]
-        public string programId;
+        public string ProgramId;
 
         [XmlIgnore]
-        public int index;
+        public int Index;
 
         [XmlIgnore]
         public string IsPremiere;
 
         [XmlIgnore]
-        public string _newDate { get; set; }
-
-        /// <summary>
-        /// A movie or episode.
-        /// Example: An episode of Lost, titled "The others strike".
-        /// </summary>
-        public MxfProgram() { }
+        public string NewDate { get; set; }
 
         /// <summary>
         /// An ID that is unique to the document and defines this element.
@@ -49,10 +40,7 @@ namespace MxfXml
         [XmlAttribute("id")]
         public string Id
         {
-            get
-            {
-                return index.ToString();
-            }
+            get => Index.ToString();
             set { }
         }
 
@@ -65,9 +53,9 @@ namespace MxfXml
         {
             get
             {
-                if (!string.IsNullOrEmpty(episodeInfo.TMSID)) return ("!Program!" + episodeInfo.TMSID.Substring(0, 10) + "_" + episodeInfo.TMSID.Substring(10));
-                if (programId.StartsWith("MV")) return ("!Program!" + programId.Substring(0, 10) + "_" + programId.Substring(10));
-                return ("!Program!" + programId);
+                if (!string.IsNullOrEmpty(EpisodeInfo.TmsId)) return ("!Program!" + EpisodeInfo.TmsId.Substring(0, 10) + "_" + EpisodeInfo.TmsId.Substring(10));
+                if (ProgramId.StartsWith("MV")) return ("!Program!" + ProgramId.Substring(0, 10) + "_" + ProgramId.Substring(10));
+                return ("!Program!" + ProgramId);
             }
             set { }
         }

@@ -1,25 +1,17 @@
-﻿using System.Collections.Generic;
-using System.Xml.Serialization;
-using System;
+﻿using System.Xml.Serialization;
 
-namespace MxfXml
+namespace hdhr2mxf.MXF
 {
     public class MxfSeriesInfo
     {
         [XmlIgnore]
-        public int index;
+        public int Index;
 
         /// <summary>
         /// 8 digit number unique to the series
         /// </summary>
         [XmlIgnore]
-        public string tmsSeriesId;
-
-        /// <summary>
-        /// A series of a particular program.
-        /// Example: Lost
-        /// </summary>
-        public MxfSeriesInfo() { }
+        public string TmsSeriesId;
 
         /// <summary>
         /// An ID that is unique to the document and defines this element.
@@ -28,10 +20,7 @@ namespace MxfXml
         [XmlAttribute("id")]
         public string Id
         {
-            get
-            {
-                return ("si" + index.ToString());
-            }
+            get => ("si" + Index.ToString());
             set { }
         }
 
@@ -42,10 +31,7 @@ namespace MxfXml
         [XmlAttribute("uid")]
         public string Uid
         {
-            get
-            {
-                return ("!Series!" + tmsSeriesId);
-            }
+            get => ("!Series!" + TmsSeriesId);
             set { }
         }
 

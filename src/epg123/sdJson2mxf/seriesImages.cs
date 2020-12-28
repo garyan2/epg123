@@ -5,72 +5,72 @@ using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 using epg123.MxfXml;
+using epg123.SchedulesDirectAPI;
+using Newtonsoft.Json;
 
-namespace epg123
+namespace epg123.sdJson2mxf
 {
-    public static partial class sdJson2mxf
+    internal static partial class sdJson2Mxf
     {
         private static List<string> seriesImageQueue = new List<string>();
         private static NameValueCollection sportsSeries = new NameValueCollection();
         private static ConcurrentBag<sdArtworkResponse> seriesImageResponses = new ConcurrentBag<sdArtworkResponse>();
 
-        private static bool getAllSeriesImages()
+        private static bool GetAllSeriesImages()
         {
             // reset counters
             processedObjects = 0;
-            Logger.WriteMessage(string.Format("Entering getAllSeriesImages() for {0} series.",
-                                totalObjects = sdMxf.With[0].SeriesInfos.Count));
-            ++processStage; reportProgress();
-            int refreshing = 0;
+            Logger.WriteMessage($"Entering getAllSeriesImages() for {totalObjects = SdMxf.With[0].SeriesInfos.Count} series.");
+            ++processStage; ReportProgress();
+            var refreshing = 0;
 
             // scan through each series in the mxf
-            foreach (MxfSeriesInfo series in sdMxf.With[0].SeriesInfos)
+            foreach (var series in SdMxf.With[0].SeriesInfos)
             {
-                string seriesId = "SH" + series.tmsSeriesId + "0000";
+                var seriesId = "SH" + series.TmsSeriesId + "0000";
 
                 // if image for series already exists in archive file, use it
                 // cycle images for a refresh based on day of month and seriesid
-                bool refresh = false;
-                if (int.TryParse(series.tmsSeriesId, out int digits))
+                var refresh = false;
+                if (int.TryParse(series.TmsSeriesId, out var digits))
                 {
                     refresh = ((digits * config.ExpectedServicecount) % DateTime.DaysInMonth(DateTime.Now.Year, DateTime.Now.Month)) == DateTime.Now.Day + 1;
                 }
                 else
                 {
-                    seriesId = series.tmsSeriesId;
+                    seriesId = series.TmsSeriesId;
                 }
 
                 if (!refresh && epgCache.JsonFiles.ContainsKey(seriesId) && epgCache.JsonFiles[seriesId].Images != null)
                 {
-                    ++processedObjects; reportProgress();
+                    ++processedObjects; ReportProgress();
                     if (string.IsNullOrEmpty(epgCache.JsonFiles[seriesId].Images)) continue;
 
-                    using (StringReader reader = new StringReader(epgCache.JsonFiles[seriesId].Images))
+                    using (var reader = new StringReader(epgCache.JsonFiles[seriesId].Images))
                     {
-                        JsonSerializer serializer = new JsonSerializer();
-                        series.seriesImages = (List<sdImage>)serializer.Deserialize(reader, typeof(List<sdImage>));
+                        var serializer = new JsonSerializer();
+                        series.SeriesImages = (List<sdImage>)serializer.Deserialize(reader, typeof(List<sdImage>));
                     }
 
-                    var image = series.seriesImages.Where(arg => arg.Aspect.ToLower().Equals(config.SeriesPosterArt ? "2x3" : "4x3")).SingleOrDefault();
+                    var image = series.SeriesImages.SingleOrDefault(arg => arg.Aspect.ToLower().Equals(config.SeriesPosterArt ? "2x3" : "4x3"));
                     if (image != null)
                     {
-                        series.GuideImage = sdMxf.With[0].getGuideImage(image.Uri).Id;
+                        series.GuideImage = SdMxf.With[0].GetGuideImage(image.Uri).Id;
                     }
                 }
-                else if (int.TryParse(series.tmsSeriesId, out int dummy))
+                else if (int.TryParse(series.TmsSeriesId, out var dummy))
                 {
                     // only increment the refresh count if something exists already
                     if (refresh && epgCache.JsonFiles.ContainsKey(seriesId) && epgCache.JsonFiles[seriesId].Images != null)
                     {
                         ++refreshing;
                     }
-                    seriesImageQueue.Add("SH" + series.tmsSeriesId);
+                    seriesImageQueue.Add("SH" + series.TmsSeriesId);
                 }
                 else
                 {
-                    seriesImageQueue.AddRange(sportsSeries.GetValues(series.tmsSeriesId));
+                    seriesImageQueue.AddRange(sportsSeries.GetValues(series.TmsSeriesId));
                 }
             }
             Logger.WriteVerbose($"Found {processedObjects} cached series image links.");
@@ -79,17 +79,17 @@ namespace epg123
                 Logger.WriteVerbose($"Refreshing {refreshing} series image links.");
             }
             totalObjects = processedObjects + seriesImageQueue.Count;
-            reportProgress();
+            ReportProgress();
 
             // maximum 500 queries at a time
             if (seriesImageQueue.Count > 0)
             {
-                Parallel.For(0, (seriesImageQueue.Count / MAXIMGQUERIES + 1), new ParallelOptions { MaxDegreeOfParallelism = MAXPARALLELDOWNLOADS }, i =>
+                Parallel.For(0, (seriesImageQueue.Count / MaxImgQueries + 1), new ParallelOptions { MaxDegreeOfParallelism = MaxParallelDownloads }, i =>
                 {
-                    downloadSeriesImageResponses(i * MAXIMGQUERIES);
+                    DownloadSeriesImageResponses(i * MaxImgQueries);
                 });
 
-                processSeriesImageResponses();
+                ProcessSeriesImageResponses();
                 if (processedObjects != totalObjects)
                 {
                     Logger.WriteInformation("Problem occurred during getAllSeriesImages(). Did not process all series image links.");
@@ -101,17 +101,17 @@ namespace epg123
             return true;
         }
 
-        private static void downloadSeriesImageResponses(int start = 0)
+        private static void DownloadSeriesImageResponses(int start = 0)
         {
             // build the array of series to request images for
-            string[] series = new string[Math.Min(seriesImageQueue.Count - start, MAXIMGQUERIES)];
-            for (int i = 0; i < series.Length; ++i)
+            var series = new string[Math.Min(seriesImageQueue.Count - start, MaxImgQueries)];
+            for (var i = 0; i < series.Length; ++i)
             {
                 series[i] = seriesImageQueue[start + i] + "0000";
             }
 
             // request images from Schedules Direct
-            IList<sdArtworkResponse> responses = sdAPI.sdGetArtwork(series);
+            var responses = sdApi.SdGetArtwork(series);
             if (responses != null)
             {
                 Parallel.ForEach(responses, (response) =>
@@ -121,72 +121,71 @@ namespace epg123
             }
         }
 
-        private static void processSeriesImageResponses()
+        private static void ProcessSeriesImageResponses()
         {
             // process request response
-            foreach (sdArtworkResponse response in seriesImageResponses)
+            foreach (var response in seriesImageResponses)
             {
-                ++processedObjects; reportProgress();
-                string seriesId = response.ProgramID;
+                ++processedObjects; ReportProgress();
+                var seriesId = response.ProgramId;
 
-                if (response.Data != null)
+                if (response.Data == null) continue;
+                MxfSeriesInfo mxfSeriesInfo = null;
+                if (response.ProgramId.StartsWith("SP"))
                 {
-                    MxfSeriesInfo mxfSeriesInfo = null;
-                    if (response.ProgramID.StartsWith("SP"))
+                    foreach (var key in sportsSeries.AllKeys)
                     {
-                        foreach (string key in sportsSeries.AllKeys)
+                        if (!sportsSeries.Get(key).Contains(response.ProgramId.Substring(0, 10))) continue;
+                        mxfSeriesInfo = SdMxf.With[0].GetSeriesInfo(key);
+                        seriesId = key;
+                    }
+                }
+                else
+                {
+                    mxfSeriesInfo = SdMxf.With[0].GetSeriesInfo(response.ProgramId.Substring(2, 8));
+                }
+                if (mxfSeriesInfo == null || !string.IsNullOrEmpty(mxfSeriesInfo.GuideImage)) continue;
+
+                // get series images
+                mxfSeriesInfo.SeriesImages = GetSeriesImages(response.Data);
+
+                if (mxfSeriesInfo.SeriesImages.Count > 0)
+                {
+                    var image = mxfSeriesInfo.SeriesImages.SingleOrDefault(arg => arg.Aspect.ToLower().Equals(config.SeriesPosterArt ? "2x3" : "4x3"));
+                    if (image != null)
+                    {
+                        mxfSeriesInfo.GuideImage = SdMxf.With[0].GetGuideImage(image.Uri).Id;
+                    }
+
+                    using (var writer = new StringWriter())
+                    {
+                        try
                         {
-                            if (sportsSeries.Get(key).Contains(response.ProgramID.Substring(0, 10)))
+                            var serializer = new JsonSerializer();
+                            serializer.Serialize(writer, mxfSeriesInfo.SeriesImages);
+
+                            if (!epgCache.JsonFiles.ContainsKey(seriesId))
                             {
-                                mxfSeriesInfo = sdMxf.With[0].getSeriesInfo(key);
-                                seriesId = key;
+                                epgCache.AddAsset(seriesId, string.Empty);
                             }
+                            epgCache.JsonFiles[seriesId].Images = writer.ToString();
                         }
-                    }
-                    else
-                    {
-                        mxfSeriesInfo = sdMxf.With[0].getSeriesInfo(response.ProgramID.Substring(2, 8));
-                    }
-                    if (mxfSeriesInfo == null || !string.IsNullOrEmpty(mxfSeriesInfo.GuideImage)) continue;
-
-                    // get series images
-                    mxfSeriesInfo.seriesImages = getSeriesImages(response.Data);
-
-                    if (mxfSeriesInfo.seriesImages.Count > 0)
-                    {
-                        var image = mxfSeriesInfo.seriesImages.Where(arg => arg.Aspect.ToLower().Equals(config.SeriesPosterArt ? "2x3" : "4x3")).SingleOrDefault();
-                        if (image != null)
+                        catch
                         {
-                            mxfSeriesInfo.GuideImage = sdMxf.With[0].getGuideImage(image.Uri).Id;
-                        }
-
-                        using (StringWriter writer = new StringWriter())
-                        {
-                            try
-                            {
-                                JsonSerializer serializer = new JsonSerializer();
-                                serializer.Serialize(writer, mxfSeriesInfo.seriesImages);
-
-                                if (!epgCache.JsonFiles.ContainsKey(seriesId))
-                                {
-                                    epgCache.AddAsset(seriesId, string.Empty);
-                                }
-                                epgCache.JsonFiles[seriesId].Images = writer.ToString();
-                            }
-                            catch { }
+                            // ignored
                         }
                     }
-                    else
-                    {
-                        epgCache.UpdateAssetImages(seriesId, string.Empty);
-                    }
+                }
+                else
+                {
+                    epgCache.UpdateAssetImages(seriesId, string.Empty);
                 }
             }
         }
 
-        private static IList<sdImage> getSeriesImages(IList<sdImage> sdImages)
+        private static IList<sdImage> GetSeriesImages(IList<sdImage> sdImages)
         {
-            List<sdImage> ret = new List<sdImage>();
+            var ret = new List<sdImage>();
             var images = sdImages.Where(arg => !string.IsNullOrEmpty(arg.Category))
                                  .Where(arg => !string.IsNullOrEmpty(arg.Aspect))
                                  .Where(arg => !string.IsNullOrEmpty(arg.Size)).Where(arg => arg.Size.ToLower().Equals("md"))
@@ -194,68 +193,62 @@ namespace epg123
                                  .Where(arg => string.IsNullOrEmpty(arg.Tier) ||
                                                arg.Tier.ToLower().Equals("series") ||
                                                arg.Tier.ToLower().Equals("sport") ||
-                                               arg.Tier.ToLower().Equals("sport event"));
-            if (images != null)
+                                               arg.Tier.ToLower().Equals("sport event")).ToArray();
+
+            // get the aspect ratios available and fix the URI
+            var aspects = new HashSet<string>();
+            foreach (var image in images)
             {
-                // get the aspect ratios available and fix the URI
-                HashSet<string> aspects = new HashSet<string>();
-                foreach (sdImage image in images)
+                aspects.Add(image.Aspect);
+                if (!image.Uri.ToLower().StartsWith("http"))
                 {
-                    aspects.Add(image.Aspect);
-                    if (!image.Uri.ToLower().StartsWith("http"))
+                    image.Uri = $"{sdApi.JsonBaseUrl}{sdApi.JsonApi}image/{image.Uri.ToLower()}";
+                }
+            }
+
+            // determine which image to return with each aspect
+            foreach (var aspect in aspects)
+            {
+                var imgAspects = images.Where(arg => arg.Aspect.ToLower().Equals(aspect));
+
+                var links = new sdImage[8];
+                foreach (var image in imgAspects)
+                {
+                    switch (image.Category.ToLower())
                     {
-                        image.Uri = $"{sdAPI.jsonBaseUrl}{sdAPI.jsonApi}image/{image.Uri.ToLower()}";
+                        case "banner":      // source-provided image, usually shows cast ensemble with source-provided text
+                            if (links[0] == null) links[0] = image;
+                            break;
+                        case "banner-l1":   // same as Banner
+                            if (links[1] == null) links[1] = image;
+                            break;
+                        case "banner-l2":   // source-provided image with plain text
+                            if (links[2] == null) links[2] = image;
+                            break;
+                        case "banner-lo":   // banner with Logo Only
+                            if (links[3] == null) links[3] = image;
+                            break;
+                        case "logo":        // official logo for program, sports organization, sports conference, or TV station
+                            if (links[4] == null) links[4] = image;
+                            break;
+                        case "banner-l3":   // stock photo image with plain text
+                            if (links[5] == null) links[5] = image;
+                            break;
+                        case "iconic":      // representative series/season/episode image, no text
+                            if (links[6] == null) links[6] = image;
+                            break;
+                        case "staple":      // the staple image is intended to cover programs which do not have a unique banner image
+                            if (links[7] == null) links[7] = image;
+                            break;
                     }
+
                 }
 
-                // determine which image to return with each aspect
-                foreach (string aspect in aspects)
+                foreach (var link in links)
                 {
-                    var imgAspects = images.Where(arg => arg.Aspect.ToLower().Equals(aspect));
-
-                    sdImage[] links = new sdImage[8];
-                    foreach (sdImage image in imgAspects)
-                    {
-                        switch (image.Category.ToLower())
-                        {
-                            case "banner":      // source-provided image, usually shows cast ensemble with source-provided text
-                                if (links[0] == null) links[0] = image;
-                                break;
-                            case "banner-l1":   // same as Banner
-                                if (links[1] == null) links[1] = image;
-                                break;
-                            case "banner-l2":   // source-provided image with plain text
-                                if (links[2] == null) links[2] = image;
-                                break;
-                            case "banner-lo":   // banner with Logo Only
-                                if (links[3] == null) links[3] = image;
-                                break;
-                            case "logo":        // official logo for program, sports organization, sports conference, or TV station
-                                if (links[4] == null) links[4] = image;
-                                break;
-                            case "banner-l3":   // stock photo image with plain text
-                                if (links[5] == null) links[5] = image;
-                                break;
-                            case "iconic":      // representative series/season/episode image, no text
-                                if (links[6] == null) links[6] = image;
-                                break;
-                            case "staple":      // the staple image is intended to cover programs which do not have a unique banner image
-                                if (links[7] == null) links[7] = image;
-                                break;
-                            default:
-                                break;
-                        }
-
-                    }
-
-                    foreach (sdImage link in links)
-                    {
-                        if (link != null)
-                        {
-                            ret.Add(link);
-                            break;
-                        }
-                    }
+                    if (link == null) continue;
+                    ret.Add(link);
+                    break;
                 }
             }
             return ret;

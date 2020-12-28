@@ -1,20 +1,14 @@
 ﻿using System.Xml.Serialization;
 
-namespace MxfXml
+namespace hdhr2mxf.MXF
 {
     public class MxfSeason
     {
         [XmlIgnore]
-        public int index;
+        public int Index;
 
         [XmlIgnore]
-        public string zap2it;
-
-        /// <summary>
-        /// A season of a particular program.
-        /// Example: Lost Season 1
-        /// </summary>
-        public MxfSeason() { }
+        public string Zap2It;
 
         /// <summary>
         /// An ID that is unique to the document and defines this element.
@@ -23,10 +17,7 @@ namespace MxfXml
         [XmlAttribute("id")]
         public string Id
         {
-            get
-            {
-                return ("sn" + index.ToString());
-            }
+            get => ("sn" + Index.ToString());
             set { }
         }
 
@@ -37,10 +28,7 @@ namespace MxfXml
         [XmlAttribute("uid")]
         public string Uid
         {
-            get
-            {
-                return ("!Season!" + zap2it + "_" + SeasonNumber);
-            }
+            get => ("!Season!" + Zap2It + "_" + SeasonNumber);
             set { }
         }
 

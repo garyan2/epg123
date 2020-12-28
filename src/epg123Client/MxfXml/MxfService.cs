@@ -1,16 +1,9 @@
-﻿using System.Collections.Generic;
-using System.Xml.Serialization;
+﻿using System.Xml.Serialization;
 
-namespace epg123.MxfXml
+namespace epg123Client.MxfXml
 {
     public class MxfService
     {
-        /// <summary>
-        /// A content provider.
-        /// Example: KOMO
-        /// </summary>
-        public MxfService() { }
-
         /// <summary>
         /// An ID that is unique to the document and defines this element.
         /// Use IDs such as s1, s2, s3, and so forth.

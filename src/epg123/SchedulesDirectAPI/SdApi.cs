@@ -6,11 +6,11 @@ using System.Text;
 using System.Threading;
 using Newtonsoft.Json;
 
-namespace epg123
+namespace epg123.SchedulesDirectAPI
 {
-    public static class sdAPI
+    public static class sdApi
     {
-        enum METHODS
+        enum methods
         {
             GET,
             GETVERBOSEMAP,
@@ -21,33 +21,27 @@ namespace epg123
 
         private static string userAgent;
         private static string grabberVersion;
-        public static string jsonBaseUrl = @"https://json.schedulesdirect.org";
-        public static string jsonApi = @"/20141201/";
+        public static string JsonBaseUrl = @"https://json.schedulesdirect.org";
+        public static string JsonApi = @"/20141201/";
         private static string sdToken;
         public static string ErrorString { get; set; }
-        public static int maxLineups { get; set; }
+        public static int MaxLineups { get; set; }
 
-        private static long totalBytes_;
-        public static string TotalDownloadBytes
-        {
-            get
-            {
-                return GetStringByteLength(totalBytes_);
-            }
-        }
+        private static long totalBytes;
+        public static string TotalDownloadBytes => GetStringByteLength(totalBytes);
 
         private static string GetStringTimeAndByteLength(TimeSpan span, long length = 0)
         {
-            string ret = span.ToString("G");
+            var ret = span.ToString("G");
             if (length == 0) return ret;
 
-            Interlocked.Add(ref totalBytes_, length);
+            Interlocked.Add(ref totalBytes, length);
             return $"{ret} / {GetStringByteLength(length)}";
         }
         private static string GetStringByteLength(long length)
         {
             string[] units = { "", "K", "M", "G", "T" };
-            for (int i = 0; i < units.Length; ++i)
+            for (var i = 0; i < units.Length; ++i)
             {
                 double calc;
                 if ((calc = length / Math.Pow(1024, i)) < 1024)
@@ -64,24 +58,24 @@ namespace epg123
             grabberVersion = version;
         }
 
-        private static string sdGetRequestResponse(METHODS method, string uri, object jsonRequest = null, bool tkRequired = true)
+        private static string SdGetRequestResponse(methods method, string uri, object jsonRequest = null, bool tkRequired = true)
         {
             // clear errorstring
             ErrorString = string.Empty;
 
             // build url
-            string url = string.Format("{0}{1}{2}", jsonBaseUrl, jsonApi, uri);
+            var url = $"{JsonBaseUrl}{JsonApi}{uri}";
 
             // send request and get response
-            int maxTries = uri.Equals("token") ? 1 : 2;
-            int cntTries = 0;
-            int timeout = uri.Equals("token") ? 3000 : 300000;
+            var maxTries = uri.Equals("token") ? 1 : 2;
+            var cntTries = 0;
+            var timeout = uri.Equals("token") ? 3000 : 300000;
             do
             {
                 try
                 {
                     // create the request with defaults
-                    HttpWebRequest req = (HttpWebRequest)WebRequest.Create(url);
+                    var req = (HttpWebRequest)WebRequest.Create(url);
                     req.UserAgent = userAgent;
                     req.AutomaticDecompression = DecompressionMethods.Deflate;
                     req.Timeout = timeout; ++cntTries;
@@ -95,36 +89,33 @@ namespace epg123
                     // setup request
                     switch (method)
                     {
-                        case METHODS.GET:
+                        case methods.GET:
                             req.Method = "GET";
                             break;
-                        case METHODS.GETVERBOSEMAP:
+                        case methods.GETVERBOSEMAP:
                             req.Method = "GET";
                             req.Headers["verboseMap"] = "true";
                             break;
-                        case METHODS.PUT:
+                        case methods.PUT:
                             req.Method = "PUT";
                             break;
-                        case METHODS.DELETE:
+                        case methods.DELETE:
                             req.Method = "DELETE";
                             break;
-                        case METHODS.POST:
-                            string send = JsonConvert.SerializeObject(jsonRequest);
-                            byte[] body = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(jsonRequest));
+                        case methods.POST:
+                            var body = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(jsonRequest));
                             req.Method = "POST";
                             req.ContentType = "application/json";
                             req.Accept = "application/json";
                             req.ContentLength = body.Length;
 
-                            Stream reqStream = req.GetRequestStream();
+                            var reqStream = req.GetRequestStream();
                             reqStream.Write(body, 0, body.Length);
                             reqStream.Close();
                             break;
-                        default:
-                            break;
                     }
 
-                    WebResponse resp = req.GetResponse();
+                    var resp = req.GetResponse();
                     return new StreamReader(resp.GetResponseStream(), Encoding.UTF8).ReadToEnd();
                 }
                 catch (WebException wex)
@@ -141,15 +132,19 @@ namespace epg123
                             Logger.WriteVerbose($"SD API WebException Thrown. Message: {wex.Message} , Status: {wex.Status}");
                             try
                             {
-                                StreamReader sr = new StreamReader(wex.Response.GetResponseStream(), Encoding.UTF8);
-                                sdError err = JsonConvert.DeserializeObject<sdError>(sr.ReadToEnd());
+                                var sr = new StreamReader(wex.Response.GetResponseStream(), Encoding.UTF8);
+                                var err = JsonConvert.DeserializeObject<sdError>(sr.ReadToEnd());
                                 if (err != null)
                                 {
                                     ErrorString = $"Message: {err.Message ?? string.Empty} Response: {err.Response ?? string.Empty}";
-                                    Logger.WriteVerbose($"SD responded with error code: {err.Code} , message: {err.Message ?? err.Response} , serverID: {err.ServerID} , datetime: {err.Datetime:s}Z");
+                                    Logger.WriteVerbose($"SD responded with error code: {err.Code} , message: {err.Message ?? err.Response} , serverID: {err.ServerId} , datetime: {err.Datetime:s}Z");
                                 }
                             }
-                            catch { }
+                            catch
+                            {
+                                // ignored
+                            }
+
                             break; // try again until maxTries
                     }
                 }
@@ -164,11 +159,11 @@ namespace epg123
             return null;
         }
 
-        public static bool sdGetToken(string username, string passwordHash, ref string errorString)
+        public static bool SdGetToken(string username, string passwordHash, ref string errorString)
         {
             if (!string.IsNullOrEmpty(sdToken)) return true;
 
-            var sr = sdGetRequestResponse(METHODS.POST, "token", new SdTokenRequest() { Username = username, Password_hash = passwordHash }, false);
+            var sr = SdGetRequestResponse(methods.POST, "token", new SdTokenRequest() { Username = username, PasswordHash = passwordHash }, false);
             if (sr == null)
             {
                 if (string.IsNullOrEmpty(ErrorString))
@@ -181,15 +176,12 @@ namespace epg123
 
             try
             {
-                SdTokenResponse ret = JsonConvert.DeserializeObject<SdTokenResponse>(sr);
-                switch (ret.Code)
+                var ret = JsonConvert.DeserializeObject<SdTokenResponse>(sr);
+                if (ret.Code == 0)
                 {
-                    case 0:
-                        Logger.WriteVerbose($"Token request successful. serverID: {ret.ServerID}");
-                        sdToken = ret.Token;
-                        return true;
-                    default:
-                        break;
+                    Logger.WriteVerbose($"Token request successful. serverID: {ret.ServerId}");
+                    sdToken = ret.Token;
+                    return true;
                 }
                 errorString = $"Failed token request. code: {ret.Code} , message: {ret.Message} , datetime: {ret.DateTime:s}Z";
             }
@@ -201,9 +193,9 @@ namespace epg123
             return false;
         }
 
-        public static sdUserStatusResponse sdGetStatus()
+        public static sdUserStatusResponse SdGetStatus()
         {
-            var sr = sdGetRequestResponse(METHODS.GET, "status");
+            var sr = SdGetRequestResponse(methods.GET, "status");
             if (sr == null)
             {
                 Logger.WriteError("Did not receive a response from Schedules Direct for a status request.");
@@ -212,35 +204,32 @@ namespace epg123
 
             try
             {
-                sdUserStatusResponse ret = JsonConvert.DeserializeObject<sdUserStatusResponse>(sr);
-                switch (ret.Code)
+                var ret = JsonConvert.DeserializeObject<sdUserStatusResponse>(sr);
+                if (ret.Code == 0)
                 {
-                    case 0:
-                        Logger.WriteVerbose($"Status request successful. account expires: {ret.Account.Expires:s}Z , lineups: {ret.Lineups.Count}/{ret.Account.MaxLineups} , lastDataUpdate: {ret.LastDataUpdate:s}Z");
-                        Logger.WriteVerbose($"system status: {ret.SystemStatus[0].Status} , message: {ret.SystemStatus[0].Message}");
-                        maxLineups = ret.Account.MaxLineups;
+                    Logger.WriteVerbose($"Status request successful. account expires: {ret.Account.Expires:s}Z , lineups: {ret.Lineups.Count}/{ret.Account.MaxLineups} , lastDataUpdate: {ret.LastDataUpdate:s}Z");
+                    Logger.WriteVerbose($"system status: {ret.SystemStatus[0].Status} , message: {ret.SystemStatus[0].Message}");
+                    MaxLineups = ret.Account.MaxLineups;
 
-                        TimeSpan expires = ret.Account.Expires - DateTime.UtcNow;
-                        if (expires < TimeSpan.FromDays(7.0))
-                        {
-                            Logger.WriteWarning($"Your Schedules Direct account expires in {expires.Days:D2} days {expires.Hours:D2} hours {expires.Minutes:D2} minutes.");
-                        }
-                        return ret;
-                    default:
-                        break;
+                    var expires = ret.Account.Expires - DateTime.UtcNow;
+                    if (expires < TimeSpan.FromDays(7.0))
+                    {
+                        Logger.WriteWarning($"Your Schedules Direct account expires in {expires.Days:D2} days {expires.Hours:D2} hours {expires.Minutes:D2} minutes.");
+                    }
+                    return ret;
                 }
-                Logger.WriteError($"Failed to get account status. code: {ret.Code} , message: {sdErrorLookup(ret.Code)}");
+                Logger.WriteError($"Failed to get account status. code: {ret.Code} , message: {SdErrorLookup(ret.Code)}");
             }
             catch (Exception ex)
             {
-                Logger.WriteError($"sdUserStatusResponse() Unknown exception thrown. Message: {ex.Message}");
+                Logger.WriteError($"SdUserStatusResponse() Unknown exception thrown. Message: {ex.Message}");
             }
             return null;
         }
 
-        public static sdClientVersionResponse sdCheckVersion()
+        public static sdClientVersionResponse SdCheckVersion()
         {
-            var sr = sdGetRequestResponse(METHODS.GET, "version/" + userAgent, null, false);
+            var sr = SdGetRequestResponse(methods.GET, $"version/{userAgent}", null, false);
             if (sr == null)
             {
                 Logger.WriteError("Did not receive a response from Schedules Direct for a version check.");
@@ -249,20 +238,17 @@ namespace epg123
 
             try
             {
-                sdClientVersionResponse ret = JsonConvert.DeserializeObject<sdClientVersionResponse>(sr);
+                var ret = JsonConvert.DeserializeObject<sdClientVersionResponse>(sr);
                 switch (ret.Code)
                 {
                     case 0:
-                        if (ret.Version != grabberVersion)
-                        {
-                            if (Logger.eventID == 0) Logger.eventID = 1;
-                            Logger.WriteInformation($"epg123 is not up to date. Latest version is {ret.Version} and can be downloaded from http://epg123.garyan2.net.");
-                        }
+                        if (ret.Version == grabberVersion) return ret;
+                        if (Logger.EventId == 0) Logger.EventId = 1;
+                        Logger.WriteInformation($"epg123 is not up to date. Latest version is {ret.Version} and can be downloaded from http://epg123.garyan2.net.");
                         return ret;
                     case 1005:
                         Logger.WriteInformation($"epg123 is not recognized as an approved app from Schedules Direct. code: {ret.Code} , message: {ret.Message} , datetime: {ret.Datetime:s}Z");
                         break;
-                    case 3000:
                     default:
                         Logger.WriteError($"Failed version check. code: {ret.Code} , message: {ret.Message} , datetime: {ret.Datetime:s}Z");
                         break;
@@ -270,14 +256,14 @@ namespace epg123
             }
             catch (Exception ex)
             {
-                Logger.WriteError($"sdClientVersionResponse() Unknown exception thrown. Message: {ex.Message}");
+                Logger.WriteError($"SdClientVersionResponse() Unknown exception thrown. Message: {ex.Message}");
             }
             return null;
         }
 
-        public static SdLineupResponse sdGetLineups()
+        public static SdLineupResponse SdGetLineups()
         {
-            var sr = sdGetRequestResponse(METHODS.GET, "lineups");
+            var sr = SdGetRequestResponse(methods.GET, "lineups");
             if (sr == null)
             {
                 Logger.WriteError("Did not receive a response from Schedules Direct for a client lineup listings.");
@@ -286,241 +272,260 @@ namespace epg123
 
             try
             {
-                SdLineupResponse ret = JsonConvert.DeserializeObject<SdLineupResponse>(sr);
-                switch (ret.Code)
+                var ret = JsonConvert.DeserializeObject<SdLineupResponse>(sr);
+                if (ret.Code == 0)
                 {
-                    case 0:
-                        Logger.WriteVerbose("Successfully requested listing of client lineups from Schedules Direct.");
-                        return ret;
-                    default:
-                        break;
+                    Logger.WriteVerbose("Successfully requested listing of client lineups from Schedules Direct.");
+                    return ret;
                 }
-                Logger.WriteError($"Failed request for listing of client lineups. code: {ret.Code} , message: {sdErrorLookup(ret.Code)}");
+                Logger.WriteError($"Failed request for listing of client lineups. code: {ret.Code} , message: {SdErrorLookup(ret.Code)}");
             }
             catch (Exception ex)
             {
-                Logger.WriteError($"sdGetLineups() Unknown exception thrown. Message: {ex.Message}");
+                Logger.WriteError($"SdGetLineups() Unknown exception thrown. Message: {ex.Message}");
             }
             return null;
         }
 
-        public static IList<sdLineupPreviewChannel> sdPreviewLineupChannels(string lineup)
+        public static IList<sdLineupPreviewChannel> SdPreviewLineupChannels(string lineup)
         {
-            var sr = sdGetRequestResponse(METHODS.GET, string.Format("lineups/preview/{0}", lineup));
-            try
+            var sr = SdGetRequestResponse(methods.GET, $"lineups/preview/{lineup}");
+            if (sr == null)
             {
-                if (sr != null)
-                {
-                    Logger.WriteVerbose($"Successfully retrieved the channels in lineup {lineup} for preview.");
-                    return JsonConvert.DeserializeObject<IList<sdLineupPreviewChannel>>(sr.Replace("[],", string.Empty));
-                }
                 Logger.WriteError($"Did not receive a response from Schedules Direct for retrieval of lineup {lineup} to preview.");
+                return null;
+            }
+
+            try
+            {
+                Logger.WriteVerbose($"Successfully retrieved the channels in lineup {lineup} for preview.");
+                return JsonConvert.DeserializeObject<IList<sdLineupPreviewChannel>>(sr.Replace("[],", string.Empty));
             }
             catch (Exception ex)
             {
-                Logger.WriteError($"sdPreviewLineupChannels() Unknown exception thrown. Message: {ex.Message}");
+                Logger.WriteError($"SdPreviewLineupChannels() Unknown exception thrown. Message: {ex.Message}");
             }
             return null;
         }
 
-        public static SdStationMapResponse sdGetStationMaps(string lineup)
+        public static SdStationMapResponse SdGetStationMaps(string lineup)
         {
-            var sr = sdGetRequestResponse(METHODS.GETVERBOSEMAP, $"lineups/{lineup}");
-            try
+            var sr = SdGetRequestResponse(methods.GETVERBOSEMAP, $"lineups/{lineup}");
+            if (sr == null)
             {
-                if (sr != null)
-                {
-                    Logger.WriteVerbose($"Successfully retrieved the station mapping for lineup {lineup}.");
-                    return JsonConvert.DeserializeObject<SdStationMapResponse>(sr.Replace("[],", string.Empty));
-                }
                 Logger.WriteError($"Did not receive a response from Schedules Direct for retrieval of lineup {lineup}.");
+                return null;
+            }
+
+            try
+            {
+                Logger.WriteVerbose($"Successfully retrieved the station mapping for lineup {lineup}.");
+                return JsonConvert.DeserializeObject<SdStationMapResponse>(sr.Replace("[],", string.Empty));
             }
             catch (Exception ex)
             {
-                Logger.WriteError($"sdGetStationMaps() Unknown exception thrown. Message: {ex.Message}");
+                Logger.WriteError($"SdGetStationMaps() Unknown exception thrown. Message: {ex.Message}");
             }
             return null;
         }
 
-        public static IList<sdScheduleResponse> sdGetScheduleListings(sdScheduleRequest[] request)
+        public static IList<sdScheduleResponse> SdGetScheduleListings(sdScheduleRequest[] request)
         {
-            DateTime dtStart = DateTime.Now;
-            var sr = sdGetRequestResponse(METHODS.POST, "schedules", request);
-            try
+            var dtStart = DateTime.Now;
+            var sr = SdGetRequestResponse(methods.POST, "schedules", request);
+            if (sr == null)
             {
-                if (sr != null)
-                {
-                    Logger.WriteVerbose($"Successfully retrieved {request.Length,3} station's daily schedules.          ({GetStringTimeAndByteLength(DateTime.Now - dtStart, sr.Length)})");
-                    return JsonConvert.DeserializeObject<IList<sdScheduleResponse>>(sr);
-                }
                 Logger.WriteError($"Did not receive a response from Schedules Direct for {request.Length,3} station's daily schedules. ({GetStringTimeAndByteLength(DateTime.Now - dtStart)})");
+                return null;
+            }
+
+            try
+            {
+                Logger.WriteVerbose($"Successfully retrieved {request.Length,3} station's daily schedules.          ({GetStringTimeAndByteLength(DateTime.Now - dtStart, sr.Length)})");
+                return JsonConvert.DeserializeObject<IList<sdScheduleResponse>>(sr);
             }
             catch (Exception ex)
             {
-                Logger.WriteError($"sdGetScheduleListings() Unknown exception thrown. Message: {ex.Message}");
+                Logger.WriteError($"SdGetScheduleListings() Unknown exception thrown. Message: {ex.Message}");
             }
             return null;
         }
 
-        public static Dictionary<string, Dictionary<string, sdScheduleMd5DateResponse>> sdGetScheduleMd5s(sdScheduleRequest[] request)
+        public static Dictionary<string, Dictionary<string, sdScheduleMd5DateResponse>> SdGetScheduleMd5S(sdScheduleRequest[] request)
         {
-            DateTime dtStart = DateTime.Now;
-            var sr = sdGetRequestResponse(METHODS.POST, "schedules/md5", request);
-            try
+            var dtStart = DateTime.Now;
+            var sr = SdGetRequestResponse(methods.POST, "schedules/md5", request);
+            if (sr == null)
             {
-                if (sr != null)
-                {
-                    Logger.WriteVerbose($"Successfully retrieved Md5s for {request.Length,3} station's daily schedules. ({GetStringTimeAndByteLength(DateTime.Now - dtStart, sr.Length)})");
-                    return JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, sdScheduleMd5DateResponse>>>(sr.Replace("[]", "{}"));
-                }
                 Logger.WriteError($"Did not receive a response from Schedules Direct for Md5s of {request.Length,3} station's daily schedules. ({GetStringTimeAndByteLength(DateTime.Now - dtStart)})");
+                return null;
+            }
+
+            try
+            {
+                Logger.WriteVerbose($"Successfully retrieved Md5s for {request.Length,3} station's daily schedules. ({GetStringTimeAndByteLength(DateTime.Now - dtStart, sr.Length)})");
+                return JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, sdScheduleMd5DateResponse>>>(sr.Replace("[]", "{}"));
             }
             catch (Exception ex)
             {
-                Logger.WriteError($"sdGetScheduleMd5s() Unknown exception thrown. Message: {ex.Message}");
+                Logger.WriteError($"SdGetScheduleMd5s() Unknown exception thrown. Message: {ex.Message}");
             }
             return null;
         }
 
-        public static IList<sdProgram> sdGetPrograms(string[] request)
+        public static IList<sdProgram> SdGetPrograms(string[] request)
         {
-            DateTime dtStart = DateTime.Now;
-            var sr = sdGetRequestResponse(METHODS.POST, "programs", request);
-            try
+            var dtStart = DateTime.Now;
+            var sr = SdGetRequestResponse(methods.POST, "programs", request);
+            if (sr == null)
             {
-                if (sr != null)
-                {
-                    Logger.WriteVerbose($"Successfully retrieved {request.Length,4} program descriptions. ({GetStringTimeAndByteLength(DateTime.Now - dtStart, sr.Length)})");
-                    return JsonConvert.DeserializeObject<IList<sdProgram>>(sr);
-                }
                 Logger.WriteError($"Did not receive a response from Schedules Direct for {request.Length,4} program descriptions. ({GetStringTimeAndByteLength(DateTime.Now - dtStart)})");
+                return null;
+            }
+
+            try
+            {
+                Logger.WriteVerbose($"Successfully retrieved {request.Length,4} program descriptions. ({GetStringTimeAndByteLength(DateTime.Now - dtStart, sr.Length)})");
+                return JsonConvert.DeserializeObject<IList<sdProgram>>(sr);
             }
             catch (Exception ex)
             {
-                Logger.WriteError($"sdGetPrograms() Unknown exception thrown. Message: {ex.Message}");
+                Logger.WriteError($"SdGetPrograms() Unknown exception thrown. Message: {ex.Message}");
             }
             return null;
         }
 
-        public static Dictionary<string, sdGenericDescriptions> sdGetProgramGenericDescription(string[] request)
+        public static Dictionary<string, sdGenericDescriptions> SdGetProgramGenericDescription(string[] request)
         {
-            DateTime dtStart = DateTime.Now;
-            var sr = sdGetRequestResponse(METHODS.POST, "metadata/description", request);
-            try
+            var dtStart = DateTime.Now;
+            var sr = SdGetRequestResponse(methods.POST, "metadata/description", request);
+            if (sr == null)
             {
-                if (sr != null)
-                {
-                    Logger.WriteVerbose($"Successfully retrieved {request.Length,3} generic program descriptions. ({GetStringTimeAndByteLength(DateTime.Now - dtStart, sr.Length)})");
-                    return JsonConvert.DeserializeObject<Dictionary<string, sdGenericDescriptions>>(sr);
-                }
                 Logger.WriteError($"Did not receive a response from Schedules Direct for {request.Length,3} generic program descriptions. ({GetStringTimeAndByteLength(DateTime.Now - dtStart)})");
+                return null;
+            }
+
+            try
+            {
+                Logger.WriteVerbose($"Successfully retrieved {request.Length,3} generic program descriptions. ({GetStringTimeAndByteLength(DateTime.Now - dtStart, sr.Length)})");
+                return JsonConvert.DeserializeObject<Dictionary<string, sdGenericDescriptions>>(sr);
             }
             catch (Exception ex)
             {
-                Logger.WriteError($"sdGetProgramGenericDescription() Unknown exception thrown. Message: {ex.Message}");
+                Logger.WriteError($"SdGetProgramGenericDescription() Unknown exception thrown. Message: {ex.Message}");
             }
             return null;
         }
 
-        public static IList<sdArtworkResponse> sdGetArtwork(string[] request)
+        public static IList<sdArtworkResponse> SdGetArtwork(string[] request)
         {
             DateTime dtStart = DateTime.Now;
-            var sr = sdGetRequestResponse(METHODS.POST, "metadata/programs", request, false);
-            try
+            var sr = SdGetRequestResponse(methods.POST, "metadata/programs", request, false);
+            if (sr == null)
             {
-                if (sr != null)
-                {
-                    Logger.WriteVerbose($"Successfully retrieved artwork info for {request.Length,3} programs. ({GetStringTimeAndByteLength(DateTime.Now - dtStart, sr.Length)})");
-                    return JsonConvert.DeserializeObject<IList<sdArtworkResponse>>(sr);
-                }
                 Logger.WriteError($"Did not receive a response from Schedules Direct for artwork info of {request.Length,3} programs. ({GetStringTimeAndByteLength(DateTime.Now - dtStart)})");
+                return null;
+            }
+
+            try
+            {
+                Logger.WriteVerbose($"Successfully retrieved artwork info for {request.Length,3} programs. ({GetStringTimeAndByteLength(DateTime.Now - dtStart, sr.Length)})");
+                return JsonConvert.DeserializeObject<IList<sdArtworkResponse>>(sr);
             }
             catch (Exception ex)
             {
-                Logger.WriteError($"sdGetArtwork() Unknown exception thrown. Message: {ex.Message}");
+                Logger.WriteError($"SdGetArtwork() Unknown exception thrown. Message: {ex.Message}");
             }
             return null;
         }
 
-        public static Dictionary<string, IList<sdCountry>> getCountryAvailables()
+        public static Dictionary<string, IList<sdCountry>> GetAvailableCountries()
         {
-            var sr = sdGetRequestResponse(METHODS.GET, "available/countries", null, false);
-            try
+            var sr = SdGetRequestResponse(methods.GET, "available/countries", null, false);
+            if (sr == null)
             {
-                if (sr != null)
-                {
-                    Logger.WriteVerbose("Successfully retrieved list of available countries from Schedules Direct.");
-                    return JsonConvert.DeserializeObject<Dictionary<string, IList<sdCountry>>>(sr);
-                }
                 Logger.WriteError("Did not receive a response from Schedules Direct for a list of available countries.");
+                return null;
+            }
+
+            try
+            {
+                Logger.WriteVerbose("Successfully retrieved list of available countries from Schedules Direct.");
+                return JsonConvert.DeserializeObject<Dictionary<string, IList<sdCountry>>>(sr);
             }
             catch (Exception ex)
             {
-                Logger.WriteError($"getCountryAvailables() Unknown exception thrown. Message: {ex.Message}");
+                Logger.WriteError($"GetAvailableCountries() Unknown exception thrown. Message: {ex.Message}");
             }
             return null;
         }
 
-        public static dynamic getSatelliteAvailables()
+        public static dynamic GetAvailableSatellites()
         {
-            var sr = sdGetRequestResponse(METHODS.GET, "available/dvb-s", null, false);
+            var sr = SdGetRequestResponse(methods.GET, "available/dvb-s", null, false);
+            if (sr == null)
+            {
+                Logger.WriteError("Did not receive a response from Schedules Direct for a list of available satellites.");
+                return null;
+            }
+
             try
             {
-                if (sr != null)
-                {
-                    Logger.WriteVerbose("Successfully retrieved list of available satellites from Schedules Direct.");
-                    return JsonConvert.DeserializeObject<dynamic>(sr);
-                }
-                Logger.WriteError("Did not receive a response from Schedles Direct for a list of available satellites.");
+                Logger.WriteVerbose("Successfully retrieved list of available satellites from Schedules Direct.");
+                return JsonConvert.DeserializeObject<dynamic>(sr);
             }
             catch (Exception ex)
             {
-                Logger.WriteError($"getSatelliteAvailables() Unknown exception thrown. Message: {ex.Message}");
+                Logger.WriteError($"GetAvailableSatellites() Unknown exception thrown. Message: {ex.Message}");
             }
             return null;
         }
 
-        public static Dictionary<string, string> getTransmitters(string country)
+        public static Dictionary<string, string> GetTransmitters(string country)
         {
-            var sr = sdGetRequestResponse(METHODS.GET, string.Format("transmitters/{0}", country), null, false);
+            var sr = SdGetRequestResponse(methods.GET, $"transmitters/{country}", null, false);
+            if (sr == null)
+            {
+                Logger.WriteError("Did not receive a response from Schedules Direct for a list of available transmitters.");
+                return null;
+            }
+
             try
             {
-                if (sr != null)
-                {
-                    Logger.WriteVerbose("Successfully retrieved list of available transmitters from Schedules Direct.");
-                    return JsonConvert.DeserializeObject<Dictionary<string, string>>(sr);
-                }
-                Logger.WriteError("Did not receive a response from Schedles Direct for a list of available transmitters.");
+                Logger.WriteVerbose("Successfully retrieved list of available transmitters from Schedules Direct.");
+                return JsonConvert.DeserializeObject<Dictionary<string, string>>(sr);
             }
             catch (Exception ex)
             {
-                Logger.WriteError($"getTransmitters() Unknown exception thrown. Message: {ex.Message}");
+                Logger.WriteError($"GetTransmitters() Unknown exception thrown. Message: {ex.Message}");
             }
             return null;
         }
 
-        public static IList<sdHeadendResponse> getHeadends(string country, string postalcode)
+        public static IList<sdHeadendResponse> GetHeadends(string country, string postalcode)
         {
-            var sr = sdGetRequestResponse(METHODS.GET, $"headends?country={country}&postalcode={postalcode}");
-            try
+            var sr = SdGetRequestResponse(methods.GET, $"headends?country={country}&postalcode={postalcode}");
+            if (sr == null)
             {
-                if (sr != null)
-                {
-                    Logger.WriteVerbose($"Successfully retrieved the headends for {country} and postal code {postalcode}.");
-                    return JsonConvert.DeserializeObject<IList<sdHeadendResponse>>(sr);
-                }
                 Logger.WriteError($"Failed to get a response from Schedules Direct for the headends of {country} and postal code {postalcode}.");
+                return null;
+            }
+
+            try
+            {
+                Logger.WriteVerbose($"Successfully retrieved the headends for {country} and postal code {postalcode}.");
+                return JsonConvert.DeserializeObject<IList<sdHeadendResponse>>(sr);
             }
             catch (Exception ex)
             {
-                Logger.WriteError($"getHeadends() Unknown exception thrown. Message: {ex.Message}");
+                Logger.WriteError($"GetHeadends() Unknown exception thrown. Message: {ex.Message}");
             }
             return null;
         }
 
-        public static bool addLineup(string lineup)
+        public static bool AddLineup(string lineup)
         {
-            var sr = sdGetRequestResponse(METHODS.PUT, $"lineups/{lineup}");
+            var sr = SdGetRequestResponse(methods.PUT, $"lineups/{lineup}");
             if (sr == null)
             {
                 Logger.WriteError($"Failed to get a response from Schedules Direct when trying to add lineup {lineup}.");
@@ -529,7 +534,7 @@ namespace epg123
 
             try
             {
-                dynamic resp = JsonConvert.DeserializeObject<dynamic>(sr);
+                var resp = JsonConvert.DeserializeObject<dynamic>(sr);
                 switch ((int)resp["code"])
                 {
                     case 0:
@@ -542,14 +547,14 @@ namespace epg123
             }
             catch (Exception ex)
             {
-                Logger.WriteError($"addLineup() Unknown exception thrown. Message: {ex.Message}");
+                Logger.WriteError($"AddLineup() Unknown exception thrown. Message: {ex.Message}");
             }
             return false;
         }
 
-        public static bool removeLineup(string lineup)
+        public static bool RemoveLineup(string lineup)
         {
-            var sr = sdGetRequestResponse(METHODS.DELETE, $"lineups/{lineup}");
+            var sr = SdGetRequestResponse(methods.DELETE, $"lineups/{lineup}");
             if (sr == null)
             {
                 Logger.WriteError($"Failed to get a response from Schedules Direct when trying to remove lineup {lineup}.");
@@ -558,7 +563,7 @@ namespace epg123
 
             try
             {
-                dynamic resp = JsonConvert.DeserializeObject<dynamic>(sr);
+                var resp = JsonConvert.DeserializeObject<dynamic>(sr);
                 switch ((int)resp["code"])
                 {
                     case 0:
@@ -571,18 +576,17 @@ namespace epg123
             }
             catch (Exception ex)
             {
-                Logger.WriteError($"removeLineup() Unknown exception thrown. Message: {ex.Message}");
+                Logger.WriteError($"RemoveLineup() Unknown exception thrown. Message: {ex.Message}");
             }
             return false;
         }
 
-        private static string sdErrorLookup(int code)
+        private static string SdErrorLookup(int code)
         {
-            string ret = string.Empty;
-            sdErrorCodes.TryGetValue(code, out ret);
+            SdErrorCodes.TryGetValue(code, out var ret);
             return ret;
         }
-        private static Dictionary<int, string> sdErrorCodes = new Dictionary<int, string>()
+        private static readonly Dictionary<int, string> SdErrorCodes = new Dictionary<int, string>()
         {
             { 0, "OK" },
             { 1001, "Unable to decode JSON." },

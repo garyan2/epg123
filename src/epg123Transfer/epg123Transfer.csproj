@@ -56,6 +56,7 @@
     <Reference Include="BDATunePIA, Version=6.3.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\wmc_dlls\w7\BDATunePIA.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="mcepg, Version=6.3.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>

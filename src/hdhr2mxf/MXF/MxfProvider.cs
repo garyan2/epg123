@@ -1,16 +1,11 @@
 ﻿using System.Xml.Serialization;
 
-namespace MxfXml
+namespace hdhr2mxf.MXF
 {
     public class MxfProvider
     {
         [XmlIgnore]
-        public int index;
-
-        /// <summary>
-        /// Provides information and copyright about who provided the listing data.
-        /// </summary>
-        public MxfProvider() { }
+        public int Index;
 
         /// <summary>
         /// An ID that is unique to the document and defines this element.
@@ -18,10 +13,7 @@ namespace MxfXml
         [XmlAttribute("id")]
         public string Id
         {
-            get
-            {
-                return ("provider" + index.ToString());
-            }
+            get => ("provider" + Index.ToString());
             set { }
         }
 

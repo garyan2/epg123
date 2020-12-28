@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -8,8 +7,8 @@ using System.Threading;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using epg123.Task;
 using Microsoft.MediaCenter.Guide;
-using Microsoft.MediaCenter.Pvr;
 using epg123Client;
 using Microsoft.MediaCenter.Store;
 
@@ -34,8 +33,7 @@ namespace epg123
             public int iSubItem;
             public int state;
             public int stateMask;
-            [MarshalAs(UnmanagedType.LPTStr)]
-            public string pszText;
+            [MarshalAs(UnmanagedType.LPTStr)] public string pszText;
             public int cchTextMax;
             public int iImage;
             public IntPtr lParam;
@@ -54,7 +52,7 @@ namespace epg123
         /// <param name="list">The listview whose items are to be selected</param>
         public static void SelectAllItems(ListView list)
         {
-            NativeMethods.SetItemState(list, -1, 2, 2);
+            SetItemState(list, -1, 2, 2);
         }
 
         /// <summary>
@@ -63,7 +61,7 @@ namespace epg123
         /// <param name="list">The listview whose items are to be deselected</param>
         public static void DeselectAllItems(ListView list)
         {
-            NativeMethods.SetItemState(list, -1, 2, 0);
+            SetItemState(list, -1, 2, 0);
         }
 
         /// <summary>
@@ -75,56 +73,59 @@ namespace epg123
         /// <param name="value">The value to be set</param>
         public static void SetItemState(ListView list, int itemIndex, int mask, int value)
         {
-            LVITEM lvItem = new LVITEM();
-            lvItem.stateMask = mask;
-            lvItem.state = value;
+            var lvItem = new LVITEM {stateMask = mask, state = value};
             SendMessageLVItem(list.Handle, LVM_SETITEMSTATE, itemIndex, ref lvItem);
         }
     }
 
-    static class Program
+    internal static class Program
     {
         #region ========== Binding Redirects ==========
         static Program()
         {
-            string[] assemblies = { "mcepg", "mcstore", "BDATunePIA" };
+            // ensure WMC is installed
+            if (!File.Exists(Helper.EhshellExeFilePath))
+            {
+                MessageBox.Show("WMC is not present on this machine. Closing EPG123 Client Guide Tool.", "Initialization Error", MessageBoxButtons.OK, MessageBoxIcon.Hand);
+                Application.Exit();
+            }
 
-            string version = FindDLLVersion(assemblies[0]);
-            foreach (string assembly in assemblies)
+            string[] assemblies = { "mcepg", "mcstore", "BDATunePIA" };
+            var version = FindDllVersion(assemblies[0]);
+            if (string.IsNullOrEmpty(version))
             {
-                try
-                {
-                    RedirectAssembly(assembly, version);
-                }
-                catch { }
+                // verify WMC is installed
+                MessageBox.Show("Could not verify Windows Media Center is installed on this machine. EPG123 Client cannot be started without WMC being present.", "Missing Windows Media Center", MessageBoxButtons.OK);
+                Application.Exit();
+            }
+
+            foreach (var assembly in assemblies)
+            {
+                RedirectAssembly(assembly, version);
             }
         }
-        private static string FindDLLVersion(string shortName)
+
+        private static string FindDllVersion(string shortName)
         {
-            string[] targetVersions = { "6.1.0.0", "6.2.0.0", "6.3.0.0" };
-            foreach (string targetVersion in targetVersions)
-            {
-                if (IsAssemblyInGAC(string.Format("{0}, Version={1}, Culture=neutral, PublicKeyToken=31bf3856ad364e35", shortName, targetVersion)))
-                {
-                    return targetVersion;
-                }
-            }
-            return null;
+            string[] targetVersions = {"6.1.0.0", "6.2.0.0", "6.3.0.0"};
+            return targetVersions.FirstOrDefault(targetVersion => IsAssemblyInGac($"{shortName}, Version={targetVersion}, Culture=neutral, PublicKeyToken=31bf3856ad364e35"));
         }
-        public static bool IsAssemblyInGAC(string assemblyString)
+
+        public static bool IsAssemblyInGac(string assemblyString)
         {
-            bool result = false;
             try
             {
-                result = Assembly.ReflectionOnlyLoad(assemblyString).GlobalAssemblyCache;
+                return Assembly.ReflectionOnlyLoad(assemblyString).GlobalAssemblyCache;
             }
-            catch { }
-            return result;
+            catch
+            {
+                return false;
+            }
         }
+
         private static void RedirectAssembly(string shortName, string targetVersionStr)
         {
-            ResolveEventHandler handler = null;
-            handler = (sender, args) =>
+            Assembly Handler(object sender, ResolveEventArgs args)
             {
                 var requestedAssembly = new AssemblyName(args.Name);
                 if (requestedAssembly.Name != shortName) return null;
@@ -133,67 +134,43 @@ namespace epg123
                 requestedAssembly.SetPublicKeyToken(new AssemblyName("x, PublicKeyToken=31bf3856ad364e35").GetPublicKeyToken());
                 requestedAssembly.CultureInfo = CultureInfo.InvariantCulture;
 
-                AppDomain.CurrentDomain.AssemblyResolve -= handler;
+                AppDomain.CurrentDomain.AssemblyResolve -= Handler;
                 return Assembly.Load(requestedAssembly);
-            };
-            AppDomain.CurrentDomain.AssemblyResolve += handler;
+            }
+            AppDomain.CurrentDomain.AssemblyResolve += Handler;
         }
         #endregion
 
         public enum ExecutionFlags : uint
         {
             ES_SYSTEM_REQUIRED = 0x00000001,
-            ES_DISPLAY_REQUIRED = 0x00000002,
-            ES_USER_PRESENT = 0x00000004,
+
+            //ES_DISPLAY_REQUIRED = 0x00000002,
+            //ES_USER_PRESENT = 0x00000004,
             ES_AWAYMODE_REQUIRED = 0x00000040,
             ES_CONTINUOUS = 0x80000000
         }
 
-        private static string appGuid = "{CD7E6857-7D92-4A2F-B3AB-ED8CB42C6F65}";
-        private static string guiGuid = "{0BA29D22-8BB1-4C33-919A-330D5DBA1FF0}";
-        private static string impGuid = "{B7CEFF32-CD68-4094-BD1B-A541D246372E}";
+        private const string AppGuid = "{CD7E6857-7D92-4A2F-B3AB-ED8CB42C6F65}";
+        private const string GuiGuid = "{0BA29D22-8BB1-4C33-919A-330D5DBA1FF0}";
+        private const string ImpGuid = "{B7CEFF32-CD68-4094-BD1B-A541D246372E}";
         private static string filename = string.Empty;
-        private static bool showProgress = false;
-        private static int maximumRecordingWaitHours = 23;
-
-        static void EstablishFileFolderPaths()
-        {
-            // set the base path and the working directory
-            Helper.ExecutablePath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            Directory.SetCurrentDirectory(Helper.ExecutablePath);
-
-            // establish folders with permissions
-            if (!Helper.CreateAndSetFolderAcl(Helper.Epg123ProgramDataFolder))
-            {
-                Logger.WriteInformation(string.Format("Failed to set full control permissions for Everyone on folder \"{0}\".", Helper.Epg123ProgramDataFolder));
-            }
-            string[] folders = { Helper.Epg123BackupFolder };
-            foreach (string folder in folders)
-            {
-                if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
-            }
-        }
+        private static bool showProgress;
+        private const int MaximumRecordingWaitHours = 23;
 
         [STAThread]
-        static int Main(string[] args)
+        private static int Main(string[] args)
         {
             // setup catch to fatal program crash
             AppDomain.CurrentDomain.UnhandledException += MyUnhandledException;
             Application.ThreadException += MyThreadException;
 
-            // verify WMC is installed
-            if (!File.Exists(Helper.EhshellExeFilePath))
-            {
-                MessageBox.Show("Could not verify Windows Media Center is installed on this machine. EPG123 Client cannot be started without WMC being present.", "Missing Windows Media Center", MessageBoxButtons.OK);
-                return -1;
-            }
-
             // establish file/folder locations
             Logger.Initialize("Media Center", "epg123Client");
-            EstablishFileFolderPaths();
+            Helper.EstablishFileFolderPaths();
 
             // filter out mcupdate calls that may be redirected
-            string arguments = string.Join(" ", args);
+            var arguments = string.Join(" ", args);
             switch (arguments)
             {
                 case "-u -nogc": // opening WMC
@@ -203,8 +180,8 @@ namespace epg123
                     return 0;
                 case "-u -manual -nogc -p 0": // guide update
                 case "-manual -nogc -p 0":
-                    DateTime startTime = DateTime.Now;
-                    ProcessStartInfo startInfo = new ProcessStartInfo()
+                    var startTime = DateTime.Now;
+                    var startInfo = new ProcessStartInfo()
                     {
                         FileName = "schtasks.exe",
                         Arguments = "/run /tn \"epg123_update\"",
@@ -213,22 +190,22 @@ namespace epg123
                     };
 
                     // begin update
-                    Process proc = Process.Start(startInfo);
-                    proc.WaitForExit();
+                    var proc = Process.Start(startInfo);
+                    proc?.WaitForExit();
 
-                    Logger.WriteInformation($"**** Attempted to kick off the epg123_update task on demand. ****");
+                    Logger.WriteInformation("**** Attempted to kick off the epg123_update task on demand. ****");
                     Logger.Close();
 
                     // monitor the task status until it is complete
-                    epgTaskScheduler ts = new epgTaskScheduler();
+                    var ts = new epgTaskScheduler();
                     while (true)
                     {
                         // looks like WMC may have a 300000 ms timeout for the update action
                         // no reason to continue with the mcupdate run if it is going to be ignored
                         if (DateTime.Now - startTime > TimeSpan.FromMinutes(5.0)) return 0;
 
-                        ts.queryTask(true);
-                        if (ts.statusString.ToLower().Contains("running"))
+                        ts.QueryTask(true);
+                        if (ts.StatusString.ToLower().Contains("running"))
                         {
                             Thread.Sleep(100);
                         }
@@ -241,22 +218,20 @@ namespace epg123
                         FileName = Environment.ExpandEnvironmentVariables(@"%SystemRoot%\ehome\mcupdate.exe"),
                         Arguments = arguments
                     };
-                    Process proc2 = Process.Start(startInfo);
-                    proc.WaitForExit();
+                    proc = Process.Start(startInfo);
+                    proc?.WaitForExit();
                     return 0;
-                default:
-                    break;
             }
 
             // create a mutex and keep alive until program exits
-            using (Mutex mutex = new Mutex(false, "Global\\" + appGuid))
+            using (var mutex = new Mutex(false, "Global\\" + AppGuid))
             {
-                bool match, nologo, import, force, showGui, advanced, nogc, verbose, noverify;
-                match = nologo = import = force = showGui = advanced = nogc = verbose = noverify = false;
+                bool nologo, import, force, showGui, advanced, nogc, verbose, noverify;
+                var match = nologo = import = force = showGui = advanced = nogc = verbose = noverify = false;
 
-                if ((args != null) && (args.Length > 0))
+                if (args.Length > 0)
                 {
-                    for (int i = 0; i < args.Length; ++i)
+                    for (var i = 0; i < args.Length; ++i)
                     {
                         switch (args[i].ToLower())
                         {
@@ -271,24 +246,23 @@ namespace epg123
                                 {
                                     if (!File.Exists(filename = args[++i]))
                                     {
-                                        string err = string.Format("File \"{0}\" does not exist.", filename);
+                                        var err = $"File \"{filename}\" does not exist.";
                                         Logger.WriteError(err);
                                         return -1;
                                     }
                                     filename = new FileInfo(filename).FullName.ToLower();
 
-                                    string testNewFile = filename.Replace("\\epg123.mxf", "\\output\\epg123.mxf");
+                                    var testNewFile = filename.Replace("\\epg123.mxf", "\\output\\epg123.mxf");
                                     if (File.Exists(testNewFile))
                                     {
-                                        Logger.WriteWarning(string.Format("It appears the MXF file to import is incorrect. Changing the import file from \"{0}\" to \"{1}\".", filename, testNewFile));
+                                        Logger.WriteWarning($"It appears the MXF file to import is incorrect. Changing the import file from \"{filename}\" to \"{testNewFile}\".");
                                         filename = testNewFile;
                                     }
-                                    statusLogo.mxfFile = filename;
+                                    statusLogo.MxfFile = filename;
                                 }
                                 else
                                 {
-                                    string err = "Missing input filename and path.";
-                                    Logger.WriteError(err);
+                                    Logger.WriteError("Missing input filename and path.");
                                     return -1;
                                 }
                                 import = true;
@@ -325,7 +299,7 @@ namespace epg123
                 }
 
                 // use another mutex if the GUI is open
-                using (Mutex mutex2 = new Mutex(false, "Global\\" + guiGuid))
+                using (var mutex2 = new Mutex(false, "Global\\" + GuiGuid))
                 {
                     // check for a gui instance already running
                     if (!mutex2.WaitOne(2000, false) && (showGui || !showProgress))
@@ -345,30 +319,31 @@ namespace epg123
                     if (showGui)
                     {
                         Logger.WriteMessage("===============================================================================");
-                        Logger.WriteMessage(string.Format(" Activating the epg123 client GUI. version {0}", Helper.epg123Version));
+                        Logger.WriteMessage($" Activating the epg123 client GUI. version {Helper.Epg123Version}");
                         Logger.WriteMessage("===============================================================================");
-                        clientForm client = new clientForm(advanced);
+                        var client = new clientForm(advanced);
                         client.ShowDialog();
 
-                        mutex2.ReleaseMutex(); GC.Collect();
-                        if (client.restartClientForm)
+                        mutex2.ReleaseMutex();
+                        GC.Collect();
+                        if (client.RestartClientForm)
                         {
                             // start a new process
-                            ProcessStartInfo startInfo = new ProcessStartInfo()
+                            var startInfo = new ProcessStartInfo()
                             {
                                 FileName = Helper.Epg123ClientExePath,
                                 WorkingDirectory = Helper.ExecutablePath,
                                 UseShellExecute = true,
-                                Verb = client.restartAsAdmin ? "runas" : null
+                                Verb = client.RestartAsAdmin ? "runas" : null
                             };
-                            Process proc = Process.Start(startInfo);
+                            Process.Start(startInfo);
                         }
                         client.Dispose();
                     }
                     else
                     {
                         // and yet another mutex for the import action
-                        using (Mutex mutex3 = new Mutex(false, "Global\\" + impGuid))
+                        using (var mutex3 = new Mutex(false, "Global\\" + ImpGuid))
                         {
                             // check for an import instance is already running
                             if (!mutex3.WaitOne(0, false))
@@ -379,67 +354,58 @@ namespace epg123
                             }
 
                             // prevent machine from entering sleep mode
-                            uint prevThreadState = NativeMethods.SetThreadExecutionState((uint)ExecutionFlags.ES_CONTINUOUS |
-                                                                                         (uint)ExecutionFlags.ES_SYSTEM_REQUIRED |
-                                                                                         (uint)ExecutionFlags.ES_AWAYMODE_REQUIRED);
+                            var prevThreadState = NativeMethods.SetThreadExecutionState(
+                                (uint) ExecutionFlags.ES_CONTINUOUS |
+                                (uint) ExecutionFlags.ES_SYSTEM_REQUIRED |
+                                (uint) ExecutionFlags.ES_AWAYMODE_REQUIRED);
 
                             Logger.WriteMessage("===============================================================================");
-                            Logger.WriteMessage(string.Format(" Beginning epg123 client execution. version {0}", Helper.epg123Version));
+                            Logger.WriteMessage($" Beginning epg123 client execution. version {Helper.Epg123Version}");
                             Logger.WriteMessage("===============================================================================");
-                            Logger.WriteInformation(string.Format("Beginning epg123 client execution. {0:u}", DateTime.Now.ToUniversalTime()));
-                            Logger.WriteVerbose(string.Format("Import: {0} , Match: {1} , NoLogo: {2} , Force: {3} , ShowProgress: {4}", import, match, nologo, force, showProgress));
-                            DateTime startTime = DateTime.UtcNow;
+                            Logger.WriteInformation($"Beginning epg123 client execution. {DateTime.Now.ToUniversalTime():u}");
+                            Logger.WriteVerbose($"Import: {import} , Match: {match} , NoLogo: {nologo} , Force: {force} , ShowProgress: {showProgress} , NoGC: {force || nogc} , NoVerify: {noverify} , Verbose: {verbose}");
+                            var startTime = DateTime.UtcNow;
 
                             if (import)
                             {
                                 // check if garbage cleanup is needed
-                                if (!nogc && !force && WmcRegistries.IsGarbageCleanupDue() && !programRecording(60))
+                                if (!nogc && !force && WmcRegistries.IsGarbageCleanupDue() && !ProgramRecording(60))
                                 {
                                     WmcUtilities.PerformGarbageCleanup();
                                 }
 
                                 // ensure no recordings are active if importing
-                                if (!force && programRecording(10))
+                                if (!force && ProgramRecording(10))
                                 {
-                                    Logger.WriteError(string.Format("A program recording is still in progress after {0} hours. Aborting the mxf file import.", maximumRecordingWaitHours));
-                                    Logger.Close();
-                                    NativeMethods.SetThreadExecutionState(prevThreadState | (uint)ExecutionFlags.ES_CONTINUOUS);
-
-                                    statusLogo.statusImage();
-                                    return -1;
+                                    Logger.WriteError($"A program recording is still in progress after {MaximumRecordingWaitHours} hours. Aborting the mxf file import.");
+                                    goto CompleteImport;
                                 }
 
                                 // import mxf file
-                                if (!importMxfFile(filename))
+                                if (!ImportMxfFile(filename))
                                 {
                                     Logger.WriteError("Failed to import .mxf file. Exiting.");
-                                    Logger.Close();
-                                    NativeMethods.SetThreadExecutionState(prevThreadState | (uint)ExecutionFlags.ES_CONTINUOUS);
-
-                                    statusLogo.statusImage();
-                                    return -1;
+                                    goto CompleteImport;
                                 }
-                                else if (!noverify)
+
+                                // perform verification
+                                if (!noverify)
                                 {
-                                    VerifyLoad verifyLoad = new VerifyLoad(filename, verbose);
+                                    var verifyLoad = new VerifyLoad(filename, verbose);
                                 }
 
                                 // get lineup and configure lineup type and devices 
                                 if (!WmcStore.ActivateEpg123LineupsInStore() || !WmcRegistries.ActivateGuide())
                                 {
                                     Logger.WriteError("Failed to locate any lineups from EPG123.");
-                                    Logger.Close();
-                                    NativeMethods.SetThreadExecutionState(prevThreadState | (uint)ExecutionFlags.ES_CONTINUOUS);
-
-                                    statusLogo.statusImage();
-                                    return -1;
+                                    goto CompleteImport;
                                 }
                             }
 
                             // remove all channel logos
                             if (nologo)
                             {
-                                clearLineupChannelLogos();
+                                ClearLineupChannelLogos();
                             }
 
                             // perform automatch
@@ -457,10 +423,11 @@ namespace epg123
                                 }
                             }
 
+                            // import success
                             if (import)
                             {
                                 // refresh the lineups after import
-                                using (MergedLineups mergedLineups = new MergedLineups(WmcStore.WmcObjectStore))
+                                using (var mergedLineups = new MergedLineups(WmcStore.WmcObjectStore))
                                 {
                                     foreach (MergedLineup mergedLineup in mergedLineups)
                                     {
@@ -471,12 +438,14 @@ namespace epg123
 
                                 // reindex database
                                 WmcUtilities.ReindexDatabase();
+                            }
 
-                                // set all active recording requests to anyLanguage=true
-                                //setSeriesRecordingRequestAnyLanguage();
-
+                            // import complete
+                            CompleteImport:
+                            if (import)
+                            {
                                 // update status logo
-                                statusLogo.statusImage();
+                                statusLogo.StatusImage();
 
                                 // signal the notification tray to update the icon
                                 Helper.SendPipeMessage("Import Complete");
@@ -486,7 +455,7 @@ namespace epg123
 
                             // all done
                             Logger.WriteInformation("Completed EPG123 client execution.");
-                            Logger.WriteVerbose(string.Format("EPG123 client execution time was {0}.", DateTime.UtcNow - startTime));
+                            Logger.WriteVerbose($"EPG123 client execution time was {DateTime.UtcNow - startTime}.");
                             Logger.Close();
                             NativeMethods.SetThreadExecutionState(prevThreadState | (uint)ExecutionFlags.ES_CONTINUOUS);
                         }
@@ -498,122 +467,93 @@ namespace epg123
         }
 
         #region ========== Import MXF File ==========
-        private static bool programRecording(int bufferMinutes)
+        private static bool ProgramRecording(int bufferMinutes)
         {
-            DateTime expireTime = DateTime.Now + TimeSpan.FromHours((double)maximumRecordingWaitHours);
-            int intervalMinutes = 1;
-            int intervalCheck = 0;
+            var expireTime = DateTime.Now + TimeSpan.FromHours(MaximumRecordingWaitHours);
+            const int intervalMinutes = 1;
+            var intervalCheck = 0;
 
             do
             {
-                bool active = WmcUtilities.DetermineRecordingsInProgress() || ((WmcRegistries.NextScheduledRecording() - TimeSpan.FromMinutes(bufferMinutes)) < DateTime.Now);
+                var active = WmcStore.DetermineRecordingsInProgress() || WmcRegistries.NextScheduledRecording() - TimeSpan.FromMinutes(bufferMinutes) < DateTime.Now;
                 if (!active && intervalCheck > 0)
                 {
                     Thread.Sleep(30000);
-                    active = WmcUtilities.DetermineRecordingsInProgress() || ((WmcRegistries.NextScheduledRecording() - TimeSpan.FromMinutes(bufferMinutes)) < DateTime.Now);
+                    active = WmcStore.DetermineRecordingsInProgress() || WmcRegistries.NextScheduledRecording() - TimeSpan.FromMinutes(bufferMinutes) < DateTime.Now;
                 }
-                if (!active || (active && expireTime < DateTime.Now))
+
+                if (!active || expireTime < DateTime.Now)
                 {
                     return active;
                 }
 
                 Helper.SendPipeMessage($"Importing|Waiting for recordings to end...|Will check again at {DateTime.Now + TimeSpan.FromMinutes(intervalMinutes):HH:mm:ss}");
-                if (active && (intervalCheck++ % (60 / intervalMinutes)) == 0)
+                if (intervalCheck++ % (60 / intervalMinutes) == 0)
                 {
                     Logger.WriteInformation($"There is a recording in progress or the next scheduled recording is within {bufferMinutes} minutes. Delaying garbage collection and/or import.");
                 }
                 Thread.Sleep(intervalMinutes * 60000);
-            }
-            while (true);
+            } while (true);
         }
 
-        public static bool importMxfFile(string filename)
+        public static bool ImportMxfFile(string file)
         {
             //verify tuners are setup in WMC prior to importing
-            int deviceCount = 0;
-            using (Devices devices = new Devices(WmcStore.WmcObjectStore))
+            var deviceCount = 0;
+            using (var devices = new Devices(WmcStore.WmcObjectStore))
             {
                 foreach (Device device in devices)
                 {
-                    if (!device.Name.ToLower().Contains("delete"))
-                    {
-                        ++deviceCount;
-                        break;
-                    }
+                    if (device.Name.ToLower().Contains("delete")) continue;
+                    ++deviceCount;
+                    break;
                 }
             }
+
             if (deviceCount == 0)
             {
-                Logger.WriteError("There are no devices/tuners configured in the database store. Perform WMC TV Setup prior to importing guide lisitngs. Aborting Import.");
+                Logger.WriteError("There are no devices/tuners configured in the database store. Perform WMC TV Setup prior to importing guide listings. Aborting Import.");
                 return false;
             }
 
             // do the import with or without progress form
-            if (showProgress)
-            {
-                frmImport frm = new frmImport(filename);
-                frm.ShowDialog();
-                return frm.success;
-            }
-            else
-            {
-                return WmcUtilities.ImportMxfFile(filename);
-            }
+            if (!showProgress) return WmcUtilities.ImportMxfFile(file);
+            var frm = new frmImport(file);
+            frm.ShowDialog();
+            return frm.Success;
         }
         #endregion
 
         #region ========== Remove Channel Logos ==========
-        public static void clearLineupChannelLogos()
+
+        public static void ClearLineupChannelLogos()
         {
-            Services services = new Services(WmcStore.WmcObjectStore);
+            var services = new Services(WmcStore.WmcObjectStore);
             foreach (Service service in services)
             {
-                if (service.LogoImage != null)
-                {
-                    service.LogoImage = null;
-                    service.Update();
-                }
+                if (service.LogoImage == null) continue;
+                service.LogoImage = null;
+                service.Update();
             }
             ObjectStore.DisposeSingleton();
             Logger.WriteInformation("Completed clearing all station logos.");
         }
         #endregion
 
-        #region ========== Set Recording Request Languages ==========
-        private static bool setSeriesRecordingRequestAnyLanguage()
+        private static void MyUnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
-            bool ret = false;
-            using (SeriesRequests seriesRequests = new SeriesRequests(WmcStore.WmcObjectStore))
+            if (!((Exception) e.ExceptionObject).Message.Equals("access denied"))
             {
-                foreach (Request request in seriesRequests)
-                {
-                    if (!request.Complete && !request.AnyLanguage)
-                    {
-                        request.AnyLanguage = true;
-                        request.Update();
-                        Logger.WriteVerbose(string.Format("Changed \"{0}\" series recording request's 'anyLanguage' setting to TRUE.",
-                            request.Title));
-                        ret = true;
-                    }
-                }
+                Logger.WriteError($"Unhandled exception caught from {AppDomain.CurrentDomain.FriendlyName}. message: {((Exception) e.ExceptionObject).Message}\n{((Exception) e.ExceptionObject).StackTrace}");
             }
-            return ret;
-        }
-        #endregion
-
-        static void MyUnhandledException(object sender, UnhandledExceptionEventArgs e)
-        {
-            if (!(e.ExceptionObject as Exception).Message.Equals("access denied"))
-            {
-                Logger.WriteError(string.Format("Unhandled exception caught from {0}. message: {1}\n{2}", AppDomain.CurrentDomain.FriendlyName, (e.ExceptionObject as Exception).Message, (e.ExceptionObject as Exception).StackTrace));
-            }
-            Process currentProcess = Process.GetCurrentProcess();
+            var currentProcess = Process.GetCurrentProcess();
             currentProcess.Kill();
         }
-        static void MyThreadException(object sender, ThreadExceptionEventArgs e)
+
+        private static void MyThreadException(object sender, ThreadExceptionEventArgs e)
         {
-            Logger.WriteError(string.Format("Unhandled thread exception caught from {0}. message: {1}\n{2}", AppDomain.CurrentDomain.FriendlyName, e.Exception.Message, e.Exception.StackTrace));
-            Process currentProcess = Process.GetCurrentProcess();
+            Logger.WriteError($"Unhandled thread exception caught from {AppDomain.CurrentDomain.FriendlyName}. message: {e.Exception.Message}\n{e.Exception.StackTrace}");
+            var currentProcess = Process.GetCurrentProcess();
             currentProcess.Kill();
         }
     }

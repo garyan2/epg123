@@ -3,10 +3,6 @@ using System.Xml.Serialization;
 
 namespace epg123.XmltvXml
 {
-    /// <summary>
-    /// <!ELEMENT rating(value, icon*)>
-    /// <!ATTLIST rating system CDATA #IMPLIED>
-    /// </summary>
     public class XmltvRating
     {
         [XmlElement("value")]

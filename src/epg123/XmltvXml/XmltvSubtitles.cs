@@ -2,10 +2,6 @@
 
 namespace epg123.XmltvXml
 {
-    /// <summary>
-    /// <!ELEMENT subtitles(language?)>
-    /// <!ATTLIST subtitles type(teletext | onscreen | deaf-signed) #IMPLIED>
-    /// </summary>
     public class XmltvSubtitles
     {
         [XmlElement("language")]

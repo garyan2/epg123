@@ -4,20 +4,19 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Text;
 using System.Windows.Forms;
 using System.Xml.Serialization;
 using Microsoft.MediaCenter.Pvr;
-using epg123;
-using epg123Transfer.MxfXml;
 
 namespace epg123Transfer
 {
     public partial class frmTransfer : Form
     {
-        private string oldWmcFile;
-        MXF oldRecordings = new MXF()
+        private string _oldWmcFile;
+        mxf _oldRecordings = new mxf()
         {
             SeriesRequest = new List<MxfRequest>(),
             ManualRequest = new List<MxfRequest>(),
@@ -27,95 +26,93 @@ namespace epg123Transfer
 
         public frmTransfer(string file)
         {
-            oldWmcFile = file;
+            _oldWmcFile = file;
             InitializeComponent();
 
-            importBinFile();
-            assignColumnSorters();
-            buildListViews();
+            ImportBinFile();
+            AssignColumnSorters();
+            BuildListViews();
 
-            if (!string.IsNullOrEmpty(file))
+            if (string.IsNullOrEmpty(file)) return;
+            if (lvMxfRecordings.Items.Count > 0)
             {
-                if (lvMxfRecordings.Items.Count > 0)
-                {
-                    btnTransfer_Click(btnAddRecordings, null);
-                }
+                btnTransfer_Click(btnAddRecordings, null);
             }
         }
 
-        private void buildListViews()
+        private void BuildListViews()
         {
-            wmcRecording = new HashSet<string>();
+            _wmcRecording = new HashSet<string>();
             lvMxfRecordings.Items.Clear();
             lvWmcRecordings.Items.Clear();
 
-            if (!string.IsNullOrEmpty(oldWmcFile))
+            if (!string.IsNullOrEmpty(_oldWmcFile))
             {
-                if (oldWmcFile.ToLower().EndsWith(".zip"))
+                if (_oldWmcFile.ToLower().EndsWith(".zip"))
                 {
-                    using (Stream stream = epg123.CompressXmlFiles.GetBackupFileStream("recordings.mxf", oldWmcFile))
+                    using (var stream = epg123.CompressXmlFiles.GetBackupFileStream("recordings.mxf", _oldWmcFile))
                     {
                         try
                         {
-                            XmlSerializer serializer = new XmlSerializer(typeof(MXF));
-                            oldRecordings = (MXF)serializer.Deserialize(stream);
+                            var serializer = new XmlSerializer(typeof(mxf));
+                            _oldRecordings = (mxf)serializer.Deserialize(stream);
                         }
                         catch
                         {
                             MessageBox.Show("This zip file does not contain a recordings.mxf file with recording requests.", "Invalid File", MessageBoxButtons.OK);
-                            oldWmcFile = string.Empty;
+                            _oldWmcFile = string.Empty;
                         }
                     }
                 }
                 else
                 {
-                    using (StreamReader stream = new StreamReader(oldWmcFile, Encoding.Default))
+                    using (var stream = new StreamReader(_oldWmcFile, Encoding.Default))
                     {
                         try
                         {
-                            XmlSerializer serializer = new XmlSerializer(typeof(MXF));
+                            var serializer = new XmlSerializer(typeof(mxf));
                             TextReader reader = new StringReader(stream.ReadToEnd());
-                            oldRecordings = (MXF)serializer.Deserialize(reader);
+                            _oldRecordings = (mxf)serializer.Deserialize(reader);
                             reader.Close();
                         }
                         catch
                         {
                             MessageBox.Show("Not a valid mxf file containing recording requests.", "Invalid File", MessageBoxButtons.OK);
-                            oldWmcFile = string.Empty;
+                            _oldWmcFile = string.Empty;
                         }
                     }
                 }
-                if (oldRecordings.ManualRequest.Count + oldRecordings.OneTimeRequest.Count + oldRecordings.SeriesRequest.Count + oldRecordings.WishListRequest.Count == 0)
+                if (_oldRecordings.ManualRequest.Count + _oldRecordings.OneTimeRequest.Count + _oldRecordings.SeriesRequest.Count + _oldRecordings.WishListRequest.Count == 0)
                 {
                     //MessageBox.Show("There are no scheduled recording requests in the backup file to restore.", "Empty Requests", MessageBoxButtons.OK);
                 }
             }
 
-            populateWmcRecordings();
-            populateOldWmcRecordings();
+            PopulateWmcRecordings();
+            PopulateOldWmcRecordings();
         }
 
         #region ========= Binary Table File ==========
-        Dictionary<string, string> idTable = new Dictionary<string, string>();
-        private void importBinFile()
+        readonly Dictionary<string, string> _idTable = new Dictionary<string, string>();
+        private void ImportBinFile()
         {
-            string url = @"http://epg123.garyan2.net/downloads/seriesXfer.bin";
+            const string url = @"http://epg123.garyan2.net/downloads/seriesXfer.bin";
 
             try
             {
-                using (MemoryStream memoryStream = new MemoryStream())
+                using (var memoryStream = new MemoryStream())
                 {
                     CopyStream(WebRequest.Create(url).GetResponse().GetResponseStream(), memoryStream);
                     memoryStream.Position = 0;
 
-                    using (BinaryReader reader = new BinaryReader(memoryStream))
+                    using (var reader = new BinaryReader(memoryStream))
                     {
-                        DateTime timestamp = DateTime.FromBinary(reader.ReadInt64());
+                        var timestamp = DateTime.FromBinary(reader.ReadInt64());
                         lblDateTime.Text += timestamp.ToLocalTime().ToString();
 
                         while (memoryStream.Position < memoryStream.Length)
                         {
-                            idTable.Add(string.Format("!MCSeries!{0}", reader.ReadInt32()), string.Format("!Series!{0:D8}", reader.ReadInt32()));
+                            _idTable.Add($"!MCSeries!{reader.ReadInt32()}", $"!Series!{reader.ReadInt32():D8}");
                         }
                     }
                 }
@@ -130,7 +127,7 @@ namespace epg123Transfer
 
         private static void CopyStream(Stream input, Stream output)
         {
-            byte[] buffer = new byte[16 * 1024];
+            var buffer = new byte[16 * 1024];
             int bytesRead;
 
             while ((bytesRead = input.Read(buffer, 0, buffer.Length)) > 0)
@@ -141,26 +138,22 @@ namespace epg123Transfer
         #endregion
 
         #region ========== Previous WMC Recordings ==========
-        private void populateOldWmcRecordings()
+        private void PopulateOldWmcRecordings()
         {
-            List<ListViewItem> listViewItems = new List<ListViewItem>();
-            foreach (MxfRequest request in oldRecordings.SeriesRequest)
+            var listViewItems = new List<ListViewItem>();
+            foreach (var request in _oldRecordings.SeriesRequest)
             {
                 // determine title & series and whether to display or not
-                string title = string.IsNullOrEmpty(request.PrototypicalTitle) ? string.IsNullOrEmpty(request.Title) ? (request.SeriesElement == null) ? string.Empty : request.SeriesElement.Title : request.Title : request.PrototypicalTitle;
-                string series = string.IsNullOrEmpty(request.SeriesAttribute) ? string.IsNullOrEmpty(request.SeriesElement.Uid) ? string.Empty : request.SeriesElement.Uid : request.SeriesAttribute;
+                var title = string.IsNullOrEmpty(request.PrototypicalTitle) ? string.IsNullOrEmpty(request.Title) ? (request.SeriesElement == null) ? string.Empty : request.SeriesElement.Title : request.Title : request.PrototypicalTitle;
+                var series = string.IsNullOrEmpty(request.SeriesAttribute) ? string.IsNullOrEmpty(request.SeriesElement.Uid) ? string.Empty : request.SeriesElement.Uid : request.SeriesAttribute;
 
                 // if title is empty, then probably recreated a previously cancelled series... need to get title from that one
                 if (string.IsNullOrEmpty(title) && !request.Complete)
                 {
-                    foreach (MxfRequest iRequest in oldRecordings.SeriesRequest)
+                    foreach (var iRequest in from iRequest in _oldRecordings.SeriesRequest let iSeries = string.IsNullOrEmpty(iRequest.SeriesAttribute) ? string.IsNullOrEmpty(iRequest.SeriesElement.Uid) ? string.Empty : iRequest.SeriesElement.Uid : iRequest.SeriesAttribute where iSeries == series select iRequest)
                     {
-                        string iSeries = string.IsNullOrEmpty(iRequest.SeriesAttribute) ? string.IsNullOrEmpty(iRequest.SeriesElement.Uid) ? string.Empty : iRequest.SeriesElement.Uid : iRequest.SeriesAttribute;
-                        if (iSeries == series)
-                        {
-                            request.PrototypicalTitle = title = string.IsNullOrEmpty(iRequest.PrototypicalTitle) ? string.IsNullOrEmpty(iRequest.Title) ? (iRequest.SeriesElement == null) ? string.Empty : iRequest.SeriesElement.Title : iRequest.Title : iRequest.PrototypicalTitle;
-                            if (!string.IsNullOrEmpty(title)) break;
-                        }
+                        request.PrototypicalTitle = title = string.IsNullOrEmpty(iRequest.PrototypicalTitle) ? string.IsNullOrEmpty(iRequest.Title) ? (iRequest.SeriesElement == null) ? string.Empty : iRequest.SeriesElement.Title : iRequest.Title : iRequest.PrototypicalTitle;
+                        if (!string.IsNullOrEmpty(title)) break;
                     }
                 }
 
@@ -169,12 +162,12 @@ namespace epg123Transfer
                     continue;
                 }
 
-                string epgSeries = series;
-                Color background = Color.LightPink;
-                if (series.StartsWith("!Series!") || idTable.TryGetValue(series, out epgSeries))
+                var epgSeries = series;
+                var background = Color.LightPink;
+                if (series.StartsWith("!Series!") || _idTable.TryGetValue(series, out epgSeries))
                 {
                     // if series already exists in wmc, don't display
-                    if (wmcRecording.Contains(epgSeries)) continue;
+                    if (_wmcRecording.Contains(epgSeries)) continue;
 
                     // write over existing Uid with gracenote Uid
                     if (!string.IsNullOrEmpty(request.SeriesAttribute)) request.SeriesAttribute = epgSeries;
@@ -186,7 +179,7 @@ namespace epg123Transfer
 
                 // create ListViewItem
                 listViewItems.Add(new ListViewItem(
-                    new string[]
+                    new[]
                     {
                         "Series",
                         title
@@ -198,66 +191,14 @@ namespace epg123Transfer
                 });
             }
 
-            foreach (MxfRequest request in oldRecordings.WishListRequest)
-            {
-                if (request.Complete || wmcRecording.Contains(request.Keywords)) continue;
+            // add wishlist requests
+            listViewItems.AddRange(from request in _oldRecordings.WishListRequest where !request.Complete && !_wmcRecording.Contains(request.Keywords) select new ListViewItem(new[] {"WishList", request.Keywords}) {BackColor = Color.LightGreen, Checked = true, Tag = request});
 
-                // create ListViewItem
-                listViewItems.Add(new ListViewItem(
-                    new string[]
-                    {
-                        "WishList",
-                        request.Keywords
-                    })
-                {
-                    BackColor = Color.LightGreen,
-                    Checked = true,
-                    Tag = request
-                });
-            }
+            // add onetime requests
+            listViewItems.AddRange(from request in _oldRecordings.OneTimeRequest where !request.Complete && (request.PrototypicalStartTime >= DateTime.UtcNow) && !_wmcRecording.Contains(request.PrototypicalTitle + " " + request.PrototypicalStartTime) let epg123 = request.PrototypicalService.StartsWith("!Service!EPG123") && (request.PrototypicalProgram.StartsWith("!Program!SH") || request.PrototypicalProgram.StartsWith("!Program!EP") || request.PrototypicalProgram.StartsWith("!Program!MV") || request.PrototypicalProgram.StartsWith("!Program!SP")) select new ListViewItem(new[] {"OneTime", request.PrototypicalTitle ?? request.Title}) {BackColor = epg123 ? Color.LightGreen : Color.LightSalmon, Checked = epg123, Tag = request});
 
-            foreach (MxfRequest request in oldRecordings.OneTimeRequest)
-            {
-                if (request.Complete || (request.PrototypicalStartTime < DateTime.UtcNow) ||
-                    wmcRecording.Contains(request.PrototypicalTitle + " " + request.PrototypicalStartTime)) continue;
-
-                // detect if onetime request is from EPG123
-                bool epg123 = request.PrototypicalService.StartsWith("!Service!EPG123") &&
-                             (request.PrototypicalProgram.StartsWith("!Program!SH") || request.PrototypicalProgram.StartsWith("!Program!EP") ||
-                              request.PrototypicalProgram.StartsWith("!Program!MV") || request.PrototypicalProgram.StartsWith("!Program!SP"));
-
-                // create ListViewItem
-                listViewItems.Add(new ListViewItem(
-                    new string[]
-                    {
-                        "OneTime",
-                        request.PrototypicalTitle ?? request.Title
-                    })
-                {
-                    BackColor = epg123 ? Color.LightGreen : Color.LightSalmon,
-                    Checked = epg123,
-                    Tag = request
-                });
-            }
-
-            foreach (MxfRequest request in oldRecordings.ManualRequest)
-            {
-                if (request.Complete || (request.PrototypicalStartTime < DateTime.Now) || 
-                    wmcRecording.Contains(request.Title + " " + request.PrototypicalStartTime + " " + request.PrototypicalChannelNumber)) continue;
-
-                // create ListViewItem
-                listViewItems.Add(new ListViewItem(
-                    new string[]
-                    {
-                        "Manual",
-                        request.Title ?? request.PrototypicalTitle
-                    })
-                {
-                    BackColor = Color.LightGreen,
-                    Checked = true,
-                    Tag = request
-                });
-            }
+            // add manual requests
+            listViewItems.AddRange(from request in _oldRecordings.ManualRequest where !request.Complete && (request.PrototypicalStartTime >= DateTime.Now) && !_wmcRecording.Contains(request.Title + " " + request.PrototypicalStartTime + " " + request.PrototypicalChannelNumber) select new ListViewItem(new[] {"Manual", request.Title ?? request.PrototypicalTitle}) {BackColor = Color.LightGreen, Checked = true, Tag = request});
 
             lvMxfRecordings.Items.AddRange(listViewItems.ToArray());
         }
@@ -278,19 +219,17 @@ namespace epg123Transfer
         private void btnOpenBackup_Click(object sender, EventArgs e)
         {
             openFileDialog1.InitialDirectory = epg123.Helper.Epg123BackupFolder;
-            if (openFileDialog1.ShowDialog() == DialogResult.OK)
-            {
-                oldWmcFile = openFileDialog1.FileName;
-                buildListViews();
-            }
+            if (openFileDialog1.ShowDialog() != DialogResult.OK) return;
+            _oldWmcFile = openFileDialog1.FileName;
+            BuildListViews();
         }
         #endregion
 
         #region ========== Current WMC Recordings ==========
-        HashSet<string> wmcRecording = new HashSet<string>();
-        private void populateWmcRecordings()
+        private HashSet<string> _wmcRecording = new HashSet<string>();
+        private void PopulateWmcRecordings()
         {
-            List<ListViewItem> listViewItems = new List<ListViewItem>();
+            var listViewItems = new List<ListViewItem>();
             foreach (SeriesRequest request in new SeriesRequests(epg123Client.WmcStore.WmcObjectStore))
             {
                 // do not display archived/completed entries
@@ -298,7 +237,7 @@ namespace epg123Transfer
 
                 // create ListViewItem
                 listViewItems.Add(new ListViewItem(
-                    new string[]
+                    new[]
                     {
                         "Series",
                         request.ToString().Substring(7).Replace(" - Complete: False", "")
@@ -309,7 +248,7 @@ namespace epg123Transfer
                 });
 
                 // add the series Uid to the hashset
-                wmcRecording.Add(request.Series.GetUIdValue());
+                _wmcRecording.Add(request.Series.GetUIdValue());
             }
 
             foreach (ManualRequest request in new ManualRequests(epg123Client.WmcStore.WmcObjectStore))
@@ -319,7 +258,7 @@ namespace epg123Transfer
 
                 // create ListViewItem
                 listViewItems.Add(new ListViewItem(
-                    new string[]
+                    new[]
                     {
                         "Manual",
                         request.ToString().Substring(7)
@@ -330,7 +269,7 @@ namespace epg123Transfer
                 });
 
                 // add the manaul recording title, starttime, and channel number
-                wmcRecording.Add(request.Title + " " + request.StartTime + " " + request.Channel.ChannelNumber.Number + "." + request.Channel.ChannelNumber.SubNumber);
+                _wmcRecording.Add(request.Title + " " + request.StartTime + " " + request.Channel.ChannelNumber.Number + "." + request.Channel.ChannelNumber.SubNumber);
             }
 
             foreach (WishListRequest request in new WishListRequests(epg123Client.WmcStore.WmcObjectStore))
@@ -340,7 +279,7 @@ namespace epg123Transfer
 
                 // create ListViewItem
                 listViewItems.Add(new ListViewItem(
-                    new string[]
+                    new[]
                     {
                         "WishList",
                         request.ToString().Substring(9)
@@ -351,7 +290,7 @@ namespace epg123Transfer
                 });
 
                 // add keywords to hashset
-                wmcRecording.Add(request.Keywords);
+                _wmcRecording.Add(request.Keywords);
             }
 
             foreach (OneTimeRequest request in new OneTimeRequests(epg123Client.WmcStore.WmcObjectStore))
@@ -361,7 +300,7 @@ namespace epg123Transfer
 
                 // create ListViewItem
                 listViewItems.Add(new ListViewItem(
-                    new string[]
+                    new[]
                     {
                         "OneTime",
                         request.Title
@@ -372,7 +311,7 @@ namespace epg123Transfer
                 });
 
                 // add the manaul recording title, starttime, and channel number
-                wmcRecording.Add(request.Title + " " + request.StartTime);
+                _wmcRecording.Add(request.Title + " " + request.StartTime);
             }
 
             if (listViewItems.Count > 0)
@@ -385,11 +324,11 @@ namespace epg123Transfer
         {
             foreach (ListViewItem item in lvWmcRecordings.SelectedItems)
             {
-                Request request = (Request)item.Tag;
+                var request = (Request)item.Tag;
                 request.Cancel();
                 request.Update();
             }
-            buildListViews();
+            BuildListViews();
         }
 
         private void contextMenuStrip1_Opening(object sender, CancelEventArgs e)
@@ -399,10 +338,10 @@ namespace epg123Transfer
         #endregion
 
         #region ========== Column Sorting ==========
-        private void assignColumnSorters()
+        private void AssignColumnSorters()
         {
             ListView[] listviews = { lvMxfRecordings, lvWmcRecordings };
-            foreach (ListView listview in listviews)
+            foreach (var listview in listviews)
             {
                 // create and assign listview item sorter
                 listview.ListViewItemSorter = new ListViewColumnSorter()
@@ -414,10 +353,10 @@ namespace epg123Transfer
             }
         }
 
-        private void lvLineupSort(object sender, ColumnClickEventArgs e)
+        private void LvLineupSort(object sender, ColumnClickEventArgs e)
         {
             // Determine which column sorter this click applies to
-            ListViewColumnSorter lvcs = (ListViewColumnSorter)((ListView)sender).ListViewItemSorter;
+            var lvcs = (ListViewColumnSorter)((ListView)sender).ListViewItemSorter;
 
             // Determine if clicked column is already the column that is being sorted
             if (e.Column == lvcs.SortColumn)
@@ -442,17 +381,17 @@ namespace epg123Transfer
             if (lvMxfRecordings.Items.Count <= 0) return;
 
             // clear the recordings
-            oldRecordings.ManualRequest = new List<MxfRequest>();
-            oldRecordings.OneTimeRequest = new List<MxfRequest>();
-            oldRecordings.SeriesRequest = new List<MxfRequest>();
-            oldRecordings.WishListRequest = new List<MxfRequest>();
+            _oldRecordings.ManualRequest = new List<MxfRequest>();
+            _oldRecordings.OneTimeRequest = new List<MxfRequest>();
+            _oldRecordings.SeriesRequest = new List<MxfRequest>();
+            _oldRecordings.WishListRequest = new List<MxfRequest>();
 
             // set version of mxf file to Win7 in order to import into any WMC
-            oldRecordings.Assembly[0].Version = "6.1.0.0";
-            oldRecordings.Assembly[1].Version = "6.1.0.0";
+            _oldRecordings.Assembly[0].Version = "6.1.0.0";
+            _oldRecordings.Assembly[1].Version = "6.1.0.0";
 
             // populate the good stuff from the listview
-            int checkedItems = 0;
+            var checkedItems = 0;
             foreach (ListViewItem item in lvMxfRecordings.Items)
             {
                 if (!item.Checked) continue;
@@ -461,18 +400,16 @@ namespace epg123Transfer
                 switch (item.Text)
                 {
                     case "Series":
-                        oldRecordings.SeriesRequest.Add((MxfRequest)item.Tag);
+                        _oldRecordings.SeriesRequest.Add((MxfRequest)item.Tag);
                         break;
                     case "WishList":
-                        oldRecordings.WishListRequest.Add((MxfRequest)item.Tag);
+                        _oldRecordings.WishListRequest.Add((MxfRequest)item.Tag);
                         break;
                     case "OneTime":
-                        oldRecordings.OneTimeRequest.Add((MxfRequest)item.Tag);
+                        _oldRecordings.OneTimeRequest.Add((MxfRequest)item.Tag);
                         break;
                     case "Manual":
-                        oldRecordings.ManualRequest.Add((MxfRequest)item.Tag);
-                        break;
-                    default:
+                        _oldRecordings.ManualRequest.Add((MxfRequest)item.Tag);
                         break;
                 }
             }
@@ -480,24 +417,24 @@ namespace epg123Transfer
 
             try
             {
-                string mxfFilepath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.mxf");
-                using (StreamWriter stream = new StreamWriter(mxfFilepath, false))
+                var mxfFilepath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.mxf");
+                using (var stream = new StreamWriter(mxfFilepath, false))
                 {
-                    XmlSerializer serializer = new XmlSerializer(typeof(MXF));
+                    var serializer = new XmlSerializer(typeof(mxf));
                     TextWriter writer = stream;
-                    serializer.Serialize(writer, oldRecordings);
+                    serializer.Serialize(writer, _oldRecordings);
                 }
 
                 // import recordings
-                ProcessStartInfo startInfo = new ProcessStartInfo()
+                var startInfo = new ProcessStartInfo()
                 {
                     FileName = Environment.ExpandEnvironmentVariables(@"%SystemRoot%\ehome\loadmxf.exe"),
-                    Arguments = string.Format("-i \"{0}\"", mxfFilepath),
+                    Arguments = $"-i \"{mxfFilepath}\"",
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
                     CreateNoWindow = true
                 };
-                using (Process process = Process.Start(startInfo))
+                using (var process = Process.Start(startInfo))
                 {
                     process.StandardOutput.ReadToEnd();
                     process.WaitForExit(30000);
@@ -511,7 +448,7 @@ namespace epg123Transfer
                     UseShellExecute = false,
                     CreateNoWindow = true
                 };
-                Process proc = Process.Start(startInfo);
+                var proc = Process.Start(startInfo);
                 proc.WaitForExit();
             }
             catch (Exception ex)
@@ -519,20 +456,20 @@ namespace epg123Transfer
                 MessageBox.Show("Failed to import the old recording requests.\n\n" + ex.Message, "Failed to Import", MessageBoxButtons.OK);
             }
 
-            buildListViews();
+            BuildListViews();
         }
 
         private void btnExit_Click(object sender, EventArgs e)
         {
             epg123Client.WmcStore.Close();
-            this.Close();
+            Close();
         }
 
         private void contextMenuStrip2_Opening(object sender, CancelEventArgs e)
         {
             if (lvMxfRecordings.SelectedItems.Count != 1) e.Cancel = true;
 
-            ListViewItem lvi = lvMxfRecordings.SelectedItems[0];
+            var lvi = lvMxfRecordings.SelectedItems[0];
             if (lvi.BackColor == Color.LightPink)
             {
                 matchVerifyToolStripMenuItem.Text = "Match";
@@ -546,21 +483,19 @@ namespace epg123Transfer
 
         private void matchVerifyToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            MxfRequest request = (MxfRequest)lvMxfRecordings.SelectedItems[0].Tag;
-            frmManualMatch frm = new frmManualMatch(request);
+            var request = (MxfRequest)lvMxfRecordings.SelectedItems[0].Tag;
+            var frm = new frmManualMatch(request);
             if (((ToolStripMenuItem)sender).Text.Equals("Match"))
             {
-                if (frm.ShowDialog() == DialogResult.OK)
-                {
-                    int topIndexItem = lvMxfRecordings.TopItem.Index;
-                    idTable.Add(frm.idWas, frm.idIs);
-                    buildListViews();
-                    lvMxfRecordings.TopItem = lvMxfRecordings.Items[topIndexItem];
-                }
+                if (frm.ShowDialog() != DialogResult.OK) return;
+                var topIndexItem = lvMxfRecordings.TopItem.Index;
+                _idTable.Add(frm.IdWas, frm.IdIs);
+                BuildListViews();
+                lvMxfRecordings.TopItem = lvMxfRecordings.Items[topIndexItem];
             }
             else
             {
-                frm.idIs = request.SeriesAttribute ?? request.SeriesElement.Uid;
+                frm.IdIs = request.SeriesAttribute ?? request.SeriesElement.Uid;
                 frm.ShowDialog();
             }
         }

@@ -189,7 +189,6 @@
     <Compile Include="sdJson2mxf\keywordGroups.cs" />
     <Compile Include="sdJson2mxf\sdJson2mxf.cs" />
     <Compile Include="sdJson2mxf\common.cs" />
-    <Compile Include="sdJson2mxf\imageArchive.cs" />
     <Compile Include="sdJson2mxf\lineupServices.cs" />
     <Compile Include="sdJson2mxf\movieImages.cs" />
     <Compile Include="sdJson2mxf\programEntries.cs" />

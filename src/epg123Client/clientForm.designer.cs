@@ -1,4 +1,6 @@
-﻿namespace epg123
+﻿using epg123;
+
+namespace epg123Client
 {
     partial class clientForm
     {
@@ -204,7 +206,7 @@
             this.mergedChannelListView.View = System.Windows.Forms.View.Details;
             this.mergedChannelListView.VirtualMode = true;
             this.mergedChannelListView.AfterLabelEdit += new System.Windows.Forms.LabelEditEventHandler(this.mergedChannelListView_AfterLabelEdit);
-            this.mergedChannelListView.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.lvLineupSort);
+            this.mergedChannelListView.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.LvLineupSort);
             this.mergedChannelListView.DrawColumnHeader += new System.Windows.Forms.DrawListViewColumnHeaderEventHandler(this.mergedChannelListView_DrawColumnHeader);
             this.mergedChannelListView.DrawItem += new System.Windows.Forms.DrawListViewItemEventHandler(this.mergedChannelListView_DrawItem);
             this.mergedChannelListView.DrawSubItem += new System.Windows.Forms.DrawListViewSubItemEventHandler(this.mergedChannelListView_DrawSubItem);
@@ -308,7 +310,7 @@
             this.clearListingsMenuItem.Name = "clearListingsMenuItem";
             this.clearListingsMenuItem.Size = new System.Drawing.Size(183, 22);
             this.clearListingsMenuItem.Text = "Clear guide listings...";
-            this.clearListingsMenuItem.Click += new System.EventHandler(this.btnClearScheduleEntries);
+            this.clearListingsMenuItem.Click += new System.EventHandler(this.BtnClearScheduleEntries);
             // 
             // toolStrip1
             // 
@@ -516,7 +518,7 @@
             this.lineupChannelListView.UseCompatibleStateImageBehavior = false;
             this.lineupChannelListView.View = System.Windows.Forms.View.Details;
             this.lineupChannelListView.VirtualMode = true;
-            this.lineupChannelListView.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.lvLineupSort);
+            this.lineupChannelListView.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.LvLineupSort);
             this.lineupChannelListView.RetrieveVirtualItem += new System.Windows.Forms.RetrieveVirtualItemEventHandler(this.lineupChannelListView_RetrieveVirtualItem);
             // 
             // columnHeader4
@@ -606,7 +608,7 @@
             this.btnDeleteLineup.Name = "btnDeleteLineup";
             this.btnDeleteLineup.Size = new System.Drawing.Size(23, 20);
             this.btnDeleteLineup.Text = "Delete Lineup";
-            this.btnDeleteLineup.Click += new System.EventHandler(this.btnDeleteLineupClick);
+            this.btnDeleteLineup.Click += new System.EventHandler(this.BtnDeleteLineupClick);
             // 
             // statusStrip1
             // 

@@ -1,12 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Xml.Serialization;
 
-namespace XmltvXml
+namespace hdhr2mxf.XMLTV
 {
-    /// <summary>
-    /// <!ELEMENT channel(display-name+, icon*, url*) >
-    /// <!ATTLIST channel id CDATA #REQUIRED >
-    /// </summary>
     public class XmltvChannel
     {
         [XmlAttribute("id")]

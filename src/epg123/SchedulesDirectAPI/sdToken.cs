@@ -1,7 +1,7 @@
 ﻿using System;
 using Newtonsoft.Json;
 
-namespace epg123
+namespace epg123.SchedulesDirectAPI
 {
     public class SdTokenRequest
     {
@@ -9,7 +9,7 @@ namespace epg123
         public string Username { get; set; }
 
         [JsonProperty("password")]
-        public string Password_hash { get; set; }
+        public string PasswordHash { get; set; }
     }
 
     public class SdTokenResponse
@@ -21,7 +21,7 @@ namespace epg123
         public int Code { get; set; }
 
         [JsonProperty("serverID")]
-        public string ServerID { get; set; }
+        public string ServerId { get; set; }
 
         [JsonProperty("message")]
         public string Message { get; set; }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.IO.Pipes;
+using System.Linq;
 using System.Reflection;
 using System.Security.AccessControl;
 using System.Security.Principal;
@@ -8,101 +9,147 @@ using System.Windows.Forms;
 
 namespace epg123
 {
-    static class Helper
+    internal static class Helper
     {
         public enum PreferredLogos
         {
-            white,
-            gray,
-            dark,
-            light,
-            none
+            WHITE,
+            GRAY,
+            DARK,
+            LIGHT,
+            NONE
         };
 
-        public static string epg123Version
+        public static string Epg123Version => Assembly.GetEntryAssembly()?.GetName().Version.ToString();
+
+        public static string SdGrabberVersion
         {
             get
             {
-                return Assembly.GetEntryAssembly().GetName().Version.ToString();
+                var version = Epg123Version.Split('.');
+                return $"{version[0]}.{version[1]}.{version[2]}";
             }
         }
-        
-        public static string backupZipFile { get; set; }
-        public static string outputPathOverride { get; set; }
+
+        public static string BackupZipFile { get; set; }
+        public static string OutputPathOverride { get; set; }
+
+        public static void EstablishFileFolderPaths()
+        {
+            // set the base path and the working directory
+            ExecutablePath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            if (!string.IsNullOrEmpty(ExecutablePath)) Directory.SetCurrentDirectory(ExecutablePath);
+
+            // establish folders with permissions
+            if (Environment.UserInteractive && !CreateAndSetFolderAcl(Epg123ProgramDataFolder))
+            {
+                Logger.WriteError($"Failed to set full control permissions for Everyone on folder \"{Epg123ProgramDataFolder}\".");
+            }
+            else
+            {
+                string[] folders = {Epg123BackupFolder, Epg123CacheFolder, Epg123LogosFolder, Epg123OutputFolder, Epg123SdLogosFolder};
+                foreach (var folder in folders)
+                {
+                    if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
+                }
+            }
+
+            // copy custom lineup file to proper location in needed
+            var oldCustomFile = ExecutablePath + "\\customLineup.xml.example";
+            if (!File.Exists(Epg123CustomLineupsXmlPath) && File.Exists(oldCustomFile))
+            {
+                File.Copy(oldCustomFile, Epg123CustomLineupsXmlPath);
+            }
+        }
 
         public static bool CreateAndSetFolderAcl(string folder)
         {
             try
             {
                 // establish security identifier for everyone and desired rights
-                SecurityIdentifier Everyone = new SecurityIdentifier(WellKnownSidType.WorldSid, null);
-                FileSystemRights Rights = FileSystemRights.FullControl;
+                var everyone = new SecurityIdentifier(WellKnownSidType.WorldSid, null);
+                const FileSystemRights rights = FileSystemRights.FullControl;
 
                 // make sure directory exists
-                DirectoryInfo Info = new DirectoryInfo(folder);
-                bool newInstall = !Directory.Exists(folder);
+                var info = new DirectoryInfo(folder);
+                var newInstall = !Directory.Exists(folder);
                 if (newInstall)
                 {
-                    Info = Directory.CreateDirectory(folder);
+                    info = Directory.CreateDirectory(folder);
                 }
 
                 // check to make sure everyone does not already have access
-                DirectorySecurity Security = Info.GetAccessControl(AccessControlSections.Access);
-                AuthorizationRuleCollection AuthorizationRules = Security.GetAccessRules(true, true, typeof(NTAccount));
-                foreach (FileSystemAccessRule rule in AuthorizationRules)
+                var security = info.GetAccessControl(AccessControlSections.Access);
+                var authorizationRules = security.GetAccessRules(true, true, typeof(NTAccount));
+                if (authorizationRules.Cast<FileSystemAccessRule>().Any(rule =>
+                    rule.IdentityReference.Value == everyone.Translate(typeof(NTAccount)).ToString() &&
+                    rule.AccessControlType == AccessControlType.Allow &&
+                    rule.FileSystemRights == rights))
                 {
-                    if ((rule.IdentityReference.Value == Everyone.Translate(typeof(NTAccount)).ToString()) &&
-                        (rule.AccessControlType == AccessControlType.Allow) &&
-                        (rule.FileSystemRights == Rights))
-                    {
-                        return true;
-                    }
+                    return true;
                 }
 
-                if (!newInstall && (DialogResult.OK != MessageBox.Show($"EPG123 is going to add the user 'Everyone' with Full Control rights to the \"{folder}\" folder. This may take a while depending on how many files are in the folder and subfolders.", "Edit Permissions", MessageBoxButtons.OK)))
+                if (!newInstall && (DialogResult.OK != MessageBox.Show($"EPG123 is going to add the user 'Everyone' with Full Control rights to the \"{folder}\" folder. This may take a while depending on how many files are in the folder and subfolders.",
+                    "Edit Permissions", MessageBoxButtons.OK)))
                 {
                     return false;
                 }
 
                 // *** Add Access Rule to the actual directory itself
-                FileSystemAccessRule AccessRule = new FileSystemAccessRule(Everyone,
-                                                                           Rights,
-                                                                           InheritanceFlags.None,
-                                                                           PropagationFlags.NoPropagateInherit,
-                                                                           AccessControlType.Allow);
+                var accessRule = new FileSystemAccessRule(everyone,
+                    rights,
+                    InheritanceFlags.None,
+                    PropagationFlags.NoPropagateInherit,
+                    AccessControlType.Allow);
 
-                Security.ModifyAccessRule(AccessControlModification.Set, AccessRule, out bool Result);
-                if (!Result)
+                security.ModifyAccessRule(AccessControlModification.Set, accessRule, out var result);
+                if (!result)
                     return false;
 
                 // *** Always allow objects to inherit on a directory
-                InheritanceFlags iFlags = InheritanceFlags.ObjectInherit;
-                iFlags = InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit;
+                const InheritanceFlags iFlags = InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit;
 
                 // *** Add Access rule for the inheritance
-                AccessRule = new FileSystemAccessRule(Everyone,
-                                                      Rights,
-                                                      iFlags,
-                                                      PropagationFlags.InheritOnly,
-                                                      AccessControlType.Allow);
-                Result = false;
-                Security.ModifyAccessRule(AccessControlModification.Add, AccessRule, out Result);
+                accessRule = new FileSystemAccessRule(everyone,
+                    rights,
+                    iFlags,
+                    PropagationFlags.InheritOnly,
+                    AccessControlType.Allow);
+                security.ModifyAccessRule(AccessControlModification.Add, accessRule, out result);
 
-                if (!Result)
+                if (!result)
                     return false;
 
-                Info.SetAccessControl(Security);
+                info.SetAccessControl(security);
             }
             catch
             {
                 if (!UserHasElevatedRights)
                 {
-                    MessageBox.Show($"EPG123 did not have sufficient priveleges to edit the folder \"{folder}\" permissions. Please run this GUI with elevated rights (as Administrator) to make the necessary changes.",
-                                    "Folder Permissions Error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                    MessageBox.Show($"EPG123 did not have sufficient privileges to edit the folder \"{folder}\" permissions. Please run this GUI with elevated rights (as Administrator) to make the necessary changes.",
+                        "Folder Permissions Error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 }
+
                 return false;
             }
+
             return true;
+        }
+
+        public static bool DeleteFile(string filepath)
+        {
+            if (!File.Exists(filepath)) return true;
+            try
+            {
+                File.Delete(filepath);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Logger.WriteInformation($"Failed to delete file \"{filepath}\"; {ex.Message}");
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -113,37 +160,32 @@ namespace epg123
         {
             get
             {
-                WindowsIdentity identity = WindowsIdentity.GetCurrent();
-                WindowsPrincipal principal = new WindowsPrincipal(identity);
+                var identity = WindowsIdentity.GetCurrent();
+                var principal = new WindowsPrincipal(identity);
                 return principal.IsInRole(WindowsBuiltInRole.Administrator);
             }
         }
 
-        public static bool tableContains(string[] table, string text, bool exactMatch = false)
+        public static bool TableContains(string[] table, string text, bool exactMatch = false)
         {
-            if (table != null)
+            if (table == null) return false;
+            foreach (var str in table)
             {
-                foreach (string str in table)
-                {
-                    if (!exactMatch && str.ToLower().Contains(text.ToLower())) return true;
-                    else if (str.ToLower().Equals(text.ToLower())) return true;
-                }
+                if (!exactMatch && str.ToLower().Contains(text.ToLower())) return true;
+                if (str.ToLower().Equals(text.ToLower())) return true;
             }
+
             return false;
         }
 
-        public static bool stringContains(string str, string text)
+        public static bool StringContains(string str, string text)
         {
-            if (str != null)
-            {
-                if (str.ToLower().Contains(text.ToLower())) return true;
-            }
-            return false;
+            return str != null && str.ToLower().Contains(text.ToLower());
         }
 
         public static void WriteEButtonFile(string action)
         {
-            using (StreamWriter sw = new StreamWriter(EButtonPath, false))
+            using (var sw = new StreamWriter(EButtonPath, false))
             {
                 sw.WriteLine(action);
                 sw.Close();
@@ -152,18 +194,22 @@ namespace epg123
 
         public static void SendPipeMessage(string message)
         {
-            NamedPipeClientStream client = new NamedPipeClientStream(".", "Epg123StatusPipe", PipeDirection.Out);
+            var client = new NamedPipeClientStream(".", "Epg123StatusPipe", PipeDirection.Out);
             try
             {
                 client.Connect(100);
-                StreamWriter writer = new StreamWriter(client);
+                var writer = new StreamWriter(client);
                 writer.WriteLine(message);
                 writer.Flush();
             }
-            catch { }
+            catch
+            {
+                // ignored
+            }
         }
 
         #region ========== Folder and File Paths ==========
+
         /// <summary>
         /// Folder location where the executables are located
         /// </summary>
@@ -172,46 +218,22 @@ namespace epg123
         /// <summary>
         /// The file path for the epg123.exe executable
         /// </summary>
-        public static string Epg123ExePath
-        {
-            get
-            {
-                return (ExecutablePath + "\\epg123.exe");
-            }
-        }
+        public static string Epg123ExePath => (ExecutablePath + "\\epg123.exe");
 
         /// <summary>
         /// The file path for the hdhr2mxf.exe executable
         /// </summary>
-        public static string Hdhr2mxfExePath
-        {
-            get
-            {
-                return (ExecutablePath + "\\hdhr2mxf.exe");
-            }
-        }
+        public static string Hdhr2MxfExePath => (ExecutablePath + "\\hdhr2mxf.exe");
 
         /// <summary>
         /// The file path for the epg123Client.exe executable
         /// </summary>
-        public static string Epg123ClientExePath
-        {
-            get
-            {
-                return (ExecutablePath + "\\epg123Client.exe");
-            }
-        }
+        public static string Epg123ClientExePath => (ExecutablePath + "\\epg123Client.exe");
 
         /// <summary>
         /// The file path for the epg123Transfer.exe executable
         /// </summary>
-        public static string Epg123TransferExePath
-        {
-            get
-            {
-                return (ExecutablePath + "\\epg123Transfer.exe");
-            }
-        }
+        public static string Epg123TransferExePath => (ExecutablePath + "\\epg123Transfer.exe");
 
         /// <summary>
         /// The folder for all user writeable files are based from
@@ -220,10 +242,13 @@ namespace epg123
         {
             get
             {
-                if (ExecutablePath.ToLower().Contains(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles).ToLower()) ||
-                    ExecutablePath.ToLower().Contains(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86).ToLower()))
+                if (ExecutablePath.ToLower()
+                        .Contains(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles).ToLower()) ||
+                    ExecutablePath.ToLower()
+                        .Contains(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86).ToLower()))
                 {
-                    return Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData) + "\\GaRyan2\\epg123";
+                    return Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData) +
+                           "\\GaRyan2\\epg123";
                 }
                 else
                 {
@@ -235,208 +260,96 @@ namespace epg123
         /// <summary>
         /// The file path for the epg123.cfg configuration file
         /// </summary>
-        public static string Epg123CfgPath
-        {
-            get
-            {
-                return Epg123ProgramDataFolder + "\\epg123.cfg";
-            }
-        }
+        public static string Epg123CfgPath => Epg123ProgramDataFolder + "\\epg123.cfg";
 
         /// <summary>
         /// The file path for the custom lineups file
         /// </summary>
-        public static string Epg123CustomLineupsXmlPath
-        {
-            get
-            {
-                return Epg123ProgramDataFolder + "\\customLineup.xml";
-            }
-        }
+        public static string Epg123CustomLineupsXmlPath => Epg123ProgramDataFolder + "\\customLineup.xml";
 
         /// <summary>
         /// The folder used to store program and WMC backups
         /// </summary>
-        public static string Epg123BackupFolder
-        {
-            get
-            {
-                return Epg123ProgramDataFolder + "\\backup";
-            }
-        }
+        public static string Epg123BackupFolder => Epg123ProgramDataFolder + "\\backup";
 
         /// <summary>
         /// The folder used to store all cached files
         /// </summary>
-        public static string Epg123CacheFolder
-        {
-            get
-            {
-                return Epg123ProgramDataFolder + "\\cache";
-            }
-        }
+        public static string Epg123CacheFolder => Epg123ProgramDataFolder + "\\cache";
 
         /// <summary>
         /// The file path for epg123cache.json file
         /// </summary>
-        public static string Epg123CacheJsonPath
-        {
-            get
-            {
-                return Epg123CacheFolder + "\\epg123cache.json";
-            }
-        }
+        public static string Epg123CacheJsonPath => Epg123CacheFolder + "\\epg123cache.json";
 
-        public static string Epg123CompressCachePath
-        {
-            get
-            {
-                return Epg123CacheFolder + "\\epg123cache.zip";
-            }
-        }
+        public static string Epg123CompressCachePath => Epg123CacheFolder + "\\epg123cache.zip";
 
         /// <summary>
         /// The folder used to store all the station logos
         /// </summary>
-        public static string Epg123LogosFolder
-        {
-            get
-            {
-                return Epg123ProgramDataFolder + "\\logos";
-            }
-        }
+        public static string Epg123LogosFolder => Epg123ProgramDataFolder + "\\logos";
 
         /// <summary>
         /// The folder used to store all the station logos from Schedules Direct
         /// </summary>
-        public static string Epg123SdLogosFolder
-        {
-            get
-            {
-                return Epg123ProgramDataFolder + "\\sdlogos";
-            }
-        }
+        public static string Epg123SdLogosFolder => Epg123ProgramDataFolder + "\\sdlogos";
 
         /// <summary>
         /// The folder used to deposit generated guide files
         /// </summary>
-        public static string Epg123OutputFolder
-        {
-            get
-            {
-                return Epg123ProgramDataFolder + "\\output";
-            }
-        }
+        public static string Epg123OutputFolder => Epg123ProgramDataFolder + "\\output";
 
         /// <summary>
         /// The file path for the epg123.mxf file
         /// </summary>
-        public static string Epg123MxfPath
-        {
-            get
-            {
-                return Epg123OutputFolder + "\\epg123.mxf";
-            }
-        }
+        public static string Epg123MxfPath => Epg123OutputFolder + "\\epg123.mxf";
 
         /// <summary>
         /// The file path for the epg123.xml file
         /// </summary>
-        public static string Epg123XmltvPath
-        {
-            get
-            {
-                return Epg123OutputFolder + "\\epg123.xmltv";
-            }
-        }
+        public static string Epg123XmltvPath => Epg123OutputFolder + "\\epg123.xmltv";
 
         /// <summary>
         /// The file path for the epg123_Guide.pdf help file
         /// </summary>
-        public static string Epg123HelpFilePath
-        {
-            get
-            {
-                return ExecutablePath + "\\epg123_Guide.pdf";
-            }
-        }
+        public static string Epg123HelpFilePath => ExecutablePath + "\\epg123_Guide.pdf";
 
         /// <summary>
         /// The file path for the EPG123Status.png status logo
         /// </summary>
-        public static string Epg123StatusLogoPath
-        {
-            get
-            {
-                return Epg123ProgramDataFolder + "\\EPG123Status.png";
-            }
-        }
+        public static string Epg123StatusLogoPath => Epg123ProgramDataFolder + "\\EPG123Status.png";
 
         /// <summary>
         /// The file path for the guideImages.xml file
         /// </summary>
-        public static string Epg123GuideImagesXmlPath
-        {
-            get
-            {
-                return Epg123ProgramDataFolder + "\\guideImages.xml";
-            }
-        }
+        public static string Epg123GuideImagesXmlPath => Epg123ProgramDataFolder + "\\guideImages.xml";
 
         /// <summary>
         /// The file path for the active trace.log file
         /// </summary>
-        public static string Epg123TraceLogPath
-        {
-            get
-            {
-                return Epg123ProgramDataFolder + "\\trace.log";
-            }
-        }
+        public static string Epg123TraceLogPath => Epg123ProgramDataFolder + "\\trace.log";
 
         /// <summary>
         /// The file path for the mmuiplus.json UI+ support file
         /// </summary>
-        public static string Epg123MmuiplusJsonPath
-        {
-            get
-            {
-                return Epg123OutputFolder + "\\mmuiplus.json";
-            }
-        }
+        public static string Epg123MmuiplusJsonPath => Epg123OutputFolder + "\\mmuiplus.json";
 
         /// <summary>
         /// The file path for the epg123Task.xml file
         /// </summary>
-        public static string Epg123TaskXmlPath
-        {
-            get
-            {
-                return Epg123ProgramDataFolder + "\\epg123Task.xml";
-            }
-        }
+        public static string Epg123TaskXmlPath => Epg123ProgramDataFolder + "\\epg123Task.xml";
 
         /// <summary>
         /// The file to define what action to perform when starting elevated
         /// </summary>
-        public static string EButtonPath
-        {
-            get
-            {
-                return Epg123ProgramDataFolder + "\\ebutton.txt";
-            }
-        }
+        public static string EButtonPath => Epg123ProgramDataFolder + "\\ebutton.txt";
 
         /// <summary>
         /// The file path to the WMC ehshell.exe file
         /// </summary>
-        public static string EhshellExeFilePath
-        {
-            get
-            {
-                return Environment.ExpandEnvironmentVariables(@"%SystemRoot%\ehome\ehshell.exe");
-            }
-        }
+        public static string EhshellExeFilePath =>
+            Environment.ExpandEnvironmentVariables(@"%SystemRoot%\ehome\ehshell.exe");
+
         #endregion
     }
 }

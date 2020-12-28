@@ -1,15 +1,7 @@
-﻿using System;
-using System.Xml.Serialization;
+﻿using System.Xml.Serialization;
 
-namespace XmltvXml
+namespace hdhr2mxf.XMLTV
 {
-    /// <summary>
-    /// <!ELEMENT video(present?, colour?, aspect?, quality?)>
-    /// <!ELEMENT present(#PCDATA)>
-    /// <!ELEMENT colour (#PCDATA)>
-    /// <!ELEMENT aspect (#PCDATA)>
-    /// <!ELEMENT quality (#PCDATA)>
-    /// </summary>
     public class XmltvVideo
     {
         [XmlElement("present")]

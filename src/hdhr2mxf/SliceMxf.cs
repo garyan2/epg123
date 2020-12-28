@@ -2,154 +2,153 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using HDHomeRunTV;
-using MxfXml;
+using hdhr2mxf.HDHR;
+using hdhr2mxf.MXF;
 
 namespace hdhr2mxf
 {
     public static class SliceMxf
     {
-        public static bool BuildMxfFromSliceGuide(List<HDHRDiscover> homeruns)
+        public static bool BuildMxfFromSliceGuide(List<hdhrDiscover> homeruns)
         {
             // scan each device for tuned channels and associated programs
-            foreach (HDHRDiscover homerun in homeruns)
+            foreach (var device in homeruns.Select(homerun => Common.Api.ConnectDevice(homerun.DiscoverUrl)))
             {
-                HDHRDevice device = Common.api.ConnectDevice(homerun.DiscoverURL);
-                if (device == null || string.IsNullOrEmpty(device.LineupURL)) continue;
-                else Console.WriteLine(string.Format("Processing {0} {1} ({2}) with firmware {3}.", device.FriendlyName, device.ModelNumber, device.DeviceID, device.FirmwareVersion));
+                if (device == null || string.IsNullOrEmpty(device.LineupUrl)) continue;
+                Console.WriteLine($"Processing {device.FriendlyName} {device.ModelNumber} ({device.DeviceId}) with firmware {device.FirmwareVersion}.");
 
                 // get channels
-                List<HDHRChannel> channels = Common.api.GetDeviceChannels(device.LineupURL);
+                var channels = Common.Api.GetDeviceChannels(device.LineupUrl);
                 if (channels == null) continue;
 
                 // determine lineup
-                string model = device.ModelNumber.Split('-')[1];
-                string deviceModel = model.Substring(model.Length - 2);
-                MxfLineup mxfLineup = Common.mxf.With[0].getLineup(deviceModel);
+                var model = device.ModelNumber.Split('-')[1];
+                var deviceModel = model.Substring(model.Length - 2);
+                var mxfLineup = Common.Mxf.With[0].GetLineup(deviceModel);
 
-                foreach (HDHRChannel channel in channels)
+                foreach (var channel in channels)
                 {
-                    int startTime = 0;
-                    List<HDHRChannelGuide> programs = Common.api.GetChannelGuide(device.DeviceAuth, channel.GuideNumber, startTime);
+                    var startTime = 0;
+                    var programs = Common.Api.GetChannelGuide(device.DeviceAuth, channel.GuideNumber, startTime);
                     if (programs == null) continue;
 
                     // build the service
-                    MxfService mxfService = Common.mxf.With[0].getService(programs[0].GuideName);
+                    var mxfService = Common.Mxf.With[0].GetService(programs[0].GuideName);
                     if (string.IsNullOrEmpty(mxfService.CallSign))
                     {
                         mxfService.CallSign = programs[0].GuideName;
                         mxfService.Name = channel.GuideName;
-                        mxfService.Affiliate = (!string.IsNullOrEmpty(programs[0].Affiliate)) ? Common.mxf.With[0].getAffiliateId(programs[0].Affiliate) : null;
-                        mxfService.LogoImage = (!Common.noLogos && !string.IsNullOrEmpty(programs[0].ImageURL)) ? Common.mxf.With[0].getGuideImage(programs[0].ImageURL).Id : null;
-                        mxfService.mxfScheduleEntries.Service = mxfService.Id;
+                        mxfService.Affiliate = (!string.IsNullOrEmpty(programs[0].Affiliate)) ? Common.Mxf.With[0].GetAffiliateId(programs[0].Affiliate) : null;
+                        mxfService.LogoImage = (!Common.NoLogos && !string.IsNullOrEmpty(programs[0].ImageUrl)) ? Common.Mxf.With[0].GetGuideImage(programs[0].ImageUrl).Id : null;
+                        mxfService.MxfScheduleEntries.Service = mxfService.Id;
                     }
 
                     // add channel to the lineup
-                    if (int.TryParse(channel.GuideNumber, out int iChannel) || double.TryParse(channel.GuideNumber, out double dChannel))
+                    if (int.TryParse(channel.GuideNumber, out _) || double.TryParse(channel.GuideNumber, out _))
                     {
-                        string[] digits = channel.GuideNumber.Split('.');
-                        int number = int.Parse(digits[0]);
-                        int subnumber = 0;
+                        var digits = channel.GuideNumber.Split('.');
+                        var number = int.Parse(digits[0]);
+                        var subnumber = 0;
                         if (digits.Length > 1)
                         {
                             subnumber = int.Parse(digits[1]);
                         }
 
                         // add the channel to the lineup and make sure we don't duplicate channels
-                        var vchan = mxfLineup.channels.Where(arg => arg.Service == mxfService.Id)
-                                                      .Where(arg => arg.Number == number)
-                                                      .Where(arg => arg.SubNumber == subnumber)
-                                                      .SingleOrDefault();
+                        var vchan = mxfLineup.Channels
+                            .Where(arg => arg.Service == mxfService.Id)
+                            .Where(arg => arg.Number == number)
+                            .SingleOrDefault(arg => arg.SubNumber == subnumber);
                         if (vchan == null)
                         {
-                            string matchname = null;
+                            string matchname;
                             switch (deviceModel)
                             {
                                 case "US":  // ATSC
-                                    matchname = string.Format("OC:{0}:{1}", number, subnumber);
+                                    matchname = $"OC:{number}:{subnumber}";
                                     break;
                                 case "DT":  // DVB-T
-                                    matchname = string.Format("DVBT:{0}:{1}:{2}", channel.OriginalNetworkID, channel.TransportStreamID, channel.ProgramNumber);
+                                    matchname =
+                                        $"DVBT:{channel.OriginalNetworkId}:{channel.TransportStreamId}:{channel.ProgramNumber}";
                                     break;
                                 case "CC":  // US CableCARD
                                     matchname = mxfService.Name;
                                     break;
-                                case "IS":  // ISDB
-                                case "DC":  // DVB-C
+                                //case "IS":  // ISDB
+                                //case "DC":  // DVB-C
                                 default:
                                     matchname = mxfService.Name;
                                     break;
                             }
 
-                            mxfLineup.channels.Add(new MxfChannel()
+                            mxfLineup.Channels.Add(new MxfChannel()
                             {
                                 Lineup = mxfLineup.Id,
-                                lineupUid = mxfLineup.Uid,
-                                stationId = mxfService.CallSign,
+                                LineupUid = mxfLineup.Uid,
+                                StationId = mxfService.CallSign,
                                 Service = mxfService.Id,
                                 Number = number,
                                 SubNumber = subnumber,
                                 MatchName = matchname
                             });
-                            Console.WriteLine(string.Format("--Processing station {0} on channel {1}{2}.",
-                                mxfService.CallSign, number, (subnumber > 0) ? "." + subnumber.ToString() : string.Empty));
+                            Console.WriteLine($"--Processing station {mxfService.CallSign} on channel {number}{((subnumber > 0) ? "." + subnumber : string.Empty)}.");
                         }
                     }
 
                     // if this channel's listings are already done, stop here
-                    if (!Common.channelsDone.Add(mxfService.CallSign)) continue;
+                    if (!Common.ChannelsDone.Add(mxfService.CallSign)) continue;
 
                     // build the programs
                     do
                     {
-                        foreach (HDHRProgram program in programs[0].Guide)
+                        foreach (var program in programs[0].Guide)
                         {
                             // establish the program ID
-                            string programID = program.SeriesID;
+                            var programId = program.SeriesId;
                             if (!string.IsNullOrEmpty(program.EpisodeNumber))
                             {
-                                programID += "_" + program.EpisodeNumber;
+                                programId += "_" + program.EpisodeNumber;
                             }
-                            else if (!programID.StartsWith("MV"))
+                            else if (!programId.StartsWith("MV"))
                             {
-                                programID += "_" + program.GetHashCode().ToString();
+                                programId += "_" + program.GetHashCode();
                             }
 
                             // create an mxf program
-                            MxfProgram mxfProgram = new MxfProgram()
+                            var mxfProgram = new MxfProgram
                             {
-                                index = Common.mxf.With[0].Programs.Count + 1
+                                Index = Common.Mxf.With[0].Programs.Count + 1, ProgramId = programId
                             };
-                            mxfProgram.programId = programID;
 
                             // create the schedule entry and program if needed
-                            string start = program.StartDateTime.ToString("yyyy-MM-ddTHH:mm:ss");
-                            if (program.StartDateTime == mxfService.mxfScheduleEntries.endTime)
+                            var start = program.StartDateTime.ToString("yyyy-MM-ddTHH:mm:ss");
+                            if (program.StartDateTime == mxfService.MxfScheduleEntries.EndTime)
                             {
                                 start = null;
                             }
-                            mxfService.mxfScheduleEntries.ScheduleEntry.Add(new MxfScheduleEntry()
+                            mxfService.MxfScheduleEntries.ScheduleEntry.Add(new MxfScheduleEntry()
                             {
                                 Duration = program.EndTime - program.StartTime,
-                                IsHdtv = channel.HD ? "true" : null,
-                                Program = Common.mxf.With[0].getProgram(programID, mxfProgram).Id,
+                                IsHdtv = channel.Hd ? "true" : null,
+                                Program = Common.Mxf.With[0].GetProgram(programId, mxfProgram).Id,
                                 StartTime = start
                             });
 
                             // build the program
-                            BuildProgram(programID, program);
+                            BuildProgram(programId, program);
 
                             startTime = program.EndTime;
                         }
-                    } while ((programs = Common.api.GetChannelGuide(device.DeviceAuth, channel.GuideNumber, startTime)) != null);
+                    } while ((programs = Common.Api.GetChannelGuide(device.DeviceAuth, channel.GuideNumber, startTime)) != null);
                 }
             }
+
             return true;
         }
 
-        private static void BuildProgram(string id, HDHRProgram program)
+        private static void BuildProgram(string id, hdhrProgram program)
         {
-            MxfProgram mxfProgram = Common.mxf.With[0].getProgram(id);
+            var mxfProgram = Common.Mxf.With[0].GetProgram(id);
             if (!string.IsNullOrEmpty(mxfProgram.Title)) return;
 
             mxfProgram.Title = program.Title;
@@ -180,7 +179,7 @@ namespace hdhr2mxf
 
             //mxfProgram.IsLimitedSeries = null;
             mxfProgram.IsMiniseries = Common.ListContains(program.Filters, "Miniseries");
-            mxfProgram.IsMovie = program.SeriesID.StartsWith("MV") ? "true" : Common.ListContains(program.Filters, "Movie");
+            mxfProgram.IsMovie = program.SeriesId.StartsWith("MV") ? "true" : Common.ListContains(program.Filters, "Movie");
             mxfProgram.IsPaidProgramming = Common.ListContains(program.Filters, "Paid Programming") ?? Common.ListContains(program.Filters, "Shopping") ?? Common.ListContains(program.Filters, "Consumer");
             //mxfProgram.IsProgramEpisodic = null;
             //mxfProgram.IsSerial = null;
@@ -194,32 +193,32 @@ namespace hdhr2mxf
             }
 
             // determine keywords
-            Common.determineProgramKeywords(ref mxfProgram, program.Filters);
+            Common.DetermineProgramKeywords(ref mxfProgram, program.Filters);
 
-            if (!program.SeriesID.StartsWith("MV"))
+            if (!program.SeriesId.StartsWith("MV"))
             {
                 // write the language
-                mxfProgram.Language = program.SeriesID.Substring(program.SeriesID.Length - 6, 2).ToLower();
+                mxfProgram.Language = program.SeriesId.Substring(program.SeriesId.Length - 6, 2).ToLower();
 
                 // add the series
-                MxfSeriesInfo mxfSeriesInfo = Common.mxf.With[0].getSeriesInfo(program.SeriesID);
+                var mxfSeriesInfo = Common.Mxf.With[0].GetSeriesInfo(program.SeriesId);
                 mxfSeriesInfo.Title = program.Title;
                 mxfProgram.Series = mxfSeriesInfo.Id;
 
                 // add the image
-                if (!string.IsNullOrEmpty(program.ImageURL))
+                if (!string.IsNullOrEmpty(program.ImageUrl))
                 {
-                    mxfSeriesInfo.GuideImage = Common.mxf.With[0].getGuideImage(program.ImageURL).Id;
+                    mxfSeriesInfo.GuideImage = Common.Mxf.With[0].GetGuideImage(program.ImageUrl).Id;
                 }
 
                 // handle any season and episode numbers along with season entries
                 if (!string.IsNullOrEmpty(program.EpisodeNumber))
                 {
-                    string[] se = program.EpisodeNumber.Substring(1).Split('E');
+                    var se = program.EpisodeNumber.Substring(1).Split('E');
                     mxfProgram.SeasonNumber = int.Parse(se[0]).ToString();
                     mxfProgram.EpisodeNumber = int.Parse(se[1]).ToString();
 
-                    mxfProgram.Season = Common.mxf.With[0].getSeasonId(program.SeriesID, mxfProgram.SeasonNumber);
+                    mxfProgram.Season = Common.Mxf.With[0].GetSeasonId(program.SeriesId, mxfProgram.SeasonNumber);
                 }
                 else if (string.IsNullOrEmpty(mxfProgram.EpisodeTitle))
                 {
@@ -233,22 +232,21 @@ namespace hdhr2mxf
             }
             else
             {
-                if (!string.IsNullOrEmpty(program.PosterURL))
+                if (!string.IsNullOrEmpty(program.PosterUrl))
                 {
-                    mxfProgram.GuideImage = Common.mxf.With[0].getGuideImage(program.PosterURL).Id;
+                    mxfProgram.GuideImage = Common.Mxf.With[0].GetGuideImage(program.PosterUrl).Id;
                 }
 
                 if (!string.IsNullOrEmpty(program.Synopsis))
                 {
-                    Match m = Regex.Match(program.Synopsis, @"\d\.\d/\d\.\d");
-                    if (m != null)
+                    var m = Regex.Match(program.Synopsis, @"\d\.\d/\d\.\d");
                     {
-                        string[] nums = m.Value.Split('/');
-                        if (double.TryParse(nums[0], out double numerator) && double.TryParse(nums[1], out double denominator))
+                        var nums = m.Value.Split('/');
+                        if (double.TryParse(nums[0], out var numerator) && double.TryParse(nums[1], out var denominator))
                         {
-                            int halfstars = (int)((numerator / denominator) * 8);
+                            var halfstars = (int)((numerator / denominator) * 8);
                             mxfProgram.HalfStars = halfstars.ToString();
-                            mxfProgram.Description = mxfProgram.Description.Replace(string.Format(" ({0})", m.Value), "");
+                            mxfProgram.Description = mxfProgram.Description.Replace($" ({m.Value})", "");
                         }
                     }
                 }

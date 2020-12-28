@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Xml;
 using System.Xml.Serialization;
 
 namespace epg123
@@ -46,7 +45,7 @@ namespace epg123
         [XmlAttribute("alternate")]
         public string Alternate { get; set; }
 
-        [XmlText()]
+        [XmlText]
         public string StationId { get; set; }
     }
 }

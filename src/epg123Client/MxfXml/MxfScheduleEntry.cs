@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 using System.Xml.Serialization;
 
-namespace epg123.MxfXml
+namespace epg123Client.MxfXml
 {
     public class MxfScheduleEntries
     {
-        [XmlAttribute("service")]
+        [XmlAttribute("service")] 
         public string Service { get; set; }
 
-        [XmlElement("ScheduleEntry")]
+        [XmlElement("ScheduleEntry")] 
         public List<MxfScheduleEntry> ScheduleEntry { get; set; }
     }
 
@@ -27,7 +27,6 @@ namespace epg123.MxfXml
         /// </summary>
         [XmlAttribute("startTime")]
         public DateTime StartTime { get; set; }
-        public bool ShouldSerializeStartTime() { return StartTime != DateTime.MinValue; }
 
         /// <summary>
         /// The duration of the broadcast, in seconds.
@@ -39,8 +38,7 @@ namespace epg123.MxfXml
         /// Indicates whether this broadcast is closed captioned.
         /// </summary>
         [XmlAttribute("isCC")]
-        public bool IsCC { get; set; } = false;
-        public bool ShouldSerializeIsCC() { return IsCC; }
+        public bool IsCc { get; set; }
 
         /// <summary>
         /// Indicates the audio format of the broadcast.
@@ -53,155 +51,133 @@ namespace epg123.MxfXml
         /// 5 = THX
         /// </summary>
         [XmlAttribute("audioFormat")]
-        public int AudioFormat { get; set; } = 0;
-        public bool ShouldSerializeAudioFormat() { return AudioFormat > 0; }
+        public int AudioFormat { get; set; }
 
         /// <summary>
         /// Indicates whether this is a live broadcast.
         /// </summary>
         [XmlAttribute("isLive")]
-        public bool IsLive { get; set; } = false;
-        public bool ShouldSerializeIsLive() { return IsLive; }
+        public bool IsLive { get; set; }
 
         /// <summary>
         /// Indicates whether this is live sports event.
         /// </summary>
         [XmlAttribute("isLiveSports")]
-        public bool IsLiveSports { get; set; } = false;
-        public bool ShouldSerializeIsLiveSports() { return IsLiveSports; }
+        public bool IsLiveSports { get; set; }
 
         /// <summary>
         /// Indicates whether this program has been taped and is being replayed (for example, a sports event).
         /// </summary>
         [XmlAttribute("isTape")]
-        public bool IsTape { get; set; } = false;
-        public bool ShouldSerializeIsTape() { return IsTape; }
+        public bool IsTape { get; set; }
 
         /// <summary>
         /// Indicates whether this program is being broadcast delayed (for example, an award show such as the Academy Awards).
         /// </summary>
         [XmlAttribute("isDelay")]
-        public bool IsDelay { get; set; } = false;
-        public bool ShouldSerializeIsDelay() { return IsDelay; }
+        public bool IsDelay { get; set; }
 
         /// <summary>
         /// Indicates whether this program is subtitled.
         /// </summary>
         [XmlAttribute("isSubtitled")]
-        public bool IsSubtitled { get; set; } = false;
-        public bool ShouldSerializeIsSubtitled() { return IsSubtitled; }
+        public bool IsSubtitled { get; set; }
 
         /// <summary>
         /// Indicates whether this program is a premiere.
         /// </summary>
         [XmlAttribute("isPremiere")]
-        public bool IsPremiere { get; set; } = false;
-        public bool ShouldSerializeIsPremiere() { return IsPremiere; }
+        public bool IsPremiere { get; set; }
 
         /// <summary>
         /// Indicates whether this program is a finale.
         /// </summary>
         [XmlAttribute("isFinale")]
-        public bool IsFinale { get; set; } = false;
-        public bool ShouldSerializeIsFinale() { return IsFinale; }
+        public bool IsFinale { get; set; }
 
         /// <summary>
         /// Indicates whether this program was joined in progress.
         /// </summary>
         [XmlAttribute("isInProgress")]
-        public bool IsInProgress { get; set; } = false;
-        public bool ShouldSerializeIsInProgress() { return IsInProgress; }
+        public bool IsInProgress { get; set; }
 
         /// <summary>
         /// Indicates whether this program has a secondary audio program broadcast at the same time.
         /// </summary>
         [XmlAttribute("isSap")]
-        public bool IsSap { get; set; } = false;
-        public bool ShouldSerializeIsSap() { return IsSap; }
+        public bool IsSap { get; set; }
 
         /// <summary>
         /// Indicates whether this program has been blacked out.
         /// </summary>
         [XmlAttribute("isBlackout")]
-        public bool IsBlackout { get; set; } = false;
-        public bool ShouldSerializeIsBlackout() { return IsBlackout; }
+        public bool IsBlackout { get; set; }
 
         /// <summary>
         /// Indicates whether this program has been broadcast with an enhanced picture.
         /// </summary>
         [XmlAttribute("isEnhanced")]
-        public bool IsEnhanced { get; set; } = false;
-        public bool ShouldSerializeIsEnhanced() { return IsEnhanced; }
+        public bool IsEnhanced { get; set; }
 
         /// <summary>
         /// Indicates whether this program is broadcast in 3D.
         /// </summary>
         [XmlAttribute("is3D")]
-        public bool Is3D { get; set; } = false;
-        public bool ShouldSerializeIs3D() { return Is3D; }
+        public bool Is3D { get; set; }
 
         /// <summary>
         /// Indicates whether this program is broadcast in letterbox format.
         /// </summary>
         [XmlAttribute("isLetterbox")]
-        public bool IsLetterbox { get; set; } = false;
-        public bool ShouldSerializeIsLetterbox() { return IsLetterbox; }
+        public bool IsLetterbox { get; set; }
 
         /// <summary>
         /// Indicates whether this program is broadcast in high definition (HD).
         /// Determines whether the HD icon is displayed.
         /// </summary>
         [XmlAttribute("isHdtv")]
-        public bool IsHdtv { get; set; } = false;
-        public bool ShouldSerializeIsHdtv() { return IsHdtv; }
+        public bool IsHdtv { get; set; }
 
         /// <summary>
         /// Indicates whether this program is broadcast simultaneously in HD.
         /// </summary>
         [XmlAttribute("isHdtvSimulCast")]
-        public bool IsHdtvSimulCast { get; set; } = false;
-        public bool ShouldSerializeIsHdtvSimulCast() { return IsHdtvSimulCast; }
+        public bool IsHdtvSimulCast { get; set; }
 
         /// <summary>
         /// Indicates whether this program is broadcast with Descriptive Video Service (DVS).
         /// </summary>
         [XmlAttribute("isDvs")]
-        public bool IsDvs { get; set; } = false;
-        public bool ShouldSerializeIsDvs() { return IsDvs; }
+        public bool IsDvs { get; set; }
 
         /// <summary>
         /// Specifies the part number (for instance, if this is part 1 of 3, use "1").
         /// </summary>
         [XmlAttribute("part")]
-        public int Part { get; set; } = 0;
-        public bool ShouldSerializePart() { return Part != 0; }
+        public int Part { get; set; }
 
         /// <summary>
         /// Specifies the total number of parts (for instance, if this is part 1 of 3, use "3").
         /// </summary>
         [XmlAttribute("parts")]
-        public int Parts { get; set; } = 0;
-        public bool ShouldSerializeParts() { return Parts != 0; }
+        public int Parts { get; set; }
 
         /// <summary>
         /// Specifies the TV parental rating (not documented on website)
         /// </summary>
         [XmlAttribute("tvRating")]
         public int TvRating { get; set; }
-        public bool ShouldSerializeTvRating() { return TvRating != 0; }
 
         /// <summary>
         /// 
         /// </summary>
         [XmlAttribute("isClassroom")]
-        public bool IsClassroom { get; set; } = false;
-        public bool ShouldSerializeIsClassroom() { return IsClassroom; }
+        public bool IsClassroom { get; set; }
 
         /// <summary>
         /// 
         /// </summary>
         [XmlAttribute("isRepeat")]
-        public bool IsRepeat { get; set; } = false;
-        public bool ShouldSerializeIsRepeat() { return IsRepeat; }
+        public bool IsRepeat { get; set; }
     }
 }

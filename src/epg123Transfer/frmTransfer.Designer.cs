@@ -68,7 +68,7 @@
             this.lvWmcRecordings.TabIndex = 0;
             this.lvWmcRecordings.UseCompatibleStateImageBehavior = false;
             this.lvWmcRecordings.View = System.Windows.Forms.View.Details;
-            this.lvWmcRecordings.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.lvLineupSort);
+            this.lvWmcRecordings.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.LvLineupSort);
             // 
             // clmType
             // 
@@ -112,7 +112,7 @@
             this.lvMxfRecordings.TabIndex = 1;
             this.lvMxfRecordings.UseCompatibleStateImageBehavior = false;
             this.lvMxfRecordings.View = System.Windows.Forms.View.Details;
-            this.lvMxfRecordings.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.lvLineupSort);
+            this.lvMxfRecordings.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.LvLineupSort);
             this.lvMxfRecordings.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.oldRecordingListView_ItemCheck);
             // 
             // clmOldType

@@ -1,8 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace epg123
+namespace epg123.TheMovieDbAPI
 {
     internal class TmdbMovieListResponse
     {

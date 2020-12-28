@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace epg123
+namespace epg123.SchedulesDirectAPI
 {
     public class SdStationMapResponse
     {
@@ -18,7 +18,7 @@ namespace epg123
     public class SdLineupMap
     {
         [JsonProperty("stationID")]
-        public string StationID { get; set; }
+        public string StationId { get; set; }
 
         [JsonProperty("uhfVhf")]
         public int UhfVhf { get; set; }
@@ -48,13 +48,13 @@ namespace epg123
         //public string Fec { get; set; }
 
         [JsonProperty("serviceID")]
-        public int ServiceID { get; set; }
+        public int ServiceId { get; set; }
 
         [JsonProperty("networkID")]
-        public int NetworkID { get; set; }
+        public int NetworkId { get; set; }
 
         [JsonProperty("transportID")]
-        public int TransportID { get; set; }
+        public int TransportId { get; set; }
 
         [JsonProperty("channel")]
         public string Channel { get; set; }
@@ -84,7 +84,7 @@ namespace epg123
     public class SdLineupStation
     {
         [JsonProperty("stationID")]
-        public string StationID { get; set; }
+        public string StationId { get; set; }
 
         [JsonProperty("name")]
         public string Name { get; set; }
@@ -117,7 +117,7 @@ namespace epg123
     public class SdStationImage
     {
         [JsonProperty("URL")]
-        public string URL { get; set; }
+        public string Url { get; set; }
 
         [JsonProperty("height")]
         public int Height { get; set; }
@@ -135,20 +135,20 @@ namespace epg123
         public string Category { get; set; }
     }
 
-    public class sdBroadcaster
-    {
-        //[JsonProperty("city")]
-        //public string City { get; set; }
+    //public class sdBroadcaster
+    //{
+    //    [JsonProperty("city")]
+    //    public string City { get; set; }
 
-        //[JsonProperty("state")]
-        //public string State { get; set; }
+    //    [JsonProperty("state")]
+    //    public string State { get; set; }
 
-        //[JsonProperty("postalcode")]
-        //public string Postalcode { get; set; }
+    //    [JsonProperty("postalcode")]
+    //    public string Postalcode { get; set; }
 
-        //[JsonProperty("country")]
-        //public string Country { get; set; }
-    }
+    //    [JsonProperty("country")]
+    //    public string Country { get; set; }
+    //}
 
     public class sdMetadata
     {

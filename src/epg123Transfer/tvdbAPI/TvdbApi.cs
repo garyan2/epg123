@@ -1,124 +1,110 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Text;
-using System.Windows.Forms;
 using System.Web;
 using Newtonsoft.Json;
 
-namespace epg123Transfer
+namespace epg123Transfer.tvdbAPI
 {
     public static class tvdbApi
     {
-        public static bool isAlive = true;
-        private const string jsonBaseUrl = @"https://api.thetvdb.com/";
-        private static string ApiKey = "125AF7126EDFF4D9";
+        private const string JsonBaseUrl = @"https://api.thetvdb.com/";
+        private const string ApiKey = "125AF7126EDFF4D9";
 
-        private enum METHODS
+        private enum methods
         {
             GET,
             POST
         };
 
-        private static string token_;
-        private static string token
+        private static string token;
+        private static string Token
         {
             get
             {
-                if (string.IsNullOrEmpty(token_))
-                {
-                    StreamReader sr = GetRequestResponse(METHODS.POST, "login", new tvdbTokenRequest() { ApiKey = ApiKey }, false);
-                    if (sr != null)
-                    {
-                        tvdbTokenResponse response = JsonConvert.DeserializeObject<tvdbTokenResponse>(sr.ReadToEnd());
-                        token_ = "Bearer " + response.Token;
-                    }
-                }
-                return token_;
+                if (!string.IsNullOrEmpty(token)) return token;
+                var sr = GetRequestResponse(methods.POST, "login", new tvdbTokenRequest() { ApiKey = ApiKey }, false);
+                if (sr == null) return token;
+                var response = JsonConvert.DeserializeObject<tvdbTokenResponse>(sr.ReadToEnd());
+                token = "Bearer " + response.Token;
+                return token;
             }
         }
 
-        private static StreamReader GetRequestResponse(METHODS method, string uri, object jsonRequest = null, bool tkRequired = true)
+        private static StreamReader GetRequestResponse(methods method, string uri, object jsonRequest = null, bool tkRequired = true)
         {
             // build url
-            string url = string.Format("{0}{1}", jsonBaseUrl, uri);
+            var url = $"{JsonBaseUrl}{uri}";
 
             // send request and get response
-            int timeout = 60000;
+            const int timeout = 60000;
             try
             {
                 // create the request with defaults
-                HttpWebRequest req = (HttpWebRequest)WebRequest.Create(url);
+                var req = (HttpWebRequest)WebRequest.Create(url);
                 req.AutomaticDecompression = DecompressionMethods.Deflate;
                 req.Timeout = timeout;
 
                 // add token if it is required
-                if (tkRequired && !string.IsNullOrEmpty(token))
+                if (tkRequired && !string.IsNullOrEmpty(Token))
                 {
-                    req.Headers.Add("Authorization", token);
+                    req.Headers.Add("Authorization", Token);
                 }
 
                 // setup request
                 switch (method)
                 {
-                    case METHODS.GET:
+                    case methods.GET:
                         req.Method = "GET";
                         break;
-                    case METHODS.POST:
-                        string send = JsonConvert.SerializeObject(jsonRequest);
-                        byte[] body = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(jsonRequest));
+                    case methods.POST:
+                        var body = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(jsonRequest));
                         req.Method = "POST";
                         req.ContentType = "application/json";
                         req.Accept = "application/json";
                         req.ContentLength = body.Length;
 
-                        Stream reqStream = req.GetRequestStream();
+                        var reqStream = req.GetRequestStream();
                         reqStream.Write(body, 0, body.Length);
                         reqStream.Close();
                         break;
-                    default:
-                        break;
                 }
 
-                WebResponse resp = req.GetResponse();
+                var resp = req.GetResponse();
                 return new StreamReader(resp.GetResponseStream(), Encoding.UTF8);
             }
-            catch { }
-            return null;
-        }
-
-        public static IList<tvdbSeriesSearchData> tvdbSearchSeriesTitle(string title)
-        {
-            StreamReader sr = GetRequestResponse(METHODS.GET, "search/series?name=" + HttpUtility.UrlEncode(title));
-            if (sr != null)
+            catch
             {
-                return JsonConvert.DeserializeObject<tvdbSearchSeriesResponse>(sr.ReadToEnd()).Data;
+                // ignored
             }
+
             return null;
         }
 
-        public static tvdbSeries tvdbGetSeriesData(int id)
+        public static IList<tvdbSeriesSearchData> TvdbSearchSeriesTitle(string title)
         {
-            StreamReader sr = GetRequestResponse(METHODS.GET, "series/" + id.ToString());
-            if (sr != null)
-            {
-                return JsonConvert.DeserializeObject<tvdbSeriesDataResponse>(sr.ReadToEnd()).Data;
-            }
-            return null;
+            var sr = GetRequestResponse(methods.GET, "search/series?name=" + HttpUtility.UrlEncode(title));
+            return sr != null ? JsonConvert.DeserializeObject<tvdbSearchSeriesResponse>(sr.ReadToEnd()).Data : null;
         }
 
-        public static string tvdbGetSeriesImageUrl(int id)
+        public static tvdbSeries TvdbGetSeriesData(int id)
         {
-            string url = string.Empty;
+            var sr = GetRequestResponse(methods.GET, "series/" + id);
+            return sr != null ? JsonConvert.DeserializeObject<tvdbSeriesDataResponse>(sr.ReadToEnd()).Data : null;
+        }
+
+        public static string TvdbGetSeriesImageUrl(int id)
+        {
+            var url = string.Empty;
 
             // determine available images
-            StreamReader sr1 = GetRequestResponse(METHODS.GET, "series/" + id.ToString() + "/images");
+            var sr1 = GetRequestResponse(methods.GET, "series/" + id + "/images");
             if (sr1 == null) return url;
 
             // pick which image type to pull
-            string type = string.Empty;
-            tvdbSeriesImagesCount imagesCount = JsonConvert.DeserializeObject<tvdbSeriesImagesCounts>(sr1.ReadToEnd()).Data;
+            string type;
+            var imagesCount = JsonConvert.DeserializeObject<tvdbSeriesImagesCounts>(sr1.ReadToEnd()).Data;
             if (imagesCount.Poster > 0) type = "poster";
             else if (imagesCount.Season > 0) type = "season";
             else if (imagesCount.Series > 0) type = "series";
@@ -127,25 +113,23 @@ namespace epg123Transfer
             else return url;
 
             // get all series images of selected type
-            StreamReader sr2 = GetRequestResponse(METHODS.GET, "series/" + id.ToString() + "/images/query?keyType=" + type);
+            var sr2 = GetRequestResponse(methods.GET, "series/" + id + "/images/query?keyType=" + type);
             if (sr2 == null) return url;
 
             // pick the highest rated image
-            decimal maxRating = -0.1M;
-            IList<tvdbSeriesImageQueryResult> images = JsonConvert.DeserializeObject<tvdbSeriesImageQueryResults>(sr2.ReadToEnd()).Data;
-            foreach (tvdbSeriesImageQueryResult image in images)
+            var maxRating = -0.1M;
+            var images = JsonConvert.DeserializeObject<tvdbSeriesImageQueryResults>(sr2.ReadToEnd()).Data;
+            foreach (var image in images)
             {
-                if ((image.RatingsInfo.Average * image.RatingsInfo.Count) > maxRating)
+                if ((image.RatingsInfo.Average * image.RatingsInfo.Count) <= maxRating) continue;
+                maxRating = image.RatingsInfo.Average * image.RatingsInfo.Count;
+                if (!string.IsNullOrEmpty(image.Thumbnail))
                 {
-                    maxRating = image.RatingsInfo.Average * image.RatingsInfo.Count;
-                    if (!string.IsNullOrEmpty(image.Thumbnail))
-                    {
-                        url = "http://thetvdb.com/banners/" + image.Thumbnail;
-                    }
-                    else
-                    {
-                        url = "http://thetvdb.com/banners/_cache/" + image.FileName;
-                    }
+                    url = "http://thetvdb.com/banners/" + image.Thumbnail;
+                }
+                else
+                {
+                    url = "http://thetvdb.com/banners/_cache/" + image.FileName;
                 }
             }
 

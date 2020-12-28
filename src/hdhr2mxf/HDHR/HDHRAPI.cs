@@ -4,54 +4,53 @@ using System.IO;
 using System.Net;
 using System.Text;
 using System.Xml.Serialization;
+using hdhr2mxf.XMLTV;
 using Newtonsoft.Json;
-using XmltvXml;
 
-namespace HDHomeRunTV
+namespace hdhr2mxf.HDHR
 {
-    public class HDHRAPI
+    public class hdhrapi
     {
-        private string UserAgent
+        private static string UserAgent
         {
             get
             {
-                Version version = System.Reflection.Assembly.GetEntryAssembly().GetName().Version;
-                return string.Format("HDHR2MXF/{0}.{1}.{2}", version.Major, version.Minor, version.Build);
+                var version = System.Reflection.Assembly.GetEntryAssembly()?.GetName().Version;
+                return $"HDHR2MXF/{version.Major}.{version.Minor}.{version.Build}";
             }
         }
-        private readonly string BaseUrl = "http://api.hdhomerun.com";
 
-        private StreamReader GetRequestResponse(string url, int timeout = 0)
+        private const string BaseUrl = "http://api.hdhomerun.com";
+
+        private static StreamReader GetRequestResponse(string url, int timeout = 0)
         {
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+            var request = (HttpWebRequest)WebRequest.Create(url);
             request.UserAgent = UserAgent;
             request.AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip;
             if (timeout > 0)
             {
                 request.Timeout = timeout;
             }
-            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-            return new StreamReader(response.GetResponseStream(), Encoding.UTF8);
+            var response = (HttpWebResponse)request.GetResponse();
+            return new StreamReader(response.GetResponseStream() ?? throw new InvalidOperationException(), Encoding.UTF8);
         }
 
-        public List<HDHRDiscover> DiscoverDevices()
+        public List<hdhrDiscover> DiscoverDevices()
         {
             try
             {
-                using (StreamReader sr = GetRequestResponse(BaseUrl + "/discover"))
+                using (var sr = GetRequestResponse(BaseUrl + "/discover"))
                 {
-                    return JsonConvert.DeserializeObject<List<HDHRDiscover>>(sr.ReadToEnd());
+                    return JsonConvert.DeserializeObject<List<hdhrDiscover>>(sr.ReadToEnd());
                 }
             }
             catch (WebException wex)
             {
                 Console.WriteLine("DiscoverDevices(): " + wex.Message);
-                if (wex.Response != null)
+                if (wex.Response == null) return null;
+                using (var sr = new StreamReader(wex.Response.GetResponseStream(), Encoding.UTF8))
                 {
-                    using (StreamReader sr = new StreamReader(wex.Response.GetResponseStream(), Encoding.UTF8))
-                    {
-                        Console.WriteLine(sr.ReadToEnd());
-                    }
+                    Console.WriteLine(sr.ReadToEnd());
                 }
             }
             catch (Exception e)
@@ -61,24 +60,22 @@ namespace HDHomeRunTV
             return null;
         }
 
-        public HDHRDevice ConnectDevice(string url)
+        public hdhrDevice ConnectDevice(string url)
         {
             try
             {
-                using (StreamReader sr = GetRequestResponse(url, 1000))
+                using (var sr = GetRequestResponse(url, 1000))
                 {
-                    return JsonConvert.DeserializeObject<HDHRDevice>(sr.ReadToEnd());
+                    return JsonConvert.DeserializeObject<hdhrDevice>(sr.ReadToEnd());
                 }
             }
             catch (WebException wex)
             {
                 Console.WriteLine("ConnectDevice(): " + wex.Message);
-                if (wex.Response != null)
+                if (wex.Response == null) return null;
+                using (var sr = new StreamReader(wex.Response.GetResponseStream(), Encoding.UTF8))
                 {
-                    using (StreamReader sr = new StreamReader(wex.Response.GetResponseStream(), Encoding.UTF8))
-                    {
-                        Console.WriteLine(sr.ReadToEnd());
-                    }
+                    Console.WriteLine(sr.ReadToEnd());
                 }
             }
             catch (Exception e)
@@ -88,24 +85,22 @@ namespace HDHomeRunTV
             return null;
         }
 
-        public List<HDHRChannel> GetDeviceChannels(string url)
+        public List<hdhrChannel> GetDeviceChannels(string url)
         {
             try
             {
-                using (StreamReader sr = GetRequestResponse(url + "?tuning"))
+                using (var sr = GetRequestResponse(url + "?tuning"))
                 {
-                    return JsonConvert.DeserializeObject<List<HDHRChannel>>(sr.ReadToEnd());
+                    return JsonConvert.DeserializeObject<List<hdhrChannel>>(sr.ReadToEnd());
                 }
             }
             catch (WebException wex)
             {
                 Console.WriteLine("GetDeviceChannels(): " + wex.Message);
-                if (wex.Response != null)
+                if (wex.Response == null) return null;
+                using (var sr = new StreamReader(wex.Response.GetResponseStream(), Encoding.UTF8))
                 {
-                    using (StreamReader sr = new StreamReader(wex.Response.GetResponseStream(), Encoding.UTF8))
-                    {
-                        Console.WriteLine(sr.ReadToEnd());
-                    }
+                    Console.WriteLine(sr.ReadToEnd());
                 }
             }
             catch (Exception e)
@@ -115,27 +110,25 @@ namespace HDHomeRunTV
             return null;
         }
 
-        public List<HDHRChannelGuide> GetChannelGuide(string deviceAuth, string channel, int startTime)
+        public List<hdhrChannelGuide> GetChannelGuide(string deviceAuth, string channel, int startTime)
         {
             try
             {
-                string url = BaseUrl + "/api/guide.php?DeviceAuth=";
-                url += Uri.EscapeDataString(deviceAuth) + "&Channel=" + channel + ((startTime > 0) ? "&Start=" + startTime.ToString() : string.Empty);
+                var url = BaseUrl + "/api/guide.php?DeviceAuth=";
+                url += Uri.EscapeDataString(deviceAuth) + "&Channel=" + channel + ((startTime > 0) ? "&Start=" + startTime : string.Empty);
 
-                using (StreamReader sr = GetRequestResponse(url))
+                using (var sr = GetRequestResponse(url))
                 {
-                    return JsonConvert.DeserializeObject<List<HDHRChannelGuide>>(sr.ReadToEnd());
+                    return JsonConvert.DeserializeObject<List<hdhrChannelGuide>>(sr.ReadToEnd());
                 }
             }
             catch (WebException wex)
             {
                 Console.WriteLine("GetChannelGuide(): " + wex.Message);
-                if (wex.Response != null)
+                if (wex.Response == null) return null;
+                using (var sr = new StreamReader(wex.Response.GetResponseStream(), Encoding.UTF8))
                 {
-                    using (StreamReader sr = new StreamReader(wex.Response.GetResponseStream(), Encoding.UTF8))
-                    {
-                        Console.WriteLine(sr.ReadToEnd());
-                    }
+                    Console.WriteLine(sr.ReadToEnd());
                 }
             }
             catch (Exception e)
@@ -145,37 +138,35 @@ namespace HDHomeRunTV
             return null;
         }
 
-        public XMLTV GetHdhrXmltvGuide(string deviceAuth)
+        public xmltv GetHdhrXmltvGuide(string deviceAuth)
         {
             try
             {
                 if (deviceAuth == null) return null;
-                using (StreamReader sr = GetRequestResponse(BaseUrl + "/api/xmltv.php?DeviceAuth=" + Uri.EscapeDataString(deviceAuth)))
+                using (var sr = GetRequestResponse(BaseUrl + "/api/xmltv.php?DeviceAuth=" + Uri.EscapeDataString(deviceAuth)))
                 {
-                    XmlSerializer serializer = new XmlSerializer(typeof(XMLTV));
-                    string firstLine = sr.ReadLine();
-                    string xmltv = (firstLine.StartsWith("<?") ? string.Empty : firstLine) + sr.ReadToEnd();
+                    var serializer = new XmlSerializer(typeof(xmltv));
+                    var firstLine = sr.ReadLine();
+                    var xmltv = (firstLine.StartsWith("<?") ? string.Empty : firstLine) + sr.ReadToEnd();
 
                     // save the xmltv file
-                    using (StreamWriter sw = new StreamWriter(epg123.Helper.outputPathOverride + "\\hdhr2mxf.xmltv", false, Encoding.UTF8))
+                    using (var sw = new StreamWriter(epg123.Helper.OutputPathOverride + "\\hdhr2mxf.xmltv", false, Encoding.UTF8))
                     {
                         sw.Write(firstLine + "\n" + xmltv);
                         sw.Close();
                     }
 
                     TextReader reader = new StringReader(xmltv);
-                    return (XMLTV)serializer.Deserialize(reader);
+                    return (xmltv)serializer.Deserialize(reader);
                 }
             }
             catch (WebException wex)
             {
                 Console.WriteLine("GetHdhrXmltvGuide(): " + wex.Message);
-                if (wex.Response != null)
+                if (wex.Response == null) return null;
+                using (var sr = new StreamReader(wex.Response.GetResponseStream(), Encoding.UTF8))
                 {
-                    using (StreamReader sr = new StreamReader(wex.Response.GetResponseStream(), Encoding.UTF8))
-                    {
-                        Console.WriteLine(sr.ReadToEnd());
-                    }
+                    Console.WriteLine(sr.ReadToEnd());
                 }
             }
             catch (Exception e)
@@ -190,21 +181,19 @@ namespace HDHomeRunTV
             try
             {
                 if (deviceAuth == null) return false;
-                using (StreamReader sr = GetRequestResponse(BaseUrl + "/api/account?DeviceAuth=" + Uri.EscapeDataString(deviceAuth)))
+                using (var sr = GetRequestResponse(BaseUrl + "/api/account?DeviceAuth=" + Uri.EscapeDataString(deviceAuth)))
                 {
-                    HDHRAccount account = JsonConvert.DeserializeObject<HDHRAccount>(sr.ReadToEnd());
+                    var account = JsonConvert.DeserializeObject<hdhrAccount>(sr.ReadToEnd());
                     return account.DvrActive;
                 }
             }
             catch (WebException wex)
             {
                 Console.WriteLine("IsDvrActive(): " + wex.Message);
-                if (wex.Response != null)
+                if (wex.Response == null) return false;
+                using (var sr = new StreamReader(wex.Response.GetResponseStream(), Encoding.UTF8))
                 {
-                    using (StreamReader sr = new StreamReader(wex.Response.GetResponseStream(), Encoding.UTF8))
-                    {
-                        Console.WriteLine(sr.ReadToEnd());
-                    }
+                    Console.WriteLine(sr.ReadToEnd());
                 }
             }
             catch (Exception e)

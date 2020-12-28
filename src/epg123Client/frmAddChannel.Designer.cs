@@ -1,4 +1,4 @@
-﻿namespace epg123
+﻿namespace epg123Client
 {
     partial class frmAddChannel
     {
@@ -467,7 +467,6 @@
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Add Channel to Lineup";
-            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.frmAddChannel_FormClosing);
             this.tabTunerSpace.ResumeLayout(false);
             this.tabChannelTuningInfo.ResumeLayout(false);
             this.tabChannelTuningInfo.PerformLayout();
