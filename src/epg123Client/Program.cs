@@ -426,6 +426,9 @@ namespace epg123
                             // import success
                             if (import)
                             {
+                                // fix merged channels that no long have tuninginfos
+                                WmcStore.CleanUpMergedChannelTuningInfos();
+
                                 // refresh the lineups after import
                                 using (var mergedLineups = new MergedLineups(WmcStore.WmcObjectStore))
                                 {
@@ -437,6 +440,7 @@ namespace epg123
                                 Logger.WriteInformation("Completed lineup refresh.");
 
                                 // reindex database
+                                WmcUtilities.ReindexPvrSchedule();
                                 WmcUtilities.ReindexDatabase();
                             }
 

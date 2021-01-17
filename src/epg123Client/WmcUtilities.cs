@@ -286,10 +286,10 @@ namespace epg123Client
             return RunWmcIndexTask("ReindexSearchRoot", "ehPrivJob.exe", "/DoReindexSearchRoot");
         }
 
-        //public static bool ReindexPvrSchedule()
-        //{
-        //    return RunWmcIndexTask("PvrScheduleTask", "mcupdate.exe", "-PvrSchedule -nogc");
-        //}
+        public static bool ReindexPvrSchedule()
+        {
+            return RunWmcIndexTask("PvrScheduleTask", "mcupdate.exe", "-PvrSchedule -nogc");
+        }
 
         private static bool RunWmcIndexTask(string task, string program, string argument)
         {

@@ -6,6 +6,8 @@ using System.Xml.Serialization;
 using epg123;
 using epg123Client.MxfXml;
 using Microsoft.MediaCenter.Guide;
+using Microsoft.MediaCenter.Pvr;
+using Program = Microsoft.MediaCenter.Guide.Program;
 
 namespace epg123Client
 {
@@ -66,16 +68,14 @@ namespace epg123Client
                 // check mxf file for discontinuities
                 var discontinuities = -1;
                 var mxfStartTime = DateTime.MinValue;
-                foreach (var entry in mxfScheduleEntries.ScheduleEntry.Where(entry =>
-                    entry.StartTime != DateTime.MinValue))
+                foreach (var entry in mxfScheduleEntries.ScheduleEntry.Where(entry => entry.StartTime != DateTime.MinValue))
                 {
                     if (mxfStartTime == DateTime.MinValue) mxfStartTime = entry.StartTime;
                     ++discontinuities;
                 }
                 if (discontinuities > 0)
                 {
-                    Logger.WriteInformation(
-                        $"Service {mxfService.CallSign} has a time discontinuity. Skipping verification of this station's schedule entries.");
+                    Logger.WriteInformation($"Service {mxfService.CallSign} has a time discontinuity. Skipping verification of this station's schedule entries.");
                     continue;
                 }
                 if (mxfStartTime > DateTime.UtcNow)
@@ -97,11 +97,7 @@ namespace epg123Client
                         // remove duplicate start time entry; probably from a discontinuity
                         try
                         {
-                            wmcScheduleEntry.Refresh();
-                            wmcScheduleEntry.Program = null;
-                            wmcScheduleEntry.Service = null;
-                            wmcScheduleEntry.Unlock();
-                            wmcScheduleEntry.Update();
+                            RemoveScheduleEntry(wmcScheduleEntry);
                         }
                         catch
                         {
@@ -135,14 +131,30 @@ namespace epg123Client
 
                         // find the program in the MXF file for this schedule entry
                         var mxfProgram = mxf.With[0].Programs[int.Parse(mxfScheduleEntry.Program) - 1];
+                        var mxfEndTime = mxfStartTime + TimeSpan.FromSeconds(mxfScheduleEntry.Duration);
 
                         // verify a schedule entry exists matching the MXF file and determine whether there needs to be intervention
-                        if (!wmcScheduleEntryTimes.TryGetValue(mxfStartTime, out var wmcScheduleEntry))
+                        var addEntry = false;
+                        var replaceEntry = false;
+                        if (!wmcScheduleEntryTimes.TryGetValue(mxfStartTime, out var wmcScheduleEntry)) addEntry = true;
+                        else if (wmcScheduleEntry.Program.GetUIdValue() != mxfProgram.Uid)
+                        {
+                            if (!IsSameSeries(wmcScheduleEntry.Program, mxfProgram))
+                            {
+                                if (wmcScheduleEntry.EndTime == mxfEndTime && wmcScheduleEntry.ProgramContent == null) replaceEntry = true;
+                                else addEntry = true;
+                            }
+                            else if (wmcScheduleEntry.ProgramContent == null) replaceEntry = true;
+                            else if (wmcScheduleEntry.Program.IsGeneric) replaceEntry = true;
+                            else addEntry = true;
+                        }
+
+                        if (addEntry)
                         {
                             try
                             {
-                                if (verbose) Logger.WriteInformation($"Service {mxfService.CallSign}: Adding schedule entry from {mxfStartTime.ToLocalTime()} to {mxfStartTime.ToLocalTime() + TimeSpan.FromSeconds(mxfScheduleEntry.Duration)} for program [{mxfProgram.Uid.Replace("!Program!", "")} - [{mxfProgram.Title}] - [{mxfProgram.EpisodeTitle}]].");
-                                var addProgram = WmcStore.WmcObjectStore.UIds[mxfProgram.Uid].Target as Microsoft.MediaCenter.Guide.Program;
+                                if (verbose) Logger.WriteInformation($"Service {mxfService.CallSign}: Adding schedule entry from {mxfStartTime.ToLocalTime()} to {mxfEndTime.ToLocalTime()} for program [{mxfProgram.Uid.Substring(9)} - [{mxfProgram.Title}] - [{mxfProgram.EpisodeTitle}]].");
+                                var addProgram = WmcStore.WmcObjectStore.UIds[mxfProgram.Uid].Target as Program;
                                 var addScheduleEntry = new ScheduleEntry(addProgram, wmcService, mxfStartTime, TimeSpan.FromSeconds(mxfScheduleEntry.Duration), mxfScheduleEntry.Part, mxfScheduleEntry.Parts);
                                 UpdateScheduleEntryTags(addScheduleEntry, mxfScheduleEntry);
                                 WmcStore.WmcObjectStore.Add(addScheduleEntry);
@@ -150,89 +162,83 @@ namespace epg123Client
                             }
                             catch (Exception e)
                             {
-                                Logger.WriteWarning($"Service {mxfService.CallSign}: Failed to add schedule entry from {mxfStartTime.ToLocalTime()} to {mxfStartTime.ToLocalTime() + TimeSpan.FromSeconds(mxfScheduleEntry.Duration)} for program [{mxfProgram.Uid.Replace("!Program!", "")} - [{mxfProgram.Title}] - [{mxfProgram.EpisodeTitle}]].\nmessage {e.Message}\n{e.StackTrace}");
+                                Logger.WriteWarning($"Service {mxfService.CallSign}: Failed to add schedule entry from {mxfStartTime.ToLocalTime()} to {mxfEndTime.ToLocalTime()} for program [{mxfProgram.Uid.Substring(9)} - [{mxfProgram.Title}] - [{mxfProgram.EpisodeTitle}]].\nmessage {e.Message}\n{e.StackTrace}");
                                 break;
                             }
                         }
-                        else
-                        {
-                            if (Math.Abs(wmcScheduleEntry.Duration.TotalSeconds - mxfScheduleEntry.Duration) > 1.0)
-                            {
-                                // change the start time of the next wmc schedule entry if possible/needed
-                                if (!wmcScheduleEntryTimes.ContainsKey(mxfScheduleEntry.StartTime + TimeSpan.FromSeconds(mxfScheduleEntry.Duration)) &&
-                                    wmcScheduleEntryTimes.TryGetValue(wmcScheduleEntry.EndTime, out var scheduleEntry))
-                                {
-                                    try
-                                    {
-                                        scheduleEntry.Refresh();
-                                        wmcScheduleEntryTimes.Remove(scheduleEntry.StartTime);
-                                        scheduleEntry.StartTime = mxfScheduleEntry.StartTime + TimeSpan.FromSeconds(mxfScheduleEntry.Duration);
-                                        scheduleEntry.Update();
-                                        wmcScheduleEntryTimes.Add(scheduleEntry.StartTime, scheduleEntry);
-                                    }
-                                    catch
-                                    {
-                                        // ignored
-                                    }
-                                }
 
-                                // correct the end time of current wmc schedule entry
+                        if (replaceEntry)
+                        {
+                            if (verbose) Logger.WriteInformation($"Service {mxfService.CallSign}: Replacing schedule entry program on {mxfStartTime.ToLocalTime()} from [{wmcScheduleEntry.Program.GetUIdValue().Substring(9)} - [{wmcScheduleEntry.Program.Title}]-[{wmcScheduleEntry.Program.EpisodeTitle}]] to [{mxfProgram.Uid.Substring(9)} - [{mxfProgram.Title}]-[{mxfProgram.EpisodeTitle}]]");
+                            UpdateScheduleEntryTags(wmcScheduleEntry, mxfScheduleEntry);
+                            wmcScheduleEntry.Update(delegate
+                            {
+                                wmcScheduleEntry.Program = WmcStore.WmcObjectStore.UIds[mxfProgram.Uid].Target as Program;
+                                wmcScheduleEntry.EndTime = mxfEndTime;
+                            });
+                            ++correctedCount;
+
+                            if (wmcScheduleEntry.ProgramContent != null)
+                            {
+                                UpdateOneTimeRequest(wmcScheduleEntry);
+                            }
+                        }
+
+                        if (!addEntry && Math.Abs(wmcScheduleEntry.Duration.TotalSeconds - mxfScheduleEntry.Duration) > 1.0)
+                        {
+                            // change the start time of the next wmc schedule entry if possible/needed
+                            if (!wmcScheduleEntryTimes.ContainsKey(mxfScheduleEntry.StartTime + TimeSpan.FromSeconds(mxfScheduleEntry.Duration)) &&
+                                wmcScheduleEntryTimes.TryGetValue(wmcScheduleEntry.EndTime, out var scheduleEntry) &&
+                                scheduleEntry.EndTime > mxfScheduleEntry.StartTime + TimeSpan.FromSeconds(mxfScheduleEntry.Duration))
+                            {
                                 try
                                 {
-                                    if (verbose) Logger.WriteInformation($"Service {mxfService.CallSign} at {mxfStartTime.ToLocalTime()}: Changing end time of [{wmcScheduleEntry.Program.GetUIdValue().Replace("!Program!", "")} - [{wmcScheduleEntry.Program.Title}]-[{wmcScheduleEntry.Program.EpisodeTitle}]] from {wmcScheduleEntry.EndTime.ToLocalTime()} to {mxfStartTime.ToLocalTime() + TimeSpan.FromSeconds(mxfScheduleEntry.Duration)}");
-                                    wmcScheduleEntry.Refresh();
-                                    wmcScheduleEntry.EndTime = mxfStartTime + TimeSpan.FromSeconds(mxfScheduleEntry.Duration);
-                                    wmcScheduleEntry.Update();
+                                    wmcScheduleEntryTimes.Remove(scheduleEntry.StartTime);
+                                    scheduleEntry.Update(delegate
+                                    {
+                                        scheduleEntry.StartTime = mxfEndTime;
+                                    });
+                                    wmcScheduleEntryTimes.Add(scheduleEntry.StartTime, scheduleEntry);
                                 }
-                                catch (Exception e)
+                                catch
                                 {
-                                    Logger.WriteWarning($"Service {mxfService.CallSign} at {mxfStartTime.ToLocalTime()}: Failed to change end time of [{wmcScheduleEntry.Program.GetUIdValue().Replace("!Program!", "")} - [{wmcScheduleEntry.Program.Title}]-[{wmcScheduleEntry.Program.EpisodeTitle}]] from {wmcScheduleEntry.EndTime.ToLocalTime()} to {mxfStartTime.ToLocalTime() + TimeSpan.FromSeconds(mxfScheduleEntry.Duration)}\nmessage {e.Message}\n{e.StackTrace}");
-                                    break;
+                                    // ignored
                                 }
                             }
 
+                            // correct the end time of current wmc schedule entry
                             try
                             {
-                                if (wmcScheduleEntry.Program.GetUIdValue() != mxfProgram.Uid)
+                                if (verbose) Logger.WriteInformation($"Service {mxfService.CallSign} at {mxfStartTime.ToLocalTime()}: Changing end time of [{wmcScheduleEntry.Program.GetUIdValue().Substring(9)} - [{wmcScheduleEntry.Program.Title}]-[{wmcScheduleEntry.Program.EpisodeTitle}]] from {wmcScheduleEntry.EndTime.ToLocalTime()} to {mxfEndTime.ToLocalTime()}");
+                                wmcScheduleEntry.Update(delegate
                                 {
-                                    if (verbose) Logger.WriteInformation($"Service {mxfService.CallSign} at {mxfStartTime.ToLocalTime()}: Replacing [{wmcScheduleEntry.Program.GetUIdValue().Replace("!Program!", "")} - [{wmcScheduleEntry.Program.Title}]-[{wmcScheduleEntry.Program.EpisodeTitle}]] with [{mxfProgram.Uid.Replace("!Program!", "")} - [{mxfProgram.Title}]-[{mxfProgram.EpisodeTitle}]]");
-                                    wmcScheduleEntry.Refresh();
-                                    wmcScheduleEntry.Program = WmcStore.WmcObjectStore.UIds[mxfProgram.Uid].Target as Microsoft.MediaCenter.Guide.Program;
-                                    UpdateScheduleEntryTags(wmcScheduleEntry, mxfScheduleEntry);
-                                    wmcScheduleEntry.EndTime = mxfStartTime + TimeSpan.FromSeconds(mxfScheduleEntry.Duration);
-                                    wmcScheduleEntry.Update();
-                                    ++correctedCount;
-                                }
+                                    wmcScheduleEntry.EndTime = mxfEndTime;
+                                });
                             }
                             catch (Exception e)
                             {
-                                Logger.WriteWarning($"Service {mxfService.CallSign} at {mxfStartTime.ToLocalTime()}: Failed to replace [{wmcScheduleEntry.Program.GetUIdValue().Replace("!Program!", "")} - [{wmcScheduleEntry.Program.Title}]-[{wmcScheduleEntry.Program.EpisodeTitle}]] with [{mxfProgram.Uid.Replace("!Program!", "")} - [{mxfProgram.Title}]-[{mxfProgram.EpisodeTitle}]]\nmessage {e.Message}\n{e.StackTrace}");
+                                Logger.WriteWarning($"Service {mxfService.CallSign} at {mxfStartTime.ToLocalTime()}: Failed to change end time of [{wmcScheduleEntry.Program.GetUIdValue().Substring(9)} - [{wmcScheduleEntry.Program.Title}]-[{wmcScheduleEntry.Program.EpisodeTitle}]] from {wmcScheduleEntry.EndTime.ToLocalTime()} to {mxfEndTime.ToLocalTime()}\nmessage {e.Message}\n{e.StackTrace}");
                                 break;
                             }
-
-                            wmcScheduleEntryTimes.Remove(mxfStartTime);
                         }
 
+                        if (!addEntry) wmcScheduleEntryTimes.Remove(mxfStartTime);
                         mxfLastStartTime = mxfStartTime;
-                        mxfStartTime += TimeSpan.FromSeconds(mxfScheduleEntry.Duration);
+                        mxfStartTime = mxfEndTime;
                     }
 
                     // remove orphaned wmcScheduleEntries
-                    foreach (var keyValuePair in wmcScheduleEntryTimes)
+                    foreach (var orphans in wmcScheduleEntryTimes)
                     {
                         try
                         {
-                            if (keyValuePair.Value.StartTime <= DateTime.UtcNow || keyValuePair.Value.StartTime >= mxfStartTime) continue;
-                            if (verbose) Logger.WriteInformation($"Service {mxfService.CallSign} at {keyValuePair.Value.StartTime.ToLocalTime()}: Removing [{keyValuePair.Value.Program.GetUIdValue().Replace("!Program!", "")} - [{keyValuePair.Value.Program.Title}]-[{keyValuePair.Value.Program.EpisodeTitle}]] due to being overlapped by another schedule entry.");
-                            keyValuePair.Value.Refresh();
-                            keyValuePair.Value.Service = null;
-                            keyValuePair.Value.Program = null;
-                            keyValuePair.Value.Unlock();
-                            keyValuePair.Value.Update();
+                            if (orphans.Value.StartTime <= DateTime.UtcNow || orphans.Value.StartTime >= mxfStartTime) continue;
+                            if (verbose) Logger.WriteInformation($"Service {mxfService.CallSign}: Removing schedule entry on {orphans.Value.StartTime.ToLocalTime()} for [{orphans.Value.Program.GetUIdValue().Replace("!Program!", "")} - [{orphans.Value.Program.Title}]-[{orphans.Value.Program.EpisodeTitle}]] due to being replaced/overlapped by another schedule entry.");
+                            RemoveScheduleEntry(orphans.Value);
                         }
                         catch (Exception e)
                         {
-                            if (verbose) Logger.WriteInformation($"Service {mxfService.CallSign} at {keyValuePair.Value.StartTime.ToLocalTime()}: Failed to remove [{keyValuePair.Value.Program.GetUIdValue().Replace("!Program!", "")} - [{keyValuePair.Value.Program.Title}]-[{keyValuePair.Value.Program.EpisodeTitle}]] due to being overlapped by another schedule entry.\nmessage {e.Message}\n{e.StackTrace}");
+                            if (verbose) Logger.WriteInformation($"Service {mxfService.CallSign} at {orphans.Value.StartTime.ToLocalTime()}: Failed to remove [{orphans.Value.Program.GetUIdValue().Replace("!Program!", "")} - [{orphans.Value.Program.Title}]-[{orphans.Value.Program.EpisodeTitle}]] due to being overlapped by another schedule entry.\nmessage {e.Message}\n{e.StackTrace}");
                         }
                     }
                 }
@@ -240,12 +246,66 @@ namespace epg123Client
                 {
                     Logger.WriteInformation($"Exception caught for {mxfService.CallSign} at {mxfStartTime.ToLocalTime()}, message {e.Message}\n{e.StackTrace}");
                 }
-                //GC.Collect();
-                //GC.WaitForPendingFinalizers();
-                //GC.Collect();
             }
             Logger.WriteInformation($"Checked {entriesChecked} entries and corrected {correctedCount} of them.");
             Logger.WriteMessage("Exiting VerifyLoad()");
+        }
+
+        private static void UpdateOneTimeRequest(ScheduleEntry wmc)
+        {
+            using (var allRecordings = new Recordings(WmcStore.WmcObjectStore))
+            {
+                var programContentKey = new ProgramContentKey(wmc.ProgramContent);
+                var recordings = (Recordings) allRecordings.WhereKeyIsInRange(programContentKey, programContentKey);
+                if (!recordings.Any()) return;
+                
+                var enumerator = recordings.GetEnumerator();
+                while (enumerator.MoveNext())
+                {
+                    var recordingToUpdate = (Recording) enumerator.Current;
+                    if (!(recordingToUpdate?.Request is OneTimeRequest)) continue;
+                    recordingToUpdate.Update(delegate
+                    {
+                        recordingToUpdate.Program = wmc.Program;
+                    });
+                    Logger.WriteWarning($"OneTimeRequest recording on {wmc.Service.CallSign} at {wmc.StartTime.ToLocalTime()} was updated to record [{wmc.Program.Title}]-[{wmc.Program.EpisodeTitle}].");
+                }
+            }
+        }
+
+        private static void RemoveScheduleEntry(ScheduleEntry wmc)
+        {
+            if (wmc.ProgramContent == null) goto RemoveEntry;
+            using (var allRecordings = new Recordings(WmcStore.WmcObjectStore))
+            {
+                var programContentKey = new ProgramContentKey(wmc.ProgramContent);
+                var recordings = (Recordings) allRecordings.WhereKeyIsInRange(programContentKey, programContentKey);
+                if (recordings.Any())
+                {
+                    var enumerator = recordings.GetEnumerator();
+                    while (enumerator.MoveNext())
+                    {
+                        var recordingAffected = (Recording) enumerator.Current;
+                        if (recordingAffected?.Request is OneTimeRequest)
+                        {
+                            Logger.WriteWarning($"OneTimeRequest recording on {wmc.Service.CallSign} at {wmc.StartTime.ToLocalTime()} for [{wmc.Program.Title}]-[{wmc.Program.EpisodeTitle}] may have been rescheduled or is no longer valid. Check your guide.");
+                        }
+                    }
+                }
+            }
+            
+            RemoveEntry:
+            wmc.Unlock();
+            wmc.Update(delegate
+            {
+                wmc.Service = null;
+                wmc.Program = null;
+            });
+        }
+
+        private static bool IsSameSeries(Program wmc, MxfProgram mxf) // or close enough to same series
+        {
+            return wmc.GetUIdValue().Substring(11, 8).Equals(mxf.Uid.Substring(11, 8)) || wmc.Title.Equals(mxf.Title);
         }
 
         private static void UpdateScheduleEntryTags(ScheduleEntry wmc, MxfScheduleEntry mxf)
@@ -273,6 +333,7 @@ namespace epg123Client
             wmc.Part = mxf.Part;
             wmc.Parts = mxf.Parts;
             wmc.TVRating = (TVRating)mxf.TvRating;
+            wmc.IsOnlyWmis = true;
         }
     }
 }

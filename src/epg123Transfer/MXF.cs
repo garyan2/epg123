@@ -171,7 +171,7 @@ namespace epg123Transfer
         public string ExactKeywordMatch { get; set; }
 
         [XmlAttribute("keywordType")]
-        public string KeywordType { get; set; }
+        public int KeywordType { get; set; }
 
         [XmlAttribute("episodeTitle")]
         public string EpisodeTitle { get; set; }
@@ -208,6 +208,21 @@ namespace epg123Transfer
 
         [XmlElement("prototypicalProgram")]
         public MxfProgram PrototypicalProgramElement { get; set; }
+
+        [XmlArrayItem("Keyword")]
+        public List<MxfKeyword> categories { get; set; }
+    }
+
+    public class MxfKeyword
+    {
+        [XmlAttribute("id")]
+        public string Id { get; set; }
+
+        [XmlAttribute("idref")]
+        public string IdRef { get; set; }
+
+        [XmlAttribute("word")]
+        public string Word { get; set; }
     }
 
     public class MxfPriorityToken

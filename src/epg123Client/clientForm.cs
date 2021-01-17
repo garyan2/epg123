@@ -1353,6 +1353,7 @@ namespace epg123Client
             // kick off the reindex
             if (importForm.Success)
             {
+                WmcStore.CleanUpMergedChannelTuningInfos();
                 WmcUtilities.ReindexDatabase();
             }
             else

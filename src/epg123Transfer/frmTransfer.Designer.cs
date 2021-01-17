@@ -47,24 +47,27 @@
             this.btnOpenBackup = new System.Windows.Forms.Button();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.label2 = new System.Windows.Forms.Label();
+            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.contextMenuStrip1.SuspendLayout();
             this.contextMenuStrip2.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
+            this.splitContainer1.Panel1.SuspendLayout();
+            this.splitContainer1.Panel2.SuspendLayout();
+            this.splitContainer1.SuspendLayout();
             this.SuspendLayout();
             // 
             // lvWmcRecordings
             // 
-            this.lvWmcRecordings.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left)));
             this.lvWmcRecordings.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.clmType,
             this.clmDescription});
             this.lvWmcRecordings.ContextMenuStrip = this.contextMenuStrip1;
+            this.lvWmcRecordings.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lvWmcRecordings.FullRowSelect = true;
-            this.lvWmcRecordings.GridLines = true;
             this.lvWmcRecordings.HideSelection = false;
-            this.lvWmcRecordings.Location = new System.Drawing.Point(426, 41);
+            this.lvWmcRecordings.Location = new System.Drawing.Point(0, 0);
             this.lvWmcRecordings.Name = "lvWmcRecordings";
-            this.lvWmcRecordings.Size = new System.Drawing.Size(346, 479);
+            this.lvWmcRecordings.Size = new System.Drawing.Size(394, 472);
             this.lvWmcRecordings.TabIndex = 0;
             this.lvWmcRecordings.UseCompatibleStateImageBehavior = false;
             this.lvWmcRecordings.View = System.Windows.Forms.View.Details;
@@ -73,11 +76,12 @@
             // clmType
             // 
             this.clmType.Text = "Type";
+            this.clmType.Width = 50;
             // 
             // clmDescription
             // 
             this.clmDescription.Text = "Title / Keyword(s)";
-            this.clmDescription.Width = 250;
+            this.clmDescription.Width = 100;
             // 
             // contextMenuStrip1
             // 
@@ -96,19 +100,17 @@
             // 
             // lvMxfRecordings
             // 
-            this.lvMxfRecordings.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left)));
             this.lvMxfRecordings.CheckBoxes = true;
             this.lvMxfRecordings.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.clmOldType,
             this.clmOldDescription});
             this.lvMxfRecordings.ContextMenuStrip = this.contextMenuStrip2;
+            this.lvMxfRecordings.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lvMxfRecordings.FullRowSelect = true;
-            this.lvMxfRecordings.GridLines = true;
             this.lvMxfRecordings.HideSelection = false;
-            this.lvMxfRecordings.Location = new System.Drawing.Point(12, 41);
+            this.lvMxfRecordings.Location = new System.Drawing.Point(0, 0);
             this.lvMxfRecordings.Name = "lvMxfRecordings";
-            this.lvMxfRecordings.Size = new System.Drawing.Size(339, 479);
+            this.lvMxfRecordings.Size = new System.Drawing.Size(392, 472);
             this.lvMxfRecordings.TabIndex = 1;
             this.lvMxfRecordings.UseCompatibleStateImageBehavior = false;
             this.lvMxfRecordings.View = System.Windows.Forms.View.Details;
@@ -118,11 +120,12 @@
             // clmOldType
             // 
             this.clmOldType.Text = "Type";
+            this.clmOldType.Width = 50;
             // 
             // clmOldDescription
             // 
             this.clmOldDescription.Text = "Title / Keyword(s)";
-            this.clmOldDescription.Width = 250;
+            this.clmOldDescription.Width = 100;
             // 
             // contextMenuStrip2
             // 
@@ -141,7 +144,8 @@
             // 
             // btnAddRecordings
             // 
-            this.btnAddRecordings.Location = new System.Drawing.Point(357, 231);
+            this.btnAddRecordings.Anchor = System.Windows.Forms.AnchorStyles.Right;
+            this.btnAddRecordings.Location = new System.Drawing.Point(397, 195);
             this.btnAddRecordings.Name = "btnAddRecordings";
             this.btnAddRecordings.Size = new System.Drawing.Size(63, 23);
             this.btnAddRecordings.TabIndex = 2;
@@ -153,7 +157,7 @@
             // 
             this.lblDateTime.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.lblDateTime.AutoSize = true;
-            this.lblDateTime.Location = new System.Drawing.Point(12, 523);
+            this.lblDateTime.Location = new System.Drawing.Point(12, 522);
             this.lblDateTime.Name = "lblDateTime";
             this.lblDateTime.Size = new System.Drawing.Size(141, 13);
             this.lblDateTime.TabIndex = 3;
@@ -161,8 +165,8 @@
             // 
             // btnExit
             // 
-            this.btnExit.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.btnExit.Location = new System.Drawing.Point(697, 526);
+            this.btnExit.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnExit.Location = new System.Drawing.Point(797, 526);
             this.btnExit.Name = "btnExit";
             this.btnExit.Size = new System.Drawing.Size(75, 23);
             this.btnExit.TabIndex = 4;
@@ -172,8 +176,9 @@
             // 
             // label1
             // 
+            this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(423, 22);
+            this.label1.Location = new System.Drawing.Point(701, 17);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(171, 13);
             this.label1.TabIndex = 5;
@@ -205,27 +210,53 @@
             this.label2.TabIndex = 7;
             this.label2.Text = "* Right-click items to manually match or verify series requests";
             // 
+            // splitContainer1
+            // 
+            this.splitContainer1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.splitContainer1.Location = new System.Drawing.Point(12, 41);
+            this.splitContainer1.Name = "splitContainer1";
+            // 
+            // splitContainer1.Panel1
+            // 
+            this.splitContainer1.Panel1.Controls.Add(this.btnAddRecordings);
+            this.splitContainer1.Panel1.Controls.Add(this.lvMxfRecordings);
+            this.splitContainer1.Panel1.Padding = new System.Windows.Forms.Padding(0, 0, 70, 0);
+            // 
+            // splitContainer1.Panel2
+            // 
+            this.splitContainer1.Panel2.Controls.Add(this.lvWmcRecordings);
+            this.splitContainer1.Panel2MinSize = 100;
+            this.splitContainer1.Size = new System.Drawing.Size(860, 472);
+            this.splitContainer1.SplitterDistance = 462;
+            this.splitContainer1.TabIndex = 9;
+            // 
             // frmTransfer
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(784, 561);
+            this.ClientSize = new System.Drawing.Size(884, 561);
+            this.Controls.Add(this.splitContainer1);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.btnOpenBackup);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.btnExit);
             this.Controls.Add(this.lblDateTime);
-            this.Controls.Add(this.btnAddRecordings);
-            this.Controls.Add(this.lvMxfRecordings);
-            this.Controls.Add(this.lvWmcRecordings);
             this.Cursor = System.Windows.Forms.Cursors.Default;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.MaximumSize = new System.Drawing.Size(800, 10000);
+            this.MinimumSize = new System.Drawing.Size(900, 600);
             this.Name = "frmTransfer";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "EPG123 Series Recordings Transfer Tool";
+            this.Shown += new System.EventHandler(this.frmTransfer_Shown);
+            this.SizeChanged += new System.EventHandler(this.frmTransfer_Shown);
             this.contextMenuStrip1.ResumeLayout(false);
             this.contextMenuStrip2.ResumeLayout(false);
+            this.splitContainer1.Panel1.ResumeLayout(false);
+            this.splitContainer1.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
+            this.splitContainer1.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -250,6 +281,7 @@
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip2;
         private System.Windows.Forms.ToolStripMenuItem matchVerifyToolStripMenuItem;
         private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.SplitContainer splitContainer1;
     }
 }
 

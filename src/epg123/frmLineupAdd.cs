@@ -201,7 +201,7 @@ namespace epg123
 
                 if (_headends.Count > 0)
                 {
-                    _headends = _headends.OrderBy(o => o.Lineup).ThenBy(o => o.Name).ToList();
+                    _headends = _headends.OrderBy(o => o.Name).ToList();
                     foreach (var lineup in _headends)
                     {
                         listBox1.Items.Add($"{lineup.Name} ({lineup.Location})");

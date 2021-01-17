@@ -106,11 +106,12 @@ namespace epg123.Task
             }
             else if (ErrorString.ToLower().Contains("access")) // permission problem
             {
-                ExistNoAccess = true;
+                Exist = ExistNoAccess = true;
                 StatusString = ErrorString;
             }
             else
             {
+                Exist = ExistNoAccess = false;
                 StatusString = "No task is scheduled to run.";
             }
 

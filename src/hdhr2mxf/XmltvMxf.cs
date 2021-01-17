@@ -118,7 +118,7 @@ namespace hdhr2mxf
             {
                 foreach (var channel in lineup.Channels)
                 {
-                    var match = $"{channel.Number}{((channel.SubNumber > 0) ? "." + channel.SubNumber.ToString() : string.Empty)} {channel.MatchName.ToUpper()}";
+                    var match = $"{channel.Number}{(channel.SubNumber > 0 ? "." + channel.SubNumber : string.Empty)} {channel.MatchName.ToUpper()}";
                     if (!displayNameChannelIDs.TryGetValue(match, out var serviceid) &&
                         !displayNameChannelIDs.TryGetValue(match.Split(' ')[0], out serviceid)) continue;
                     channel.StationId = GetStationIdFromChannelId(serviceid);
@@ -228,7 +228,8 @@ namespace hdhr2mxf
             foreach (var program in xmltv.Programs)
             {
                 // determine which service the schedule entry is for
-                var mxfService = Common.Mxf.With[0].GetService(GetStationIdFromChannelId(program.Channel));
+                var mxfService = Common.Mxf.With[0].Services.SingleOrDefault(arg => arg.StationId == GetStationIdFromChannelId(program.Channel));
+                if (mxfService == null) continue;
 
                 // determine start time
                 var dtStart = DateTime.ParseExact(program.Start, "yyyyMMddHHmmss zzz", CultureInfo.InvariantCulture).ToUniversalTime();

@@ -343,6 +343,12 @@ namespace epg123Client
         /// <returns></returns>
         public static string GetAllTuningInfos(MergedChannel mergedChannel)
         {
+            // attempt to repair tuning infos
+            if (mergedChannel.TuningInfos == null || mergedChannel.TuningInfos.Empty)
+            {
+                mergedChannel.AddChannelListings(null);
+            }
+
             return GetAllTuningInfos((Channel) mergedChannel);
         }
 
@@ -487,6 +493,17 @@ namespace epg123Client
                 Logger.WriteError($"Exception thrown during GetAllTuningInfos() for merged channel {mergedChannel}. {ex.Message}\n{ex.StackTrace}");
             }
             return ret;
+        }
+
+        public static void CleanUpMergedChannelTuningInfos()
+        {
+            foreach (MergedChannel mergedChannel in new MergedChannels(WmcObjectStore))
+            {
+                if (mergedChannel.TuningInfos.Empty)
+                {
+                    mergedChannel.AddChannelListings(null);
+                }
+            }
         }
 
         public static void AutoMapChannels()

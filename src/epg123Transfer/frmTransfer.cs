@@ -7,8 +7,10 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using System.Xml.Serialization;
+using epg123Client;
 using Microsoft.MediaCenter.Pvr;
 
 namespace epg123Transfer
@@ -30,7 +32,6 @@ namespace epg123Transfer
             InitializeComponent();
 
             ImportBinFile();
-            AssignColumnSorters();
             BuildListViews();
 
             if (string.IsNullOrEmpty(file)) return;
@@ -90,6 +91,8 @@ namespace epg123Transfer
 
             PopulateWmcRecordings();
             PopulateOldWmcRecordings();
+            AdjustColumnWidths(lvMxfRecordings);
+            AdjustColumnWidths(lvWmcRecordings);
         }
 
         #region ========= Binary Table File ==========
@@ -140,7 +143,29 @@ namespace epg123Transfer
         #region ========== Previous WMC Recordings ==========
         private void PopulateOldWmcRecordings()
         {
+            AssignColumnSorter(lvMxfRecordings);
             var listViewItems = new List<ListViewItem>();
+            var keywords = new Dictionary<string, string>();
+            var services = new Dictionary<string, string>();
+
+            // collect services and keywords based on IDs
+            var allRequests = new List<MxfRequest>(_oldRecordings.ManualRequest.Count + _oldRecordings.OneTimeRequest.Count + 
+                                                   _oldRecordings.SeriesRequest.Count + _oldRecordings.WishListRequest.Count);
+            allRequests.AddRange(_oldRecordings.ManualRequest);
+            allRequests.AddRange(_oldRecordings.OneTimeRequest);
+            allRequests.AddRange(_oldRecordings.SeriesRequest);
+            allRequests.AddRange(_oldRecordings.WishListRequest);
+            foreach (var request in allRequests)
+            {
+                if (request.Channel != null && request.PrototypicalService != null && !services.ContainsKey(request.Channel)) services.Add(request.Channel, request.PrototypicalService);
+                if (!(request.categories?.Count > 0)) continue;
+                foreach (var keyword in request.categories.Where(keyword => keyword.Id != null))
+                {
+                    keywords.Add(keyword.Id, keyword.Word);
+                }
+
+            }
+
             foreach (var request in _oldRecordings.SeriesRequest)
             {
                 // determine title & series and whether to display or not
@@ -173,16 +198,18 @@ namespace epg123Transfer
                     if (!string.IsNullOrEmpty(request.SeriesAttribute)) request.SeriesAttribute = epgSeries;
                     else request.SeriesElement.Uid = epgSeries;
                     background = Color.LightGreen;
-
-                    if (!series.StartsWith("!Series!")) request.AnyChannel = "true";
                 }
+
+                // make sure we get the service id
+                var service = request.PrototypicalService;
+                if (request.Channel != null && request.PrototypicalService == null) services.TryGetValue(request.Channel, out service);
 
                 // create ListViewItem
                 listViewItems.Add(new ListViewItem(
                     new[]
                     {
                         "Series",
-                        title
+                        title + $" [{RunTypeString(request.RunType)}, {(!request.AnyChannel.Equals("true") ? $"{request.PrototypicalChannelNumber}{ServiceCallsign(service)}" : $"{ContentQualityString(request.ContentQualityPreference)}")}]"
                     })
                 {
                     BackColor = background,
@@ -192,13 +219,118 @@ namespace epg123Transfer
             }
 
             // add wishlist requests
-            listViewItems.AddRange(from request in _oldRecordings.WishListRequest where !request.Complete && !_wmcRecording.Contains(request.Keywords) select new ListViewItem(new[] {"WishList", request.Keywords}) {BackColor = Color.LightGreen, Checked = true, Tag = request});
+            foreach (var request in _oldRecordings.WishListRequest)
+            {
+                if (request.Complete) continue;
+
+                // determine text for entry
+                var title = "";
+                if (request.KeywordType != 0) title += $"{(KeywordType)request.KeywordType}: ";
+                title += request.Keywords;
+                if (request.categories?.Count > 0)
+                {
+                    title += " (";
+                    foreach (var keyword in request.categories.Where(keyword => keyword.IdRef != null))
+                    {
+                        keywords.TryGetValue(keyword.IdRef, out var word);
+                        keyword.Word = word;
+                    }
+                    title = request.categories.OrderBy(cat => cat.Word).Aggregate(title, (current, keyword) => current + $"{keyword.Word}, ");
+                    title = title.TrimEnd(',', ' ') + ")";
+                }
+                if (_wmcRecording.Contains(title)) continue;
+
+                listViewItems.Add(new ListViewItem(
+                    new []
+                    {
+                        "WishList",
+                        title + $" [{RunTypeString(request.RunType)}]"
+                    })
+                {
+                    BackColor = Color.LightGreen,
+                    Checked = true,
+                    Tag = request
+                });
+            }
 
             // add onetime requests
-            listViewItems.AddRange(from request in _oldRecordings.OneTimeRequest where !request.Complete && (request.PrototypicalStartTime >= DateTime.UtcNow) && !_wmcRecording.Contains(request.PrototypicalTitle + " " + request.PrototypicalStartTime) let epg123 = request.PrototypicalService.StartsWith("!Service!EPG123") && (request.PrototypicalProgram.StartsWith("!Program!SH") || request.PrototypicalProgram.StartsWith("!Program!EP") || request.PrototypicalProgram.StartsWith("!Program!MV") || request.PrototypicalProgram.StartsWith("!Program!SP")) select new ListViewItem(new[] {"OneTime", request.PrototypicalTitle ?? request.Title}) {BackColor = epg123 ? Color.LightGreen : Color.LightSalmon, Checked = epg123, Tag = request});
+            foreach (var request in _oldRecordings.OneTimeRequest)
+            {
+                if (request.Complete || _wmcRecording.Contains($"{request.PrototypicalTitle} {request.PrototypicalStartTime}")) continue;
+
+                // make sure we get the service id
+                var service = request.PrototypicalService;
+                if (request.Channel != null && request.PrototypicalService == null) services.TryGetValue(request.Channel, out service);
+
+                var epg123 = service.StartsWith("!Service!EPG123");
+                var title = $"{request.PrototypicalTitle ?? request.Title}{EpisodeTitle(request.PrototypicalProgram)} [{request.PrototypicalChannelNumber}{ServiceCallsign(service)}, {request.PrototypicalStartTime.ToLocalTime()}]";
+                var background = ProgramExistsInDatabase(request.PrototypicalProgram) ? Color.LightGreen : Color.MediumSeaGreen;
+
+                var dupe = listViewItems.SingleOrDefault(arg => arg.SubItems[1].Text == title);
+                if (dupe != null) continue;
+
+                listViewItems.Add(new ListViewItem(
+                    new []
+                    {
+                        "OneTime",
+                        title
+                    })
+                {
+                    BackColor = epg123 ? background : Color.LightSalmon,
+                    Checked = false,
+                    Tag = request
+                });
+            }
 
             // add manual requests
-            listViewItems.AddRange(from request in _oldRecordings.ManualRequest where !request.Complete && (request.PrototypicalStartTime >= DateTime.Now) && !_wmcRecording.Contains(request.Title + " " + request.PrototypicalStartTime + " " + request.PrototypicalChannelNumber) select new ListViewItem(new[] {"Manual", request.Title ?? request.PrototypicalTitle}) {BackColor = Color.LightGreen, Checked = true, Tag = request});
+            foreach (var request in _oldRecordings.ManualRequest)
+            {
+                if (request.Complete || (request.IsRecurring.Equals("false") && request.PrototypicalStartTime < DateTime.UtcNow) ||
+                    _wmcRecording.Contains(request.Title + " " + request.PrototypicalStartTime + " " + request.PrototypicalChannelNumber)) continue;
+
+                // make sure we get the service id
+                var service = request.PrototypicalService;
+                if (request.Channel != null && request.PrototypicalService == null) services.TryGetValue(request.Channel, out service);
+
+                var title = request.PrototypicalTitle;
+                if (request.IsRecurring.Equals("false"))
+                {
+                    title += $" [{request.PrototypicalChannelNumber}{ServiceCallsign(service)}, {request.PrototypicalStartTime.ToLocalTime()} - {request.PrototypicalStartTime.ToLocalTime() + ConvertPDTHSM(request.PrototypicalDuration)}]";
+                }
+                else
+                {
+                    var daysOfWeek = (DaysOfWeek) int.Parse(request.DayOfWeekMask);
+                    title += " [Every";
+                    if (daysOfWeek == DaysOfWeek.All) title += "day,";
+                    else if (daysOfWeek != DaysOfWeek.None)
+                    {
+                        title += " ";
+                        title += (daysOfWeek & DaysOfWeek.Monday) != DaysOfWeek.None ? $"{DaysOfWeek.Monday}," : "";
+                        title += (daysOfWeek & DaysOfWeek.Tuesday) != DaysOfWeek.None ? $"{DaysOfWeek.Tuesday}," : "";
+                        title += (daysOfWeek & DaysOfWeek.Wednesday) != DaysOfWeek.None ? $"{DaysOfWeek.Wednesday}," : "";
+                        title += (daysOfWeek & DaysOfWeek.Thursday) != DaysOfWeek.None ? $"{DaysOfWeek.Thursday}," : "";
+                        title += (daysOfWeek & DaysOfWeek.Friday) != DaysOfWeek.None ? $"{DaysOfWeek.Friday}," : "";
+                        title += (daysOfWeek & DaysOfWeek.Saturday) != DaysOfWeek.None ? $"{DaysOfWeek.Saturday}," : "";
+                        title += (daysOfWeek & DaysOfWeek.Sunday) != DaysOfWeek.None ? $"{DaysOfWeek.Sunday}," : "";
+                    }
+                    title += $" {request.PrototypicalChannelNumber}{ServiceCallsign(service)}, {request.PrototypicalStartTime.ToLocalTime():h:mm tt} - {request.PrototypicalStartTime.ToLocalTime() + ConvertPDTHSM(request.PrototypicalDuration):h:mm tt}]";
+                }
+
+                var dupe = listViewItems.SingleOrDefault(arg => arg.SubItems[1].Text == title);
+                if (dupe != null) continue;
+                
+                listViewItems.Add(new ListViewItem(
+                    new[]
+                    {
+                        "Manual",
+                        title
+                    })
+                {
+                    BackColor = Color.LightGreen,
+                    Checked = request.IsRecurring.Equals("true"),
+                    Tag = request
+                });
+            }
 
             lvMxfRecordings.Items.AddRange(listViewItems.ToArray());
         }
@@ -229,8 +361,9 @@ namespace epg123Transfer
         private HashSet<string> _wmcRecording = new HashSet<string>();
         private void PopulateWmcRecordings()
         {
+            AssignColumnSorter(lvWmcRecordings);
             var listViewItems = new List<ListViewItem>();
-            foreach (SeriesRequest request in new SeriesRequests(epg123Client.WmcStore.WmcObjectStore))
+            foreach (SeriesRequest request in new SeriesRequests(WmcStore.WmcObjectStore))
             {
                 // do not display archived/completed entries
                 if (request.Complete) continue;
@@ -240,10 +373,10 @@ namespace epg123Transfer
                     new[]
                     {
                         "Series",
-                        request.ToString().Substring(7).Replace(" - Complete: False", "")
+                        request.Title + $" [{RunTypeString(request.RunType)}, {(!request.AnyChannel ? $"{request.Channel?.ChannelNumber} {request.Channel?.CallSign}" : $"{ContentQualityString(request.ContentQualityPreference)}")}]"
                     })
                 {
-                    BackColor = !request.Series.GetUIdValue().Contains("!Series!") ? Color.Pink : Color.LightGreen,
+                    BackColor = !request.Series.GetUIdValue().Contains("!Series!") ? Color.Pink : request.RequestedPrograms.Any(arg => arg.ScheduledRecording != null) ? Color.LightGreen : Color.MediumSeaGreen,
                     Tag = request
                 });
 
@@ -251,67 +384,102 @@ namespace epg123Transfer
                 _wmcRecording.Add(request.Series.GetUIdValue());
             }
 
-            foreach (ManualRequest request in new ManualRequests(epg123Client.WmcStore.WmcObjectStore))
+            foreach (ManualRequest request in new ManualRequests(WmcStore.WmcObjectStore))
             {
                 // do not display archived/completed entries
-                if (request.Complete || (request.StartTime < DateTime.UtcNow)) continue;
+                if (request.Complete) continue;
+
+                // what to display?
+                var title = request.PrototypicalProgram.ToString().StartsWith("Manual Recording") ? request.Title : request.PrototypicalProgram.Title;
+                if (!request.IsRecurring)
+                {
+                    title += $" [{request.Channel?.ChannelNumber} {request.Channel?.CallSign}, {request.StartTime.ToLocalTime()} - {request.StartTime.ToLocalTime() + request.Duration}]";
+                }
+                else
+                {
+                    title += " [Every";
+                    if (request.DaysOfWeek == DaysOfWeek.All) title += "day,";
+                    else if (request.DaysOfWeek != DaysOfWeek.None)
+                    {
+                        title += " ";
+                        title += (request.DaysOfWeek & DaysOfWeek.Monday) != DaysOfWeek.None ? $"{DaysOfWeek.Monday}," : "";
+                        title += (request.DaysOfWeek & DaysOfWeek.Tuesday) != DaysOfWeek.None ? $"{DaysOfWeek.Tuesday}," : "";
+                        title += (request.DaysOfWeek & DaysOfWeek.Wednesday) != DaysOfWeek.None ? $"{DaysOfWeek.Wednesday}," : "";
+                        title += (request.DaysOfWeek & DaysOfWeek.Thursday) != DaysOfWeek.None ? $"{DaysOfWeek.Thursday}," : "";
+                        title += (request.DaysOfWeek & DaysOfWeek.Friday) != DaysOfWeek.None ? $"{DaysOfWeek.Friday}," : "";
+                        title += (request.DaysOfWeek & DaysOfWeek.Saturday) != DaysOfWeek.None ? $"{DaysOfWeek.Saturday}," : "";
+                        title += (request.DaysOfWeek & DaysOfWeek.Sunday) != DaysOfWeek.None ? $"{DaysOfWeek.Sunday}," : "";
+                    }
+                    title += $" {request.Channel?.ChannelNumber} {request.Channel?.CallSign}, {request.StartTime.ToLocalTime():h:mm tt} - {request.StartTime.ToLocalTime() + request.Duration:h:mm tt}]";
+                }
 
                 // create ListViewItem
                 listViewItems.Add(new ListViewItem(
                     new[]
                     {
                         "Manual",
-                        request.ToString().Substring(7)
+                        title
                     })
                 {
-                    BackColor = Color.LightGreen,
+                    BackColor = request.RequestedPrograms.Any() ? Color.LightGreen : Color.MediumSeaGreen,
                     Tag = request
                 });
 
-                // add the manaul recording title, starttime, and channel number
-                _wmcRecording.Add(request.Title + " " + request.StartTime + " " + request.Channel.ChannelNumber.Number + "." + request.Channel.ChannelNumber.SubNumber);
+                // add the manual recording title, starttime, and channel number
+                _wmcRecording.Add(request.Title + " " + request.StartTime + " " + request.Channel?.ChannelNumber?.Number + "." + request.Channel?.ChannelNumber?.SubNumber);
             }
 
-            foreach (WishListRequest request in new WishListRequests(epg123Client.WmcStore.WmcObjectStore))
+            foreach (WishListRequest request in new WishListRequests(WmcStore.WmcObjectStore))
             {
                 // do not display archived/completed entries
                 if (request.Complete) continue;
+
+                // determine text for entry
+                var title = "";
+                if (request.KeywordType != KeywordType.None) title += $"{request.KeywordType}: ";
+                title += request.Title;
+                if (!request.Categories.Empty)
+                {
+                    title += " (";
+                    title = request.Categories.OrderBy(cat => cat.Word).Aggregate(title, (current, keyword) => current + $"{keyword.Word}, ");
+                    title = title.TrimEnd(',', ' ') + ")";
+                }
 
                 // create ListViewItem
                 listViewItems.Add(new ListViewItem(
                     new[]
                     {
-                        "WishList",
-                        request.ToString().Substring(9)
+                        "WishList", 
+                        title + $" [{RunTypeString(request.RunType)}]"
                     })
                 {
-                    BackColor = Color.LightGreen,
+                    BackColor = request.RequestedPrograms.Any() ? Color.LightGreen : Color.MediumSeaGreen,
                     Tag = request
                 });
 
                 // add keywords to hashset
-                _wmcRecording.Add(request.Keywords);
+                _wmcRecording.Add(title);
             }
 
-            foreach (OneTimeRequest request in new OneTimeRequests(epg123Client.WmcStore.WmcObjectStore))
+            foreach (OneTimeRequest request in new OneTimeRequests(WmcStore.WmcObjectStore))
             {
+                // add the manual recording title, starttime, and channel number
+                _wmcRecording.Add($"{request.Title} {request.StartTime}");
+
                 // do not display archived/completed entries
-                if (request.Complete || (request.StartTime < DateTime.UtcNow)) continue;
+                if (request.Complete || (request.RequestedProgram?.IsRequestFilled ?? false)) continue;
 
                 // create ListViewItem
                 listViewItems.Add(new ListViewItem(
                     new[]
                     {
                         "OneTime",
-                        request.Title
+                        $"{request.Title}{(request.PrototypicalProgram.EpisodeTitle == "" ? null : $" : {request.PrototypicalProgram.EpisodeTitle}")} [{request.Channel.ChannelNumber} {request.Channel.CallSign}, {request.StartTime.ToLocalTime()}]"
                     })
                 {
-                    BackColor = Color.LightGreen,
+                    BackColor = request.RequestedPrograms.Any() ? Color.LightGreen : Color.MediumSeaGreen,
                     Tag = request
                 });
-
-                // add the manaul recording title, starttime, and channel number
-                _wmcRecording.Add(request.Title + " " + request.StartTime);
             }
 
             if (listViewItems.Count > 0)
@@ -338,19 +506,13 @@ namespace epg123Transfer
         #endregion
 
         #region ========== Column Sorting ==========
-        private void AssignColumnSorters()
+        private void AssignColumnSorter(ListView listview)
         {
-            ListView[] listviews = { lvMxfRecordings, lvWmcRecordings };
-            foreach (var listview in listviews)
+            listview.ListViewItemSorter = new ListViewColumnSorter
             {
-                // create and assign listview item sorter
-                listview.ListViewItemSorter = new ListViewColumnSorter()
-                {
-                    SortColumn = 1,
-                    Order = SortOrder.Ascending
-                };
-                listview.Sort();
-            }
+                SortColumn = 1,
+                Order = SortOrder.Ascending
+            };
         }
 
         private void LvLineupSort(object sender, ColumnClickEventArgs e)
@@ -367,18 +529,45 @@ namespace epg123Transfer
             else
             {
                 // Set the column number that is to be sorted; default to ascending.
-                lvcs.SortColumn = e.Column;
                 lvcs.Order = SortOrder.Ascending;
             }
 
+            // always have secondary sort to second column (title/keyword)
+            if (e.Column == 0)
+            {
+                lvcs.SortColumn = 1;
+                ((ListView)sender).Sort();
+            }
+
             // Perform the sort with these new sort options.
+            lvcs.SortColumn = e.Column;
             ((ListView)sender).Sort();
         }
+
+        private void AdjustColumnWidths(ListView listView)
+        {
+            var dpiScaleFactor = 1.0;
+            using (var g = CreateGraphics())
+            {
+                if ((int) g.DpiX != 96)
+                {
+                    dpiScaleFactor = g.DpiX / 96;
+                }
+            }
+
+            listView.Columns[0].Width = -1;
+            listView.Columns[0].Width = Math.Max(listView.Columns[0].Width, (int)(60 * dpiScaleFactor));
+            listView.Columns[1].Width = -1;
+            listView.Columns[1].Width = Math.Max(listView.Width - listView.Columns[0].Width - (int)(23 * dpiScaleFactor), listView.Columns[1].Width);
+        }
+
         #endregion
 
         private void btnTransfer_Click(object sender, EventArgs e)
         {
             if (lvMxfRecordings.Items.Count <= 0) return;
+
+            this.Cursor = Cursors.WaitCursor;
 
             // clear the recordings
             _oldRecordings.ManualRequest = new List<MxfRequest>();
@@ -395,7 +584,16 @@ namespace epg123Transfer
             foreach (ListViewItem item in lvMxfRecordings.Items)
             {
                 if (!item.Checked) continue;
-                else ++checkedItems;
+                ++checkedItems;
+
+                if (((MxfRequest)item.Tag).AnyChannel.Equals("false"))
+                {
+                    if (ServiceCallsign(((MxfRequest)item.Tag).PrototypicalService) == null)
+                    {
+                        ((MxfRequest)item.Tag).AnyChannel = "true";
+                        ((MxfRequest)item.Tag).ContentQualityPreference = $"{(int)ContentQualityPreference.PreferHD}";
+                    }
+                }
 
                 switch (item.Text)
                 {
@@ -449,7 +647,7 @@ namespace epg123Transfer
                     CreateNoWindow = true
                 };
                 var proc = Process.Start(startInfo);
-                proc.WaitForExit();
+                proc?.WaitForExit();
             }
             catch (Exception ex)
             {
@@ -457,11 +655,12 @@ namespace epg123Transfer
             }
 
             BuildListViews();
+            this.Cursor = Cursors.Arrow;
         }
 
         private void btnExit_Click(object sender, EventArgs e)
         {
-            epg123Client.WmcStore.Close();
+            WmcStore.Close();
             Close();
         }
 
@@ -498,6 +697,81 @@ namespace epg123Transfer
                 frm.IdIs = request.SeriesAttribute ?? request.SeriesElement.Uid;
                 frm.ShowDialog();
             }
+        }
+
+        private TimeSpan ConvertPDTHSM(string pdthsm)
+        {
+            var expression = new Regex(@"P((?<days>\d{1,2})D)*T((?<hours>\d{1,2})H)*((?<minutes>\d{1,2})M)*((?<seconds>\d{1,2})S)*");
+            var match = expression.Match(pdthsm);
+            if (!match.Success) return new TimeSpan(0);
+            int.TryParse(match.Groups["days"].Value, out var days);
+            int.TryParse(match.Groups["hours"].Value, out var hours);
+            int.TryParse(match.Groups["minutes"].Value, out var minutes);
+            int.TryParse(match.Groups["seconds"].Value, out var seconds);
+            return new TimeSpan(days, hours, minutes, seconds);
+        }
+
+        private static string RunTypeString(string value)
+        {
+            return RunTypeString((RunType)int.Parse(value));
+        }
+
+        private static string RunTypeString(RunType type)
+        {
+            switch (type)
+            {
+                case RunType.FirstRunOnly:
+                    return "New";
+                case RunType.LiveOnly:
+                    return "Live";
+                default:
+                    return "New/Repeat";
+            }
+        }
+
+        private static string ServiceCallsign(string protoService)
+        {
+            if (!(WmcStore.WmcObjectStore.UIds[protoService]?.Target is Microsoft.MediaCenter.Guide.Service service)) return null;
+            return service.CallSign == "" ? null : $" {service.CallSign}";
+        }
+
+        private static string EpisodeTitle(string protoProgram)
+        {
+            if (!(WmcStore.WmcObjectStore.UIds[protoProgram]?.Target is Microsoft.MediaCenter.Guide.Program program)) return null;
+            return program.EpisodeTitle == "" ? null : $" : {program.EpisodeTitle}";
+        }
+
+        private static bool ProgramExistsInDatabase(string protoProgram)
+        {
+            return (WmcStore.WmcObjectStore.UIds[protoProgram]?.Target is Microsoft.MediaCenter.Guide.Program);
+        }
+        
+        private static string ContentQualityString(string preference)
+        {
+            return ContentQualityString((ContentQualityPreference) int.Parse(preference));
+        }
+        
+        private static string ContentQualityString(ContentQualityPreference preference)
+        {
+            switch (preference)
+            {
+                case ContentQualityPreference.OnlyHD:
+                    return "HD Only";
+                case ContentQualityPreference.PreferHD:
+                    return "HD Preferred";
+                case ContentQualityPreference.OnlySD:
+                    return "SD Only";
+                case ContentQualityPreference.PreferSD:
+                    return "SD Preferred";
+                default:
+                    return "SD/HD";
+            }
+        }
+
+        private void frmTransfer_Shown(object sender, EventArgs e)
+        {
+            AdjustColumnWidths(lvMxfRecordings);
+            AdjustColumnWidths(lvWmcRecordings);
         }
     }
 }
