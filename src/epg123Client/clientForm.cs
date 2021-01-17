@@ -920,6 +920,9 @@ namespace epg123Client
                     // increment progress bar
                     IncrementProgressBar();
 
+                    // do not include broadband channels
+                    if (channel.ChannelType == ChannelType.WmisBroadband) continue;
+
                     // make sure channel has a primary channel with lineup
                     if (channel.PrimaryChannel?.Lineup == null)
                     {

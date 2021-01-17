@@ -188,6 +188,7 @@ namespace epg123
             using (var sw = new StreamWriter(EButtonPath, false))
             {
                 sw.WriteLine(action);
+                sw.Flush();
                 sw.Close();
             }
         }

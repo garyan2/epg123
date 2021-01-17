@@ -474,7 +474,7 @@ namespace epg123Transfer
                     new[]
                     {
                         "OneTime",
-                        $"{request.Title}{(request.PrototypicalProgram.EpisodeTitle == "" ? null : $" : {request.PrototypicalProgram.EpisodeTitle}")} [{request.Channel.ChannelNumber} {request.Channel.CallSign}, {request.StartTime.ToLocalTime()}]"
+                        $"{request.Title}{(request.PrototypicalProgram.EpisodeTitle == "" ? null : $" : {request.PrototypicalProgram.EpisodeTitle}")} [{request.Channel?.ChannelNumber} {request.Channel?.CallSign}, {request.StartTime.ToLocalTime()}]"
                     })
                 {
                     BackColor = request.RequestedPrograms.Any() ? Color.LightGreen : Color.MediumSeaGreen,
