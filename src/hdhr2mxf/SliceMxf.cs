@@ -55,7 +55,7 @@ namespace hdhr2mxf
                         }
 
                         // add the channel to the lineup and make sure we don't duplicate channels
-                        var vchan = mxfLineup.Channels
+                        var vchan = mxfLineup.channels
                             .Where(arg => arg.Service == mxfService.Id)
                             .Where(arg => arg.Number == number)
                             .SingleOrDefault(arg => arg.SubNumber == subnumber);
@@ -81,7 +81,7 @@ namespace hdhr2mxf
                                     break;
                             }
 
-                            mxfLineup.Channels.Add(new MxfChannel()
+                            mxfLineup.channels.Add(new MxfChannel()
                             {
                                 Lineup = mxfLineup.Id,
                                 LineupUid = mxfLineup.Uid,

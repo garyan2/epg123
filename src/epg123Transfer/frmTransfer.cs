@@ -376,7 +376,7 @@ namespace epg123Transfer
                         request.Title + $" [{RunTypeString(request.RunType)}, {(!request.AnyChannel ? $"{request.Channel?.ChannelNumber} {request.Channel?.CallSign}" : $"{ContentQualityString(request.ContentQualityPreference)}")}]"
                     })
                 {
-                    BackColor = !request.Series.GetUIdValue().Contains("!Series!") ? Color.Pink : request.RequestedPrograms.Any(arg => arg.ScheduledRecording != null) ? Color.LightGreen : Color.MediumSeaGreen,
+                    BackColor = !request.Series.GetUIdValue().Contains("!Series!") ? Color.Pink : IsScheduled(request) ? Color.LightGreen : Color.MediumSeaGreen,
                     Tag = request
                 });
 
@@ -386,8 +386,11 @@ namespace epg123Transfer
 
             foreach (ManualRequest request in new ManualRequests(WmcStore.WmcObjectStore))
             {
+                // add the manual recording title, starttime, and channel number
+                _wmcRecording.Add(request.Title + " " + request.StartTime + " " + request.Channel?.ChannelNumber?.Number + "." + request.Channel?.ChannelNumber?.SubNumber);
+
                 // do not display archived/completed entries
-                if (request.Complete) continue;
+                if (request.Complete || (!request.IsRecurring && (request.RequestedProgram?.IsRequestFilled ?? false))) continue;
 
                 // what to display?
                 var title = request.PrototypicalProgram.ToString().StartsWith("Manual Recording") ? request.Title : request.PrototypicalProgram.Title;
@@ -421,12 +424,9 @@ namespace epg123Transfer
                         title
                     })
                 {
-                    BackColor = request.RequestedPrograms.Any() ? Color.LightGreen : Color.MediumSeaGreen,
+                    BackColor = IsScheduled(request) ? Color.LightGreen : Color.MediumSeaGreen,
                     Tag = request
                 });
-
-                // add the manual recording title, starttime, and channel number
-                _wmcRecording.Add(request.Title + " " + request.StartTime + " " + request.Channel?.ChannelNumber?.Number + "." + request.Channel?.ChannelNumber?.SubNumber);
             }
 
             foreach (WishListRequest request in new WishListRequests(WmcStore.WmcObjectStore))
@@ -453,7 +453,7 @@ namespace epg123Transfer
                         title + $" [{RunTypeString(request.RunType)}]"
                     })
                 {
-                    BackColor = request.RequestedPrograms.Any() ? Color.LightGreen : Color.MediumSeaGreen,
+                    BackColor = IsScheduled(request) ? Color.LightGreen : Color.MediumSeaGreen,
                     Tag = request
                 });
 
@@ -477,7 +477,7 @@ namespace epg123Transfer
                         $"{request.Title}{(request.PrototypicalProgram.EpisodeTitle == "" ? null : $" : {request.PrototypicalProgram.EpisodeTitle}")} [{request.Channel?.ChannelNumber} {request.Channel?.CallSign}, {request.StartTime.ToLocalTime()}]"
                     })
                 {
-                    BackColor = request.RequestedPrograms.Any() ? Color.LightGreen : Color.MediumSeaGreen,
+                    BackColor = IsScheduled(request) ? Color.LightGreen : Color.MediumSeaGreen,
                     Tag = request
                 });
             }
@@ -766,6 +766,12 @@ namespace epg123Transfer
                 default:
                     return "SD/HD";
             }
+        }
+
+        private static bool IsScheduled(Request request)
+        {
+            return request.RequestedPrograms.Any(program => program.ScheduledRecording != null);
+            //return !request.Complete && request.RequestedPrograms.Any(program => program.IsRequested && !program.IsRequestFilled);
         }
 
         private void frmTransfer_Shown(object sender, EventArgs e)

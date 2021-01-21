@@ -69,7 +69,7 @@ namespace hdhr2mxf
                     }
 
                     // add channel to the lineup
-                    mxfLineup.Channels.Add(new MxfChannel()
+                    mxfLineup.channels.Add(new MxfChannel()
                     {
                         Lineup = mxfLineup.Id,
                         LineupUid = mxfLineup.UniqueId,
@@ -116,7 +116,7 @@ namespace hdhr2mxf
             // find the stationid for each tuner channel for the MXF
             foreach (var lineup in Common.Mxf.With[0].Lineups)
             {
-                foreach (var channel in lineup.Channels)
+                foreach (var channel in lineup.channels)
                 {
                     var match = $"{channel.Number}{(channel.SubNumber > 0 ? "." + channel.SubNumber : string.Empty)} {channel.MatchName.ToUpper()}";
                     if (!displayNameChannelIDs.TryGetValue(match, out var serviceid) &&
@@ -157,7 +157,7 @@ namespace hdhr2mxf
             foreach (var lineup in Common.Mxf.With[0].Lineups)
             {
                 var channelsToRemove = new List<MxfChannel>();
-                foreach (var channel in lineup.Channels)
+                foreach (var channel in lineup.channels)
                 {
                     if (!string.IsNullOrEmpty(channel.Match))
                     {
@@ -172,7 +172,7 @@ namespace hdhr2mxf
                 {
                     foreach (var channel in channelsToRemove)
                     {
-                        lineup.Channels.Remove(channel);
+                        lineup.channels.Remove(channel);
                     }
                 }
             }

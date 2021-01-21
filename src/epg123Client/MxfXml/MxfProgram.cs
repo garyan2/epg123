@@ -24,5 +24,14 @@ namespace epg123Client.MxfXml
         /// </summary>
         [XmlAttribute("episodeTitle")]
         public string EpisodeTitle { get; set; }
+
+        /// <summary>
+        /// The description of this program.
+        /// The maximum length is 2048 characters.
+        /// </summary>
+        [XmlAttribute("description")]
+        public string Description { get; set; }
+
+
     }
 }

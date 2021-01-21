@@ -286,7 +286,7 @@ namespace hdhr2mxf.MXF
                 Index = Lineups.Count + 1,
                 Uid = "EPG123-HDHR2MXF-" + hdhrType,
                 Name = $"EPG123 HDHR-{hdhrType} to MXF Converter",
-                Channels = new List<MxfChannel>()
+                channels = new List<MxfChannel>()
             });
             _lineups.Add(hdhrType.ToUpper(), lineup);
             return lineup;

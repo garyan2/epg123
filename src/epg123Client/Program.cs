@@ -371,6 +371,7 @@ namespace epg123
                                 // check if garbage cleanup is needed
                                 if (!nogc && !force && WmcRegistries.IsGarbageCleanupDue() && !ProgramRecording(60))
                                 {
+                                    WmcStore.Close();
                                     WmcUtilities.PerformGarbageCleanup();
                                 }
 
@@ -380,6 +381,7 @@ namespace epg123
                                     Logger.WriteError($"A program recording is still in progress after {MaximumRecordingWaitHours} hours. Aborting the mxf file import.");
                                     goto CompleteImport;
                                 }
+                                WmcStore.Close();
 
                                 // import mxf file
                                 if (!ImportMxfFile(filename))
@@ -426,7 +428,7 @@ namespace epg123
                             // import success
                             if (import)
                             {
-                                // fix merged channels that no long have tuninginfos
+                                // fix merged channels that no longer have tuninginfos
                                 WmcStore.CleanUpMergedChannelTuningInfos();
 
                                 // refresh the lineups after import

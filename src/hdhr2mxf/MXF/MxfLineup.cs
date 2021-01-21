@@ -52,6 +52,6 @@ namespace hdhr2mxf.MXF
         }
 
         [XmlArrayItem("Channel")]
-        public List<MxfChannel> Channels { get; set; }
+        public List<MxfChannel> channels { get; set; }
     }
 }

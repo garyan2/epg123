@@ -25,7 +25,7 @@ namespace epg123Client
                 mxf = (mxf) serializer.Deserialize(reader);
                 reader.Close();
             }
-            if (!(mxf.Providers[0]?.Name ?? string.Empty).Equals("EPG123"))
+            if (!(mxf.Providers[0]?.Name ?? string.Empty).Equals("EPG123") && !(mxf.Providers[0]?.Name ?? string.Empty).Equals("HDHR2MXF"))
             {
                 Logger.WriteInformation("The imported MXF file is not a guide listings file created by EPG123. Skipping schedule entry verifications.");
                 Logger.WriteInformation("Exiting VerifyLoad()");
@@ -144,8 +144,8 @@ namespace epg123Client
                                 if (wmcScheduleEntry.EndTime == mxfEndTime && wmcScheduleEntry.ProgramContent == null) replaceEntry = true;
                                 else addEntry = true;
                             }
-                            else if (wmcScheduleEntry.ProgramContent == null) replaceEntry = true;
-                            else if (wmcScheduleEntry.Program.IsGeneric) replaceEntry = true;
+                            else if (wmcScheduleEntry.ProgramContent == null || wmcScheduleEntry.Program.IsGeneric) replaceEntry = true;
+                            else if (wmcScheduleEntry.Program.IsMovie && wmcScheduleEntry.Program.Description.Equals(mxfProgram.Description)) replaceEntry = true;
                             else addEntry = true;
                         }
 

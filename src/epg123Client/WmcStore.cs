@@ -346,7 +346,14 @@ namespace epg123Client
             // attempt to repair tuning infos
             if (mergedChannel.TuningInfos == null || mergedChannel.TuningInfos.Empty)
             {
-                mergedChannel.AddChannelListings(null);
+                try
+                {
+                    mergedChannel.AddChannelListings(null);
+                }
+                catch
+                {
+                    Logger.WriteInformation($"Failed to repair merged channel \"{mergedChannel}\" with no tuning infos.");
+                }
             }
 
             return GetAllTuningInfos((Channel) mergedChannel);
@@ -499,9 +506,14 @@ namespace epg123Client
         {
             foreach (MergedChannel mergedChannel in new MergedChannels(WmcObjectStore))
             {
-                if (mergedChannel.TuningInfos.Empty)
+                if (!mergedChannel.TuningInfos.Empty) continue;
+                try
                 {
                     mergedChannel.AddChannelListings(null);
+                }
+                catch
+                {
+                    Logger.WriteInformation($"Failed to repair merged channel \"{mergedChannel}\" with no tuning infos.");
                 }
             }
         }
