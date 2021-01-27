@@ -301,20 +301,20 @@ namespace epg123.sdJson2mxf
                 lastProgramId = program.ProgramId;
 
                 // prepopulate some of the program
-                var prog = new MxfProgram()
+                var prog = SdMxf.With[0].GetProgram(program.ProgramId, new MxfProgram
                 {
                     Index = SdMxf.With[0].Programs.Count + 1,
                     Md5 = program.Md5,
                     TmsId = program.ProgramId,
-                    IsSeasonFinale = Helper.StringContains(program.IsPremiereOrFinale, "Season Finale"),
-                    IsSeasonPremiere = Helper.StringContains(program.IsPremiereOrFinale, "Season Premiere"),
-                    IsSeriesFinale = Helper.StringContains(program.IsPremiereOrFinale, "Series Finale"),
-                    IsSeriesPremiere = Helper.StringContains(program.IsPremiereOrFinale, "Series Premiere"),
-                    IsPremiere = program.Premiere || Helper.StringContains(program.IsPremiereOrFinale, "Premiere"),
                     Part = program.Multipart?.PartNumber ?? 0,
                     Parts = program.Multipart?.TotalParts ?? 0,
-                    NewDate = (config.OadOverride && program.New) ? dtStart.ToLocalTime() : DateTime.MinValue
-                };
+                    NewDate = config.OadOverride && program.New ? dtStart.ToLocalTime() : DateTime.MinValue
+                });
+                prog.IsSeasonFinale |= Helper.StringContains(program.IsPremiereOrFinale, "Season Finale");
+                prog.IsSeasonPremiere |= Helper.StringContains(program.IsPremiereOrFinale, "Season Premiere");
+                prog.IsSeriesFinale |= Helper.StringContains(program.IsPremiereOrFinale, "Series Finale");
+                prog.IsSeriesPremiere |= Helper.StringContains(program.IsPremiereOrFinale, "Series Premiere");
+                prog.IsPremiere = program.Premiere || Helper.StringContains(program.IsPremiereOrFinale, "Premiere");
 
                 // grab any tvratings from desired countries
                 var scheduleTvRatings = new Dictionary<string, string>();
@@ -357,8 +357,8 @@ namespace epg123.sdJson2mxf
                     IsTape = Helper.StringContains(program.LiveTapeDelay, "tape"),
                     Part = program.Multipart?.PartNumber ?? 0,
                     Parts = program.Multipart?.TotalParts ?? 0,
-                    Program = SdMxf.With[0].GetProgram(program.ProgramId, prog).Id,
-                    StartTime = (startTime == null) ? DateTime.MinValue : DateTime.Parse(startTime),
+                    Program = prog.Id,
+                    StartTime = startTime == null ? DateTime.MinValue : DateTime.Parse(startTime),
                     //TvRating is determined in the class itself to combine with the program content ratings
                     IsSigned = program.Signed
                 });

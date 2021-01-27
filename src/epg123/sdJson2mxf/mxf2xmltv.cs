@@ -26,13 +26,10 @@ namespace epg123.sdJson2mxf
                     Programs = new List<XmltvProgramme>()
                 };
 
-                foreach (var channel in SdMxf.With[0].Lineups.SelectMany(lineup => lineup.channels))
-                {
-                    xmltv.Channels.Add(BuildXmltvChannel(channel));
-                }
-
                 foreach (var service in SdMxf.With[0].Services)
                 {
+                    xmltv.Channels.Add(BuildXmltvChannel(service));
+
                     var startTime = new DateTime();
                     if (service.MxfScheduleEntries.ScheduleEntry.Count == 0 && config.XmltvAddFillerData)
                     {
@@ -44,7 +41,6 @@ namespace epg123.sdJson2mxf
                             Title = service.Name,
                             TmsId = $"EPG123FILL{service.StationId}",
                             Index = SdMxf.With[0].Programs.Count + 1,
-                            //jsonProgramData = new sdProgram()
                         };
 
                         // populate the schedule entries
@@ -82,11 +78,8 @@ namespace epg123.sdJson2mxf
         }
 
         #region ========== XMLTV Channels and Functions ==========
-        public static XmltvChannel BuildXmltvChannel(MxfChannel mxfChannel)
+        public static XmltvChannel BuildXmltvChannel(MxfService mxfService)
         {
-            // determine what service this channel belongs to
-            var mxfService = SdMxf.With[0].Services.Single(arg => arg.Id.Equals(mxfChannel.Service));
-
             // initialize the return channel
             var ret = new XmltvChannel()
             {
@@ -106,13 +99,19 @@ namespace epg123.sdJson2mxf
             // add channel number if requested
             if (config.XmltvIncludeChannelNumbers)
             {
-                if (mxfChannel.Number > 0)
+                var numbers = new HashSet<string>();
+                foreach (var mxfLineup in SdMxf.With[0].Lineups)
                 {
-                    var num = mxfChannel.Number.ToString();
-                    num += (mxfChannel.SubNumber > 0) ? "." + mxfChannel.SubNumber.ToString() : string.Empty;
+                    foreach (var mxfChannel in mxfLineup.channels)
+                    {
+                        if (mxfChannel.Service != mxfService.Id || mxfChannel.Number <= 0) continue;
 
-                    ret.DisplayNames.Add(new XmltvText() { Text = num + " " + mxfService.CallSign });
-                    ret.DisplayNames.Add(new XmltvText() { Text = num });
+                        var num = $"{mxfChannel.Number}" + (mxfChannel.SubNumber > 0 ? $".{mxfChannel.SubNumber}" : "");
+                        if (!numbers.Add(num)) continue;
+
+                        ret.DisplayNames.Add(new XmltvText { Text = num + " " + mxfService.CallSign });
+                        ret.DisplayNames.Add(new XmltvText { Text = num });
+                    }
                 }
             }
 
@@ -172,7 +171,7 @@ namespace epg123.sdJson2mxf
                     PreviouslyShown = BuildProgramPreviouslyShown(mxfProgram, scheduleEntry),
                     Premiere = BuildProgramPremiere(mxfProgram, scheduleEntry),
                     Live = BuildLiveFlag(scheduleEntry),
-                    New = (!scheduleEntry.IsRepeat) ? string.Empty : null,
+                    New = !scheduleEntry.IsRepeat ? string.Empty : null,
                     Subtitles = BuildProgramSubtitles(scheduleEntry),
                     Rating = BuildProgramRatings(mxfProgram, scheduleEntry),
                     StarRating = BuildProgramStarRatings(mxfProgram)

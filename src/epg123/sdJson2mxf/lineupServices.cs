@@ -154,8 +154,7 @@ namespace epg123.sdJson2mxf
                         if ((station == null) || (ExcludedStations.Contains(station.StationId) && !CustomStations.Contains(station.StationId))) continue;
                         if (!IncludedStations.Contains(station.StationId) && !config.AutoAddNew)
                         {
-                            Logger.WriteWarning(
-                                $"**** Lineup {clientLineup.Name} ({clientLineup.Location}) has added station {station.StationId} ({station.Callsign}). ****");
+                            Logger.WriteWarning($"**** Lineup {clientLineup.Name} ({clientLineup.Location}) has added station {station.StationId} ({station.Callsign}). ****");
                             continue;
                         }
                     }

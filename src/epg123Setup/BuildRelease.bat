@@ -3,7 +3,7 @@ CLS
 
 REM Enable command extensions
 SETLOCAL ENABLEEXTENSIONS
-SET VER="1.6.1.2"
+SET VER="1.6.1.3"
 SET COMPILER=C:\Program Files (x86)\Inno Setup 5\compil32.exe
 SET BASE=..\..\bin\output
 SET PORTABLE=%BASE%\portable
@@ -23,12 +23,14 @@ powershell.exe -nologo -noprofile -command "& { Add-Type -A 'System.IO.Compressi
 
 ECHO Copying files to release folders ...
 COPY /Y "%RELEASE%\epg123.exe" "%PORTABLE%"
+COPY /Y "%RELEASE%\epg123.exe.config" "%PORTABLE%"
 COPY /Y "%RELEASE%\hdhr2mxf.exe" "%PORTABLE%"
 COPY /Y "%RELEASE%\Newtonsoft.Json.dll" "%PORTABLE%"
 
 COPY /Y "%RELEASE%\epg123Client.exe" "%PORTABLE%"
 COPY /Y "%RELEASE%\epg123Client.exe.config" "%PORTABLE%"
 COPY /Y "%RELEASE%\epgTray.exe" "%PORTABLE%"
+COPY /Y "%RELEASE%\epgTray.exe.config" "%PORTABLE%"
 
 COPY /Y "%RELEASE%\epg123Transfer.exe" "%PORTABLE%"
 COPY /Y "%RELEASE%\epg123Transfer.exe.config" "%PORTABLE%"

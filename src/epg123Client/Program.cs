@@ -393,7 +393,7 @@ namespace epg123
                                 // perform verification
                                 if (!noverify)
                                 {
-                                    var verifyLoad = new VerifyLoad(filename, verbose);
+                                    _ = new VerifyLoad(filename, verbose);
                                 }
 
                                 // get lineup and configure lineup type and devices 

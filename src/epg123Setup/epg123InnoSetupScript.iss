@@ -79,6 +79,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 [Files]
 Source: "misc\dotNetFx40_Full_setup.exe"; DestDir: "{tmp}"; Flags: dontcopy
 Source: "..\..\bin\Release\epg123.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: main1
+Source: "..\..\bin\Release\epg123.exe.config"; DestDir: "{app}"; Flags: ignoreversion; Components: main1
 Source: "..\..\bin\Release\hdhr2mxf.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: hdhr
 Source: "..\..\bin\Release\Newtonsoft.Json.dll"; DestDir: "{app}"; Flags: ignoreversion; Components: main1 hdhr
 Source: "..\..\bin\Release\epg123Client.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: main2
@@ -86,6 +87,7 @@ Source: "..\..\bin\Release\epg123Client.exe.config"; DestDir: "{app}"; Flags: ig
 Source: "..\..\bin\Release\epg123Transfer.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: main2
 Source: "..\..\bin\Release\epg123Transfer.exe.config"; DestDir: "{app}"; Flags: ignoreversion; Attribs: hidden; MinVersion: 6.1; OnlyBelowVersion: 6.2; Components: main2
 Source: "..\..\bin\Release\epgTray.exe"; DestDir: "{app}"; BeforeInstall: TaskKill('epgTray.exe'); Flags: ignoreversion signonce; Components: main2
+Source: "..\..\bin\Release\epgTray.exe.config"; DestDir: "{app}"; Flags: ignoreversion; Components: main2
 Source: "docs\epg123_Guide.pdf"; DestDir: "{app}"; Flags: ignoreversion; Components: help
 Source: "docs\license.rtf"; DestDir: "{app}"; Flags: ignoreversion
 Source: "docs\customLineup.xml.example"; DestDir: "{app}"; Flags: ignoreversion; Components: main1
@@ -109,7 +111,7 @@ Root: HKLM; Subkey: "SYSTEM\CurrentControlSet\Services\EventLog\Media Center\EPG
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent runascurrentuser unchecked; Components: main1
 Filename: "{app}\{#MyClientExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyClientName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent runascurrentuser unchecked; Components: main2
-Filename: "{app}\epgTray.exe"; Flags: nowait runascurrentuser; Components: main2
+Filename: "{app}\epgTray.exe"; Flags: nowait runasoriginaluser; Components: main2
 
 [Dirs]
 Name: {code:GetRootDataFolder}; Permissions: everyone-full
@@ -121,6 +123,7 @@ Type: files; Name: "{app}\tweakmediacenter.reg"; Components: main1 main2 help
 Type: files; Name: "{app}\epg123utility.exe"; Components: main1 main2 help
 Type: files; Name: "{app}\epg123UtilityReadme.pdf"; Components: main1 main2 help
 Type: files; Name: "{app}\epg123.exe"; Components: not main1
+Type: files; Name: "{app}\epg123.exe.config"; Components: not main1
 Type: files; Name: "{app}\hdhr2mxf.exe"; Components: not hdhr
 Type: files; Name: "{app}\epg123Client.exe"; Components: not main2
 Type: files; Name: "{app}\epg123Client.exe.config"; Components: not main2
@@ -129,6 +132,7 @@ Type: files; Name: "{app}\epg123Transfer.exe.config"; Components: not main2
 Type: files; Name: "{app}\epg123_Guide.pdf"; Components: not help
 Type: files; Name: "{app}\customLineup.xml.example"; Components: not main1
 Type: files; Name: "{app}\epgTray.exe"; BeforeInstall: TaskKill('epgTray.exe'); Components: not main2
+Type: files; Name: "{app}\epgTray.exe.config"; Components: not main2
 Type: files; Name: "{commondesktop}\{#MyAppName}.lnk"; Components: not main1
 Type: files; Name: "{commondesktop}\{#MyClientName}.lnk"; Components: not main2
 Type: files; Name: "{commonprograms}\{#MyAppName}\{#MyAppName}.lnk"; Components: not main1

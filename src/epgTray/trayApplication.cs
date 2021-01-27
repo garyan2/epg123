@@ -4,11 +4,14 @@ using System.Drawing;
 using System.IO;
 using System.IO.Pipes;
 using System.Reflection;
+using System.Security.AccessControl;
 using System.Security.Principal;
 using System.Threading;
 using System.Windows.Forms;
 using epg123;
+using epgTray.Properties;
 using Microsoft.Win32;
+using Timer = System.Threading.Timer;
 
 namespace epgTray
 {
@@ -20,9 +23,11 @@ namespace epgTray
         private ToolStripMenuItem _closeMenuItem;
         private ToolStripMenuItem _openConfigMenuItem;
         private ToolStripMenuItem _openClientMenuItem;
+        private ToolStripMenuItem _openTransferToolMenuItem;
         private ToolStripMenuItem _viewLogMenuItem;
         private ToolStripMenuItem _runUpdateMenuItem;
-        private System.Threading.Timer _timer;
+        private ToolStripMenuItem _notificationMenuItem;
+        private Timer _timer;
         public bool Shutdown;
         private readonly Thread _serverThread;
         private int _lastStatus;
@@ -36,6 +41,13 @@ namespace epgTray
 
             Application.ApplicationExit += OnApplicationExit;
             InitializeComponent();
+
+            if (Settings.Default.UpgradeRequired)
+            {
+                Settings.Default.Upgrade();
+                Settings.Default.UpgradeRequired = false;
+                Settings.Default.Save();
+            }
 
             try
             {
@@ -65,16 +77,18 @@ namespace epgTray
             _closeMenuItem = new ToolStripMenuItem();
             _openConfigMenuItem = new ToolStripMenuItem();
             _openClientMenuItem = new ToolStripMenuItem();
+            _openTransferToolMenuItem = new ToolStripMenuItem();
             _viewLogMenuItem = new ToolStripMenuItem();
             _runUpdateMenuItem = new ToolStripMenuItem();
+            _notificationMenuItem = new ToolStripMenuItem();
             _trayIconContextMenu.SuspendLayout();
 
             // 
             // TrayIconContextMenu
             // 
             _trayIconContextMenu.Items.AddRange(new ToolStripItem[] {
-            _runUpdateMenuItem, new ToolStripSeparator(),
-                _openConfigMenuItem, _openClientMenuItem, _viewLogMenuItem, new ToolStripSeparator(),
+            _runUpdateMenuItem, _notificationMenuItem, new ToolStripSeparator(),
+                _openConfigMenuItem, _openClientMenuItem, _openTransferToolMenuItem, _viewLogMenuItem, new ToolStripSeparator(),
                 _closeMenuItem});
             _trayIconContextMenu.Name = "_trayIconContextMenu";
             // 
@@ -97,6 +111,13 @@ namespace epgTray
             _openConfigMenuItem.Text = "Open Configuration GUI";
             _openConfigMenuItem.Enabled = File.Exists(Helper.Epg123ExePath);
             _openConfigMenuItem.Click += OpenFileMenuItem_Click;
+            //
+            // OpenTransferToolMenuItem
+            //
+            _openTransferToolMenuItem.Name = "_openTransferToolMenuItem";
+            _openTransferToolMenuItem.Text = "Open Transfer Tool";
+            _openTransferToolMenuItem.Enabled = File.Exists(Helper.Epg123TransferExePath);
+            _openTransferToolMenuItem.Click += OpenFileMenuItem_Click;
             // 
             // ViewLogMenuItem
             // 
@@ -110,9 +131,24 @@ namespace epgTray
             _runUpdateMenuItem.Text = "Update Guide Now";
             _runUpdateMenuItem.Enabled = File.Exists(Helper.Epg123ClientExePath);
             _runUpdateMenuItem.Click += RunUpdateMenuItem_Click;
+            //
+            // NotificationMenuItem
+            //
+            _notificationMenuItem.Name = "_notificationMenuItem";
+            _notificationMenuItem.Text = "Notify on ERRORs only";
+            _notificationMenuItem.CheckState = Settings.Default.errorOnly ? CheckState.Checked : CheckState.Unchecked;
+            _notificationMenuItem.Click += NotificationMenuItemOnClick;
 
             _trayIconContextMenu.ResumeLayout(false);
             _trayIcon.ContextMenuStrip = _trayIconContextMenu;
+        }
+
+        private void NotificationMenuItemOnClick(object sender, EventArgs e)
+        {
+            Settings.Default.errorOnly = !Settings.Default.errorOnly;
+            Settings.Default.Save();
+            _notificationMenuItem.CheckState = Settings.Default.errorOnly ? CheckState.Checked : CheckState.Unchecked;
+            _trayIconContextMenu.Show();
         }
 
         private void OnApplicationExit(object sender, EventArgs e)
@@ -148,23 +184,23 @@ namespace epgTray
             if (lastTime == unknown)
             {
                 SetNotifyIconText($"EPG123\nLast guide update status is unknown.\n{DateTime.Now}");
-                return Properties.Resources.statusUnknown;
+                return Resources.statusUnknown;
             }
             if (DateTime.Now - lastTime > TimeSpan.FromHours(24.0))
             {
                 SetNotifyIconText($"EPG123\nLast update was more than 24 hrs ago.\n{lastTime}");
-                return Properties.Resources.statusError;
+                return Resources.statusError;
             }
 
-            var statusIcon = Properties.Resources.statusOK;
+            var statusIcon = Resources.statusOK;
             switch (_lastStatus)
             {
                 case 0xDEAD:
-                    statusIcon = Properties.Resources.statusError;
+                    statusIcon = Resources.statusError;
                     SetNotifyIconText($"EPG123\nThere was an error during last update.\n{lastTime}");
                     break;
                 case 0xBAD1:
-                    statusIcon = Properties.Resources.statusWarning;
+                    statusIcon = Resources.statusWarning;
                     SetNotifyIconText($"EPG123\nThere was a warning during last update.\n{lastTime}");
                     break;
                 case 0x0001:
@@ -176,7 +212,7 @@ namespace epgTray
             }
 
             _nextUpdate = lastTime + TimeSpan.FromHours(24);
-            _timer = new System.Threading.Timer(TimerEvent);
+            _timer = new Timer(TimerEvent);
             _ = _timer.Change(30000, 30000);
 
             // set and display icon
@@ -205,7 +241,7 @@ namespace epgTray
         private void PipeServer()
         {
             var pipeSecurity = new PipeSecurity();
-            pipeSecurity.AddAccessRule(new PipeAccessRule(new SecurityIdentifier(WellKnownSidType.WorldSid, null), PipeAccessRights.FullControl, System.Security.AccessControl.AccessControlType.Allow));
+            pipeSecurity.AddAccessRule(new PipeAccessRule(new SecurityIdentifier(WellKnownSidType.WorldSid, null), PipeAccessRights.FullControl, AccessControlType.Allow));
             var server = new NamedPipeServerStream("Epg123StatusPipe", PipeDirection.InOut, -1, PipeTransmissionMode.Message, PipeOptions.None, 0, 0, pipeSecurity);
             var reader = new StreamReader(server);
 
@@ -222,7 +258,7 @@ namespace epgTray
                     if (line.StartsWith("Downloading"))
                     {
                         _nextUpdate = DateTime.Now + TimeSpan.FromMinutes(5);
-                        _trayIcon.Icon = Properties.Resources.statusUpdating;
+                        _trayIcon.Icon = Resources.statusUpdating;
                         SetNotifyIconText(line.Replace("|", "\n"));
                     }
                     else if (line.StartsWith("Download Complete"))
@@ -233,7 +269,7 @@ namespace epgTray
                     else if (line.StartsWith("Importing"))
                     {
                         if (line.Contains("Performing garbage cleanup...")) _nextUpdate = DateTime.Now + TimeSpan.FromMinutes(60);
-                        _trayIcon.Icon = Properties.Resources.statusUpdating;
+                        _trayIcon.Icon = Resources.statusUpdating;
                         SetNotifyIconText(line.Replace("|", "\n"));
                     }
                     else if (line.StartsWith("Import Complete"))
@@ -259,7 +295,7 @@ namespace epgTray
                                 _trayIcon.BalloonTipText = "Your WMC program guide has successfully been updated.";
                                 break;
                         }
-                        _trayIcon.ShowBalloonTip(10000);
+                        if (!Settings.Default.errorOnly || _lastStatus == 0xDEAD) _trayIcon.ShowBalloonTip(10000);
                     }
                     else if (line.StartsWith("Shutdown"))
                     {
@@ -291,6 +327,9 @@ namespace epgTray
                 case "_openClientMenuItem":
                     filePath = Helper.Epg123ClientExePath;
                     break;
+                case "_openTransferToolMenuItem":
+                    filePath = Helper.Epg123TransferExePath;
+                    break;
                 case "_viewLogMenuItem":
                     filePath = Helper.Epg123TraceLogPath;
                     break;
@@ -302,7 +341,7 @@ namespace epgTray
 
         private void RunUpdateMenuItem_Click(object sender, EventArgs e)
         {
-            var startInfo = new ProcessStartInfo()
+            var startInfo = new ProcessStartInfo
             {
                 FileName = "schtasks.exe",
                 Arguments = "/run /tn \"epg123_update\"",

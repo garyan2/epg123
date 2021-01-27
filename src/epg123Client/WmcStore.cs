@@ -506,7 +506,7 @@ namespace epg123Client
         {
             foreach (MergedChannel mergedChannel in new MergedChannels(WmcObjectStore))
             {
-                if (!mergedChannel.TuningInfos.Empty) continue;
+                if (!mergedChannel.TuningInfos.Empty || mergedChannel.PrimaryChannel == null) continue;
                 try
                 {
                     mergedChannel.AddChannelListings(null);

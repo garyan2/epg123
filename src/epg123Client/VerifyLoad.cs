@@ -187,9 +187,9 @@ namespace epg123Client
                         if (!addEntry && Math.Abs(wmcScheduleEntry.Duration.TotalSeconds - mxfScheduleEntry.Duration) > 1.0)
                         {
                             // change the start time of the next wmc schedule entry if possible/needed
-                            if (!wmcScheduleEntryTimes.ContainsKey(mxfScheduleEntry.StartTime + TimeSpan.FromSeconds(mxfScheduleEntry.Duration)) &&
+                            if (!wmcScheduleEntryTimes.ContainsKey(mxfEndTime) &&
                                 wmcScheduleEntryTimes.TryGetValue(wmcScheduleEntry.EndTime, out var scheduleEntry) &&
-                                scheduleEntry.EndTime > mxfScheduleEntry.StartTime + TimeSpan.FromSeconds(mxfScheduleEntry.Duration))
+                                scheduleEntry.EndTime > mxfEndTime)
                             {
                                 try
                                 {
