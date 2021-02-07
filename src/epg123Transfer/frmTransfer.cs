@@ -34,7 +34,7 @@ namespace epg123Transfer
             ImportBinFile();
             BuildListViews();
 
-            if (string.IsNullOrEmpty(file)) return;
+            if (string.IsNullOrEmpty(_oldWmcFile)) return;
             if (lvMxfRecordings.Items.Count > 0)
             {
                 btnTransfer_Click(btnAddRecordings, null);
@@ -276,7 +276,7 @@ namespace epg123Transfer
                         title
                     })
                 {
-                    BackColor = epg123 ? background : Color.LightSalmon,
+                    BackColor = epg123 ? background : Color.LightPink,
                     Checked = false,
                     Tag = request
                 });
@@ -611,7 +611,12 @@ namespace epg123Transfer
                         break;
                 }
             }
-            if (checkedItems == 0) return;
+
+            if (checkedItems == 0)
+            {
+                this.Cursor = Cursors.Arrow;
+                return;
+            }
 
             try
             {

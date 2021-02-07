@@ -499,6 +499,7 @@ namespace epg123.MxfXml
 
         [XmlElement("ProducerRole")]
         public List<MxfPersonRank> ProducerRole { get; set; }
+        public bool ShouldSerializeProducerRole() { return false; }
 
         [XmlElement("DirectorRole")]
         public List<MxfPersonRank> DirectorRole { get; set; }

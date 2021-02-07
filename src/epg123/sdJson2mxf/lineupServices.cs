@@ -191,8 +191,8 @@ namespace epg123.sdJson2mxf
 
                             if (station.StationLogos != null)
                             {
-                                stationLogo = station.StationLogos.FirstOrDefault(arg => arg.Category != null && arg.Category.Equals(config.PreferredLogoStyle)) ??
-                                              station.StationLogos.FirstOrDefault(arg => arg.Category != null && arg.Category.Equals(config.AlternateLogoStyle));
+                                stationLogo = station.StationLogos.FirstOrDefault(arg => arg.Category != null && arg.Category.Equals(config.PreferredLogoStyle, StringComparison.OrdinalIgnoreCase)) ??
+                                              station.StationLogos.FirstOrDefault(arg => arg.Category != null && arg.Category.Equals(config.AlternateLogoStyle, StringComparison.OrdinalIgnoreCase));
 
                                 if (stationLogo != null)
                                 {

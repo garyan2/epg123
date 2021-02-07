@@ -106,7 +106,8 @@ namespace epg123.Task
             }
             else if (ErrorString.ToLower().Contains("access")) // permission problem
             {
-                Exist = ExistNoAccess = true;
+                Exist = false;
+                ExistNoAccess = true;
                 StatusString = ErrorString;
             }
             else

@@ -407,7 +407,7 @@ namespace epg123
                             // remove all channel logos
                             if (nologo)
                             {
-                                ClearLineupChannelLogos();
+                                WmcStore.ClearLineupChannelLogos();
                             }
 
                             // perform automatch
@@ -527,22 +527,6 @@ namespace epg123
             var frm = new frmImport(file);
             frm.ShowDialog();
             return frm.Success;
-        }
-        #endregion
-
-        #region ========== Remove Channel Logos ==========
-
-        public static void ClearLineupChannelLogos()
-        {
-            var services = new Services(WmcStore.WmcObjectStore);
-            foreach (Service service in services)
-            {
-                if (service.LogoImage == null) continue;
-                service.LogoImage = null;
-                service.Update();
-            }
-            ObjectStore.DisposeSingleton();
-            Logger.WriteInformation("Completed clearing all station logos.");
         }
         #endregion
 

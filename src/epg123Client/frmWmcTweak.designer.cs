@@ -33,6 +33,9 @@
             this.cbMainShowDetails = new System.Windows.Forms.CheckBox();
             this.trackMinutes = new System.Windows.Forms.TrackBar();
             this.grpMainEPG = new System.Windows.Forms.GroupBox();
+            this.cbClock = new System.Windows.Forms.CheckBox();
+            this.cbExpandedMovie = new System.Windows.Forms.CheckBox();
+            this.cbExpandedEpg = new System.Windows.Forms.CheckBox();
             this.cbChannelName = new System.Windows.Forms.CheckBox();
             this.cbCenterLogo = new System.Windows.Forms.CheckBox();
             this.cbRemoveAnimations = new System.Windows.Forms.CheckBox();
@@ -62,6 +65,7 @@
             this.trackMainRows = new System.Windows.Forms.TrackBar();
             this.btnTunerLimit = new System.Windows.Forms.Button();
             this.grpWmcTweak = new System.Windows.Forms.GroupBox();
+            this.cbNoSuccess = new System.Windows.Forms.CheckBox();
             this.label14 = new System.Windows.Forms.Label();
             this.lblStatusLogoOpaque = new System.Windows.Forms.Label();
             this.trackBar1 = new System.Windows.Forms.TrackBar();
@@ -87,7 +91,6 @@
             this.label9 = new System.Windows.Forms.Label();
             this.btnRemoveLogos = new System.Windows.Forms.Button();
             this.lblTunerLimit = new System.Windows.Forms.Label();
-            this.cbNoSuccess = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.trackMinutes)).BeginInit();
             this.grpMainEPG.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.trackColumnWidth)).BeginInit();
@@ -119,7 +122,7 @@
             this.cbMainShowDetails.AutoSize = true;
             this.cbMainShowDetails.Checked = true;
             this.cbMainShowDetails.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbMainShowDetails.Location = new System.Drawing.Point(182, 225);
+            this.cbMainShowDetails.Location = new System.Drawing.Point(182, 209);
             this.cbMainShowDetails.Name = "cbMainShowDetails";
             this.cbMainShowDetails.Size = new System.Drawing.Size(130, 17);
             this.cbMainShowDetails.TabIndex = 1;
@@ -131,20 +134,22 @@
             // 
             this.trackMinutes.AutoSize = false;
             this.trackMinutes.LargeChange = 30;
-            this.trackMinutes.Location = new System.Drawing.Point(6, 327);
+            this.trackMinutes.Location = new System.Drawing.Point(6, 301);
             this.trackMinutes.Maximum = 240;
             this.trackMinutes.Minimum = 30;
             this.trackMinutes.Name = "trackMinutes";
-            this.trackMinutes.Size = new System.Drawing.Size(170, 40);
+            this.trackMinutes.Size = new System.Drawing.Size(170, 35);
             this.trackMinutes.SmallChange = 30;
             this.trackMinutes.TabIndex = 3;
             this.trackMinutes.TickFrequency = 30;
-            this.trackMinutes.TickStyle = System.Windows.Forms.TickStyle.Both;
             this.trackMinutes.Value = 120;
             this.trackMinutes.ValueChanged += new System.EventHandler(this.trackBar_ValueChanged);
             // 
             // grpMainEPG
             // 
+            this.grpMainEPG.Controls.Add(this.cbClock);
+            this.grpMainEPG.Controls.Add(this.cbExpandedMovie);
+            this.grpMainEPG.Controls.Add(this.cbExpandedEpg);
             this.grpMainEPG.Controls.Add(this.cbChannelName);
             this.grpMainEPG.Controls.Add(this.cbCenterLogo);
             this.grpMainEPG.Controls.Add(this.cbRemoveAnimations);
@@ -181,6 +186,36 @@
             this.grpMainEPG.TabIndex = 4;
             this.grpMainEPG.TabStop = false;
             this.grpMainEPG.Text = "Guide Tweaks";
+            // 
+            // cbClock
+            // 
+            this.cbClock.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.cbClock.Location = new System.Drawing.Point(234, 398);
+            this.cbClock.Name = "cbClock";
+            this.cbClock.Size = new System.Drawing.Size(92, 40);
+            this.cbClock.TabIndex = 31;
+            this.cbClock.Text = "Add Date to Clock Display";
+            this.cbClock.UseVisualStyleBackColor = true;
+            // 
+            // cbExpandedMovie
+            // 
+            this.cbExpandedMovie.AutoSize = true;
+            this.cbExpandedMovie.Location = new System.Drawing.Point(9, 398);
+            this.cbExpandedMovie.Name = "cbExpandedMovie";
+            this.cbExpandedMovie.Size = new System.Drawing.Size(166, 17);
+            this.cbExpandedMovie.TabIndex = 30;
+            this.cbExpandedMovie.Text = "Add Movie Years to Grid Cells";
+            this.cbExpandedMovie.UseVisualStyleBackColor = true;
+            // 
+            // cbExpandedEpg
+            // 
+            this.cbExpandedEpg.AutoSize = true;
+            this.cbExpandedEpg.Location = new System.Drawing.Point(9, 421);
+            this.cbExpandedEpg.Name = "cbExpandedEpg";
+            this.cbExpandedEpg.Size = new System.Drawing.Size(173, 17);
+            this.cbExpandedEpg.TabIndex = 29;
+            this.cbExpandedEpg.Text = "Add Episode Titles to Grid Cells";
+            this.cbExpandedEpg.UseVisualStyleBackColor = true;
             // 
             // cbChannelName
             // 
@@ -227,32 +262,30 @@
             // 
             this.trackColumnWidth.AutoSize = false;
             this.trackColumnWidth.LargeChange = 1;
-            this.trackColumnWidth.Location = new System.Drawing.Point(6, 386);
+            this.trackColumnWidth.Location = new System.Drawing.Point(6, 355);
             this.trackColumnWidth.Maximum = 450;
             this.trackColumnWidth.Name = "trackColumnWidth";
-            this.trackColumnWidth.Size = new System.Drawing.Size(170, 40);
+            this.trackColumnWidth.Size = new System.Drawing.Size(170, 35);
             this.trackColumnWidth.TabIndex = 12;
             this.trackColumnWidth.TickFrequency = 30;
-            this.trackColumnWidth.TickStyle = System.Windows.Forms.TickStyle.Both;
             this.trackColumnWidth.ValueChanged += new System.EventHandler(this.trackBar_ValueChanged);
             // 
             // trackLogoSize
             // 
             this.trackLogoSize.AutoSize = false;
             this.trackLogoSize.LargeChange = 1;
-            this.trackLogoSize.Location = new System.Drawing.Point(6, 150);
+            this.trackLogoSize.Location = new System.Drawing.Point(6, 139);
             this.trackLogoSize.Maximum = 2;
             this.trackLogoSize.Name = "trackLogoSize";
-            this.trackLogoSize.Size = new System.Drawing.Size(170, 40);
+            this.trackLogoSize.Size = new System.Drawing.Size(170, 35);
             this.trackLogoSize.TabIndex = 20;
-            this.trackLogoSize.TickStyle = System.Windows.Forms.TickStyle.Both;
             this.trackLogoSize.ValueChanged += new System.EventHandler(this.trackBar_ValueChanged);
             // 
             // label7
             // 
             this.label7.AutoSize = true;
-            this.label7.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Underline))), System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label7.Location = new System.Drawing.Point(6, 75);
+            this.label7.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Underline))), System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label7.Location = new System.Drawing.Point(6, 69);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(110, 13);
             this.label7.TabIndex = 24;
@@ -261,7 +294,7 @@
             // lblColumnWidth
             // 
             this.lblColumnWidth.AutoSize = true;
-            this.lblColumnWidth.Location = new System.Drawing.Point(182, 386);
+            this.lblColumnWidth.Location = new System.Drawing.Point(182, 355);
             this.lblColumnWidth.Name = "lblColumnWidth";
             this.lblColumnWidth.Size = new System.Drawing.Size(70, 13);
             this.lblColumnWidth.TabIndex = 13;
@@ -270,7 +303,7 @@
             // lblRowHeight
             // 
             this.lblRowHeight.AutoSize = true;
-            this.lblRowHeight.Location = new System.Drawing.Point(182, 91);
+            this.lblRowHeight.Location = new System.Drawing.Point(182, 85);
             this.lblRowHeight.Name = "lblRowHeight";
             this.lblRowHeight.Size = new System.Drawing.Size(82, 13);
             this.lblRowHeight.TabIndex = 23;
@@ -279,7 +312,7 @@
             // lblLogoSize
             // 
             this.lblLogoSize.AutoSize = true;
-            this.lblLogoSize.Location = new System.Drawing.Point(182, 150);
+            this.lblLogoSize.Location = new System.Drawing.Point(182, 139);
             this.lblLogoSize.Name = "lblLogoSize";
             this.lblLogoSize.Size = new System.Drawing.Size(32, 13);
             this.lblLogoSize.TabIndex = 21;
@@ -298,8 +331,8 @@
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Underline))), System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label4.Location = new System.Drawing.Point(6, 370);
+            this.label4.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Underline))), System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label4.Location = new System.Drawing.Point(6, 339);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(135, 13);
             this.label4.TabIndex = 14;
@@ -308,7 +341,7 @@
             // cbAutoAdjustColumnWidth
             // 
             this.cbAutoAdjustColumnWidth.AutoSize = true;
-            this.cbAutoAdjustColumnWidth.Location = new System.Drawing.Point(182, 402);
+            this.cbAutoAdjustColumnWidth.Location = new System.Drawing.Point(182, 371);
             this.cbAutoAdjustColumnWidth.Name = "cbAutoAdjustColumnWidth";
             this.cbAutoAdjustColumnWidth.Size = new System.Drawing.Size(120, 17);
             this.cbAutoAdjustColumnWidth.TabIndex = 15;
@@ -320,22 +353,21 @@
             // 
             this.trackRowHeight.AutoSize = false;
             this.trackRowHeight.LargeChange = 1;
-            this.trackRowHeight.Location = new System.Drawing.Point(6, 91);
+            this.trackRowHeight.Location = new System.Drawing.Point(6, 85);
             this.trackRowHeight.Maximum = 100;
             this.trackRowHeight.Minimum = 50;
             this.trackRowHeight.Name = "trackRowHeight";
-            this.trackRowHeight.Size = new System.Drawing.Size(170, 40);
+            this.trackRowHeight.Size = new System.Drawing.Size(170, 35);
             this.trackRowHeight.TabIndex = 22;
             this.trackRowHeight.TickFrequency = 10;
-            this.trackRowHeight.TickStyle = System.Windows.Forms.TickStyle.Both;
             this.trackRowHeight.Value = 85;
             this.trackRowHeight.ValueChanged += new System.EventHandler(this.trackBar_ValueChanged);
             // 
             // label12
             // 
             this.label12.AutoSize = true;
-            this.label12.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Underline))), System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label12.Location = new System.Drawing.Point(6, 134);
+            this.label12.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Underline))), System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label12.Location = new System.Drawing.Point(6, 123);
             this.label12.Name = "label12";
             this.label12.Size = new System.Drawing.Size(113, 13);
             this.label12.TabIndex = 22;
@@ -344,7 +376,7 @@
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Underline))), System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label5.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Underline))), System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label5.Location = new System.Drawing.Point(6, 16);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(122, 13);
@@ -354,7 +386,7 @@
             // lblCellFontSize
             // 
             this.lblCellFontSize.AutoSize = true;
-            this.lblCellFontSize.Location = new System.Drawing.Point(182, 32);
+            this.lblCellFontSize.Location = new System.Drawing.Point(182, 31);
             this.lblCellFontSize.Name = "lblCellFontSize";
             this.lblCellFontSize.Size = new System.Drawing.Size(45, 13);
             this.lblCellFontSize.TabIndex = 16;
@@ -364,21 +396,20 @@
             // 
             this.trackCellFontSize.AutoSize = false;
             this.trackCellFontSize.LargeChange = 1;
-            this.trackCellFontSize.Location = new System.Drawing.Point(6, 32);
+            this.trackCellFontSize.Location = new System.Drawing.Point(6, 31);
             this.trackCellFontSize.Maximum = 48;
             this.trackCellFontSize.Minimum = 10;
             this.trackCellFontSize.Name = "trackCellFontSize";
-            this.trackCellFontSize.Size = new System.Drawing.Size(170, 40);
+            this.trackCellFontSize.Size = new System.Drawing.Size(170, 35);
             this.trackCellFontSize.TabIndex = 15;
-            this.trackCellFontSize.TickStyle = System.Windows.Forms.TickStyle.Both;
             this.trackCellFontSize.Value = 22;
             this.trackCellFontSize.ValueChanged += new System.EventHandler(this.trackBar_ValueChanged);
             // 
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Underline))), System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label3.Location = new System.Drawing.Point(6, 311);
+            this.label3.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Underline))), System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label3.Location = new System.Drawing.Point(6, 285);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(104, 13);
             this.label3.TabIndex = 11;
@@ -387,7 +418,7 @@
             // lblMinutes
             // 
             this.lblMinutes.AutoSize = true;
-            this.lblMinutes.Location = new System.Drawing.Point(182, 327);
+            this.lblMinutes.Location = new System.Drawing.Point(182, 301);
             this.lblMinutes.Name = "lblMinutes";
             this.lblMinutes.Size = new System.Drawing.Size(64, 13);
             this.lblMinutes.TabIndex = 5;
@@ -398,7 +429,7 @@
             this.cbMiniShowDetails.AutoSize = true;
             this.cbMiniShowDetails.Checked = true;
             this.cbMiniShowDetails.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbMiniShowDetails.Location = new System.Drawing.Point(182, 284);
+            this.cbMiniShowDetails.Location = new System.Drawing.Point(182, 263);
             this.cbMiniShowDetails.Name = "cbMiniShowDetails";
             this.cbMiniShowDetails.Size = new System.Drawing.Size(130, 17);
             this.cbMiniShowDetails.TabIndex = 10;
@@ -408,7 +439,7 @@
             // lblMiniRows
             // 
             this.lblMiniRows.AutoSize = true;
-            this.lblMiniRows.Location = new System.Drawing.Point(182, 268);
+            this.lblMiniRows.Location = new System.Drawing.Point(182, 247);
             this.lblMiniRows.Name = "lblMiniRows";
             this.lblMiniRows.Size = new System.Drawing.Size(43, 13);
             this.lblMiniRows.TabIndex = 9;
@@ -417,8 +448,8 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Underline))), System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label2.Location = new System.Drawing.Point(6, 252);
+            this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Underline))), System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label2.Location = new System.Drawing.Point(6, 231);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(102, 13);
             this.label2.TabIndex = 8;
@@ -427,8 +458,8 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Underline))), System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label1.Location = new System.Drawing.Point(6, 193);
+            this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Underline))), System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label1.Location = new System.Drawing.Point(6, 177);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(120, 13);
             this.label1.TabIndex = 2;
@@ -438,20 +469,19 @@
             // 
             this.trackMiniRows.AutoSize = false;
             this.trackMiniRows.LargeChange = 1;
-            this.trackMiniRows.Location = new System.Drawing.Point(6, 268);
+            this.trackMiniRows.Location = new System.Drawing.Point(6, 247);
             this.trackMiniRows.Maximum = 7;
             this.trackMiniRows.Minimum = 2;
             this.trackMiniRows.Name = "trackMiniRows";
-            this.trackMiniRows.Size = new System.Drawing.Size(170, 40);
+            this.trackMiniRows.Size = new System.Drawing.Size(170, 35);
             this.trackMiniRows.TabIndex = 8;
-            this.trackMiniRows.TickStyle = System.Windows.Forms.TickStyle.Both;
             this.trackMiniRows.Value = 2;
             this.trackMiniRows.ValueChanged += new System.EventHandler(this.trackBar_ValueChanged);
             // 
             // lblMainRows
             // 
             this.lblMainRows.AutoSize = true;
-            this.lblMainRows.Location = new System.Drawing.Point(182, 209);
+            this.lblMainRows.Location = new System.Drawing.Point(182, 193);
             this.lblMainRows.Name = "lblMainRows";
             this.lblMainRows.Size = new System.Drawing.Size(43, 13);
             this.lblMainRows.TabIndex = 7;
@@ -461,13 +491,12 @@
             // 
             this.trackMainRows.AutoSize = false;
             this.trackMainRows.LargeChange = 1;
-            this.trackMainRows.Location = new System.Drawing.Point(6, 209);
+            this.trackMainRows.Location = new System.Drawing.Point(6, 193);
             this.trackMainRows.Maximum = 25;
             this.trackMainRows.Minimum = 4;
             this.trackMainRows.Name = "trackMainRows";
-            this.trackMainRows.Size = new System.Drawing.Size(170, 40);
+            this.trackMainRows.Size = new System.Drawing.Size(170, 35);
             this.trackMainRows.TabIndex = 6;
-            this.trackMainRows.TickStyle = System.Windows.Forms.TickStyle.Both;
             this.trackMainRows.Value = 7;
             this.trackMainRows.ValueChanged += new System.EventHandler(this.trackBar_ValueChanged);
             // 
@@ -516,6 +545,17 @@
             this.grpWmcTweak.TabIndex = 6;
             this.grpWmcTweak.TabStop = false;
             this.grpWmcTweak.Text = "WMC Tweaks";
+            // 
+            // cbNoSuccess
+            // 
+            this.cbNoSuccess.AutoSize = true;
+            this.cbNoSuccess.Location = new System.Drawing.Point(9, 514);
+            this.cbNoSuccess.Name = "cbNoSuccess";
+            this.cbNoSuccess.Size = new System.Drawing.Size(240, 17);
+            this.cbNoSuccess.TabIndex = 35;
+            this.cbNoSuccess.Text = "Display Warnings, Errors, and Updates ONLY";
+            this.cbNoSuccess.UseVisualStyleBackColor = true;
+            this.cbNoSuccess.CheckedChanged += new System.EventHandler(this.cbNoSuccess_CheckedChanged);
             // 
             // label14
             // 
@@ -799,17 +839,6 @@
             this.lblTunerLimit.TabIndex = 6;
             this.lblTunerLimit.Text = "Increase tuner limits to 32 per tuner type.";
             // 
-            // cbNoSuccess
-            // 
-            this.cbNoSuccess.AutoSize = true;
-            this.cbNoSuccess.Location = new System.Drawing.Point(9, 514);
-            this.cbNoSuccess.Name = "cbNoSuccess";
-            this.cbNoSuccess.Size = new System.Drawing.Size(240, 17);
-            this.cbNoSuccess.TabIndex = 35;
-            this.cbNoSuccess.Text = "Display Warnings, Errors, and Updates ONLY";
-            this.cbNoSuccess.UseVisualStyleBackColor = true;
-            this.cbNoSuccess.CheckedChanged += new System.EventHandler(this.cbNoSuccess_CheckedChanged);
-            // 
             // frmWmcTweak
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -907,5 +936,8 @@
         private System.Windows.Forms.Label label14;
         private System.Windows.Forms.CheckBox cbChannelName;
         private System.Windows.Forms.CheckBox cbNoSuccess;
+        private System.Windows.Forms.CheckBox cbExpandedEpg;
+        private System.Windows.Forms.CheckBox cbExpandedMovie;
+        private System.Windows.Forms.CheckBox cbClock;
     }
 }

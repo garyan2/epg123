@@ -322,22 +322,6 @@ namespace epg123.sdJson2mxf
             {
                 prg.IsGeneric = true;
             }
-
-            // special case to flag sports events ** I CURRENTLY SEE NO ADVANTAGE TO DOING THIS **
-            //if (!string.IsNullOrEmpty(Helper.stringContains(sd.ShowType, "Sports Event")))
-            //{
-            //    // find all schedule entries that link to this program
-            //    foreach (MxfScheduleEntries mxfScheduleEntries in sdMxf.With[0].ScheduleEntries)
-            //    {
-            //        foreach (MxfScheduleEntry mxfScheduleEntry in mxfScheduleEntries.ScheduleEntry)
-            //        {
-            //            if (mxfScheduleEntry.Program.Equals(prg.Id) && !string.IsNullOrEmpty(mxfScheduleEntry.IsLive))
-            //            {
-            //                mxfScheduleEntry.IsLiveSports = "true";
-            //            }
-            //        }
-            //    }
-            //}
         }
 
         private static void DetermineProgramKeywords(ref MxfProgram prg, sdProgram sd)

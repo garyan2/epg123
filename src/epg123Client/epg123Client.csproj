@@ -193,6 +193,9 @@
     <EmbeddedResource Include="EPG.MCML" />
     <EmbeddedResource Include="EPGCELLS.MCML" />
     <EmbeddedResource Include="EPGCOMMON.MCML" />
+    <EmbeddedResource Include="FILTERBUTTON.MCML" />
+    <EmbeddedResource Include="FILTERLISTBOX.MCML" />
+    <EmbeddedResource Include="CLOCK.MCML" />
     <None Include="Properties\Settings.settings">
       <Generator>PublicSettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>

@@ -226,6 +226,20 @@ namespace epg123Client
         }
 
         /// <summary>
+        /// Clears all service logos
+        /// </summary>
+        public static void ClearLineupChannelLogos()
+        {
+            foreach (Service service in new Services(WmcObjectStore))
+            {
+                if (service.LogoImage == null) continue;
+                service.LogoImage = null;
+                service.Update();
+            }
+            Logger.WriteInformation("Completed clearing all station logos.");
+        }
+
+        /// <summary>
         /// Clears all schedule entries in a service
         /// </summary>
         /// <param name="mergedChannelId"></param>
@@ -352,7 +366,7 @@ namespace epg123Client
                 }
                 catch
                 {
-                    Logger.WriteInformation($"Failed to repair merged channel \"{mergedChannel}\" with no tuning infos.");
+                    Logger.WriteInformation($"Attempted to repair merged channel \"{mergedChannel}\" with no tuning infos.");
                 }
             }
 
@@ -504,7 +518,7 @@ namespace epg123Client
 
         public static void CleanUpMergedChannelTuningInfos()
         {
-            foreach (MergedChannel mergedChannel in new MergedChannels(WmcObjectStore))
+            foreach (MergedChannel mergedChannel in WmcMergedLineup.UncachedChannels)
             {
                 if (!mergedChannel.TuningInfos.Empty || mergedChannel.PrimaryChannel == null) continue;
                 try
@@ -513,7 +527,7 @@ namespace epg123Client
                 }
                 catch
                 {
-                    Logger.WriteInformation($"Failed to repair merged channel \"{mergedChannel}\" with no tuning infos.");
+                    Logger.WriteInformation($"Attempted to repair merged channel \"{mergedChannel}\" with no tuning infos.");
                 }
             }
         }

@@ -56,6 +56,9 @@ namespace epg123
             EPG_MCML,
             EPGCELLS_MCML,
             EPGCOMMON_MCML,
+            FILTERBUTTON_MCML,
+            FILTERLISTBOX_MCML,
+            CLOCK_MCML,
             MAX
         }
 
@@ -79,7 +82,7 @@ namespace epg123
 
         // calculation constants
         private const double PixelsPerPoint = 1.33;
-        private const int MinMainTableTop = 50;
+        private const int MinMainTableTop = 65;
         private const int MinMiniTableTop = 300;
 
         private const int TunerLimit = 32;
@@ -173,14 +176,17 @@ namespace epg123
         private int MaxMainTableRows => (int)((MaxTableBottom - MinMainTableTop + ((ShowMainDetails) ? 0 : DetailsVerticalSize)) / (double)RowHeightPixel);
         private int MainTableTop => ((MinMainTableTop + MaxTableBottom + ((ShowMainDetails) ? 0 : DetailsVerticalSize) - (MainGuideRows * RowHeightPixel)) / 2);
         private int MainTableBottom => (MainTableTop + RowHeightPixel * MainGuideRows);
-        private int DetailsVerticalSize => (int) ((4.2 * DetailFontPointSize) * PixelsPerPoint);
+        private int DetailsVerticalSize => (int) ((4.2 * DetailFontPointSize) * PixelsPerPoint) + 34;
         private int MaxTableBottom => (768 - MinMainTableTop - DetailsVerticalSize);
-        private int MiniTableBottom => (MaxTableBottom + (ShowMiniDetails ? 0 : DetailsVerticalSize));
+        private int MiniTableBottom => (MaxTableBottom + (ShowMiniDetails ? 0 : DetailsVerticalSize)) + 50;
         private int MiniTableTop => (MiniTableBottom - RowHeightPixel * MiniGuideRows);
         private int MaxMiniTableRows => (int) ((MiniTableBottom - MinMiniTableTop) / (double) RowHeightPixel);
         private int SmallLogoHeight => CellFontPixelHeight;
-        private int LargeLogoHeight => Math.Min(RowHeightPixel, 75);
+        private int LargeLogoHeight => Math.Min(RowHeightPixel - ScaleNumber(6), 75);
         private int MediumLogoHeight => (int) ((SmallLogoHeight + LargeLogoHeight) / 2.0);
+        private int ScaleNumber(double fontSize) => (int) (fontSize * Math.Min(CellFontPointSize, 36) / 22 + 0.5);
+        private int HalfScaleNumber(double fontSize) => (int) ((1 + (Math.Min(CellFontPointSize, 36) - 22) / 44.0) * fontSize);
+        private int FilterButtonWidth => (int) (ScaleNumber(16) * PixelsPerPoint * RowHeightMultiplier + 0.5);
 
         // widget reactions
         private void RecalculateAll()
@@ -277,7 +283,7 @@ namespace epg123
         private int CalculateColumnWidth()
         {
             var logoHeight = trackLogoSize.Value == 0 ? SmallLogoHeight : trackLogoSize.Value == 1 ? MediumLogoHeight : LargeLogoHeight;
-            return 3 * logoHeight + 10 + (cbHideNumber.Checked ? 0 : (int)(CellFontPixelHeight * 2.67) + 10);
+            return 3 * logoHeight + ScaleNumber(5) + (cbHideNumber.Checked ? 0 : (int)(CellFontPixelHeight * 2.67) + ScaleNumber(5));
         }
         #endregion
 
@@ -459,6 +465,29 @@ namespace epg123
                 break;
             }
 
+            // determine if expanded epg is active
+            var rule1 = _shellDllResources[(int) shellresource.EPGCELLS_MCML]
+                .Descendants()
+                .Where(arg => arg.Name.LocalName == "Equality")
+                .Where(arg => arg.Attribute("Source").Value == "[Cell.Episode]")
+                .Where(arg => arg.Attribute("Value") != null)
+                .SingleOrDefault(arg => arg.Attribute("Value").Value == "");
+            cbExpandedEpg.Checked = rule1 != null;
+
+            // determine if expanded movie is active
+            var rule2 = _shellDllResources[(int)shellresource.EPGCELLS_MCML]
+                .Descendants()
+                .Where(arg => arg.Name.LocalName == "Equality")
+                .Where(arg => arg.Attribute("Source").Value == "[Cell.MovieYear]")
+                .Where(arg => arg.Attribute("Value") != null)
+                .SingleOrDefault(arg => arg.Attribute("Value").Value == "");
+            cbExpandedMovie.Checked = rule2 != null;
+
+            // determine if expanded clock is active
+            var clock = _shellDllResources[(int)shellresource.CLOCK_MCML].Descendants()
+                .Single(arg => arg.Name.LocalName == "DateTimeFormats");
+            cbClock.Checked = clock.Attribute("DateTimeFormats").Value.Contains("AbbreviatedLongDate");
+
             // get channel column width
             using (var key = Registry.LocalMachine.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Media Center\\Settings\\ProgramGuide", false))
             {
@@ -469,87 +498,106 @@ namespace epg123
 
                 cbAutoAdjustColumnWidth.Checked = (width == CalculateColumnWidth());
             }
-
             return true;
         }
 
-        private void SetFontSizes()
+        private void SetEpgChannelCellProperties()
         {
-            var test = _shellDllResources[(int) shellresource.EPG_MCML]
-                .Descendants()
-                .Where(arg => arg.Name.LocalName == "Size")
+            var logoHeight = trackLogoSize.Value == 0 ? SmallLogoHeight : trackLogoSize.Value == 1 ? MediumLogoHeight : LargeLogoHeight;
+            var uiElements = _shellDllResources[(int) shellresource.EPGCELLS_MCML].Descendants()
+                .Where(arg => arg.Name.LocalName == "UI")
+                .Single(arg => arg.Attribute("Name") != null && arg.Attribute("Name").Value == "EpgChannelCell");
+
+            // edit properties
+            var properties = uiElements.Descendants()
+                .Where(arg => arg.Name.LocalName == "Properties").Elements();
+            foreach (var e in properties)
+            {
+                if (e.Attribute("Name") == null) continue;
+
+                int iValue;
+                switch (e.Attribute("Name")?.Value)
+                {
+                    case "NumberDefaultFont":
+                        iValue = cbRemoveAnimations.Checked ? CellFontPointSize : ScaleNumber(18);
+                        e.SetAttributeValue("FontSize", $"{iValue}"); // default is 18
+                        break;
+                    case "NumberExpandedFont":
+                        e.SetAttributeValue("FontSize", $"{CellFontPointSize}"); // default is 22
+                        break;
+                    case "CallsignDefaultFont":
+                        e.SetAttributeValue("FontSize", $"{ScaleNumber(18)}"); // default is 18
+                        break;
+                    case "CallsignExpandedFont":
+                        e.SetAttributeValue("FontSize", $"{ScaleNumber(18)}"); // default is 18
+                        break;
+                    case "BackgroundDefaultPadding":
+                        e.SetAttributeValue("Inset", $"{ScaleNumber(5)},0,{ScaleNumber(5)},0"); // default is "10,12,10,8"
+                        break;
+                    case "BackgroundExpandedPadding":
+                        e.SetAttributeValue("Inset", $"{ScaleNumber(5)},0,{ScaleNumber(5)},0"); // default is "10,6,10,6"
+                        break;
+                    case "DefaultNumberMargins":
+                        e.SetAttributeValue("Inset", "0,0,0,0"); // default is "0,0,0,0"
+                        break;
+                    case "FocusNumberMargins":
+                        e.SetAttributeValue("Inset", "0,0,0,0"); // default is "-3,2,0,0"
+                        break;
+                    case "DefaultCallsignMargins":
+                        e.SetAttributeValue("Inset", $"{ScaleNumber(5)},0,0,0"); // default is "0,0,0,0"
+                        break;
+                    case "FocusCallsignMargins":
+                        e.SetAttributeValue("Inset", $"{ScaleNumber(5)},0,0,0"); // default is "0,6,0,0"
+                        break;
+                }
+            }
+
+            // set channel number size/location attributes
+            var text = uiElements.Descendants()
+                .Where(arg => arg.Name.LocalName == "Text")
                 .Where(arg => arg.Attribute("Name") != null)
-                .Single(arg => arg.Attribute("Name").Value == "GuideShowCardImageSize");
-            test?.SetAttributeValue("Size", "210,150");
-
-            // set program/movie details font sizes
-            var fonts1 = _resDllResources[(int) resresource.GUIDEDETAILSBASE_XML].Descendants()
-                .Where(arg => arg.Name.LocalName == "Font")
-                .Where(arg => arg.Parent.Name.LocalName == "Properties")
-                .Where(arg => arg.Parent.Parent.Name.LocalName == "UI")
-                .Where(arg => arg.Parent.Parent.Attribute("Name").Value == "GuideDetailsBase");
-            foreach (var font in fonts1)
+                .Single(arg => arg.Attribute("Name")?.Value == "Number");
+            if (text != null)
             {
-                if (font.Attribute("Name") == null) continue;
+                var value = cbHideNumber.Checked ? "1,0" : $"{CellFontPixelHeight * 3},0";
+                text.SetAttributeValue("MaximumSize", value); // default is "75,0"
 
-                switch (font.Attribute("Name").Value)
+                var layout = text.Descendants().Single(arg => arg.Name.LocalName == "FormLayoutInput");
+                layout?.SetAttributeValue("Vertical", "Center"); // default is null
+            }
+
+            // edit channel logo and number panels
+            var panels = uiElements.Descendants()
+                .Where(arg => arg.Name.LocalName == "Panel" && arg.Attribute("Name") != null);
+            foreach (var panel in panels)
+            {
+                XElement e;
+                switch (panel.Attribute("Name")?.Value)
                 {
-                    case "TitleFont":
-                        font.SetAttributeValue("FontSize", DetailFontPointSize.ToString()); // default 22
+                    case "SmallLogoPanel":
+                        e = panel.Descendants().Single(arg => arg.Name.LocalName == "FormLayoutInput");
+                        e.SetAttributeValue("Bottom", "Parent,1"); // default is "Number,1"
+                        e.SetAttributeValue("Vertical", "Center"); // default is null
+                        e.SetAttributeValue("Horizontal", cbCenterLogo.Checked ? "Center" : null); // default is null
+                        e.SetAttributeValue("Left", cbCenterLogo.Checked && !cbHideNumber.Checked ? "Parent,1," + (3 * CellFontPixelHeight - trackColumnWidth.Value + 10) : null);
+
+                        var height = cbRemoveAnimations.Checked ? logoHeight : (int) (logoHeight * 0.82);
+                        e = panel.Descendants().Single(arg => arg.Name.LocalName == "ChannelLogo");
+                        e.SetAttributeValue("MaximumSize", $"{3 * height},{height}"); // default is "70,40"
                         break;
-                    case "OtherFont":
-                    case "ClockFont":
-                    case "LabelFont":
-                    case "AlertFont":
-                        var value = (int)(DetailFontPointSize * 0.82 + 0.5);
-                        font.SetAttributeValue("FontSize", value.ToString()); // default is 18
+                    case "CallsignPanel":
+                        e = panel.Descendants().Single(arg => arg.Name.LocalName == "FormLayoutInput");
+                        e.SetAttributeValue("Bottom", "Parent,1"); // default is "Number,1"
+                        e.SetAttributeValue("Vertical", "Center"); // default is null
                         break;
                 }
             }
 
-            // set channel details font sizes
-            var fonts2 = _shellDllResources[(int)shellresource.EPG_MCML].Descendants()
-                .Where(arg => arg.Name.LocalName == "Font")
-                .Where(arg => arg.Parent.Name.LocalName == "Properties")
-                .Where(arg => arg.Parent.Parent.Name.LocalName == "UI")
-                .Where(arg => arg.Parent.Parent.Attribute("Name").Value == "ChannelDetailsView");
-            foreach (var font in fonts2)
-            {
-                if (font.Attribute("Name") == null) continue;
-
-                switch (font.Attribute("Name").Value)
-                {
-                    case "NameFont":
-                        font.SetAttributeValue("FontSize", DetailFontPointSize.ToString()); // default is 22
-                        break;
-                    case "OtherFont":
-                        var value = (int)(DetailFontPointSize * 0.82 + 0.5);
-                        font.SetAttributeValue("FontSize", value.ToString()); // default is 18
-                        break;
-                }
-            }
-
-            // set on demand details font sizes
-            var fonts3 = _shellDllResources[(int)shellresource.EPG_MCML].Descendants()
-                .Where(arg => arg.Name.LocalName == "Font")
-                .Where(arg => arg.Parent.Name.LocalName == "Properties")
-                .Where(arg => arg.Parent.Parent.Name.LocalName == "UI")
-                .Where(arg => arg.Parent.Parent.Attribute("Name").Value == "OnDemandOfferView");
-            foreach (var font in fonts3)
-            {
-                if (font.Attribute("Name") == null) continue;
-
-                switch (font.Attribute("Name").Value)
-                {
-                    case "TitleFont":
-                        font.SetAttributeValue("FontSize", DetailFontPointSize.ToString()); // default is 22
-                        break;
-                    case "OtherFont":
-                        var value = (int)(DetailFontPointSize * 0.82 + 0.5);
-                        font.SetAttributeValue("FontSize", value.ToString()); // default is 18
-                        break;
-                }
-            }
+            // set logo maximum size
+            var logoElement = _shellDllResources[(int)shellresource.EPGCOMMON_MCML].Descendants()
+                .Where(arg => arg.Name.LocalName == "UI" && arg.Attribute("Name").Value == "ChannelLogo");
+            logoElement.Descendants().Single(arg => arg.Name.LocalName == "Size")
+                .SetAttributeValue("Size", $"{3 * logoHeight},{logoHeight}"); // default is "75,35"
 
             // replace callsign with channel name
             if (cbChannelName.Checked)
@@ -564,393 +612,463 @@ namespace epg123
                 }
             }
 
-            // set table column header font sizes
-            var columnHeaderFontSize = 16 - (ColumnMinutes - 120) / 30;
-            var fonts5 = _shellDllResources[(int)shellresource.EPGCELLS_MCML]
-                .Descendants()
-                .Where(arg => arg.Name.LocalName == "UI")
-                .Where(arg => arg.Attribute("Name") != null)
-                .Single(arg => arg.Attribute("Name").Value == "EpgTimeCell");
-            var fonts6 = _shellDllResources[(int)shellresource.EPGCOMMON_MCML]
-                .Descendants()
-                .Where(arg => arg.Name.LocalName == "UI")
-                .Where(arg => arg.Attribute("Name") != null)
-                .Single(arg => arg.Attribute("Name").Value == "EpgDateCell");
-            if (fonts5 != null)
-            {
-                var timeFont = fonts5
-                    .Descendants()
-                    .Where(arg => arg.Name.LocalName == "Font")
-                    .Where(arg => arg.Attribute("Name") != null)
-                    .Single(arg => arg.Attribute("Name").Value == "TimeFont");
-                timeFont?.SetAttributeValue("FontSize", columnHeaderFontSize.ToString()); // default is 16
-
-                var dateFont = fonts6
-                    .Descendants()
-                    .Where(arg => arg.Name.LocalName == "Font")
-                    .Where(arg => arg.Attribute("Name") != null)
-                    .Single(arg => arg.Attribute("Name").Value == "DateFont");
-                dateFont?.SetAttributeValue("FontSize", columnHeaderFontSize.ToString()); // default is 16
-            }
-
-            // set page title font size "guide"
-            var fonts4 = _shellDllResources[(int)shellresource.EPG_MCML]
-                .Descendants()
-                .Where(arg => arg.Name.LocalName == "Font")
-                .Where(arg => arg.Parent.Name.LocalName == "Font")
-                .Where(arg => arg.Parent.Parent.Name.LocalName == "StaticText")
-                .Single(arg => arg.Parent.Parent.Attribute("Name").Value == "Title");
-            if (fonts4 != null)
-            {
-                var maxFont = (int)((0.7 * MainTableTop - 18 + (16 - columnHeaderFontSize) * 1.33) / 1.33);
-                var value = maxFont >= 22 ? Math.Min(maxFont, 48) : 0;
-                fonts4.SetAttributeValue("FontSize", value.ToString()); // default is 48
-            }
-
-            // set channel cell column font sizes and insets (first column)
-            var fonts7 = _shellDllResources[(int)shellresource.EPGCELLS_MCML]
-                .Descendants()
-                .Where(arg => arg.Name.LocalName == "UI")
-                .Where(arg => arg.Attribute("Name") != null)
-                .Single(arg => arg.Attribute("Name").Value == "EpgChannelCell");
-            if (fonts7 != null)
-            {
-                var fonts = fonts7.Descendants()
-                    .Where(arg => arg.Name.LocalName == "Font")
-                    .Where(arg => arg.Attribute("Name") != null);
-                foreach (var font in fonts)
-                {
-                    int value;
-                    switch (font.Attribute("Name").Value)
-                    {
-                        case "NumberExpandedFont":
-                            font.SetAttributeValue("FontSize", trackCellFontSize.Value.ToString()); // default is 22
-                            break;
-                        case "NumberDefaultFont":
-                            value = (cbRemoveAnimations.Checked) ? trackCellFontSize.Value : (int)(trackCellFontSize.Value * 0.82 + 0.5);
-                            font.SetAttributeValue("FontSize", value.ToString()); // default is 18
-                            break;
-                        case "CallsignDefaultFont":
-                        case "CallsignExpandedFont":
-                            value = (int)(trackCellFontSize.Value * 0.82 - 1);
-                            font.SetAttributeValue("FontSize", value.ToString()); // default is 18
-                            break;
-                    }
-                }
-
-                var insets = fonts7.Descendants()
-                    .Where(arg => arg.Name.LocalName == "Inset")
-                    .Where(arg => arg.Attribute("Name") != null);
-                var logoHeight = (trackLogoSize.Value == 0) ? SmallLogoHeight : trackLogoSize.Value == 1 ? MediumLogoHeight : LargeLogoHeight;
-                foreach (var inset in insets)
-                {
-                    string value;
-                    switch (inset.Attribute("Name").Value)
-                    {
-                        case "BackgroundDefaultPadding": // channel logo
-                            value = string.Format("0,{0},{1},{0}", cbRemoveAnimations.Checked ? 0 : (int)((RowHeightPixel - 0.82 * logoHeight) / 2.0 - 0.5), cbHideNumber.Checked ? 0 : 5);
-                            inset.SetAttributeValue("Inset", value); // default is "10,12,10,8"
-                            break;
-                        case "BackgroundExpandedPadding": // channel logo
-                            value = (cbHideNumber.Checked) ? "0,0,0,0" : "0,0,5,0";
-                            inset.SetAttributeValue("Inset", value); // default is "10,6,10,6"
-                            break;
-                        case "DefaultNumberMargins":
-                            value = cbHideNumber.Checked ? "-1,0,0,0" : string.Format("5,{0},0,{0}", cbRemoveAnimations.Checked ? 0 : -(int)((RowHeightPixel - 0.82 * logoHeight) / 2.0));
-                            inset.SetAttributeValue("Inset", value); // default is "0,0,0,0"
-                            break;
-                        case "FocusNumberMargins":
-                            value = (cbHideNumber.Checked) ? "-1,0,0,0" : "5,0,0,0";
-                            inset.SetAttributeValue("Inset", value); // default is "-3,2,0,0"
-                            break;
-                        case "DefaultCallsignMargins":
-                            inset.SetAttributeValue("Inset", "5,0,0,0"); // default is "0,0,0,0"
-                            break;
-                        case "FocusCallsignMargins":
-                            inset.SetAttributeValue("Inset", "5,0,0,0");
-                            break;
-                    }
-                }
-
-                var panels = fonts7.Descendants()
-                    .Where(arg => arg.Name.LocalName == "Panel")
-                    .Where(arg => arg.Attribute("Name") != null);
-                foreach (var panel in panels)
-                {
-                    XElement e;
-                    switch (panel.Attribute("Name").Value)
-                    {
-                        case "SmallLogoPanel":
-                            e = panel.Descendants().Single(arg => arg.Name.LocalName == "FormLayoutInput");
-                            e.SetAttributeValue("Bottom", "Parent,1"); // default is "Number,1"
-                            e.SetAttributeValue("Vertical", "Center"); // default is null
-                            e.SetAttributeValue("Horizontal", cbCenterLogo.Checked || cbHideNumber.Checked ? "Center" : null); // default is null
-                            e.SetAttributeValue("Left", cbCenterLogo.Checked && !cbHideNumber.Checked ? "Parent,1," + (3 * CellFontPixelHeight - trackColumnWidth.Value + 5).ToString() : null);
-
-                            e = panel.Descendants().Single(arg => arg.Name.LocalName == "ChannelLogo");
-                            var value = $"{3 * logoHeight},{logoHeight}";
-                            e.SetAttributeValue("MaximumSize", value); // default is "70,40"
-                            break;
-                        case "CallsignPanel":
-                            e = panel.Descendants().Single(arg => arg.Name.LocalName == "FormLayoutInput");
-                            e.SetAttributeValue("Bottom", "Parent,1"); // default is "Number,1"
-                            e.SetAttributeValue("Vertical", "Center"); // default is null
-                            break;
-                    }
-                }
-
-                var ui = _shellDllResources[(int)shellresource.EPGCOMMON_MCML].Descendants()
-                    .Where(arg => arg.Name.LocalName == "UI")
-                    .Where(arg => arg.Attribute("Name") != null);
-                foreach (var e in ui)
-                {
-                    switch (e.Attribute("Name").Value)
-                    {
-                        case "ChannelLogo":
-                            var value = $"{3 * logoHeight},{logoHeight}";
-                            e.Descendants().Single(arg => arg.Name.LocalName == "Size")
-                                .SetAttributeValue("Size", value); // default is "75,35"
-                            break;
-                    }
-                }
-
-                var text = fonts7
-                    .Descendants()
-                    .Where(arg => arg.Name.LocalName == "Text")
-                    .Where(arg => arg.Attribute("Name") != null)
-                    .Single(arg => arg.Attribute("Name").Value == "Number");
-                if (text != null)
-                {
-                    var value = cbHideNumber.Checked ? "1,0" : $"{CellFontPixelHeight * 3},0";
-                    text.SetAttributeValue("MaximumSize", value); // default is "75,0"
-
-                    var layout = text.Descendants().Single(arg => arg.Name.LocalName == "FormLayoutInput");
-                    layout?.SetAttributeValue("Vertical", "Center"); // default is null
-                }
-            }
-
-            // set title line text font size and insets
-            var fonts8 = _shellDllResources[(int) shellresource.EPGCELLS_MCML]
-                .Descendants()
-                .Where(arg => arg.Name.LocalName == "UI")
-                .Where(arg => arg.Attribute("Name") != null)
-                .Single(arg => arg.Attribute("Name").Value == "EpgShowCell");
-            if (fonts8 != null)
-            {
-                var fonts = fonts8.Descendants()
-                    .Where(arg => arg.Name.LocalName == "Font")
-                    .Where(arg => arg.Attribute("Name") != null)
-                    .Where(arg => arg.Parent.Name.LocalName == "Properties");
-                foreach (var font in fonts)
-                {
-                    switch (font.Attribute("Name").Value)
-                    {
-                        case "TitleDefaultFont":
-                        case "TitleFocusFont":
-                            font.SetAttributeValue("FontSize", trackCellFontSize.Value.ToString()); // default is 22
-                            break;
-                    }
-                }
-
-                var scaleFactor = CellFontPointSize / 22.0;
-                var panel = fonts8
-                    .Descendants()
-                    .Where(arg => arg.Name.LocalName == "Panel")
-                    .Where(arg => arg.Attribute("Name") != null)
-                    .Single(arg => arg.Attribute("Name").Value == "TitleLine");
-                if (panel != null)
-                {
-                    var value = string.Format("{0},0,{0},0", (int)(10 * scaleFactor + 0.5));
-                    panel.SetAttributeValue("Padding", value); // default is "10,8,10,0"
-                }
-
-                var graphics = fonts8.Descendants()
-                    .Where(arg => arg.Name.LocalName == "Graphic")
-                    .Where(arg => arg.Attribute("Name") != null);
-                foreach (var graphic in graphics)
-                {
-                    string value;
-                    switch (graphic.Attribute("Name").Value)
-                    {
-                        case "HDImage":
-                            value = $"{(int)(27 * scaleFactor - 26.5)},0,0,0";
-                            graphic.SetAttributeValue("Margins", value); // default is "0,6,0,8"
-                            value = $"{(int)(27 * Math.Min(scaleFactor, 1.0) + 0.5)},{(int)(17 * Math.Min(scaleFactor, 1.0) + 0.5)}";
-                            graphic.SetAttributeValue("MinimumSize", value); // default is "27,17"
-
-                            graphic.SetAttributeValue("Scale", string.Format("{0},{0},{0}", scaleFactor)); // default is null
-                            graphic.SetAttributeValue("CenterPointPercent", "1.0,0.5,0.5"); // default is null
-                            break;
-                        case "ContinuingPrevious":
-                            value = $"0,0,{(int)(23 * scaleFactor - 13.5)},0";
-                            graphic.SetAttributeValue("Margins", value); // default is "0,1,9,8"
-                            value = $"{(int)(14 * Math.Min(scaleFactor, 1.0) + 0.5)},{(int)(19 * Math.Min(scaleFactor, 1.0) + 0.5)}";
-                            graphic.SetAttributeValue("MinimumSize", value); // default is "14,19"
-
-                            graphic.SetAttributeValue("Scale", string.Format("{0},{0},{0}", scaleFactor)); // default is null
-                            graphic.SetAttributeValue("CenterPointPercent", "0.0,0.5,0.5"); // default is null
-                            break;
-                        case "ContinuingNext":
-                            value = $"{(int)(23 * scaleFactor - 13.5)},0,0,0";
-                            graphic.SetAttributeValue("Margins", value); // default is "9,1,0,8"
-                            value = $"{(int)(14 * Math.Min(scaleFactor, 1.0) + 0.5)},{(int)(19 * Math.Min(scaleFactor, 1.0) + 0.5)}";
-                            graphic.SetAttributeValue("MinimumSize", value); // default is "14,19"
-
-                            graphic.SetAttributeValue("Scale", string.Format("{0},{0},{0}", scaleFactor)); // default is null
-                            graphic.SetAttributeValue("CenterPointPercent", "1.0,0.5,0.5"); // default is null
-                            break;
-                        case "Record":
-                            graphic.SetAttributeValue("Margins", "0,0,0,0"); // default is "0,6,0,8"
-
-                            graphic.SetAttributeValue("Scale", string.Format("{0},{0},{0}", scaleFactor)); // default is null
-                            graphic.SetAttributeValue("CenterPointPercent", "1.0,0.5,0.5"); // default is null
-                            break;
-                    }
-                }
-
-                var title = fonts8
-                    .Descendants()
-                    .Where(arg => arg.Name.LocalName == "Text")
-                    .Where(arg => arg.Attribute("Name") != null)
-                    .Single(arg => arg.Attribute("Name").Value == "Title");
-                if (title != null)
-                {
-                    var margin = (int)(((MainTableBottom - MainTableTop) / MainGuideRows - CellFontPointSize * PixelsPerPoint - 6) / 2.0) - (int)(0.08 * CellFontPointSize * PixelsPerPoint + 0.5);
-                    var value = $"0,{margin},0,0";
-                    title.SetAttributeValue("Margins", value); // default is null
-                }
-            }
-        }
-
-        private void SetTableGeometries()
-        {
-            // get main guide rows and mini guide rows
-            var actions = _shellDllResources[(int) shellresource.EPG_MCML].Descendants()
-                .Where(arg => arg.Name.LocalName == "Set")
-                .Where(arg => arg.Attribute("Target") != null)
-                .Where(arg => arg.Attribute("Target").Value == "[Table.VisibleRowCapacity]")
-                .Select(arg => arg.Parent);
-            foreach (var action in actions)
-            {
-                var mode = action.Parent
-                    .Descendants()
-                    .Where(arg => arg.Name.LocalName == "Equality")
-                    .Where(arg => arg.Attribute("Source") != null)
-                    .Single(arg => arg.Attribute("Source").Value == "[MiniMode.Value]");
-                if (mode != null)
-                {
-                    if (mode.Attribute("Value").Value == "false") // main guide
-                    {
-                        foreach (var target in action.Descendants())
-                        {
-                            if (target.Attribute("Target") == null) continue;
-                            int value;
-                            switch (target.Attribute("Target").Value)
-                            {
-                                case "[Table.VisibleRowCapacity]":
-                                    target.SetAttributeValue("Value", MainGuideRows.ToString()); // default is 7
-                                    break;
-                                case "[FilterButtonLayout.Top.Offset]":
-                                    target.SetAttributeValue("Value", MainTableTop.ToString()); // default is 118
-                                    break;
-                                case "[FilterButtonLayout.Left.Offset]":
-                                    target.SetAttributeValue("Value", "0"); // default is 55
-                                    break;
-                                case "[FilterButtonLayout.Right.Offset]":
-                                    target.SetAttributeValue("Value", "55"); // default is 106
-                                    break;
-                                case "[FilterButtonLayout.Bottom.Offset]":
-                                    target.SetAttributeValue("Value", MainTableBottom.ToString()); // default is 493
-                                    break;
-                                case "[DetailsLayout.Top.Offset]":
-                                    value = cbMainShowDetails.Checked ? 6 : 1000;
-                                    target.SetAttributeValue("Value", value.ToString()); // defualt is 27
-                                    break;
-                                case "[ContentImageLayout.Top.Offset]":
-                                    value = cbMainShowDetails.Checked ? 12 : 1000;
-                                    target.SetAttributeValue("Value", value.ToString()); // default is 34
-                                    break;
-                            }
-                        }
-                    }
-                    else // mini guide
-                    {
-                        foreach (var target in action.Descendants())
-                        {
-                            if (target.Attribute("Target") == null) continue;
-                            int value;
-                            switch (target.Attribute("Target").Value)
-                            {
-                                case "[Table.VisibleRowCapacity]":
-                                    target.SetAttributeValue("Value", MiniGuideRows.ToString()); // default is 2
-                                    break;
-                                case "[FilterButtonLayout.Top.Offset]":
-                                    target.SetAttributeValue("Value", MiniTableTop.ToString()); // default is 476
-                                    break;
-                                case "[FilterButtonLayout.Left.Offset]":
-                                    target.SetAttributeValue("Value", "0"); // default is 54
-                                    break;
-                                case "[FilterButtonLayout.Right.Offset]":
-                                    target.SetAttributeValue("Value", "55"); // default is 55
-                                    break;
-                                case "[FilterButtonLayout.Bottom.Offset]":
-                                    target.SetAttributeValue("Value", MiniTableBottom.ToString()); // default is 585
-                                    break;
-                                case "[DetailsLayout.Top.Offset]":
-                                    value = (cbMiniShowDetails.Checked) ? 6 : 1000;
-                                    target.SetAttributeValue("Value", value.ToString()); // default is 25
-                                    break;
-                                case "[ContentImageLayout.Top.Offset]":
-                                    value = (cbMiniShowDetails.Checked) ? 12 : 1000;
-                                    target.SetAttributeValue("Value", value.ToString()); // default is 31
-                                    break;
-                            }
-                        }
-                    }
-                }
-            }
-
-            // set guide visible columns
-            var columns = _shellDllResources[(int) shellresource.EPG_MCML]
-                .Descendants()
-                .Where(arg => arg.Name.LocalName == "Condition") // IsWidescreen
-                .Where(arg => arg.Attribute("Target") != null)
-                .Single(arg => arg.Attribute("Target").Value == "[Table.VisibleColumnCapacity]");
-            columns?.SetAttributeValue("Value", trackMinutes.Value.ToString()); // default is 120
-            columns = _shellDllResources[(int) shellresource.EPG_MCML]
-                .Descendants()
-                .Where(arg => arg.Name.LocalName == "Default")
-                .Where(arg => arg.Attribute("Target") != null)
-                .Single(arg => arg.Attribute("Target").Value == "[Table.VisibleColumnCapacity]");
-            columns?.SetAttributeValue("Value", trackMinutes.Value.ToString()); // default is 90
-
-            // set program / movie details placement
-            var inputs = _shellDllResources[(int) shellresource.EPG_MCML].Descendants()
-                .Where(arg => arg.Name.LocalName == "FormLayoutInput")
-                .Where(arg => arg.Attribute("Name") != null);
-            if (inputs.Any())
-            {
-                foreach (var input in inputs)
-                {
-                    switch (input.Attribute("Name").Value)
-                    {
-                        case "DetailsLayout":
-                            input.SetAttributeValue("Left", "FilterButton,0,225"); // default is "FilterButton,1,260"
-                            input.SetAttributeValue("Right", "Table,1,-74"); // default is "Table,1,-155"
-                            break;
-                        case "ContentImageLayout":
-                            input.SetAttributeValue("Top", "Parent,0"); // default is "Parent,0"
-                            input.SetAttributeValue("Right", "Parent,0,215"); // default is "Parent,1"
-                            break;
-                    }
-                }
-            }
-
             // set channel column width
             using (var key = Registry.LocalMachine.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Media Center\\Settings\\ProgramGuide", true))
             {
                 key?.SetValue("ChannelCellWidth", trackColumnWidth.Value, RegistryValueKind.DWord); // default is 0
             }
+        }
+
+        private void SetGuidePageDateTimeFilterFonts()
+        {
+            // set date font above channel cells
+            var date = _shellDllResources[(int) shellresource.EPGCOMMON_MCML]
+                .Descendants()
+                .Where(arg => arg.Name.LocalName == "Font")
+                .Single(arg => arg.Attribute("Name") != null && arg.Attribute("Name")?.Value == "DateFont");
+            date.SetAttributeValue("FontSize", $"{ScaleNumber(16)}"); // default is 16
+
+            var date2 = _shellDllResources[(int) shellresource.EPGCOMMON_MCML].Descendants()
+                .Where(arg => arg.Name.LocalName == "Text")
+                .Single(arg => arg.Attribute("Name") != null && arg.Attribute("Name")?.Value == "Date");
+            date2.SetAttributeValue("Margins", $"{ScaleNumber(14)},0,{ScaleNumber(5)},0"); // default is "14,0,5,0"
+
+            // set time font above guide cells
+            var time = _shellDllResources[(int)shellresource.EPGCELLS_MCML].Descendants()
+                .Where(arg => arg.Name.LocalName == "Font")
+                .Single(arg => arg.Attribute("Name") != null && arg.Attribute("Name")?.Value == "TimeFont");
+            time.SetAttributeValue("FontSize", $"{ScaleNumber(16)}"); // default is 16
+
+            var time2 = _shellDllResources[(int) shellresource.EPGCELLS_MCML].Descendants()
+                .Where(arg => arg.Name.LocalName == "UI")
+                .Where(arg => arg.Attribute("Name") != null && arg.Attribute("Name")?.Value == "EpgTimeCell")
+                .Descendants()
+                .Single(arg => arg.Attribute("Name") != null && arg.Attribute("Name")?.Value == "Label");
+            time2.SetAttributeValue("Margins", $"{ScaleNumber(14)},0,{ScaleNumber(5)},0"); // default is "14,0,5,0"
+
+            // set title font for guide page
+            var maxFont = Math.Min((int)((0.7 * MainTableTop - 18 + (16 - ScaleNumber(16)) * 1.33) / 1.33), 48);
+            var title = _shellDllResources[(int)shellresource.EPG_MCML].Descendants()
+                .Where(arg => arg.Name.LocalName == "Font")
+                .Where(arg => arg.Parent != null && arg.Parent.Name.LocalName == "Font")
+                .Where(arg => arg.Parent.Parent != null && arg.Parent.Parent.Name.LocalName == "StaticText")
+                .Single(arg => arg.Parent.Parent.Attribute("Name")?.Value == "Title");
+            title.SetAttributeValue("FontSize", $"{maxFont}"); // default is 48
+
+            // set filter button text font and margins
+            var button = _shellDllResources[(int) shellresource.FILTERBUTTON_MCML].Descendants()
+                .Where(arg => arg.Name.LocalName == "Font")
+                .Single(arg => arg.Attribute("Name") != null && arg.Attribute("Name")?.Value == "Font");
+            button.SetAttributeValue("FontSize", $"{ScaleNumber(16)}"); // default is 16
+
+            var buttonText = _shellDllResources[(int)shellresource.FILTERBUTTON_MCML].Descendants()
+                .Where(arg => arg.Name.LocalName == "Panel")
+                .Single(arg => arg.Attribute("Name") != null && arg.Attribute("Name")?.Value == "LabelPanel");
+            buttonText.SetAttributeValue("Margins", "0,0,0,0"); // default is "0,8,0,0"
+
+            // set chevron margins
+            var chevron = _shellDllResources[(int) shellresource.FILTERBUTTON_MCML].Descendants()
+                .Where(arg => arg.Name.LocalName == "Graphic")
+                .Single(arg => arg.Attribute("Name") != null && arg.Attribute("Name")?.Value == "Chevron");
+            chevron.SetAttributeValue("Margins", $"14,0,{ScaleNumber(36)},0"); // default is "14,0,36,0"
+            chevron.SetAttributeValue("MaintainAspectRatio", "true"); // default is false (not present)
+
+            // set filter list text font
+            var list = _shellDllResources[(int) shellresource.FILTERLISTBOX_MCML].Descendants()
+                .Where(arg => arg.Name.LocalName == "UI")
+                .Where(arg => arg.Attribute("Name") != null && arg.Attribute("Name")?.Value == "FilteredGuide").Descendants()
+                .Where(arg => arg.Name.LocalName == "Properties").Elements();
+            foreach (var e in list)
+            {
+                switch (e.Attribute("Name")?.Value)
+                {
+                    case "FocusLabelMargins":
+                        e.SetAttributeValue("Inset", $"{ScaleNumber(12)},0,{ScaleNumber(8)},0"); // default is "12,6,8,0"
+                        break;
+                    case "TileSize":
+                        e.SetAttributeValue("Size", $"{ScaleNumber(270)},{RowHeightPixel - 3}"); // default is "270,51"
+                        break;
+                    case "LabelMargins":
+                        e.SetAttributeValue("Inset", $"{ScaleNumber(36)},0,{ScaleNumber(8)},0"); // default is "36,6,8,0"
+                        break;
+                    case "Font":
+                        e.SetAttributeValue("FontSize", $"{ScaleNumber(22)}"); // default is 22
+                        break;
+                    case "FocusFont":
+                        e.SetAttributeValue("FontSize", $"{ScaleNumber(22)}"); // default is 22
+                        break;
+                    case "FocusImage":
+                        e.SetAttributeValue("BaseImage", "null");
+                        break;
+                    case "IconMinSize":
+                        e.SetAttributeValue("Size", $"{ScaleNumber(39)},{ScaleNumber(32)}");
+                        break;
+                    case "IconPadding":
+                        e.SetAttributeValue("Inset", $"0,0,{ScaleNumber(20)},0");
+                        break;
+                }
+            }
+
+            // set filter menu width
+            var menu = _shellDllResources[(int) shellresource.EPG_MCML].Descendants()
+                .Where(arg => arg.Name.LocalName == "GuideFilterListBox").Descendants()
+                .Single(arg => arg.Name.LocalName == "FormLayoutInput");
+            menu.SetAttributeValue("Right", $"FilterButton,1,{ScaleNumber(274)}"); // default is "FilterButton,1,274"
+
+            var panel = _shellDllResources[(int) shellresource.EPG_MCML].Descendants()
+                .Where(arg => arg.Name.LocalName == "Panel")
+                .Where(arg => arg.Attribute("Name") != null && arg.Attribute("Name").Value == "ContentPanel").Descendants()
+                .First(arg => arg.Name.LocalName == "FormLayoutInput");
+            panel.SetAttributeValue("Right", $"FilterButton,1,{ScaleNumber(238)}");
+
+            // set date/time format
+            if (cbClock.Checked)
+            {
+                var clock = _shellDllResources[(int)shellresource.CLOCK_MCML].Descendants()
+                    .Single(arg => arg.Name.LocalName == "DateTimeFormats");
+                clock.SetAttributeValue("DateTimeFormats", "AbbreviatedLongDate,ShortTime"); // default is "ShortTime"
+            }
+        }
+
+        private void SetTableAndDetailsViewProperties()
+        {
+            var epgPage = _shellDllResources[(int) shellresource.EPG_MCML].Descendants()
+                .Where(arg => arg.Name.LocalName == "UI")
+                .Single(arg => arg.Attribute("Name") != null && arg.Attribute("Name")?.Value == "EpgPage");
+
+            // set main detail image size
+            var image1 = epgPage.Descendants()
+                .Where(arg => arg.Name.LocalName == "Size")
+                .Single(arg => arg.Attribute("Name") != null && arg.Attribute("Name")?.Value == "GuideShowCardImageSize");
+            image1?.SetAttributeValue("Size", "267,150"); // default is 210,116
+
+            // set detail vertical offsets, visible row counts, filter offsets, and image offsets
+            var actions = epgPage.Descendants()
+                .Where(arg => arg.Name.LocalName == "Set")
+                .Where(arg => arg.Attribute("Target") != null && arg.Attribute("Target")?.Value == "[Table.VisibleRowCapacity]")
+                .Select(arg => arg.Parent);
+            foreach (var action in actions)
+            {
+                var mode = action?.Parent?.Descendants()
+                    .Where(arg => arg.Name.LocalName == "Equality")
+                    .Single(arg => arg.Attribute("Source") != null && arg.Attribute("Source")?.Value == "[MiniMode.Value]");
+                if (mode.Attribute("Value")?.Value == "false") // main guide
+                {
+                    foreach (var target in action.Descendants())
+                    {
+                        int iValue;
+                        switch (target.Attribute("Target")?.Value)
+                        {
+                            case "[Table.VisibleRowCapacity]":
+                                target.SetAttributeValue("Value", $"{MainGuideRows}"); // default is 7
+                                break;
+                            case "[FilterButtonLayout.Top.Offset]":
+                                target.SetAttributeValue("Value", $"{MainTableTop}"); // default is 118
+                                break;
+                            case "[FilterButtonLayout.Left.Offset]":
+                                target.SetAttributeValue("Value", "0"); // default is 55
+                                break;
+                            case "[FilterButtonLayout.Right.Offset]":
+                                target.SetAttributeValue("Value", $"{FilterButtonWidth}"); // default is 106
+                                break;
+                            case "[FilterButtonLayout.Bottom.Offset]":
+                                target.SetAttributeValue("Value", $"{MainTableBottom}"); // default is 493
+                                break;
+                            case "[DetailsLayout.Top.Offset]":
+                                iValue = cbMainShowDetails.Checked ? 27 : 1000;
+                                target.SetAttributeValue("Value", $"{iValue}"); // default is 27
+                                break;
+                            case "[DetailsLayout.Bottom.Offset]":
+                                break;
+                            case "[ContentImageLayout.Top.Offset]":
+                                iValue = cbMainShowDetails.Checked ? 34 : 1000;
+                                target.SetAttributeValue("Value", $"{iValue}"); // default is 34
+                                break;
+
+                        }
+                    }
+                }
+                else // mini-guide
+                {
+                    foreach (var target in action.Descendants())
+                    {
+                        int iValue;
+                        switch (target.Attribute("Target")?.Value)
+                        {
+                            case "[Table.VisibleRowCapacity]":
+                                target.SetAttributeValue("Value", $"{MiniGuideRows}"); // default is 2
+                                break;
+                            case "[FilterButtonLayout.Top.Offset]":
+                                target.SetAttributeValue("Value", $"{MiniTableTop}"); // default is 476
+                                break;
+                            case "[FilterButtonLayout.Left.Offset]":
+                                target.SetAttributeValue("Value", "0"); // default is 54
+                                break;
+                            case "[FilterButtonLayout.Right.Offset]":
+                                target.SetAttributeValue("Value", $"{FilterButtonWidth}"); // default is 55
+                                break;
+                            case "[FilterButtonLayout.Bottom.Offset]":
+                                target.SetAttributeValue("Value", $"{MiniTableBottom}"); // default is 585
+                                break;
+                            case "[DetailsLayout.Top.Offset]":
+                                iValue = (cbMiniShowDetails.Checked) ? 25 : 1000;
+                                target.SetAttributeValue("Value", $"{iValue}"); // default is 25
+                                break;
+                            case "[DetailsLayout.Bottom.Offset]":
+                                break;
+                            case "[ContentImageLayout.Top.Offset]":
+                                iValue = (cbMiniShowDetails.Checked) ? 31 : 1000;
+                                target.SetAttributeValue("Value", $"{iValue}"); // default is 31
+                                break;
+                        }
+                    }
+                }
+
+                // set mini-guide background vertical size
+                var graphic = epgPage.Descendants()
+                    .Where(arg => arg.Name.LocalName == "Graphic")
+                    .Where(arg => arg.Attribute("Name")?.Value == "MiniGuideBackground").Descendants()
+                    .Single(arg => arg.Name.LocalName == "AnchorLayoutInput");
+                graphic.SetAttributeValue("Top", $"Parent,0,{MiniTableTop - 153}"); // default is 323
+            }
+        }
+
+        private void SetEpgCellProperties()
+        {
+            var epgShow = _shellDllResources[(int) shellresource.EPGCELLS_MCML].Descendants()
+                .Where(arg => arg.Name.LocalName == "UI")
+                .Single(arg => arg.Attribute("Name") != null && arg.Attribute("Name")?.Value == "EpgShowCell");
+
+            // set title line text font size and insets
+            var fonts = epgShow.Descendants()
+                .Where(arg => arg.Name.LocalName == "Font");
+            foreach (var font in fonts)
+            {
+                switch (font.Attribute("Name")?.Value)
+                {
+                    case "TitleDefaultFont":
+                    case "TitleFocusFont":
+                        font.SetAttributeValue("FontSize", trackCellFontSize.Value.ToString()); // default is 22
+                        break;
+                }
+            }
+
+            // set titleline padding
+            var panel = epgShow.Descendants()
+                .Where(arg => arg.Name.LocalName == "Panel")
+                .Single(arg => arg.Attribute("Name") != null && arg.Attribute("Name")?.Value == "TitleLine");
+            panel.SetAttributeValue("Padding", $"{ScaleNumber(10)},0,{ScaleNumber(10)},0"); // default is "10,8,10,0"
+
+            // set graphics sizes and margins
+            var scaleFactor = CellFontPointSize / 22.0;
+            var graphics = epgShow.Descendants()
+                .Where(arg => arg.Name.LocalName == "Graphic" && arg.Attribute("Name") != null);
+            foreach (var graphic in graphics)
+            {
+                string value;
+                switch (graphic.Attribute("Name")?.Value)
+                {
+                    case "HDImage":
+                        value = $"{(int)(27 * scaleFactor - 26.5)},0,0,0";
+                        graphic.SetAttributeValue("Margins", value); // default is "0,6,0,8"
+                        value = $"{(int)(27 * Math.Min(scaleFactor, 1.0) + 0.5)},{(int)(17 * Math.Min(scaleFactor, 1.0) + 0.5)}";
+                        graphic.SetAttributeValue("MinimumSize", value); // default is "27,17"
+
+                        graphic.SetAttributeValue("Scale", string.Format("{0},{0},{0}", scaleFactor)); // default is null
+                        graphic.SetAttributeValue("CenterPointPercent", "1.0,0.5,0.5"); // default is null
+                        break;
+                    case "ContinuingPrevious":
+                        value = $"0,0,{(int)(23 * scaleFactor - 13.5)},0";
+                        graphic.SetAttributeValue("Margins", value); // default is "0,1,9,8"
+                        value = $"{(int)(14 * Math.Min(scaleFactor, 1.0) + 0.5)},{(int)(19 * Math.Min(scaleFactor, 1.0) + 0.5)}";
+                        graphic.SetAttributeValue("MinimumSize", value); // default is "14,19"
+
+                        graphic.SetAttributeValue("Scale", string.Format("{0},{0},{0}", scaleFactor)); // default is null
+                        graphic.SetAttributeValue("CenterPointPercent", "0.0,0.5,0.5"); // default is null
+                        break;
+                    case "ContinuingNext":
+                        value = $"{(int)(23 * scaleFactor - 13.5)},0,0,0";
+                        graphic.SetAttributeValue("Margins", value); // default is "9,1,0,8"
+                        value = $"{(int)(14 * Math.Min(scaleFactor, 1.0) + 0.5)},{(int)(19 * Math.Min(scaleFactor, 1.0) + 0.5)}";
+                        graphic.SetAttributeValue("MinimumSize", value); // default is "14,19"
+
+                        graphic.SetAttributeValue("Scale", string.Format("{0},{0},{0}", scaleFactor)); // default is null
+                        graphic.SetAttributeValue("CenterPointPercent", "1.0,0.5,0.5"); // default is null
+                        break;
+                    case "Record":
+                        graphic.SetAttributeValue("Margins", "0,0,0,0"); // default is "0,6,0,8"
+
+                        graphic.SetAttributeValue("Scale", string.Format("{0},{0},{0}", scaleFactor)); // default is null
+                        graphic.SetAttributeValue("CenterPointPercent", "1.0,0.5,0.5"); // default is null
+                        break;
+                }
+            }
+
+            // set program title margins
+            var title = epgShow.Descendants()
+                .Where(arg => arg.Name.LocalName == "Text")
+                .Single(arg => arg.Attribute("Name") != null && arg.Attribute("Name")?.Value == "Title");
+            if (title != null)
+            {
+                var margin = (int)(((MainTableBottom - MainTableTop) / (float)MainGuideRows - CellFontPointSize * PixelsPerPoint - 6) / 2.0) - (int)(0.08 * CellFontPointSize * PixelsPerPoint + 0.5);
+                var value = $"0,{margin},0,0";
+                title.SetAttributeValue("Margins", value); // default is null
+            }
+
+            // set expanded epg
+            if (cbExpandedEpg.Checked)
+            {
+                var rule = _shellDllResources[(int) shellresource.EPGCELLS_MCML]
+                    .Descendants()
+                    .Where(arg => arg.Name.LocalName == "Equality")
+                    .Single(arg => arg.Attribute("Value")?.Value == "[Cell.Episode]");
+                rule.SetAttributeValue("Value", string.Empty);
+            }
+
+            // set expanded movie
+            if (cbExpandedMovie.Checked)
+            {
+                var rule = _shellDllResources[(int)shellresource.EPGCELLS_MCML]
+                    .Descendants()
+                    .Where(arg => arg.Name.LocalName == "Equality")
+                    .Single(arg => arg.Attribute("Value")?.Value == "[Cell.MovieYear]");
+                rule.SetAttributeValue("Value", string.Empty);
+            }
+        }
+
+        private void SetTableAndDetailGeometries()
+        {
+            // set guide visible columns
+            var columns = _shellDllResources[(int) shellresource.EPG_MCML]
+                .Descendants()
+                .Where(arg => arg.Name.LocalName == "Condition") // IsWidescreen
+                .Where(arg => arg.Attribute("Target") != null)
+                .Single(arg => arg.Attribute("Target")?.Value == "[Table.VisibleColumnCapacity]");
+            columns?.SetAttributeValue("Value", trackMinutes.Value.ToString()); // default is 120
+            columns = _shellDllResources[(int) shellresource.EPG_MCML]
+                .Descendants()
+                .Where(arg => arg.Name.LocalName == "Default")
+                .Where(arg => arg.Attribute("Target") != null)
+                .Single(arg => arg.Attribute("Target")?.Value == "[Table.VisibleColumnCapacity]");
+            columns?.SetAttributeValue("Value", trackMinutes.Value.ToString()); // default is 90
+
+            // determine if in widescreen
+            var isNormalScreen = false;
+            var isWideScreen = false;
+            foreach (var screen in Screen.AllScreens)
+            {
+                var w = screen.Bounds.Width;
+                var h = screen.Bounds.Height;
+                if ((float) w / (float) h > 1.5f) isWideScreen = true;
+                else isNormalScreen = true;
+            }
+
+            // if multiple formats, allow user to override the 4x3 offsets
+            if (isNormalScreen && isWideScreen)
+            {
+                if (DialogResult.No ==
+                    MessageBox.Show(
+                        "You have multiple format displays available. Do you wish to apply settings for a 4x3 display?",
+                        "Muliple Display Formats", MessageBoxButtons.YesNo, MessageBoxIcon.Question))
+                    isNormalScreen = false;
+            }
+
+            // set program / movie details placement
+            var inputs = _shellDllResources[(int) shellresource.EPG_MCML].Descendants()
+                .Where(arg => arg.Name.LocalName == "FormLayoutInput" || arg.Name.LocalName == "Font")
+                .Where(arg => arg.Attribute("Name") != null);
+            if (inputs.Any())
+            {
+                foreach (var input in inputs)
+                {
+                    switch (input.Attribute("Name")?.Value)
+                    {
+                        case "InitialGridPosition":
+                            input.SetAttributeValue("Right", $"Parent,1,-{FilterButtonWidth + 3}"); // default is "Parent,1,-53"
+                            break;
+                        case "FinalGridPosition":
+                            input.SetAttributeValue("Right", $"Parent,1,{ScaleNumber(230)}"); // default is "Parent,1,298"
+                            break;
+                        case "DetailsLayout":
+                            input.SetAttributeValue("Left", $"FilterButton,0,{(isNormalScreen ? 225 : 315)}"); // default is "FilterButton,1,260"
+                            input.SetAttributeValue("Right", $"Table,1,{(isNormalScreen ? -50 : -120)}"); // default is "Table,1,-155"
+                            break;
+                        case "ContentImageLayout":
+                            input.SetAttributeValue("Top", "Parent,0"); // default is "Parent,0"
+                            input.SetAttributeValue("Right", $"Parent,0,{(isNormalScreen ? 215 : 300)}"); // default is "Parent,1"
+                            break;
+                        case "MyTitleFont":
+                            input.SetAttributeValue("FontSize", $"{HalfScaleNumber(22)}");
+                            break;
+                        case "MyOtherFont":
+                            input.SetAttributeValue("FontSize", $"{HalfScaleNumber(18)}");
+                            break;
+                        case "MyClockFont":
+                            input.SetAttributeValue("FontSize", $"{HalfScaleNumber(18)}");
+                            break;
+                        case "MyLabelFont":
+                            input.SetAttributeValue("FontSize", $"{HalfScaleNumber(32)}");
+                            break;
+                        case "MyAlertFont":
+                            input.SetAttributeValue("FontSize", $"{HalfScaleNumber(16)}");
+                            break;
+                    }
+                }
+            }
+
+            // add channel details bottom line
+            var entry = _shellDllResources[(int)shellresource.EPG_MCML].Descendants()
+                .Single(arg => arg.Name.LocalName == "ScheduleEntryDetailsView");
+            if (cbHideNumber.Checked)
+            {
+                entry.SetAttributeValue("ShowChannelInfoOnBottomLine", "true");
+            }
+
+            if (CellFontPixelHeight > 22)
+            {
+                entry.SetAttributeValue("TightenTitleLineSpacing", "true");
+            }
+
+            // set channel details font size
+            var fonts = _shellDllResources[(int) shellresource.EPG_MCML].Descendants()
+                .Where(arg => arg.Name.LocalName == "Font")
+                .Where(arg => arg.Attribute("Name") != null);
+            foreach (var font in fonts)
+            {
+                switch (font.Attribute("Name").Value)
+                {
+                    case "NameFont":
+                        font.SetAttributeValue("FontSize", $"{HalfScaleNumber(22)}");
+                        break;
+                    case "OtherFont":
+                        font.SetAttributeValue("FontSize", $"{HalfScaleNumber(18)}");
+                        break;
+                }
+            }
+
+            // set channel details time/title offset positions
+            var anchors = _shellDllResources[(int) shellresource.EPG_MCML].Descendants()
+                .Where(arg =>
+                    arg.Name.LocalName == "UI" && arg.Attribute("Name") != null &&
+                    arg.Attribute("Name").Value == "ChannelDetailsView").Descendants()
+                .Where(arg => arg.Name.LocalName == "AnchorLayoutInput");
+            foreach (var anchor in anchors)
+            {
+                if (!anchor.Parent.Parent.Attribute("Name").Value.StartsWith("Program")) continue;
+                anchor.SetAttributeValue("Left", $"Parent,0,{HalfScaleNumber(125)}");
+            }
+
+            // set clock position
+            var clock = _shellDllResources[(int) shellresource.EPG_MCML].Descendants()
+                .Where(arg => arg.Name.LocalName == "Clock").Descendants()
+                .Single(arg => arg.Name.LocalName == "FormLayoutInput");
+            clock.SetAttributeValue("Right", $"Parent,1,-{FilterButtonWidth + 3}");
+
+            // set brandlogo position
+            var brand = _shellDllResources[(int)shellresource.EPG_MCML].Descendants()
+                .Where(arg => arg.Name.LocalName == "BrandLogo").Descendants()
+                .Single(arg => arg.Name.LocalName == "FormLayoutInput");
+            brand.SetAttributeValue("Right", $"Parent,1,-{FilterButtonWidth}");
         }
 
         private static int SafeTrackBarValue(int value, TrackBar trackbar)
@@ -1158,8 +1276,11 @@ namespace epg123
             // update xdocuments
             if (!sender.Equals(btnResetToDefault))
             {
-                SetFontSizes();
-                SetTableGeometries();
+                SetGuidePageDateTimeFilterFonts();
+                SetEpgChannelCellProperties();
+                SetTableAndDetailsViewProperties();
+                SetEpgCellProperties();
+                SetTableAndDetailGeometries();
 
                 // update the shell dll
                 UpdateShellDll();
@@ -1191,15 +1312,7 @@ namespace epg123
         private void btnRemoveLogos_Click(object sender, EventArgs e)
         {
             Cursor = Cursors.WaitCursor;
-
-            var startInfo = new ProcessStartInfo()
-            {
-                FileName = "epg123Client.exe",
-                Arguments = "-nologo"
-            };
-            var proc = Process.Start(startInfo);
-            proc?.WaitForExit();
-
+            WmcStore.ClearLineupChannelLogos();
             Cursor = Cursors.Arrow;
         }
 
