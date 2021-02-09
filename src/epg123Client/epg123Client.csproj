@@ -200,6 +200,7 @@
       <Generator>PublicSettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
+    <EmbeddedResource Include="TABLE.MCML" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\EPG123.ico" />

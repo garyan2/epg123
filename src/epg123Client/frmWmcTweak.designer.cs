@@ -435,6 +435,7 @@
             this.cbMiniShowDetails.TabIndex = 10;
             this.cbMiniShowDetails.Text = "Show Program Details";
             this.cbMiniShowDetails.UseVisualStyleBackColor = true;
+            this.cbMiniShowDetails.CheckedChanged += new System.EventHandler(this.cbMainShowDetails_CheckStateChanged);
             // 
             // lblMiniRows
             // 

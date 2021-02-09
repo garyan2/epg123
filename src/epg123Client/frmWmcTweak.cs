@@ -59,26 +59,15 @@ namespace epg123
             FILTERBUTTON_MCML,
             FILTERLISTBOX_MCML,
             CLOCK_MCML,
-            MAX
-        }
-
-        // enumeration of resources in ehres.dll
-        private enum resresource
-        {
-            GUIDEDETAILSBASE_XML,
-            //DEFAULTGEOSETTINGS_XML,
+            TABLE_MCML,
             MAX
         }
 
         private readonly XDocument[] _shellDllResources = new XDocument[(int) shellresource.MAX];
-        private readonly XDocument[] _resDllResources = new XDocument[(int) resresource.MAX];
 
         // filepaths
         private readonly string _shellEhomePath = Environment.GetEnvironmentVariable("WINDIR") + @"\ehome\Microsoft.MediaCenter.Shell.dll";
-
         private readonly string _shellTempPath = Environment.GetEnvironmentVariable("TEMP") + @"\Microsoft.MediaCenter.Shell.dll";
-
-        private readonly string _resEhomePath = Environment.GetEnvironmentVariable("WINDIR") + @"\ehome\ehres.dll";
 
         // calculation constants
         private const double PixelsPerPoint = 1.33;
@@ -165,7 +154,6 @@ namespace epg123
         private bool ShowMainDetails { get; set; }
         private bool ShowMiniDetails { get; set; }
         private int CellFontPointSize { get; set; }
-        private int DetailFontPointSize { get; set; }
         private int MainGuideRows { get; set; }
         private int MiniGuideRows { get; set; }
         private int ColumnMinutes { get; set; }
@@ -173,13 +161,12 @@ namespace epg123
         // calculated parameters
         private int CellFontPixelHeight => (int)(CellFontPointSize * PixelsPerPoint);
         private int RowHeightPixel => (int)(CellFontPixelHeight * RowHeightMultiplier + 0.5);
-        private int MaxMainTableRows => (int)((MaxTableBottom - MinMainTableTop + ((ShowMainDetails) ? 0 : DetailsVerticalSize)) / (double)RowHeightPixel);
-        private int MainTableTop => ((MinMainTableTop + MaxTableBottom + ((ShowMainDetails) ? 0 : DetailsVerticalSize) - (MainGuideRows * RowHeightPixel)) / 2);
-        private int MainTableBottom => (MainTableTop + RowHeightPixel * MainGuideRows);
-        private int DetailsVerticalSize => (int) ((4.2 * DetailFontPointSize) * PixelsPerPoint) + 34;
-        private int MaxTableBottom => (768 - MinMainTableTop - DetailsVerticalSize);
-        private int MiniTableBottom => (MaxTableBottom + (ShowMiniDetails ? 0 : DetailsVerticalSize)) + 50;
-        private int MiniTableTop => (MiniTableBottom - RowHeightPixel * MiniGuideRows);
+        private int MaxMainTableRows => (int)((MaxTableBottom - MinMainTableTop) / (double)RowHeightPixel);
+        private int MainTableTop => (MinMainTableTop + MaxTableBottom - MainGuideRows * RowHeightPixel) / 2;
+        private int MainTableBottom => MainTableTop + RowHeightPixel * MainGuideRows;
+        private int MaxTableBottom => 768 - (ShowMainDetails ? 25 + 150 : (int)(HalfScaleNumber(16) * PixelsPerPoint) + 7) - 50;
+        private int MiniTableBottom => 768 - (ShowMiniDetails ? 25 + 118 : (int)(HalfScaleNumber(16) * PixelsPerPoint + 7)) - 50;
+        private int MiniTableTop => MiniTableBottom - (RowHeightPixel + 3) * MiniGuideRows;
         private int MaxMiniTableRows => (int) ((MiniTableBottom - MinMiniTableTop) / (double) RowHeightPixel);
         private int SmallLogoHeight => CellFontPixelHeight;
         private int LargeLogoHeight => Math.Min(RowHeightPixel - ScaleNumber(6), 75);
@@ -299,17 +286,6 @@ namespace epg123
             if (font1 != null)
             {
                 trackCellFontSize.Value = CellFontPointSize = SafeTrackBarValue(int.Parse(font1.Attribute("FontSize").Value), trackCellFontSize);
-            }
-
-            // get detail font size
-            var font2 = _resDllResources[(int) resresource.GUIDEDETAILSBASE_XML]
-                .Descendants()
-                .Where(arg => arg.Name.LocalName == "Font")
-                .Where(arg => arg.Attribute("Name") != null)
-                .Single(arg => arg.Attribute("Name").Value == "TitleFont");
-            if (font2 != null)
-            {
-                DetailFontPointSize = int.Parse(font2.Attribute("FontSize").Value);
             }
 
             // get main guide rows and mini guide rows
@@ -822,14 +798,57 @@ namespace epg123
                                 break;
                         }
                     }
-                }
 
-                // set mini-guide background vertical size
-                var graphic = epgPage.Descendants()
-                    .Where(arg => arg.Name.LocalName == "Graphic")
-                    .Where(arg => arg.Attribute("Name")?.Value == "MiniGuideBackground").Descendants()
-                    .Single(arg => arg.Name.LocalName == "AnchorLayoutInput");
-                graphic.SetAttributeValue("Top", $"Parent,0,{MiniTableTop - 153}"); // default is 323
+                    // set mini-guide background vertical size
+                    var graphic = epgPage.Descendants()
+                        .Where(arg => arg.Name.LocalName == "Graphic")
+                        .Where(arg => arg.Attribute("Name")?.Value == "MiniGuideBackground").Descendants()
+                        .Single(arg => arg.Name.LocalName == "AnchorLayoutInput");
+                    graphic.SetAttributeValue("Bottom", "Parent,1"); // default is "Parent,1,10"
+                    graphic.SetAttributeValue("Top", $"Parent,0,{(int)((MiniTableTop - Math.Max(ScaleNumber(16) * PixelsPerPoint + 3, 47)) * 972 / 768.0) - 203}"); // default is "Parent,0,323"
+                }
+            }
+
+            // set the scroll hotspot size and locations
+            var scroll = _shellDllResources[(int) shellresource.TABLE_MCML].Descendants()
+                .Where(arg => arg.Name.LocalName == "TableAxisAutoScrollRegion")
+                .Where(arg => arg.Attribute("Name") != null);
+            foreach (var e in scroll)
+            {
+                var layout = e.Descendants().Single(arg => arg.Name.LocalName == "FormLayoutInput");
+                switch (e.Attribute("Name").Value)
+                {
+                    // up/down images are 44,38
+                    // left/right images are 38,44
+                    case "Up":
+                        e.SetAttributeValue("NavigationHintMargins", "0,0,0,0"); // default is "10,3,10,18"
+                        layout.SetAttributeValue("Left", "CornerPanel,1,28"); // default is 20
+                        layout.SetAttributeValue("Top", "CornerPanel,1,-44"); // default is -49
+                        layout.SetAttributeValue("Bottom", "CornerPanel,1,0"); // default is 10
+                        layout.SetAttributeValue("Right", "Parent,1,-28"); // default is -33
+                        break;
+                    case "Down":
+                        e.SetAttributeValue("NavigationHintMargins", "0,0,0,0"); // default is "10,14,10,7"
+                        layout.SetAttributeValue("Left", "CornerPanel,1,28"); // default is 20
+                        layout.SetAttributeValue("Top", "Parent,1,0"); // default is -10
+                        layout.SetAttributeValue("Bottom", "Parent,1,44"); // default is 49
+                        layout.SetAttributeValue("Right", "Parent,1,-28"); // default is -33
+                        break;
+                    case "Left":
+                        e.SetAttributeValue("NavigationHintMargins", $"-10,0,0,0"); // default is "5,10,5,10"
+                        layout.SetAttributeValue("Left", $"CornerPanel,1,0"); // default is -28
+                        layout.SetAttributeValue("Top", $"CornerPanel,1,{ScaleNumber(10)}"); // default is 10
+                        layout.SetAttributeValue("Bottom", $"Parent,1,{-ScaleNumber(10)}"); // default is -10
+                        layout.SetAttributeValue("Right", $"CornerPanel,1,28"); // default is 20
+                        break;
+                    case "Right":
+                        e.SetAttributeValue("NavigationHintMargins", $"-10,0,{FilterButtonWidth},0"); // default is "5,10,47,10"
+                        layout.SetAttributeValue("Left", $"Parent,1,-28"); // default is -33
+                        layout.SetAttributeValue("Top", $"CornerPanel,1,{ScaleNumber(10)}"); // default is 10
+                        layout.SetAttributeValue("Bottom", $"Parent,1,{-ScaleNumber(10)}"); // default is -10
+                        layout.SetAttributeValue("Right", $"Parent,1,{FilterButtonWidth + 10}"); // default is 56
+                        break;
+                }
             }
         }
 
@@ -1163,11 +1182,6 @@ namespace epg123
             for (var i = 0; i < _shellDllResources.Length; ++i)
             {
                 _shellDllResources[i] = GetFileResource(_shellEhomePath, ((shellresource) i).ToString().Replace("_", "."));
-            }
-
-            for (var i = 0; i < _resDllResources.Length; ++i)
-            {
-                _resDllResources[i] = GetFileResource(_resEhomePath, ((resresource) i).ToString().Replace("_", "."));
             }
         }
 
