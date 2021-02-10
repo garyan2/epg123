@@ -531,12 +531,12 @@
             // lblXmltvLogosNote
             // 
             this.lblXmltvLogosNote.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblXmltvLogosNote.Location = new System.Drawing.Point(6, 362);
+            this.lblXmltvLogosNote.Location = new System.Drawing.Point(7, 350);
             this.lblXmltvLogosNote.Name = "lblXmltvLogosNote";
             this.lblXmltvLogosNote.Size = new System.Drawing.Size(297, 30);
             this.lblXmltvLogosNote.TabIndex = 28;
             this.lblXmltvLogosNote.Text = "* The option to \'Include station logos in .\\logos folder\' must be enabled to incl" +
-    "ude channel logos in the XMLTV file.";
+    "ude preferred channel logos.";
             // 
             // lblXmltvOutput
             // 
@@ -1836,9 +1836,9 @@
         private System.Windows.Forms.CheckBox cbSdLogos;
         private System.Windows.Forms.Label lblAlternateLogos;
         private System.Windows.Forms.ComboBox cmbAlternateLogos;
-        private System.Windows.Forms.Label lblXmltvLogosNote;
         private System.Windows.Forms.CheckBox cbAlternateSEFormat;
         private System.Windows.Forms.CheckBox cbBrandLogo;
         private System.Windows.Forms.CheckBox ckXmltvExtendedInfo;
+        private System.Windows.Forms.Label lblXmltvLogosNote;
     }
 }
