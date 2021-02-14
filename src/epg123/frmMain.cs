@@ -27,9 +27,7 @@ namespace epg123
             StationID = 2,
             Name = 3
         }
-        private List<string> _lineups;
         private readonly epgTaskScheduler _task = new epgTaskScheduler();
-        private HashSet<string> _newLineups = new HashSet<string>();
         private readonly ImageList _imageList = new ImageList();
         private bool _newLogin = true;
         public bool RestartAsAdmin;
@@ -40,6 +38,7 @@ namespace epg123
         public bool Import;
         public bool Match;
         private readonly double _dpiScaleFactor = 1.0;
+        private bool _lockCustomCheckboxes;
 
         public frmMain()
         {
@@ -60,7 +59,7 @@ namespace epg123
                     _imageList.ImageSize = new Size((int)(g.DpiX / 6), (int)(g.DpiY / 6));
 
                     // adjust column widths for list views
-                    ListView[] listviews = { lvL1Lineup, lvL2Lineup, lvL3Lineup, lvL4Lineup };
+                    ListView[] listviews = { lvLineupChannels };
                     foreach (var listview in listviews)
                     {
                         foreach (ColumnHeader column in listview.Columns)
@@ -71,7 +70,7 @@ namespace epg123
                 }
             }
 
-            toolStrip1.ImageScalingSize = toolStrip2.ImageScalingSize = toolStrip3.ImageScalingSize = toolStrip4.ImageScalingSize = toolStrip5.ImageScalingSize = new Size((int)(_dpiScaleFactor * 16), (int)(_dpiScaleFactor * 16));
+            toolStrip6.ImageScalingSize = new Size((int)(_dpiScaleFactor * 16), (int)(_dpiScaleFactor * 16));
         }
         private void ConfigForm_Load(object sender, EventArgs e)
         {
@@ -97,11 +96,8 @@ namespace epg123
             }
 
             // set imagelist for listviews
-            lvL1Lineup.SmallImageList = lvL1Lineup.LargeImageList = _imageList;
-            lvL2Lineup.SmallImageList = lvL2Lineup.LargeImageList = _imageList;
-            lvL3Lineup.SmallImageList = lvL3Lineup.LargeImageList = _imageList;
-            lvL4Lineup.SmallImageList = lvL4Lineup.LargeImageList = _imageList;
             lvL5Lineup.SmallImageList = lvL5Lineup.LargeImageList = _imageList;
+            lvLineupChannels.SmallImageList = lvLineupChannels.LargeImageList = _imageList;
 
             // set the splitter distance
             splitContainer1.Panel1MinSize = (int)(splitContainer1.Panel1MinSize * _dpiScaleFactor);
@@ -392,13 +388,6 @@ namespace epg123
                 // get membership expiration
                 GetUserStatus();
 
-                // create 2 lists : stations to be downloaded and stations not to be downloaded
-                // stations that do not exist in either list are NEW
-                if (Config.StationId != null)
-                {
-                    PopulateIncludedExcludedStations(Config.StationId);
-                }
-
                 // populate the listviews with lineup channels
                 BuildLineupTabs();
 
@@ -510,35 +499,128 @@ namespace epg123
         #region ========== Setup Lineup ListViews and Tabs ==========
         private void BuildLineupTabs()
         {
-            ListView[] listViews = { lvL1Lineup, lvL2Lineup, lvL3Lineup, lvL4Lineup, lvL5Lineup };
-            ToolStripLabel[] listViewLabels = { lblL1Lineup, lblL2Lineup, lblL3Lineup, lblL4Lineup };
-            ToolStrip[] toolStrips = { toolStrip1, toolStrip2, toolStrip3, toolStrip4, toolStrip5 };
+            ListView[] listViews = { lvLineupChannels, lvL5Lineup };
 
             // focus on first tab
             tabLineups.SelectedIndex = 0;
 
-            // temporarily disable item check
-            _disableItemCheck = true;
-
             // clear lineup listviews and title
-            for (var i = 0; i < listViews.Length; ++i)
+            foreach (var t in listViews)
             {
-                listViews[i].Items.Clear();
-                listViews[i].ListViewItemSorter = null;
-                if (i < 4) listViewLabels[i].Text = string.Empty;
-                toolStrips[i].Enabled = false;
-                ExcludeLineup(i);
+                t.Items.Clear();
+                t.ListViewItemSorter = null;
             }
 
             // populate the listviews with channels/services
-            BuildListViewChannels();
+            BuildLineupsAndStations();
             BuildCustomListViewChannels();
 
             // assign a listviewcolumnsorter to a listview
             AssignColumnSorters();
+        }
+        public void BuildLineupsAndStations()
+        {
+            // reset lineups, stations, and combobox
+            comboLineups.Items.Clear();
+            _allAvailableStations.Clear();
 
-            // re-enable item check
-            _disableItemCheck = false;
+            // retrieve lineups from SD
+            var clientLineups = sdApi.SdGetLineups();
+            if (clientLineups == null) return;
+
+            foreach (var clientLineup in clientLineups.Lineups)
+            {
+                // request the lineup's station maps
+                var lineupMap = sdApi.SdGetStationMaps(clientLineup.Lineup);
+                if (lineupMap == null) continue;
+
+                // build the stations
+                foreach (var station in lineupMap.Stations)
+                {
+                    _allAvailableStations.Add(station.StationId);
+                    if (_allStations.ContainsKey(station.StationId)) continue;
+
+                    var configStation = Config.StationId.SingleOrDefault(arg =>
+                        arg.StationId.Replace("-", "").Equals(station.StationId));
+                    _allStations.Add(station.StationId, new myStation(station)
+                    {
+                        CustomCallsign = configStation?.CustomCallSign,
+                        CustomServiceName = configStation?.CustomServiceName,
+                        HDOverride = (configStation?.HdOverride ?? false),
+                        SDOverride = (configStation?.SdOverride ?? false),
+                        Include = (!configStation?.StationId.StartsWith("-") ?? Config.AutoAddNew),
+                    });
+                }
+
+                // build the lineup
+                if (_allLineups.ContainsKey(clientLineup.Lineup)) continue;
+                _allLineups.Add(clientLineup.Lineup, new myLineup(clientLineup)
+                {
+                    Include = (Config.IncludedLineup?.Contains(clientLineup.Lineup) ?? false),
+                    Channels = lineupMap.Map.ToList()
+                });
+            }
+
+            // cleanup dead lineups and populate combo box
+            foreach (var lineup in _allLineups)
+            {
+                if (clientLineups.Lineups.SingleOrDefault(arg => arg.Lineup.Equals(lineup.Key)) == null)
+                {
+                    lineup.Value.Include = false;
+                    continue;
+                }
+                comboLineups.Items.Add(lineup.Value);
+            }
+
+            labelLineupCounts.Text = $"subscribed to {comboLineups.Items.Count} out of {sdApi.MaxLineups} allowed lineups";
+
+            if (comboLineups.Items.Count > -1) comboLineups.SelectedIndex = 0;
+        }
+        public string GetChannelNumber(SdLineupMap map)
+        {
+            var number = -1;
+            var subnumber = 0;
+
+            // QAM
+            if (map.ChannelMajor > 0)
+            {
+                number = map.ChannelMajor;
+                subnumber = map.ChannelMinor;
+            }
+
+            // ATSC or NTSC
+            else if (map.AtscMajor > 0)
+            {
+                number = map.AtscMajor;
+                subnumber = map.AtscMinor;
+            }
+            else if (map.UhfVhf > 0)
+            {
+                number = map.UhfVhf;
+            }
+
+            // Cable or Satellite
+            else if (!string.IsNullOrEmpty(map.Channel))
+            {
+                // subnumber = 0;
+                if (Regex.Match(map.Channel, @"[A-Za-z]{1}[\d]{4}").Length > 0)
+                {
+                    // 4dtv has channels starting with 2 character satellite identifier
+                    number = int.Parse(map.Channel.Substring(2));
+                }
+                else if (!int.TryParse(Regex.Replace(map.Channel, "[^0-9.]", ""), out number))
+                {
+                    // if channel number is not a whole number, must be a decimal number
+                    var numbers = Regex.Replace(map.Channel, "[^0-9.]", "").Replace('_', '.').Replace("-", ".").Split('.');
+                    if (numbers.Length == 2)
+                    {
+                        number = int.Parse(numbers[0]);
+                        subnumber = int.Parse(numbers[1]);
+                    }
+                }
+            }
+
+            return number + (subnumber > 0 ? "." + subnumber : null);
         }
         private void BuildCustomListViewChannels()
         {
@@ -592,22 +674,12 @@ namespace epg123
                 Subnumber = station.Subnumber
             };
 
-            ListView[] listviews = { lvL1Lineup, lvL2Lineup, lvL3Lineup, lvL4Lineup };
-            foreach (var listView in listviews)
-            {
-                foreach (ListViewItem item in listView.Items)
-                {
-                    if (item.SubItems[(int)LineupColumn.StationID].Text.Equals(station.StationId))
-                    {
-                        return station;
-                    }
+            if (_allAvailableStations.Contains(station.StationId) || !_allAvailableStations.Contains(station.Alternate)) return station;
 
-                    if (!item.SubItems[(int) LineupColumn.StationID].Text.Equals(station.Alternate)) continue;
-                    ret.Callsign = item.SubItems[(int)LineupColumn.CallSign].Text;
-                    ret.Name = item.SubItems[(int)LineupColumn.Name].Text;
-                    ret.StationId = item.SubItems[(int)LineupColumn.StationID].Text;
-                }
-            }
+            ret.Callsign = _allStations[station.Alternate].Callsign;
+            ret.Name = _allStations[station.Alternate].Name;
+            ret.StationId = _allStations[station.Alternate].StationId;
+
             return ret;
         }
         private void btnCustomLineup_DropDownItemClicked(object sender, ToolStripItemClickedEventArgs e)
@@ -637,8 +709,8 @@ namespace epg123
                         stationItem.Name
                     })
                 {
-                    Checked = _allStationIDs.Contains(station.StationId) || _allStationIDs.Contains(station.Alternate),
-                    ForeColor = _allStationIDs.Contains(stationItem.StationId) ? SystemColors.WindowText : SystemColors.GrayText
+                    Checked = _allAvailableStations.Contains(station.StationId) || _allAvailableStations.Contains(station.Alternate),
+                    ForeColor = _allAvailableStations.Contains(stationItem.StationId) ? SystemColors.WindowText : SystemColors.GrayText
                 });
             }
 
@@ -647,177 +719,6 @@ namespace epg123
             _lockCustomCheckboxes = true;
         }
 
-        private bool _lockCustomCheckboxes;
-        private HashSet<string> _allStationIDs;
-        private void BuildListViewChannels()
-        {
-            _allStationIDs = new HashSet<string>();
-            _lineups = new List<string>();
-            _sdlogos = new Dictionary<string, string>();
-            ListView[] listViews = { lvL1Lineup, lvL2Lineup, lvL3Lineup, lvL4Lineup };
-            ToolStripLabel[] listViewLabels = { lblL1Lineup, lblL2Lineup, lblL3Lineup, lblL4Lineup };
-            ToolStrip[] toolStrips = { toolStrip1, toolStrip2, toolStrip3, toolStrip4 };
-
-            // retrieve lineups from SD
-            var clientLineups = sdApi.SdGetLineups();
-            if (clientLineups == null) return;
-
-            // build listviews with lineups and channels
-            var processedLineup = 0;
-            foreach (var clientLineup in clientLineups.Lineups)
-            {
-                // initialize an array of listviewitems
-                var listViewItems = new List<ListViewItem>();
-
-                // record lineup unique id
-                _lineups.Add(clientLineup.Lineup);
-
-                // process the lineup map
-                if (!clientLineup.IsDeleted)
-                {
-                    // set the include globe state with checkmark and update label
-                    if (((Config.IncludedLineup != null) && Config.IncludedLineup.Contains(clientLineup.Lineup)) || _newLineups.Contains(clientLineup.Lineup)) IncludeLineup(processedLineup);
-                    if (processedLineup < listViews.Length) listViewLabels[processedLineup].Text = $"{clientLineup.Name} ({clientLineup.Location})";
-
-                    // request the lineup's station maps
-                    var lineupMap = sdApi.SdGetStationMaps(clientLineup.Lineup);
-                    if (lineupMap == null) continue;
-
-                    // match station with mapping for lineup number and subnumbers
-                    foreach (var station in lineupMap.Stations)
-                    {
-                        if (station == null) continue;
-                        var stationLanguage = string.Empty;
-                        if (station.BroadcastLanguage != null)
-                        {
-                            stationLanguage = station.BroadcastLanguage[0];
-                            if (station.BroadcastLanguage.Length > 1)
-                            {
-                                foreach (var lang in station.BroadcastLanguage)
-                                {
-                                    if (lang.Equals("en", StringComparison.OrdinalIgnoreCase)) continue;
-                                    stationLanguage = lang;
-                                    break;
-                                }
-                            }
-                        }
-
-                        // use hashset to make sure we don't duplicate channel entries
-                        var channelNumbers = new HashSet<string>();
-                        _allStationIDs.Add(station.StationId);
-
-                        foreach (var map in lineupMap.Map)
-                        {
-                            if (!map.StationId.Equals(station.StationId)) continue;
-
-                            var number = -1;
-                            var subnumber = 0;
-
-                            // create what will be the ListViewItem Tag
-                            var dlStation = new SdChannelDownload
-                            {
-                                CallSign = station.Callsign,
-                                StationId = station.StationId,
-                                CustomCallSign = CheckCustomCallsign(station.StationId),
-                                CustomServiceName = CheckCustomServicename(station.StationId),
-                                HdOverride = CheckHdOverride(station.StationId),
-                                SdOverride = CheckSdOverride(station.StationId)
-                            };
-
-                            // QAM
-                            if (map.ChannelMajor > 0)
-                            {
-                                number = map.ChannelMajor;
-                                subnumber = map.ChannelMinor;
-                            }
-
-                            // ATSC or NTSC
-                            else if (map.AtscMajor > 0)
-                            {
-                                number = map.AtscMajor;
-                                subnumber = map.AtscMinor;
-                            }
-                            else if (map.UhfVhf > 0)
-                            {
-                                number = map.UhfVhf;
-                            }
-
-                            // Cable or Satellite
-                            else if (!string.IsNullOrEmpty(map.Channel))
-                            {
-                                //subnumber = 0;
-                                if (Regex.Match(map.Channel, @"[A-Za-z]{1}[\d]{4}").Length > 0)
-                                {
-                                    // 4dtv has channels starting with 2 character satellite identifier
-                                    number = int.Parse(map.Channel.Substring(2));
-                                }
-                                else if (!int.TryParse(Regex.Replace(map.Channel, "[^0-9.]", ""), out number))
-                                {
-                                    // if channel number is not a whole number, must be a decimal number
-                                    var numbers = Regex.Replace(map.Channel, "[^0-9.]", "").Replace('_', '.').Replace("-", ".").Split('.');
-                                    if (numbers.Length == 2)
-                                    {
-                                        number = int.Parse(numbers[0]);
-                                        subnumber = int.Parse(numbers[1]);
-                                    }
-                                }
-                            }
-
-                            var channelNumber = number + ((subnumber > 0) ? "." + subnumber : null);
-                            if (!channelNumbers.Add(channelNumber + ":" + station.StationId)) continue;
-                            listViewItems.Add(AddListviewChannel(dlStation.CustomCallSign ?? station.Callsign, channelNumber, station.StationId, dlStation.CustomServiceName ?? station.Name, dlStation, stationLanguage));
-
-                            // URIs to channel logos are here ... store them for use if needed
-                            string dummy;
-                            if ((station.StationLogos != null) && station.StationLogos.Count > 0)
-                            {
-                                for (var i = 0; i < station.StationLogos.Count; ++i)
-                                {
-                                    if (!_sdlogos.TryGetValue(station.Callsign + "-" + (i + 1), out dummy))
-                                    {
-                                        _sdlogos.Add(station.Callsign + "-" + (i + 1), station.StationLogos[i].Url);
-                                    }
-                                }
-                            }
-                            else if ((station.Logo != null) && !_sdlogos.TryGetValue(station.Callsign, out dummy))
-                            {
-                                _sdlogos.Add(station.Callsign, station.Logo.Url);
-                            }
-                        }
-                    }
-
-                    // add all the listview items to the listview
-                    if (listViewItems.Count > 0 && processedLineup < listViews.Length)
-                    {
-                        listViews[processedLineup].Items.AddRange(listViewItems.ToArray());
-                        toolStrips[processedLineup].Enabled = true;
-                    }
-                }
-                else if (processedLineup < listViews.Length)
-                {
-                    listViewLabels[processedLineup].Text = $"[Deleted] ({clientLineup.Lineup})";
-                }
-                ++processedLineup;
-            }
-        }
-        private ListViewItem AddListviewChannel(string callsign, string number, string stationid, string name, SdChannelDownload dlstation, string language)
-        {
-            var channelIsNew = !_includedStations.Contains(stationid) && !_excludedStations.Contains(stationid) && (_includedStations.Count + _excludedStations.Count > 0);
-            return new ListViewItem(
-                new[]
-                {
-                    callsign,
-                    number,
-                    stationid,
-                    name
-                })
-            {
-                Tag = dlstation,
-                Checked = _includedStations.Contains(stationid) || (Config.AutoAddNew && !_excludedStations.Contains(stationid) && !btnClientLineups.Enabled),
-                ImageKey = GetLanguageIcon(language),
-                BackColor = channelIsNew ? Color.Pink : default
-            };
-        }
         private string GetLanguageIcon(string language)
         {
             if (string.IsNullOrEmpty(language)) language = "zz";
@@ -828,7 +729,7 @@ namespace epg123
                 return language;
             }
 
-            _imageList.Images.Add(language, DrawText(language, new Font(lvL1Lineup.Font.Name, 16, FontStyle.Bold, lvL1Lineup.Font.Unit)));
+            _imageList.Images.Add(language, DrawText(language, new Font(lvLineupChannels.Font.Name, 16, FontStyle.Bold, lvLineupChannels.Font.Unit)));
             return language;
         }
         private static Image DrawText(string text, Font font)
@@ -841,7 +742,6 @@ namespace epg123
             catch
             {
                 textBytes = Encoding.ASCII.GetBytes("zaa");
-                //Logger.WriteError(string.Format("{0} not supported.", text));
             }
 
             // establish backColor based on language identifier
@@ -893,190 +793,23 @@ namespace epg123
         }
         #endregion
 
-        #region ========== ListView Tab Widgets ==========
-
-        private bool _disableItemCheck;
-        private void btnAll_Click(object sender, EventArgs e)
-        {
-            ToolStripButton[] btn = { btnL1All, btnL2All, btnL3All, btnL4All };
-            ListView[] lv = { lvL1Lineup, lvL2Lineup, lvL3Lineup, lvL4Lineup };
-
-            // determine which lineup the button click is for
-            for (var i = 0; i < btn.Length; ++i)
-            {
-                if (!btn[i].Equals(sender)) continue;
-                // escape if the listview is not enabled
-                if (!lv[i].Enabled) break;
-
-                _disableItemCheck = true;
-                var addStations = new HashSet<string>();
-
-                // scan through lineup and check any unchecked items
-                foreach (ListViewItem item in lv[i].Items)
-                {
-                    if (item.Checked) continue;
-                    var stationId = item.SubItems[2].Text;
-                    addStations.Add(stationId);
-                    _includedStations.Add(stationId);
-                    _excludedStations.Remove(stationId);
-                    item.Checked = true;
-                }
-
-                // if there were no items to check, stop
-                if (addStations.Count == 0) break;
-
-                // scan through all lineups and check the affected stations
-                foreach (var listview in lv)
-                {
-                    foreach (ListViewItem item in listview.Items)
-                    {
-                        if (!item.Checked && addStations.Contains(item.SubItems[2].Text)) item.Checked = true;
-                    }
-                }
-
-                _disableItemCheck = false;
-            }
-        }
-        private void btnNone_Click(object sender, EventArgs e)
-        {
-            ToolStripButton[] btn = { btnL1None, btnL2None, btnL3None, btnL4None };
-            ListView[] lv = { lvL1Lineup, lvL2Lineup, lvL3Lineup, lvL4Lineup };
-
-            // determine which lineup the button click is for
-            for (var i = 0; i < btn.Length; ++i)
-            {
-                if (!btn[i].Equals(sender)) continue;
-                // escape if listview is not enabled
-                if (!lv[i].Enabled) break;
-
-                _disableItemCheck = true;
-                var removeStations = new HashSet<string>();
-
-                // scan through lineup and uncheck any checked items
-                foreach (ListViewItem item in lv[i].Items)
-                {
-                    if (!item.Checked) continue;
-                    var stationId = item.SubItems[2].Text;
-                    removeStations.Add(stationId);
-                    _includedStations.Remove(stationId);
-                    _excludedStations.Add(stationId);
-                    item.Checked = false;
-                }
-
-                // if there were no items to uncheck, stop
-                if (removeStations.Count == 0) break;
-
-                // scan through all lineups and uncheck the affected stations
-                foreach (var listview in lv)
-                {
-                    foreach (ListViewItem item in listview.Items)
-                    {
-                        if (item.Checked && removeStations.Contains(item.SubItems[2].Text)) item.Checked = false;
-                    }
-                }
-
-                _disableItemCheck = false;
-            }
-        }
-        private void lvLineup_ItemCheck(object sender, ItemCheckEventArgs e)
-        {
-            if (_disableItemCheck) return;
-
-            // Ignore item checks when selecting multiple items
-            if ((ModifierKeys & (Keys.Shift | Keys.Control)) > 0)
-            {
-                e.NewValue = e.CurrentValue;
-            }
-
-            // temporarily disable item check
-            _disableItemCheck = true;
-
-            ListView[] listviews = { lvL1Lineup, lvL2Lineup, lvL3Lineup, lvL4Lineup };
-            var stationId = string.Empty;
-
-            foreach (var listview in listviews)
-            {
-                // if not the sender, go to next listview
-                if (!sender.Equals(listview)) continue;
-
-                // if listview is not focused, then this is draw event, not click event
-                if (!listview.Focused)
-                {
-                    _disableItemCheck = false;
-                    return;
-                }
-
-                // determine what station id it is
-                stationId = listview.Items[e.Index].SubItems[(int)LineupColumn.StationID].Text;
-
-                // update the include/exclude hashsets
-                if (e.NewValue == CheckState.Checked)
-                {
-                    _includedStations.Add(stationId);
-                    _excludedStations.Remove(stationId);
-                }
-                else
-                {
-                    _includedStations.Remove(stationId);
-                    _excludedStations.Add(stationId);
-                }
-                break;
-            }
-
-            // scan all the listviews to change check state
-            foreach (var listview in listviews)
-            {
-                foreach (ListViewItem item in listview.Items)
-                {
-                    if ((item != null) && item.SubItems[(int)LineupColumn.StationID].Text.Equals(stationId))
-                    {
-                        item.Checked = (e.NewValue == CheckState.Checked);
-                    }
-                }
-            }
-
-            // re-enable item check
-            _disableItemCheck = false;
-        }
-        #endregion
-
         #region ========== Buttons & Links ==========
         private void RefreshConfiguration()
         {
-            ToolStripMenuItem[] items = { L1includeToolStripMenuItem, L2includeToolStripMenuItem, L3includeToolStripMenuItem, L4includeToolStripMenuItem };
-            ListView[] listViews = { lvL1Lineup, lvL2Lineup, lvL3Lineup, lvL4Lineup };
-            var stations = new HashSet<string>();
-            var expectedStationIds = new HashSet<string>();
+            var stationsToExclude = new HashSet<string>();
+            var stationsToDownload = new HashSet<string>();
 
-            // reset included lineups and stations
+            // reset included lineups and stations to repopulate
             Config.IncludedLineup = new List<string>();
             Config.StationId = new List<SdChannelDownload>();
-
-            // add all station includes and excludes to configuration file
-            for (var i = 0; i < items.Length; ++i)
+            foreach (var lineup in _allLineups.Where(lineup => lineup.Value.Include))
             {
-                // flag that lineup is included for download and add to inluded lineups
-                var included = items[i].Checked;
-                if (included) Config.IncludedLineup.Add(_lineups[i]);
-
-                foreach (ListViewItem listviewitem in listViews[i].Items)
+                Config.IncludedLineup.Add(lineup.Key);
+                foreach (var station in lineup.Value.Channels)
                 {
-                    var station = (SdChannelDownload)listviewitem.Tag;
-                    station.StationId = station.StationId.Replace("-", "");
-
-                    if (!stations.Contains(listviewitem.SubItems[(int)LineupColumn.StationID].Text))
+                    if (_allAvailableStations.Contains(station.StationId) && _allStations[station.StationId].Include)
                     {
-                        stations.Add(listviewitem.SubItems[(int)LineupColumn.StationID].Text);
-                        if (!listviewitem.Checked)
-                        {
-                            station.StationId = "-" + station.StationId;
-                        }
-                        Config.StationId.Add(station);
-                    }
-
-                    if (included && listviewitem.Checked && !expectedStationIds.Contains(station.StationId))
-                    {
-                        expectedStationIds.Add(station.StationId);
+                        stationsToDownload.Add(station.StationId);
                     }
                 }
             }
@@ -1085,10 +818,47 @@ namespace epg123
                 Config.IncludedLineup.Add((string)btnCustomLineup.Tag);
                 foreach (ListViewItem item in lvL5Lineup.Items)
                 {
-                    if (item.Checked) expectedStationIds.Add(item.SubItems[(int)LineupColumn.StationID].Text);
+                    if (item.Checked) stationsToDownload.Add(item.SubItems[(int)LineupColumn.StationID].Text);
                 }
             }
-            Config.ExpectedServicecount = expectedStationIds.Count;
+
+            // populate the excluded stations
+            foreach (var station in _allAvailableStations)
+            {
+                if (!stationsToDownload.Contains(station)) stationsToExclude.Add(station);
+            }
+
+            // add all the included stations
+            foreach (var include in stationsToDownload)
+            {
+                var station = _allStations[include];
+                Config.StationId.Add(new SdChannelDownload
+                {
+                    HdOverride = station.HDOverride,
+                    SdOverride = station.SDOverride,
+                    CallSign = station.Callsign,
+                    CustomCallSign = station.CustomCallsign,
+                    CustomServiceName = station.CustomServiceName,
+                    StationId = include
+                });
+            }
+
+            // add all the excluded stations
+            foreach (var exclude in stationsToExclude)
+            {
+                var station = _allStations[exclude];
+                Config.StationId.Add(new SdChannelDownload
+                {
+                    HdOverride = station.HDOverride,
+                    SdOverride = station.SDOverride,
+                    CallSign = station.Callsign,
+                    CustomCallSign = station.CustomCallsign,
+                    CustomServiceName = station.CustomServiceName,
+                    StationId = $"-{exclude}"
+                });
+            }
+
+            Config.ExpectedServicecount = stationsToDownload.Count;
         }
         private void btnSave_Click(object sender, EventArgs e)
         {
@@ -1151,8 +921,14 @@ namespace epg123
             var gui = new frmLineups();
             gui.ShowDialog();
             if (gui.Cancel) return;
-            _newLineups = gui.NewLineups;
             BuildLineupTabs();
+
+            foreach (var lineup in gui.NewLineups)
+            {
+                _allLineups[lineup].Include = true;
+            }
+
+            subscribedLineup_SelectedIndexChanged(null, null);
         }
         private void btnViewLog_Click(object sender, EventArgs e)
         {
@@ -1188,7 +964,7 @@ namespace epg123
         #region ========== Column Sorters ==========
         private void AssignColumnSorters()
         {
-            ListView[] listviews = { lvL1Lineup, lvL2Lineup, lvL3Lineup, lvL4Lineup, lvL5Lineup };
+            ListView[] listviews = { lvL5Lineup, lvLineupChannels };
             foreach (var listview in listviews)
             {
                 // create and assign listview item sorter
@@ -1224,71 +1000,15 @@ namespace epg123
         #endregion
 
         #region ========== Include/Exclude Stations and Lineups ==========
-
-        readonly HashSet<string> _excludedStations = new HashSet<string>();
-        readonly HashSet<string> _includedStations = new HashSet<string>();
-        private void PopulateIncludedExcludedStations(IEnumerable<SdChannelDownload> list)
-        {
-            foreach (var station in list)
-            {
-                if (station.StationId.StartsWith("-"))
-                {
-                    _excludedStations.Add(station.StationId.Replace("-", ""));
-                }
-                else
-                {
-                    _includedStations.Add(station.StationId);
-                }
-            }
-        }
         private void LineupEnableToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Image[] stopLight = { Resources.GreenLight.ToBitmap(), Resources.RedLight.ToBitmap() };
-            ToolStripDropDownButton[] btns = { L1IncludeExclude, L2IncludeExclude, L3IncludeExclude, L4IncludeExclude, L5IncludeExclude };
-            ToolStripMenuItem[] items = { L1includeToolStripMenuItem , L2includeToolStripMenuItem , L3includeToolStripMenuItem , L4includeToolStripMenuItem , L5includeToolStripMenuItem,
-                                          L1excludeToolStripMenuItem , L2excludeToolStripMenuItem , L3excludeToolStripMenuItem , L4excludeToolStripMenuItem , L5excludeToolStripMenuItem };
-            ListView[] listViews = { lvL1Lineup, lvL2Lineup, lvL3Lineup, lvL4Lineup, lvL5Lineup };
-            var mid = items.Length / 2;
-            for (var i = 0; i < items.Length; ++i)
-            {
-                // determine which menuitem was clicked
-                if (!items[i].Equals((ToolStripMenuItem) sender)) continue;
-                items[i].Checked = true;
-                items[(i + mid) % items.Length].Checked = false;
-                btns[i % mid].Image = stopLight[i / btns.Length];
+            var include = L5includeToolStripMenuItem.Equals((ToolStripMenuItem) sender);
 
-                listViews[i % listViews.Length].Enabled = (i < 5);
-                listViews[i % listViews.Length].ForeColor = (i < 5) ? DefaultForeColor : Color.LightGray;
-                break;
-            }
-        }
-        private void IncludeLineup(int lineup)
-        {
-            ToolStripDropDownButton[] btns = { L1IncludeExclude, L2IncludeExclude, L3IncludeExclude, L4IncludeExclude, L5IncludeExclude };
-            ToolStripMenuItem[] items = { L1includeToolStripMenuItem , L2includeToolStripMenuItem , L3includeToolStripMenuItem , L4includeToolStripMenuItem , L5includeToolStripMenuItem,
-                                          L1excludeToolStripMenuItem , L2excludeToolStripMenuItem , L3excludeToolStripMenuItem , L4excludeToolStripMenuItem , L5excludeToolStripMenuItem };
-            ListView[] listViews = { lvL1Lineup, lvL2Lineup, lvL3Lineup, lvL4Lineup, lvL5Lineup };
-            if (lineup >= btns.Length) return;
-
-            var mid = items.Length / 2;
-            btns[lineup].Image = Resources.GreenLight.ToBitmap();
-            listViews[lineup].Enabled = items[lineup].Checked = true;
-            items[lineup + mid].Checked = false;
-            listViews[lineup].ForeColor = DefaultForeColor;
-        }
-        private void ExcludeLineup(int lineup)
-        {
-            ToolStripDropDownButton[] btns = { L1IncludeExclude, L2IncludeExclude, L3IncludeExclude, L4IncludeExclude, L5IncludeExclude };
-            ToolStripMenuItem[] items = { L1includeToolStripMenuItem , L2includeToolStripMenuItem , L3includeToolStripMenuItem , L4includeToolStripMenuItem , L5includeToolStripMenuItem,
-                                          L1excludeToolStripMenuItem , L2excludeToolStripMenuItem , L3excludeToolStripMenuItem , L4excludeToolStripMenuItem , L5excludeToolStripMenuItem};
-            ListView[] listViews = { lvL1Lineup, lvL2Lineup, lvL3Lineup, lvL4Lineup, lvL5Lineup };
-            if (lineup >= btns.Length) return;
-
-            var mid = items.Length / 2;
-            btns[lineup].Image = Resources.RedLight.ToBitmap();
-            listViews[lineup].Enabled = items[lineup].Checked = false;
-            items[lineup + mid].Checked = true;
-            listViews[lineup].ForeColor = Color.LightGray;
+            L5includeToolStripMenuItem.Checked = include;
+            L5excludeToolStripMenuItem.Checked = !include;
+            L5IncludeExclude.Image = include ? Resources.GreenLight.ToBitmap() : Resources.RedLight.ToBitmap();
+            lvL5Lineup.Enabled = include;
+            lvL5Lineup.ForeColor = include ? DefaultForeColor : Color.LightGray;
         }
         #endregion
 
@@ -1386,7 +1106,6 @@ namespace epg123
         #endregion
         #region ========== TAB: Images ==========
 
-        private Dictionary<string, string> _sdlogos = new Dictionary<string, string>();
         private void imageConfigs_Changed(object sender, EventArgs e)
         {
             if (sender.Equals(cbSeriesPosterArt))
@@ -1417,8 +1136,25 @@ namespace epg123
         private void btnSdLogos_Click(object sender, EventArgs e)
         {
             Cursor = Cursors.WaitCursor;
+            Dictionary<string, string> _sdlogos = new Dictionary<string, string>();
 
             // open form and handle the sd logo downloads and image crop/resize
+            foreach (var station in _allAvailableStations.Select(stationId => _allStations[stationId].Station))
+            {
+                if (station.StationLogos != null)
+                {
+                    for (var i = 0; i < station.StationLogos.Count; ++i)
+                    {
+                        _sdlogos.Add($"{station.Callsign}-{i + 1}", station.StationLogos[i].Url);
+                    }
+                }
+
+                if (station.Logo != null)
+                {
+                    _sdlogos.Add($"{station.Callsign}", station.Logo.Url);
+                }
+            }
+
             var dl = new frmDownloadLogos(_sdlogos);
             dl.ShowDialog();
 
@@ -1508,44 +1244,191 @@ namespace epg123
 
         private void lineupMenuStrip_Opening(object sender, CancelEventArgs e)
         {
-            ListView[] listViews = { lvL1Lineup, lvL2Lineup, lvL3Lineup, lvL4Lineup };
-            listViews[tabLineups.SelectedIndex].SelectedIndices.Clear();
-            if (listViews[tabLineups.SelectedIndex].Items.Count == 0) { e.Cancel = true;
-            }
+            if (lvLineupChannels.Items.Count == 0) e.Cancel = true;
         }
 
         private void copyToClipboardMenuItem_Click(object sender, EventArgs e)
         {
-            ListView[] listViews = { lvL1Lineup, lvL2Lineup, lvL3Lineup, lvL4Lineup };
-            ToolStripLabel[] labels = { lblL1Lineup, lblL2Lineup, lblL3Lineup, lblL4Lineup };
-
-            var textToAdd = $"Lineup: {labels[tabLineups.SelectedIndex].Text}\r\n";
+            var textToAdd = $"Lineup: {comboLineups.Text}\r\n";
             textToAdd += "Call Sign\tChannel\tStationID\tName\r\n";
-            textToAdd = listViews[tabLineups.SelectedIndex].Items.Cast<ListViewItem>().Aggregate(textToAdd, (current, listViewItem) => current + $"{listViewItem.SubItems[0].Text}\t{listViewItem.SubItems[1].Text}\t{listViewItem.SubItems[2].Text}\t{listViewItem.SubItems[3].Text}\r\n");
+            textToAdd = lvLineupChannels.Items.Cast<ListViewItem>().Aggregate(textToAdd, (current, listViewItem) => current + $"{listViewItem.SubItems[0].Text}\t{listViewItem.SubItems[1].Text}\t{listViewItem.SubItems[2].Text}\t{listViewItem.SubItems[3].Text}\r\n");
             Clipboard.SetText(textToAdd);
-        }
-
-        private bool CheckHdOverride(string stationId)
-        {
-            return (from station in Config.StationId ?? new List<SdChannelDownload>() where station.StationId == stationId select station.HdOverride).FirstOrDefault();
-        }
-        private bool CheckSdOverride(string stationId)
-        {
-            return (from station in Config.StationId ?? new List<SdChannelDownload>() where station.StationId == stationId select station.SdOverride).FirstOrDefault();
-        }
-
-        private string CheckCustomCallsign(string stationId)
-        {
-            return (from station in Config.StationId where station.StationId == stationId && !string.IsNullOrEmpty(station.CustomCallSign) select station.CustomCallSign).FirstOrDefault();
-        }
-        private string CheckCustomServicename(string stationId)
-        {
-            return (from station in Config.StationId where station.StationId == stationId && !string.IsNullOrEmpty(station.CustomServiceName) select station.CustomServiceName).FirstOrDefault();
         }
 
         private void tabTask_Enter(object sender, EventArgs e)
         {
             UpdateTaskPanel(true);
         }
+
+        private readonly Dictionary<string, myStation> _allStations = new Dictionary<string, myStation>();
+        private readonly Dictionary<string, myLineup> _allLineups = new Dictionary<string, myLineup>();
+        private readonly HashSet<string> _allAvailableStations = new HashSet<string>();
+
+
+        private void subscribedLineup_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (comboLineups.SelectedIndex == -1) return;
+
+            lvLineupChannels.Items.Clear();
+            lvLineupChannels.BeginUpdate();
+
+            var selectedLineup = (myLineup)comboLineups.SelectedItem;
+            menuInclude.Checked = lvLineupChannels.Enabled = selectedLineup.Include;
+            menuExclude.Checked = !selectedLineup.Include;
+            btnIncludeExclude.Image = selectedLineup.Include ? Resources.GreenLight.ToBitmap() : Resources.RedLight.ToBitmap();
+            lvLineupChannels.ForeColor = selectedLineup.Include ? DefaultForeColor : Color.LightGray;
+
+            var channels = new List<myChannelLvi>();
+            foreach (var channel in _allLineups[selectedLineup.Lineup.Lineup].Channels)
+            {
+                var channelIsNew = Config.StationId.SingleOrDefault(arg => arg.StationId.Replace("-", "") == channel.StationId) == null;
+                channels.Add(new myChannelLvi(GetChannelNumber(channel), _allStations[channel.StationId])
+                {
+                    ImageKey = GetLanguageIcon(_allStations[channel.StationId].LanguageCode),
+                    BackColor = channelIsNew ? Color.Pink : default
+                });
+            }
+            lvLineupChannels.Items.AddRange(channels.ToArray());
+
+            lvLineupChannels.EndUpdate();
+        }
+
+        private void btnSelectAllNone_Click(object sender, EventArgs e)
+        {
+            var enable = ((ToolStripButton) sender).Equals(btnSelectAll);
+
+            lvLineupChannels.BeginUpdate();
+            foreach (myChannelLvi item in lvLineupChannels.Items)
+            {
+                if (item.Checked == enable) continue;
+                item.Station.Include = enable;
+            }
+            lvLineupChannels.EndUpdate();
+        }
+
+        private void lvLineupChannels_ItemCheck(object sender, ItemCheckEventArgs e)
+        {
+            // Ignore item checks when selecting multiple items
+            if ((ModifierKeys & (Keys.Shift | Keys.Control)) > 0)
+            {
+                e.NewValue = e.CurrentValue;
+            }
+
+            // determine what station id it is
+            var stationId = lvLineupChannels.Items[e.Index].SubItems[(int)LineupColumn.StationID].Text;
+
+            // set the include state
+            _allStations[stationId].Include = e.NewValue == CheckState.Checked;
+        }
+
+        private void menuIncludeExclude_Click(object sender, EventArgs e)
+        {
+            var include = false;
+            var menu = (ToolStripMenuItem) sender;
+            if (menu.Equals(menuInclude))
+            {
+                include = true;
+            }
+
+            var selectedLineup = (myLineup)comboLineups.SelectedItem;
+            selectedLineup.Include = include;
+
+            menuInclude.Checked = lvLineupChannels.Enabled = include;
+            menuExclude.Checked = !include;
+            btnIncludeExclude.Image = include ? Resources.GreenLight.ToBitmap() : Resources.RedLight.ToBitmap();
+            lvLineupChannels.ForeColor = include ? DefaultForeColor : Color.LightGray;
+        }
+
+        private void viewLogosMenuItem_Click(object sender, EventArgs e)
+        {
+            if (lvLineupChannels.SelectedItems.Count != 1) return;
+            var item = lvLineupChannels.SelectedItems[0] as myChannelLvi;
+            var station = item.Station;
+            var frm = new frmLogos(station.Station);
+            frm.Show(this);
+        }
+    }
+}
+
+public class myLineup
+{
+    public override string ToString()
+    {
+        return $"{(Lineup.IsDeleted ? "[Deleted] " : null)}{Lineup.Name} ({Lineup.Location})";
+    }
+
+    public bool Include { get; set; }
+    public SdLineup Lineup { get; private set; }
+    public List<SdLineupMap> Channels { get; set; }
+
+    public myLineup(SdLineup lineup)
+    {
+        Lineup = lineup;
+    }
+}
+
+public class myStation
+{
+    public override string ToString()
+    {
+        return $"{Callsign} - {Name}";
+    }
+
+    private bool _include;
+    public event EventHandler IncludeChanged;
+    protected virtual void OnIncludeChanged(EventArgs e)
+    {
+        var handler = IncludeChanged;
+        handler?.Invoke(this, e);
+    }
+    public bool Include
+    {
+        get => _include;
+        set
+        {
+            if (value == _include) return;
+            _include = value;
+            OnIncludeChanged(EventArgs.Empty);
+        }
+    }
+
+    public bool HDOverride { get; set; }
+    public bool SDOverride { get; set; }
+    public string CustomCallsign { get; set; }
+    public string CustomServiceName { get; set; }
+    public string Callsign { get; private set; }
+    public string Name { get; private set; }
+    public string StationId { get; private set; }
+    public string LanguageCode { get; private set; }
+    public SdLineupStation Station { get; private set; }
+
+    public myStation(SdLineupStation station)
+    {
+        StationId = station.StationId;
+        Callsign = station.Callsign;
+        Name = station.Name;
+        LanguageCode = station.BroadcastLanguage[0] ?? null;
+        Station = station;
+    }
+}
+
+public class myChannelLvi : ListViewItem
+{
+    public string ChannelNumber { get; set; }
+    public myStation Station { get; private set; }
+
+    public myChannelLvi(string channelNumber, myStation station) : base(new string[4])
+    {
+        ChannelNumber = channelNumber;
+        Station = station;
+
+        SubItems[0].Text = Station.Callsign;
+        SubItems[1].Text = ChannelNumber;
+        SubItems[2].Text = Station.StationId;
+        SubItems[3].Text = Station.Name;
+
+        Checked = Station.Include;
+
+        Station.IncludeChanged += (sender, args) => Checked = Station.Include;
     }
 }

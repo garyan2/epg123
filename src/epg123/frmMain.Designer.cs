@@ -73,7 +73,6 @@
             this.tabTask = new System.Windows.Forms.TabPage();
             this.cbAutomatch = new System.Windows.Forms.CheckBox();
             this.lblSchedStatus = new System.Windows.Forms.Label();
-            this.btnTask = new epg123.ElevatedButton();
             this.cbImport = new System.Windows.Forms.CheckBox();
             this.cbTaskWake = new System.Windows.Forms.CheckBox();
             this.tbSchedTime = new System.Windows.Forms.MaskedTextBox();
@@ -88,61 +87,25 @@
             this.txtPassword = new System.Windows.Forms.TextBox();
             this.txtLoginName = new System.Windows.Forms.TextBox();
             this.tabLineups = new System.Windows.Forms.TabControl();
-            this.tabL1 = new System.Windows.Forms.TabPage();
-            this.lvL1Lineup = new System.Windows.Forms.ListView();
-            this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnHeader2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnHeader3 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnHeader13 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.tabLineup = new System.Windows.Forms.TabPage();
+            this.lvLineupChannels = new System.Windows.Forms.ListView();
+            this.columnHeader21 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnHeader22 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnHeader23 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnHeader24 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.lineupMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.viewLogosMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.copyToClipboardMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStrip1 = new System.Windows.Forms.ToolStrip();
-            this.L1IncludeExclude = new System.Windows.Forms.ToolStripDropDownButton();
-            this.L1includeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.L1excludeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.btnL1All = new System.Windows.Forms.ToolStripButton();
-            this.btnL1None = new System.Windows.Forms.ToolStripButton();
-            this.lblL1Lineup = new System.Windows.Forms.ToolStripLabel();
-            this.tabL2 = new System.Windows.Forms.TabPage();
-            this.lvL2Lineup = new System.Windows.Forms.ListView();
-            this.columnHeader4 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnHeader5 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnHeader6 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnHeader14 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.toolStrip2 = new System.Windows.Forms.ToolStrip();
-            this.L2IncludeExclude = new System.Windows.Forms.ToolStripDropDownButton();
-            this.L2includeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.L2excludeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.btnL2All = new System.Windows.Forms.ToolStripButton();
-            this.btnL2None = new System.Windows.Forms.ToolStripButton();
-            this.lblL2Lineup = new System.Windows.Forms.ToolStripLabel();
-            this.tabL3 = new System.Windows.Forms.TabPage();
-            this.lvL3Lineup = new System.Windows.Forms.ListView();
-            this.columnHeader7 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnHeader8 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnHeader9 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnHeader15 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.toolStrip3 = new System.Windows.Forms.ToolStrip();
-            this.L3IncludeExclude = new System.Windows.Forms.ToolStripDropDownButton();
-            this.L3includeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.L3excludeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.btnL3All = new System.Windows.Forms.ToolStripButton();
-            this.btnL3None = new System.Windows.Forms.ToolStripButton();
-            this.lblL3Lineup = new System.Windows.Forms.ToolStripLabel();
-            this.tabL4 = new System.Windows.Forms.TabPage();
-            this.lvL4Lineup = new System.Windows.Forms.ListView();
-            this.columnHeader10 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnHeader11 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnHeader12 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnHeader16 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.toolStrip4 = new System.Windows.Forms.ToolStrip();
-            this.L4IncludeExclude = new System.Windows.Forms.ToolStripDropDownButton();
-            this.L4includeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.L4excludeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.btnL4All = new System.Windows.Forms.ToolStripButton();
-            this.btnL4None = new System.Windows.Forms.ToolStripButton();
-            this.lblL4Lineup = new System.Windows.Forms.ToolStripLabel();
-            this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.toolStrip6 = new System.Windows.Forms.ToolStrip();
+            this.btnIncludeExclude = new System.Windows.Forms.ToolStripDropDownButton();
+            this.menuInclude = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuExclude = new System.Windows.Forms.ToolStripMenuItem();
+            this.comboLineups = new System.Windows.Forms.ToolStripComboBox();
+            this.btnSelectAll = new System.Windows.Forms.ToolStripButton();
+            this.btnSelectNone = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.labelLineupCounts = new System.Windows.Forms.ToolStripLabel();
+            this.tabCustom = new System.Windows.Forms.TabPage();
             this.lvL5Lineup = new System.Windows.Forms.ListView();
             this.columnHeader17 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader18 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -162,6 +125,7 @@
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.btnClearCache = new System.Windows.Forms.Button();
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
+            this.btnTask = new epg123.ElevatedButton();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -174,16 +138,10 @@
             this.tabTask.SuspendLayout();
             this.grpAccount.SuspendLayout();
             this.tabLineups.SuspendLayout();
-            this.tabL1.SuspendLayout();
+            this.tabLineup.SuspendLayout();
             this.lineupMenuStrip.SuspendLayout();
-            this.toolStrip1.SuspendLayout();
-            this.tabL2.SuspendLayout();
-            this.toolStrip2.SuspendLayout();
-            this.tabL3.SuspendLayout();
-            this.toolStrip3.SuspendLayout();
-            this.tabL4.SuspendLayout();
-            this.toolStrip4.SuspendLayout();
-            this.tabPage1.SuspendLayout();
+            this.toolStrip6.SuspendLayout();
+            this.tabCustom.SuspendLayout();
             this.toolStrip5.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -366,8 +324,6 @@
             // cbSdLogos
             // 
             this.cbSdLogos.AutoSize = true;
-            this.cbSdLogos.Checked = true;
-            this.cbSdLogos.CheckState = System.Windows.Forms.CheckState.Checked;
             this.cbSdLogos.Location = new System.Drawing.Point(6, 239);
             this.cbSdLogos.Name = "cbSdLogos";
             this.cbSdLogos.Size = new System.Drawing.Size(199, 17);
@@ -760,17 +716,6 @@
             this.lblSchedStatus.TabIndex = 4;
             this.lblSchedStatus.Text = "Task Status";
             // 
-            // btnTask
-            // 
-            this.btnTask.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.btnTask.Location = new System.Drawing.Point(228, 87);
-            this.btnTask.Name = "btnTask";
-            this.btnTask.Size = new System.Drawing.Size(75, 23);
-            this.btnTask.TabIndex = 21;
-            this.btnTask.Text = "Create";
-            this.btnTask.UseVisualStyleBackColor = true;
-            this.btnTask.Click += new System.EventHandler(this.btnTask_Click);
-            // 
             // cbImport
             // 
             this.cbImport.AutoSize = true;
@@ -907,11 +852,8 @@
             // 
             // tabLineups
             // 
-            this.tabLineups.Controls.Add(this.tabL1);
-            this.tabLineups.Controls.Add(this.tabL2);
-            this.tabLineups.Controls.Add(this.tabL3);
-            this.tabLineups.Controls.Add(this.tabL4);
-            this.tabLineups.Controls.Add(this.tabPage1);
+            this.tabLineups.Controls.Add(this.tabLineup);
+            this.tabLineups.Controls.Add(this.tabCustom);
             this.tabLineups.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabLineups.Location = new System.Drawing.Point(0, 0);
             this.tabLineups.Name = "tabLineups";
@@ -919,66 +861,75 @@
             this.tabLineups.Size = new System.Drawing.Size(440, 526);
             this.tabLineups.TabIndex = 0;
             // 
-            // tabL1
+            // tabLineup
             // 
-            this.tabL1.Controls.Add(this.lvL1Lineup);
-            this.tabL1.Controls.Add(this.toolStrip1);
-            this.tabL1.Location = new System.Drawing.Point(4, 22);
-            this.tabL1.Name = "tabL1";
-            this.tabL1.Padding = new System.Windows.Forms.Padding(3);
-            this.tabL1.Size = new System.Drawing.Size(432, 500);
-            this.tabL1.TabIndex = 0;
-            this.tabL1.Text = "Lineup 1";
+            this.tabLineup.Controls.Add(this.lvLineupChannels);
+            this.tabLineup.Controls.Add(this.toolStrip6);
+            this.tabLineup.Location = new System.Drawing.Point(4, 22);
+            this.tabLineup.Name = "tabLineup";
+            this.tabLineup.Size = new System.Drawing.Size(432, 500);
+            this.tabLineup.TabIndex = 5;
+            this.tabLineup.Text = "Subscribed Lineups";
+            this.tabLineup.UseVisualStyleBackColor = true;
             // 
-            // lvL1Lineup
+            // lvLineupChannels
             // 
-            this.lvL1Lineup.CheckBoxes = true;
-            this.lvL1Lineup.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.columnHeader1,
-            this.columnHeader2,
-            this.columnHeader3,
-            this.columnHeader13});
-            this.lvL1Lineup.ContextMenuStrip = this.lineupMenuStrip;
-            this.lvL1Lineup.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lvL1Lineup.FullRowSelect = true;
-            this.lvL1Lineup.HideSelection = false;
-            this.lvL1Lineup.Location = new System.Drawing.Point(3, 28);
-            this.lvL1Lineup.Name = "lvL1Lineup";
-            this.lvL1Lineup.Size = new System.Drawing.Size(426, 469);
-            this.lvL1Lineup.Sorting = System.Windows.Forms.SortOrder.Ascending;
-            this.lvL1Lineup.TabIndex = 1;
-            this.lvL1Lineup.UseCompatibleStateImageBehavior = false;
-            this.lvL1Lineup.View = System.Windows.Forms.View.Details;
-            this.lvL1Lineup.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.LvLineupSort);
-            this.lvL1Lineup.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.lvLineup_ItemCheck);
+            this.lvLineupChannels.CheckBoxes = true;
+            this.lvLineupChannels.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.columnHeader21,
+            this.columnHeader22,
+            this.columnHeader23,
+            this.columnHeader24});
+            this.lvLineupChannels.ContextMenuStrip = this.lineupMenuStrip;
+            this.lvLineupChannels.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lvLineupChannels.FullRowSelect = true;
+            this.lvLineupChannels.HideSelection = false;
+            this.lvLineupChannels.Location = new System.Drawing.Point(0, 21);
+            this.lvLineupChannels.Name = "lvLineupChannels";
+            this.lvLineupChannels.Size = new System.Drawing.Size(288, 313);
+            this.lvLineupChannels.Sorting = System.Windows.Forms.SortOrder.Ascending;
+            this.lvLineupChannels.TabIndex = 3;
+            this.lvLineupChannels.UseCompatibleStateImageBehavior = false;
+            this.lvLineupChannels.View = System.Windows.Forms.View.Details;
+            this.lvLineupChannels.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.LvLineupSort);
+            this.lvLineupChannels.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.lvLineupChannels_ItemCheck);
             // 
-            // columnHeader1
+            // columnHeader21
             // 
-            this.columnHeader1.Text = "CallSign";
-            this.columnHeader1.Width = 100;
+            this.columnHeader21.Text = "CallSign";
+            this.columnHeader21.Width = 100;
             // 
-            // columnHeader2
+            // columnHeader22
             // 
-            this.columnHeader2.Text = "Channel";
-            this.columnHeader2.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.columnHeader22.Text = "Channel";
+            this.columnHeader22.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             // 
-            // columnHeader3
+            // columnHeader23
             // 
-            this.columnHeader3.Text = "StationID";
-            this.columnHeader3.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.columnHeader23.Text = "StationID";
+            this.columnHeader23.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             // 
-            // columnHeader13
+            // columnHeader24
             // 
-            this.columnHeader13.Text = "Name";
-            this.columnHeader13.Width = 175;
+            this.columnHeader24.Text = "Name";
+            this.columnHeader24.Width = 175;
             // 
             // lineupMenuStrip
             // 
+            this.lineupMenuStrip.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.lineupMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.viewLogosMenuItem,
             this.copyToClipboardMenuItem});
             this.lineupMenuStrip.Name = "contextMenuStrip1";
-            this.lineupMenuStrip.Size = new System.Drawing.Size(172, 26);
+            this.lineupMenuStrip.Size = new System.Drawing.Size(172, 48);
             this.lineupMenuStrip.Opening += new System.ComponentModel.CancelEventHandler(this.lineupMenuStrip_Opening);
+            // 
+            // viewLogosMenuItem
+            // 
+            this.viewLogosMenuItem.Name = "viewLogosMenuItem";
+            this.viewLogosMenuItem.Size = new System.Drawing.Size(171, 22);
+            this.viewLogosMenuItem.Text = "View/Edit Logos";
+            this.viewLogosMenuItem.Click += new System.EventHandler(this.viewLogosMenuItem_Click);
             // 
             // copyToClipboardMenuItem
             // 
@@ -988,479 +939,113 @@
             this.copyToClipboardMenuItem.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.copyToClipboardMenuItem.Click += new System.EventHandler(this.copyToClipboardMenuItem_Click);
             // 
-            // toolStrip1
-            // 
-            this.toolStrip1.Enabled = false;
-            this.toolStrip1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
-            this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.L1IncludeExclude,
-            this.btnL1All,
-            this.btnL1None,
-            this.lblL1Lineup});
-            this.toolStrip1.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.HorizontalStackWithOverflow;
-            this.toolStrip1.Location = new System.Drawing.Point(3, 3);
-            this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(426, 25);
-            this.toolStrip1.TabIndex = 0;
-            this.toolStrip1.Text = "toolStrip1";
-            // 
-            // L1IncludeExclude
-            // 
-            this.L1IncludeExclude.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.L1IncludeExclude.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.L1includeToolStripMenuItem,
-            this.L1excludeToolStripMenuItem});
-            this.L1IncludeExclude.Image = ((System.Drawing.Image)(resources.GetObject("L1IncludeExclude.Image")));
-            this.L1IncludeExclude.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.L1IncludeExclude.Name = "L1IncludeExclude";
-            this.L1IncludeExclude.Size = new System.Drawing.Size(29, 22);
-            this.L1IncludeExclude.Text = "Include/Exclude";
-            this.L1IncludeExclude.ToolTipText = "Include/Exclude Lineup";
-            // 
-            // L1includeToolStripMenuItem
-            // 
-            this.L1includeToolStripMenuItem.CheckOnClick = true;
-            this.L1includeToolStripMenuItem.Name = "L1includeToolStripMenuItem";
-            this.L1includeToolStripMenuItem.Size = new System.Drawing.Size(115, 22);
-            this.L1includeToolStripMenuItem.Text = "Include";
-            this.L1includeToolStripMenuItem.Click += new System.EventHandler(this.LineupEnableToolStripMenuItem_Click);
-            // 
-            // L1excludeToolStripMenuItem
-            // 
-            this.L1excludeToolStripMenuItem.Checked = true;
-            this.L1excludeToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.L1excludeToolStripMenuItem.Name = "L1excludeToolStripMenuItem";
-            this.L1excludeToolStripMenuItem.Size = new System.Drawing.Size(115, 22);
-            this.L1excludeToolStripMenuItem.Text = "Exclude";
-            this.L1excludeToolStripMenuItem.Click += new System.EventHandler(this.LineupEnableToolStripMenuItem_Click);
-            // 
-            // btnL1All
-            // 
-            this.btnL1All.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.btnL1All.Image = ((System.Drawing.Image)(resources.GetObject("btnL1All.Image")));
-            this.btnL1All.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.btnL1All.Name = "btnL1All";
-            this.btnL1All.Size = new System.Drawing.Size(25, 22);
-            this.btnL1All.Text = "All";
-            this.btnL1All.ToolTipText = "Select All";
-            this.btnL1All.Click += new System.EventHandler(this.btnAll_Click);
-            // 
-            // btnL1None
-            // 
-            this.btnL1None.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.btnL1None.Image = ((System.Drawing.Image)(resources.GetObject("btnL1None.Image")));
-            this.btnL1None.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.btnL1None.Name = "btnL1None";
-            this.btnL1None.Size = new System.Drawing.Size(40, 22);
-            this.btnL1None.Text = "None";
-            this.btnL1None.ToolTipText = "Select None";
-            this.btnL1None.Click += new System.EventHandler(this.btnNone_Click);
-            // 
-            // lblL1Lineup
-            // 
-            this.lblL1Lineup.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            this.lblL1Lineup.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.lblL1Lineup.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            this.lblL1Lineup.Name = "lblL1Lineup";
-            this.lblL1Lineup.Size = new System.Drawing.Size(0, 22);
-            // 
-            // tabL2
-            // 
-            this.tabL2.Controls.Add(this.lvL2Lineup);
-            this.tabL2.Controls.Add(this.toolStrip2);
-            this.tabL2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tabL2.Location = new System.Drawing.Point(4, 22);
-            this.tabL2.Name = "tabL2";
-            this.tabL2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabL2.Size = new System.Drawing.Size(432, 500);
-            this.tabL2.TabIndex = 1;
-            this.tabL2.Text = "Lineup 2";
-            this.tabL2.UseVisualStyleBackColor = true;
-            // 
-            // lvL2Lineup
-            // 
-            this.lvL2Lineup.CheckBoxes = true;
-            this.lvL2Lineup.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.columnHeader4,
-            this.columnHeader5,
-            this.columnHeader6,
-            this.columnHeader14});
-            this.lvL2Lineup.ContextMenuStrip = this.lineupMenuStrip;
-            this.lvL2Lineup.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lvL2Lineup.FullRowSelect = true;
-            this.lvL2Lineup.HideSelection = false;
-            this.lvL2Lineup.Location = new System.Drawing.Point(3, 28);
-            this.lvL2Lineup.Name = "lvL2Lineup";
-            this.lvL2Lineup.Size = new System.Drawing.Size(426, 469);
-            this.lvL2Lineup.Sorting = System.Windows.Forms.SortOrder.Ascending;
-            this.lvL2Lineup.TabIndex = 5;
-            this.lvL2Lineup.UseCompatibleStateImageBehavior = false;
-            this.lvL2Lineup.View = System.Windows.Forms.View.Details;
-            this.lvL2Lineup.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.LvLineupSort);
-            this.lvL2Lineup.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.lvLineup_ItemCheck);
-            // 
-            // columnHeader4
-            // 
-            this.columnHeader4.Text = "CallSign";
-            this.columnHeader4.Width = 100;
-            // 
-            // columnHeader5
-            // 
-            this.columnHeader5.Text = "Channel";
-            this.columnHeader5.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            // 
-            // columnHeader6
-            // 
-            this.columnHeader6.Text = "StationID";
-            this.columnHeader6.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            // 
-            // columnHeader14
-            // 
-            this.columnHeader14.Text = "Name";
-            this.columnHeader14.Width = 175;
-            // 
-            // toolStrip2
-            // 
-            this.toolStrip2.Enabled = false;
-            this.toolStrip2.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
-            this.toolStrip2.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.L2IncludeExclude,
-            this.btnL2All,
-            this.btnL2None,
-            this.lblL2Lineup});
-            this.toolStrip2.Location = new System.Drawing.Point(3, 3);
-            this.toolStrip2.Name = "toolStrip2";
-            this.toolStrip2.Size = new System.Drawing.Size(426, 25);
-            this.toolStrip2.TabIndex = 4;
-            this.toolStrip2.Text = "toolStrip2";
-            // 
-            // L2IncludeExclude
-            // 
-            this.L2IncludeExclude.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.L2IncludeExclude.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.L2includeToolStripMenuItem,
-            this.L2excludeToolStripMenuItem});
-            this.L2IncludeExclude.Image = ((System.Drawing.Image)(resources.GetObject("L2IncludeExclude.Image")));
-            this.L2IncludeExclude.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.L2IncludeExclude.Name = "L2IncludeExclude";
-            this.L2IncludeExclude.Size = new System.Drawing.Size(29, 22);
-            this.L2IncludeExclude.Text = "Include/Exclude";
-            this.L2IncludeExclude.ToolTipText = "Include/Exclude Lineup";
-            // 
-            // L2includeToolStripMenuItem
-            // 
-            this.L2includeToolStripMenuItem.CheckOnClick = true;
-            this.L2includeToolStripMenuItem.Name = "L2includeToolStripMenuItem";
-            this.L2includeToolStripMenuItem.Size = new System.Drawing.Size(115, 22);
-            this.L2includeToolStripMenuItem.Text = "Include";
-            this.L2includeToolStripMenuItem.Click += new System.EventHandler(this.LineupEnableToolStripMenuItem_Click);
-            // 
-            // L2excludeToolStripMenuItem
-            // 
-            this.L2excludeToolStripMenuItem.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
-            this.L2excludeToolStripMenuItem.Checked = true;
-            this.L2excludeToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.L2excludeToolStripMenuItem.Name = "L2excludeToolStripMenuItem";
-            this.L2excludeToolStripMenuItem.Size = new System.Drawing.Size(115, 22);
-            this.L2excludeToolStripMenuItem.Text = "Exclude";
-            this.L2excludeToolStripMenuItem.Click += new System.EventHandler(this.LineupEnableToolStripMenuItem_Click);
-            // 
-            // btnL2All
-            // 
-            this.btnL2All.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.btnL2All.Image = ((System.Drawing.Image)(resources.GetObject("btnL2All.Image")));
-            this.btnL2All.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.btnL2All.Name = "btnL2All";
-            this.btnL2All.Size = new System.Drawing.Size(25, 22);
-            this.btnL2All.Text = "All";
-            this.btnL2All.ToolTipText = "Select All";
-            this.btnL2All.Click += new System.EventHandler(this.btnAll_Click);
-            // 
-            // btnL2None
-            // 
-            this.btnL2None.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.btnL2None.Image = ((System.Drawing.Image)(resources.GetObject("btnL2None.Image")));
-            this.btnL2None.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.btnL2None.Name = "btnL2None";
-            this.btnL2None.Size = new System.Drawing.Size(40, 22);
-            this.btnL2None.Text = "None";
-            this.btnL2None.ToolTipText = "Select None";
-            this.btnL2None.Click += new System.EventHandler(this.btnNone_Click);
-            // 
-            // lblL2Lineup
-            // 
-            this.lblL2Lineup.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            this.lblL2Lineup.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            this.lblL2Lineup.Name = "lblL2Lineup";
-            this.lblL2Lineup.Size = new System.Drawing.Size(0, 22);
-            // 
-            // tabL3
-            // 
-            this.tabL3.Controls.Add(this.lvL3Lineup);
-            this.tabL3.Controls.Add(this.toolStrip3);
-            this.tabL3.Location = new System.Drawing.Point(4, 22);
-            this.tabL3.Name = "tabL3";
-            this.tabL3.Padding = new System.Windows.Forms.Padding(3);
-            this.tabL3.Size = new System.Drawing.Size(432, 500);
-            this.tabL3.TabIndex = 2;
-            this.tabL3.Text = "Lineup 3";
-            this.tabL3.UseVisualStyleBackColor = true;
-            // 
-            // lvL3Lineup
-            // 
-            this.lvL3Lineup.CheckBoxes = true;
-            this.lvL3Lineup.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.columnHeader7,
-            this.columnHeader8,
-            this.columnHeader9,
-            this.columnHeader15});
-            this.lvL3Lineup.ContextMenuStrip = this.lineupMenuStrip;
-            this.lvL3Lineup.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lvL3Lineup.FullRowSelect = true;
-            this.lvL3Lineup.HideSelection = false;
-            this.lvL3Lineup.Location = new System.Drawing.Point(3, 28);
-            this.lvL3Lineup.Name = "lvL3Lineup";
-            this.lvL3Lineup.Size = new System.Drawing.Size(426, 469);
-            this.lvL3Lineup.Sorting = System.Windows.Forms.SortOrder.Ascending;
-            this.lvL3Lineup.TabIndex = 7;
-            this.lvL3Lineup.UseCompatibleStateImageBehavior = false;
-            this.lvL3Lineup.View = System.Windows.Forms.View.Details;
-            this.lvL3Lineup.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.LvLineupSort);
-            this.lvL3Lineup.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.lvLineup_ItemCheck);
-            // 
-            // columnHeader7
-            // 
-            this.columnHeader7.Text = "CallSign";
-            this.columnHeader7.Width = 100;
-            // 
-            // columnHeader8
-            // 
-            this.columnHeader8.Text = "Channel";
-            this.columnHeader8.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            // 
-            // columnHeader9
-            // 
-            this.columnHeader9.Text = "StationID";
-            this.columnHeader9.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            // 
-            // columnHeader15
-            // 
-            this.columnHeader15.Text = "Name";
-            this.columnHeader15.Width = 175;
-            // 
-            // toolStrip3
-            // 
-            this.toolStrip3.Enabled = false;
-            this.toolStrip3.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
-            this.toolStrip3.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.L3IncludeExclude,
-            this.btnL3All,
-            this.btnL3None,
-            this.lblL3Lineup});
-            this.toolStrip3.Location = new System.Drawing.Point(3, 3);
-            this.toolStrip3.Name = "toolStrip3";
-            this.toolStrip3.Size = new System.Drawing.Size(426, 25);
-            this.toolStrip3.TabIndex = 6;
-            this.toolStrip3.Text = "toolStrip3";
-            // 
-            // L3IncludeExclude
-            // 
-            this.L3IncludeExclude.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.L3IncludeExclude.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.L3includeToolStripMenuItem,
-            this.L3excludeToolStripMenuItem});
-            this.L3IncludeExclude.Image = ((System.Drawing.Image)(resources.GetObject("L3IncludeExclude.Image")));
-            this.L3IncludeExclude.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.L3IncludeExclude.Name = "L3IncludeExclude";
-            this.L3IncludeExclude.Size = new System.Drawing.Size(29, 22);
-            this.L3IncludeExclude.Text = "Include/Exclude";
-            this.L3IncludeExclude.ToolTipText = "Include/Exclude Lineup";
-            // 
-            // L3includeToolStripMenuItem
-            // 
-            this.L3includeToolStripMenuItem.CheckOnClick = true;
-            this.L3includeToolStripMenuItem.Name = "L3includeToolStripMenuItem";
-            this.L3includeToolStripMenuItem.Size = new System.Drawing.Size(115, 22);
-            this.L3includeToolStripMenuItem.Text = "Include";
-            this.L3includeToolStripMenuItem.Click += new System.EventHandler(this.LineupEnableToolStripMenuItem_Click);
-            // 
-            // L3excludeToolStripMenuItem
-            // 
-            this.L3excludeToolStripMenuItem.Checked = true;
-            this.L3excludeToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.L3excludeToolStripMenuItem.Name = "L3excludeToolStripMenuItem";
-            this.L3excludeToolStripMenuItem.Size = new System.Drawing.Size(115, 22);
-            this.L3excludeToolStripMenuItem.Text = "Exclude";
-            this.L3excludeToolStripMenuItem.Click += new System.EventHandler(this.LineupEnableToolStripMenuItem_Click);
-            // 
-            // btnL3All
-            // 
-            this.btnL3All.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.btnL3All.Image = ((System.Drawing.Image)(resources.GetObject("btnL3All.Image")));
-            this.btnL3All.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.btnL3All.Name = "btnL3All";
-            this.btnL3All.Size = new System.Drawing.Size(25, 22);
-            this.btnL3All.Text = "All";
-            this.btnL3All.ToolTipText = "Select All";
-            this.btnL3All.Click += new System.EventHandler(this.btnAll_Click);
-            // 
-            // btnL3None
-            // 
-            this.btnL3None.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.btnL3None.Image = ((System.Drawing.Image)(resources.GetObject("btnL3None.Image")));
-            this.btnL3None.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.btnL3None.Name = "btnL3None";
-            this.btnL3None.Size = new System.Drawing.Size(40, 22);
-            this.btnL3None.Text = "None";
-            this.btnL3None.ToolTipText = "Select None";
-            this.btnL3None.Click += new System.EventHandler(this.btnNone_Click);
-            // 
-            // lblL3Lineup
-            // 
-            this.lblL3Lineup.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            this.lblL3Lineup.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            this.lblL3Lineup.Name = "lblL3Lineup";
-            this.lblL3Lineup.Size = new System.Drawing.Size(0, 22);
-            // 
-            // tabL4
-            // 
-            this.tabL4.Controls.Add(this.lvL4Lineup);
-            this.tabL4.Controls.Add(this.toolStrip4);
-            this.tabL4.Location = new System.Drawing.Point(4, 22);
-            this.tabL4.Name = "tabL4";
-            this.tabL4.Padding = new System.Windows.Forms.Padding(3);
-            this.tabL4.Size = new System.Drawing.Size(432, 500);
-            this.tabL4.TabIndex = 3;
-            this.tabL4.Text = "Lineup 4";
-            this.tabL4.UseVisualStyleBackColor = true;
-            // 
-            // lvL4Lineup
-            // 
-            this.lvL4Lineup.CheckBoxes = true;
-            this.lvL4Lineup.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.columnHeader10,
-            this.columnHeader11,
-            this.columnHeader12,
-            this.columnHeader16});
-            this.lvL4Lineup.ContextMenuStrip = this.lineupMenuStrip;
-            this.lvL4Lineup.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lvL4Lineup.FullRowSelect = true;
-            this.lvL4Lineup.HideSelection = false;
-            this.lvL4Lineup.Location = new System.Drawing.Point(3, 28);
-            this.lvL4Lineup.Name = "lvL4Lineup";
-            this.lvL4Lineup.Size = new System.Drawing.Size(426, 469);
-            this.lvL4Lineup.Sorting = System.Windows.Forms.SortOrder.Ascending;
-            this.lvL4Lineup.TabIndex = 7;
-            this.lvL4Lineup.UseCompatibleStateImageBehavior = false;
-            this.lvL4Lineup.View = System.Windows.Forms.View.Details;
-            this.lvL4Lineup.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.LvLineupSort);
-            this.lvL4Lineup.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.lvLineup_ItemCheck);
-            // 
-            // columnHeader10
-            // 
-            this.columnHeader10.Text = "CallSign";
-            this.columnHeader10.Width = 100;
-            // 
-            // columnHeader11
-            // 
-            this.columnHeader11.Text = "Channel";
-            this.columnHeader11.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            // 
-            // columnHeader12
-            // 
-            this.columnHeader12.Text = "StationID";
-            this.columnHeader12.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            // 
-            // columnHeader16
-            // 
-            this.columnHeader16.Text = "Name";
-            this.columnHeader16.Width = 175;
-            // 
-            // toolStrip4
-            // 
-            this.toolStrip4.Enabled = false;
-            this.toolStrip4.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
-            this.toolStrip4.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.L4IncludeExclude,
-            this.btnL4All,
-            this.btnL4None,
-            this.lblL4Lineup});
-            this.toolStrip4.Location = new System.Drawing.Point(3, 3);
-            this.toolStrip4.Name = "toolStrip4";
-            this.toolStrip4.Size = new System.Drawing.Size(426, 25);
-            this.toolStrip4.TabIndex = 6;
-            this.toolStrip4.Text = "toolStrip4";
-            // 
-            // L4IncludeExclude
-            // 
-            this.L4IncludeExclude.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.L4IncludeExclude.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.L4includeToolStripMenuItem,
-            this.L4excludeToolStripMenuItem});
-            this.L4IncludeExclude.Image = ((System.Drawing.Image)(resources.GetObject("L4IncludeExclude.Image")));
-            this.L4IncludeExclude.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.L4IncludeExclude.Name = "L4IncludeExclude";
-            this.L4IncludeExclude.Size = new System.Drawing.Size(29, 22);
-            this.L4IncludeExclude.Text = "Include/Exclude";
-            this.L4IncludeExclude.ToolTipText = "Include/Exclude Lineup";
-            // 
-            // L4includeToolStripMenuItem
-            // 
-            this.L4includeToolStripMenuItem.CheckOnClick = true;
-            this.L4includeToolStripMenuItem.Name = "L4includeToolStripMenuItem";
-            this.L4includeToolStripMenuItem.Size = new System.Drawing.Size(115, 22);
-            this.L4includeToolStripMenuItem.Text = "Include";
-            this.L4includeToolStripMenuItem.Click += new System.EventHandler(this.LineupEnableToolStripMenuItem_Click);
-            // 
-            // L4excludeToolStripMenuItem
-            // 
-            this.L4excludeToolStripMenuItem.Checked = true;
-            this.L4excludeToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.L4excludeToolStripMenuItem.Name = "L4excludeToolStripMenuItem";
-            this.L4excludeToolStripMenuItem.Size = new System.Drawing.Size(115, 22);
-            this.L4excludeToolStripMenuItem.Text = "Exclude";
-            this.L4excludeToolStripMenuItem.Click += new System.EventHandler(this.LineupEnableToolStripMenuItem_Click);
-            // 
-            // btnL4All
-            // 
-            this.btnL4All.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.btnL4All.Image = ((System.Drawing.Image)(resources.GetObject("btnL4All.Image")));
-            this.btnL4All.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.btnL4All.Name = "btnL4All";
-            this.btnL4All.Size = new System.Drawing.Size(25, 22);
-            this.btnL4All.Text = "All";
-            this.btnL4All.ToolTipText = "Select All";
-            this.btnL4All.Click += new System.EventHandler(this.btnAll_Click);
-            // 
-            // btnL4None
-            // 
-            this.btnL4None.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.btnL4None.Image = ((System.Drawing.Image)(resources.GetObject("btnL4None.Image")));
-            this.btnL4None.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.btnL4None.Name = "btnL4None";
-            this.btnL4None.Size = new System.Drawing.Size(40, 22);
-            this.btnL4None.Text = "None";
-            this.btnL4None.ToolTipText = "Select None";
-            this.btnL4None.Click += new System.EventHandler(this.btnNone_Click);
-            // 
-            // lblL4Lineup
-            // 
-            this.lblL4Lineup.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            this.lblL4Lineup.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            this.lblL4Lineup.Name = "lblL4Lineup";
-            this.lblL4Lineup.Size = new System.Drawing.Size(0, 22);
-            // 
-            // tabPage1
-            // 
-            this.tabPage1.Controls.Add(this.lvL5Lineup);
-            this.tabPage1.Controls.Add(this.toolStrip5);
-            this.tabPage1.Location = new System.Drawing.Point(4, 22);
-            this.tabPage1.Name = "tabPage1";
-            this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage1.Size = new System.Drawing.Size(432, 500);
-            this.tabPage1.TabIndex = 4;
-            this.tabPage1.Text = "Custom Lineup";
-            this.tabPage1.UseVisualStyleBackColor = true;
+            // toolStrip6
+            // 
+            this.toolStrip6.CanOverflow = false;
+            this.toolStrip6.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
+            this.toolStrip6.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.btnIncludeExclude,
+            this.comboLineups,
+            this.btnSelectAll,
+            this.btnSelectNone,
+            this.toolStripSeparator1,
+            this.labelLineupCounts});
+            this.toolStrip6.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.Flow;
+            this.toolStrip6.Location = new System.Drawing.Point(0, 0);
+            this.toolStrip6.MaximumSize = new System.Drawing.Size(432, 0);
+            this.toolStrip6.Name = "toolStrip6";
+            this.toolStrip6.Size = new System.Drawing.Size(288, 31);
+            this.toolStrip6.Stretch = true;
+            this.toolStrip6.TabIndex = 2;
+            this.toolStrip6.Text = "toolStrip6";
+            // 
+            // btnIncludeExclude
+            // 
+            this.btnIncludeExclude.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.btnIncludeExclude.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.menuInclude,
+            this.menuExclude});
+            this.btnIncludeExclude.Image = ((System.Drawing.Image)(resources.GetObject("btnIncludeExclude.Image")));
+            this.btnIncludeExclude.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnIncludeExclude.Name = "btnIncludeExclude";
+            this.btnIncludeExclude.Size = new System.Drawing.Size(29, 20);
+            this.btnIncludeExclude.Text = "Include/Exclude";
+            this.btnIncludeExclude.ToolTipText = "Include/Exclude Lineup";
+            // 
+            // menuInclude
+            // 
+            this.menuInclude.CheckOnClick = true;
+            this.menuInclude.Name = "menuInclude";
+            this.menuInclude.Size = new System.Drawing.Size(115, 22);
+            this.menuInclude.Text = "Include";
+            this.menuInclude.Click += new System.EventHandler(this.menuIncludeExclude_Click);
+            // 
+            // menuExclude
+            // 
+            this.menuExclude.Checked = true;
+            this.menuExclude.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.menuExclude.Name = "menuExclude";
+            this.menuExclude.Size = new System.Drawing.Size(115, 22);
+            this.menuExclude.Text = "Exclude";
+            this.menuExclude.Click += new System.EventHandler(this.menuIncludeExclude_Click);
+            // 
+            // comboLineups
+            // 
+            this.comboLineups.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboLineups.FlatStyle = System.Windows.Forms.FlatStyle.Standard;
+            this.comboLineups.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            this.comboLineups.MaxDropDownItems = 16;
+            this.comboLineups.Name = "comboLineups";
+            this.comboLineups.Size = new System.Drawing.Size(400, 23);
+            this.comboLineups.Sorted = true;
+            this.comboLineups.SelectedIndexChanged += new System.EventHandler(this.subscribedLineup_SelectedIndexChanged);
+            // 
+            // btnSelectAll
+            // 
+            this.btnSelectAll.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.btnSelectAll.Image = ((System.Drawing.Image)(resources.GetObject("btnSelectAll.Image")));
+            this.btnSelectAll.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnSelectAll.Name = "btnSelectAll";
+            this.btnSelectAll.Size = new System.Drawing.Size(25, 19);
+            this.btnSelectAll.Text = "All";
+            this.btnSelectAll.ToolTipText = "Select All";
+            this.btnSelectAll.Click += new System.EventHandler(this.btnSelectAllNone_Click);
+            // 
+            // btnSelectNone
+            // 
+            this.btnSelectNone.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.btnSelectNone.Image = ((System.Drawing.Image)(resources.GetObject("btnSelectNone.Image")));
+            this.btnSelectNone.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnSelectNone.Name = "btnSelectNone";
+            this.btnSelectNone.Size = new System.Drawing.Size(40, 19);
+            this.btnSelectNone.Text = "None";
+            this.btnSelectNone.ToolTipText = "Select None";
+            this.btnSelectNone.Click += new System.EventHandler(this.btnSelectAllNone_Click);
+            // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(6, 23);
+            // 
+            // labelLineupCounts
+            // 
+            this.labelLineupCounts.AutoSize = false;
+            this.labelLineupCounts.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.labelLineupCounts.Font = new System.Drawing.Font("Segoe UI", 8.5F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Italic | System.Drawing.FontStyle.Underline))));
+            this.labelLineupCounts.Name = "labelLineupCounts";
+            this.labelLineupCounts.Overflow = System.Windows.Forms.ToolStripItemOverflow.Never;
+            this.labelLineupCounts.Size = new System.Drawing.Size(350, 19);
+            // 
+            // tabCustom
+            // 
+            this.tabCustom.Controls.Add(this.lvL5Lineup);
+            this.tabCustom.Controls.Add(this.toolStrip5);
+            this.tabCustom.Location = new System.Drawing.Point(4, 22);
+            this.tabCustom.Name = "tabCustom";
+            this.tabCustom.Size = new System.Drawing.Size(432, 500);
+            this.tabCustom.TabIndex = 4;
+            this.tabCustom.Text = "Custom Lineup";
+            this.tabCustom.UseVisualStyleBackColor = true;
             // 
             // lvL5Lineup
             // 
@@ -1472,11 +1057,12 @@
             this.columnHeader20});
             this.lvL5Lineup.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lvL5Lineup.Enabled = false;
+            this.lvL5Lineup.ForeColor = System.Drawing.Color.LightGray;
             this.lvL5Lineup.FullRowSelect = true;
             this.lvL5Lineup.HideSelection = false;
-            this.lvL5Lineup.Location = new System.Drawing.Point(3, 28);
+            this.lvL5Lineup.Location = new System.Drawing.Point(0, 25);
             this.lvL5Lineup.Name = "lvL5Lineup";
-            this.lvL5Lineup.Size = new System.Drawing.Size(426, 469);
+            this.lvL5Lineup.Size = new System.Drawing.Size(432, 475);
             this.lvL5Lineup.Sorting = System.Windows.Forms.SortOrder.Ascending;
             this.lvL5Lineup.TabIndex = 9;
             this.lvL5Lineup.UseCompatibleStateImageBehavior = false;
@@ -1506,14 +1092,18 @@
             // 
             // toolStrip5
             // 
+            this.toolStrip5.CanOverflow = false;
             this.toolStrip5.Enabled = false;
             this.toolStrip5.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
             this.toolStrip5.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.L5IncludeExclude,
             this.btnCustomLineup});
-            this.toolStrip5.Location = new System.Drawing.Point(3, 3);
+            this.toolStrip5.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.HorizontalStackWithOverflow;
+            this.toolStrip5.Location = new System.Drawing.Point(0, 0);
+            this.toolStrip5.MaximumSize = new System.Drawing.Size(432, 0);
             this.toolStrip5.Name = "toolStrip5";
-            this.toolStrip5.Size = new System.Drawing.Size(426, 25);
+            this.toolStrip5.Size = new System.Drawing.Size(432, 0);
+            this.toolStrip5.Stretch = true;
             this.toolStrip5.TabIndex = 8;
             this.toolStrip5.Text = "toolStrip5";
             // 
@@ -1642,6 +1232,17 @@
             this.btnClearCache.UseVisualStyleBackColor = true;
             this.btnClearCache.Click += new System.EventHandler(this.btnClearCache_Click);
             // 
+            // btnTask
+            // 
+            this.btnTask.FlatStyle = System.Windows.Forms.FlatStyle.System;
+            this.btnTask.Location = new System.Drawing.Point(228, 87);
+            this.btnTask.Name = "btnTask";
+            this.btnTask.Size = new System.Drawing.Size(75, 23);
+            this.btnTask.TabIndex = 21;
+            this.btnTask.Text = "Create";
+            this.btnTask.UseVisualStyleBackColor = true;
+            this.btnTask.Click += new System.EventHandler(this.btnTask_Click);
+            // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
@@ -1680,25 +1281,13 @@
             this.grpAccount.ResumeLayout(false);
             this.grpAccount.PerformLayout();
             this.tabLineups.ResumeLayout(false);
-            this.tabL1.ResumeLayout(false);
-            this.tabL1.PerformLayout();
+            this.tabLineup.ResumeLayout(false);
+            this.tabLineup.PerformLayout();
             this.lineupMenuStrip.ResumeLayout(false);
-            this.toolStrip1.ResumeLayout(false);
-            this.toolStrip1.PerformLayout();
-            this.tabL2.ResumeLayout(false);
-            this.tabL2.PerformLayout();
-            this.toolStrip2.ResumeLayout(false);
-            this.toolStrip2.PerformLayout();
-            this.tabL3.ResumeLayout(false);
-            this.tabL3.PerformLayout();
-            this.toolStrip3.ResumeLayout(false);
-            this.toolStrip3.PerformLayout();
-            this.tabL4.ResumeLayout(false);
-            this.tabL4.PerformLayout();
-            this.toolStrip4.ResumeLayout(false);
-            this.toolStrip4.PerformLayout();
-            this.tabPage1.ResumeLayout(false);
-            this.tabPage1.PerformLayout();
+            this.toolStrip6.ResumeLayout(false);
+            this.toolStrip6.PerformLayout();
+            this.tabCustom.ResumeLayout(false);
+            this.tabCustom.PerformLayout();
             this.toolStrip5.ResumeLayout(false);
             this.toolStrip5.PerformLayout();
             this.ResumeLayout(false);
@@ -1716,42 +1305,6 @@
         private System.Windows.Forms.TextBox txtPassword;
         private System.Windows.Forms.TextBox txtLoginName;
         private System.Windows.Forms.TabControl tabLineups;
-        private System.Windows.Forms.TabPage tabL1;
-        private System.Windows.Forms.ListView lvL1Lineup;
-        private System.Windows.Forms.ColumnHeader columnHeader1;
-        private System.Windows.Forms.ColumnHeader columnHeader2;
-        private System.Windows.Forms.ColumnHeader columnHeader3;
-        private System.Windows.Forms.ToolStrip toolStrip1;
-        private System.Windows.Forms.ToolStripButton btnL1All;
-        private System.Windows.Forms.ToolStripButton btnL1None;
-        private System.Windows.Forms.ToolStripLabel lblL1Lineup;
-        private System.Windows.Forms.TabPage tabL2;
-        private System.Windows.Forms.ListView lvL2Lineup;
-        private System.Windows.Forms.ColumnHeader columnHeader4;
-        private System.Windows.Forms.ColumnHeader columnHeader5;
-        private System.Windows.Forms.ColumnHeader columnHeader6;
-        private System.Windows.Forms.ToolStrip toolStrip2;
-        private System.Windows.Forms.ToolStripButton btnL2All;
-        private System.Windows.Forms.ToolStripButton btnL2None;
-        private System.Windows.Forms.ToolStripLabel lblL2Lineup;
-        private System.Windows.Forms.TabPage tabL3;
-        private System.Windows.Forms.ListView lvL3Lineup;
-        private System.Windows.Forms.ColumnHeader columnHeader7;
-        private System.Windows.Forms.ColumnHeader columnHeader8;
-        private System.Windows.Forms.ColumnHeader columnHeader9;
-        private System.Windows.Forms.ToolStrip toolStrip3;
-        private System.Windows.Forms.ToolStripButton btnL3All;
-        private System.Windows.Forms.ToolStripButton btnL3None;
-        private System.Windows.Forms.ToolStripLabel lblL3Lineup;
-        private System.Windows.Forms.TabPage tabL4;
-        private System.Windows.Forms.ListView lvL4Lineup;
-        private System.Windows.Forms.ColumnHeader columnHeader10;
-        private System.Windows.Forms.ColumnHeader columnHeader11;
-        private System.Windows.Forms.ColumnHeader columnHeader12;
-        private System.Windows.Forms.ToolStrip toolStrip4;
-        private System.Windows.Forms.ToolStripButton btnL4All;
-        private System.Windows.Forms.ToolStripButton btnL4None;
-        private System.Windows.Forms.ToolStripLabel lblL4Lineup;
         private System.Windows.Forms.Button btnSave;
         private System.Windows.Forms.LinkLabel linkLabel1;
         private System.Windows.Forms.TextBox txtAcctExpires;
@@ -1761,30 +1314,14 @@
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Button btnExecute;
         private System.Windows.Forms.Button btnClientLineups;
-        private System.Windows.Forms.ColumnHeader columnHeader13;
-        private System.Windows.Forms.ColumnHeader columnHeader14;
-        private System.Windows.Forms.ColumnHeader columnHeader15;
-        private System.Windows.Forms.ColumnHeader columnHeader16;
         private System.Windows.Forms.CheckBox cbOadOverride;
         private System.Windows.Forms.CheckBox cbAddNewStations;
         private System.Windows.Forms.Button btnHelp;
         private System.Windows.Forms.Label lblUpdate;
-        private System.Windows.Forms.ToolStripDropDownButton L1IncludeExclude;
-        private System.Windows.Forms.ToolStripMenuItem L1includeToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem L1excludeToolStripMenuItem;
-        private System.Windows.Forms.ToolStripDropDownButton L2IncludeExclude;
-        private System.Windows.Forms.ToolStripMenuItem L2includeToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem L2excludeToolStripMenuItem;
-        private System.Windows.Forms.ToolStripDropDownButton L3IncludeExclude;
-        private System.Windows.Forms.ToolStripMenuItem L3includeToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem L3excludeToolStripMenuItem;
-        private System.Windows.Forms.ToolStripDropDownButton L4IncludeExclude;
-        private System.Windows.Forms.ToolStripMenuItem L4includeToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem L4excludeToolStripMenuItem;
         private System.Windows.Forms.ToolTip toolTip1;
         private System.Windows.Forms.Button btnClearCache;
         private System.Windows.Forms.CheckBox cbXmltv;
-        private System.Windows.Forms.TabPage tabPage1;
+        private System.Windows.Forms.TabPage tabCustom;
         private System.Windows.Forms.ListView lvL5Lineup;
         private System.Windows.Forms.ColumnHeader columnHeader17;
         private System.Windows.Forms.ColumnHeader columnHeader18;
@@ -1840,5 +1377,21 @@
         private System.Windows.Forms.CheckBox cbBrandLogo;
         private System.Windows.Forms.CheckBox ckXmltvExtendedInfo;
         private System.Windows.Forms.Label lblXmltvLogosNote;
+        private System.Windows.Forms.TabPage tabLineup;
+        private System.Windows.Forms.ListView lvLineupChannels;
+        private System.Windows.Forms.ColumnHeader columnHeader21;
+        private System.Windows.Forms.ColumnHeader columnHeader22;
+        private System.Windows.Forms.ColumnHeader columnHeader23;
+        private System.Windows.Forms.ColumnHeader columnHeader24;
+        private System.Windows.Forms.ToolStrip toolStrip6;
+        private System.Windows.Forms.ToolStripDropDownButton btnIncludeExclude;
+        private System.Windows.Forms.ToolStripMenuItem menuInclude;
+        private System.Windows.Forms.ToolStripMenuItem menuExclude;
+        private System.Windows.Forms.ToolStripButton btnSelectAll;
+        private System.Windows.Forms.ToolStripButton btnSelectNone;
+        private System.Windows.Forms.ToolStripComboBox comboLineups;
+        private System.Windows.Forms.ToolStripLabel labelLineupCounts;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+        private System.Windows.Forms.ToolStripMenuItem viewLogosMenuItem;
     }
 }

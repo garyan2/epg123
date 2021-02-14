@@ -103,6 +103,12 @@
     <Compile Include="frmDownloadLogos.designer.cs">
       <DependentUpon>frmDownloadLogos.cs</DependentUpon>
     </Compile>
+    <Compile Include="frmLogos.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmLogos.Designer.cs">
+      <DependentUpon>frmLogos.cs</DependentUpon>
+    </Compile>
     <Compile Include="frmMain.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -224,6 +230,9 @@
     <EmbeddedResource Include="frmDownloadLogos.resx">
       <DependentUpon>frmDownloadLogos.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmLogos.resx">
+      <DependentUpon>frmLogos.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="frmMain.resx">
       <DependentUpon>frmMain.cs</DependentUpon>
