@@ -84,13 +84,12 @@
             this.contextMenuStrip2.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.menuDeleteCustom});
             this.contextMenuStrip2.Name = "contextMenuStrip2";
-            this.contextMenuStrip2.Size = new System.Drawing.Size(164, 26);
-            this.contextMenuStrip2.Opening += new System.ComponentModel.CancelEventHandler(this.contextMenuStrip2_Opening);
+            this.contextMenuStrip2.Size = new System.Drawing.Size(181, 48);
             // 
             // menuDeleteCustom
             // 
             this.menuDeleteCustom.Name = "menuDeleteCustom";
-            this.menuDeleteCustom.Size = new System.Drawing.Size(163, 22);
+            this.menuDeleteCustom.Size = new System.Drawing.Size(180, 22);
             this.menuDeleteCustom.Text = "Delete local file...";
             this.menuDeleteCustom.Click += new System.EventHandler(this.menuDeleteLocal_Click);
             // 

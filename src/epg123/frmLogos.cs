@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Net;
 using System.Windows.Forms;
 using epg123.SchedulesDirectAPI;
 
@@ -10,16 +11,15 @@ namespace epg123
 {
     public partial class frmLogos : Form
     {
-        private string Callsign = string.Empty;
-        private PictureBox selectedBox = null;
-        private SdLineupStation Station;
+        private readonly string _callsign = string.Empty;
+        private readonly SdLineupStation _station;
 
         public frmLogos(SdLineupStation station)
         {
             InitializeComponent();
 
-            Callsign = station.Callsign;
-            Station = station;
+            _callsign = station.Callsign;
+            _station = station;
 
             label7.Text = $"{station.Callsign}\n{station.Name}\n{station.Affiliate}";
             openFileDialog1.InitialDirectory = $"{Helper.Epg123LogosFolder}";
@@ -43,45 +43,45 @@ namespace epg123
         {
             Refresh();
             LoadLocalImages();
-            LoadRemoteImages(Station);
+            LoadRemoteImages(_station);
         }
 
         private void LoadLocalImages()
         {
-            if (File.Exists($"{Helper.Epg123LogosFolder}\\{Callsign}_c.png") && pbCustomLocal.Image == null)
+            if (File.Exists($"{Helper.Epg123LogosFolder}\\{_callsign}_c.png") && pbCustomLocal.Image == null)
             {
                 pbCustomLocal.BackColor = Color.FromArgb(255, 6, 15, 30);
-                pbCustomLocal.Image = Image.FromFile($"{Helper.Epg123LogosFolder}\\{Callsign}_c.png");
+                pbCustomLocal.Image = Image.FromFile($"{Helper.Epg123LogosFolder}\\{_callsign}_c.png");
             }
 
-            if (File.Exists($"{Helper.Epg123LogosFolder}\\{Callsign}_d.png") && pbDarkLocal.Image == null)
+            if (File.Exists($"{Helper.Epg123LogosFolder}\\{_callsign}_d.png") && pbDarkLocal.Image == null)
             {
                 pbDarkLocal.BackColor = Color.FromArgb(255, 6, 15, 30); ;
-                pbDarkLocal.Image = Image.FromFile($"{Helper.Epg123LogosFolder}\\{Callsign}_d.png");
+                pbDarkLocal.Image = Image.FromFile($"{Helper.Epg123LogosFolder}\\{_callsign}_d.png");
             }
 
-            if (File.Exists($"{Helper.Epg123LogosFolder}\\{Callsign}_w.png") && pbWhiteLocal.Image == null)
+            if (File.Exists($"{Helper.Epg123LogosFolder}\\{_callsign}_w.png") && pbWhiteLocal.Image == null)
             {
                 pbWhiteLocal.BackColor = Color.FromArgb(255, 6, 15, 30); ;
-                pbWhiteLocal.Image = Image.FromFile($"{Helper.Epg123LogosFolder}\\{Callsign}_w.png");
+                pbWhiteLocal.Image = Image.FromFile($"{Helper.Epg123LogosFolder}\\{_callsign}_w.png");
             }
 
-            if (File.Exists($"{Helper.Epg123LogosFolder}\\{Callsign}_l.png") && pbLightLocal.Image == null)
+            if (File.Exists($"{Helper.Epg123LogosFolder}\\{_callsign}_l.png") && pbLightLocal.Image == null)
             {
                 pbLightLocal.BackColor = Color.White;
-                pbLightLocal.Image = Image.FromFile($"{Helper.Epg123LogosFolder}\\{Callsign}_l.png");
+                pbLightLocal.Image = Image.FromFile($"{Helper.Epg123LogosFolder}\\{_callsign}_l.png");
             }
 
-            if (File.Exists($"{Helper.Epg123LogosFolder}\\{Callsign}_g.png") && pbGrayLocal.Image == null)
+            if (File.Exists($"{Helper.Epg123LogosFolder}\\{_callsign}_g.png") && pbGrayLocal.Image == null)
             {
                 pbGrayLocal.BackColor = Color.White;
-                pbGrayLocal.Image = Image.FromFile($"{Helper.Epg123LogosFolder}\\{Callsign}_g.png");
+                pbGrayLocal.Image = Image.FromFile($"{Helper.Epg123LogosFolder}\\{_callsign}_g.png");
             }
 
-            if (File.Exists($"{Helper.Epg123LogosFolder}\\{Callsign}.png") && pbDefaultLocal.Image == null)
+            if (File.Exists($"{Helper.Epg123LogosFolder}\\{_callsign}.png") && pbDefaultLocal.Image == null)
             {
                 pbDefaultLocal.BackColor = Color.FromArgb(255, 6, 15, 30);
-                pbDefaultLocal.Image = Image.FromFile($"{Helper.Epg123LogosFolder}\\{Callsign}.png");
+                pbDefaultLocal.Image = Image.FromFile($"{Helper.Epg123LogosFolder}\\{_callsign}.png");
             }
         }
 
@@ -120,7 +120,16 @@ namespace epg123
 
         private void menuDeleteLocal_Click(object sender, EventArgs e)
         {
-            var path = $"{Helper.Epg123LogosFolder}\\{Callsign}";
+            PictureBox selectedBox = null;
+            var menuItem = (ToolStripMenuItem) sender;
+            var owner = (ContextMenuStrip) menuItem?.Owner;
+            if (owner != null)
+            {
+                selectedBox = (PictureBox) owner.SourceControl;
+            }
+            if (selectedBox == null) return;
+
+            var path = $"{Helper.Epg123LogosFolder}\\{_callsign}";
             if (selectedBox == pbCustomLocal) path += "_c.png";
             if (selectedBox == pbDarkLocal) path += "_d.png";
             if (selectedBox == pbWhiteLocal) path += "_w.png";
@@ -190,52 +199,38 @@ namespace epg123
                 g.DrawImage(origImg, 0, offsetY, cropRectangle, GraphicsUnit.Pixel);
             }
 
-            // resize image if needed
             if (tgtHeight >= cropImg.Height && tgtWidth >= cropImg.Width) return cropImg;
-            
+
+            // resize image if needed
             var scale = Math.Min((double) tgtWidth / cropImg.Width, (double) tgtHeight / cropImg.Height);
             var destWidth = (int) (cropImg.Width * scale);
             var destHeight = (int) (cropImg.Height * scale);
             return new Bitmap(cropImg, new Size(destWidth, destHeight));
         }
 
-        private void contextMenuStrip2_Opening(object sender, CancelEventArgs e)
-        {
-            selectedBox = pbCustomLocal;
-        }
-
         private void picDragSource_MouseDown(object sender, MouseEventArgs e)
         {
-            // Start the drag if it's the right mouse button.
             if (e.Button != MouseButtons.Left) return;
             var img = ((PictureBox)sender).Image;
             if (img == null) return;
             DoDragDrop(img, DragDropEffects.Copy);
         }
 
-        // Allow a copy of an image.
         private void pictureBox_DragEnter(object sender, DragEventArgs e)
         {
-            // See if this is a copy and the data includes an image.
-            if (e.Data.GetDataPresent(DataFormats.Bitmap) &&
+            if ((e.Data.GetDataPresent(DataFormats.Bitmap) ||
+                e.Data.GetDataPresent(DataFormats.FileDrop) ||
+                e.Data.GetDataPresent(DataFormats.StringFormat)) &&
                 (e.AllowedEffect & DragDropEffects.Copy) != 0)
-            {
-                // Allow this.
-                e.Effect = DragDropEffects.Copy;
-            }
-            else if (e.Data.GetDataPresent(DataFormats.FileDrop) &&
-                     (e.AllowedEffect & DragDropEffects.Copy) != 0)
             {
                 e.Effect = DragDropEffects.Copy;
             }
             else
             {
-                // Don't allow any other drop.
                 e.Effect = DragDropEffects.None;
             }
         }
 
-        // Accept the drop.
         private void pictureBox_DragDrop(object sender, DragEventArgs e)
         {
             Bitmap imgBitmap = null;
@@ -247,10 +242,29 @@ namespace epg123
             {
                 imgBitmap = Image.FromFile(((string[]) e.Data.GetData(DataFormats.FileDrop))[0]) as Bitmap;
             }
+            else if (e.Data.GetDataPresent(DataFormats.StringFormat))
+            {
+                var link = (string) e.Data.GetData(DataFormats.StringFormat);
+                if (!link.StartsWith("http", StringComparison.OrdinalIgnoreCase)) return;
+
+                try
+                {
+                    ServicePointManager.Expect100Continue = true;
+                    ServicePointManager.SecurityProtocol = (SecurityProtocolType)3072;
+                    using (var stream = new MemoryStream(new WebClient().DownloadData(link)))
+                    {
+                        imgBitmap = Image.FromStream(stream) as Bitmap;
+                    }
+                }
+                catch
+                {
+                    // do nothing, will return anyway since imgBitmap will be null
+                }
+            }
             if (imgBitmap == null) return;
 
             var target = (PictureBox) sender;
-            var path = $"{Helper.Epg123LogosFolder}\\{Callsign}";
+            var path = $"{Helper.Epg123LogosFolder}\\{_callsign}";
             if (target == pbCustomLocal) path += "_c.png";
             if (target == pbDarkLocal) path += "_d.png";
             if (target == pbWhiteLocal) path += "_w.png";

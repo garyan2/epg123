@@ -1422,10 +1422,10 @@ public class myChannelLvi : ListViewItem
         ChannelNumber = channelNumber;
         Station = station;
 
-        SubItems[0].Text = Station.Callsign;
+        SubItems[0].Text = Station.CustomCallsign ?? Station.Callsign;
         SubItems[1].Text = ChannelNumber;
         SubItems[2].Text = Station.StationId;
-        SubItems[3].Text = Station.Name;
+        SubItems[3].Text = Station.CustomServiceName ?? Station.Name;
 
         Checked = Station.Include;
 
