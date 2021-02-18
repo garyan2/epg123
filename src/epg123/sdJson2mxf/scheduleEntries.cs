@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Windows.Forms;
 using epg123.MxfXml;
 using epg123.SchedulesDirectAPI;
 using Newtonsoft.Json;
@@ -97,12 +98,12 @@ namespace epg123.sdJson2mxf
             foreach (var request in requests)
             {
                 var requestErrors = new Dictionary<int, string>();
+                var mxfService = SdMxf.With[0].GetService(request.StationId);
                 if (stationResponses.TryGetValue(request.StationId, out var stationResponse))
                 {
                     // if the station return is empty, go to next station
                     if (stationResponse.Count == 0)
                     {
-                        var mxfService = SdMxf.With[0].GetService(request.StationId);
                         var comment = $"Failed to parse the schedule Md5 return for stationId {mxfService.StationId} ({mxfService.CallSign}) on {dates[0]} and after.";
                         if (CheckSuppressWarnings(mxfService.CallSign))
                         {
@@ -118,6 +119,7 @@ namespace epg123.sdJson2mxf
 
                     // scan through all the dates returned for the station and request dates that are not cached
                     IList<string> newDateRequests = new List<string>();
+                    HashSet<string> dupeMd5s = new HashSet<string>();
                     foreach (var day in dates)
                     {
                         if (stationResponse.TryGetValue(day, out var dayResponse) && (dayResponse.Code == 0) && !string.IsNullOrEmpty(dayResponse.Md5))
@@ -141,12 +143,32 @@ namespace epg123.sdJson2mxf
                             {
                                 newDateRequests.Add(day);
                             }
-                            ScheduleEntries.Add(dayResponse.Md5, new[] { request.StationId, day });
+
+                            if (!ScheduleEntries.ContainsKey(dayResponse.Md5))
+                            {
+                                ScheduleEntries.Add(dayResponse.Md5, new[] { request.StationId, day });
+                            }
+                            else
+                            {
+                                var previous = ScheduleEntries[dayResponse.Md5][1];
+                                var comment = $"Duplicate schedule Md5 return for stationId {mxfService.StationId} ({mxfService.CallSign}) on {day} with {previous}.";
+                                Logger.WriteWarning(comment);
+                                dupeMd5s.Add(dayResponse.Md5);
+                            }
                         }
                         else if ((dayResponse != null) && (dayResponse.Code != 0) && !requestErrors.ContainsKey(dayResponse.Code))
                         {
                             requestErrors.Add(dayResponse.Code, dayResponse.Message);
                         }
+                    }
+
+                    // clear out dupe entries
+                    foreach (var dupe in dupeMd5s)
+                    {
+                        var previous = ScheduleEntries[dupe][1];
+                        var comment = $"Removing duplicate Md5 schedule entry for stationId {mxfService.StationId} ({mxfService.CallSign}) on {previous}.";
+                        Logger.WriteWarning(comment);
+                        ScheduleEntries.Remove(dupe);
                     }
 
                     // create the new request for the station
@@ -162,7 +184,6 @@ namespace epg123.sdJson2mxf
                 else
                 {
                     // requested station was not in response
-                    var mxfService = SdMxf.With[0].GetService(request.StationId);
                     Logger.WriteWarning($"Requested stationId {mxfService.StationId} ({mxfService.CallSign}) was not present in schedule Md5 response.");
                     processedObjects += dates.Length; ReportProgress();
                     continue;

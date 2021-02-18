@@ -603,8 +603,14 @@ namespace epg123Client
             renameMenuItem.Visible = mergedChannelMenuStrip;
             renumberMenuItem.Visible = mergedChannelMenuStrip;
             toolStripSeparator6.Visible = mergedChannelMenuStrip;
+            splitMenuItem.Visible = mergedChannelMenuStrip;
+            mergeMenuItem.Visible = mergedChannelMenuStrip;
+            toolStripSeparator7.Visible = mergedChannelMenuStrip;
             clipboardMenuItem.Visible = mergedChannelMenuStrip;
             clearListingsMenuItem.Visible = mergedChannelMenuStrip;
+
+            // only enable merge menu item if multiple channels are selected
+            mergeMenuItem.Enabled = mergedChannelListView.SelectedIndices.Count > 1;
 
             // only enable rename menu item if a single channel has been selected
             renameMenuItem.Enabled = mergedChannelListView.SelectedIndices.Count == 1 && _customLabelsOnly;
@@ -689,6 +695,87 @@ namespace epg123Client
                     lvEditTextBox.Hide();
                     e.Handled = true;
                     break;
+            }
+        }
+        #endregion
+
+        #region ==== Split/Merged Operations =====
+        private void splitMenuItem_Click(object sender, EventArgs e)
+        {
+            Cursor = Cursors.WaitCursor;
+            mergedChannelListView.BeginUpdate();
+            foreach (int index in mergedChannelListView.SelectedIndices)
+            {
+                SplitChannels(_allMergedChannels[_mergedChannelFilter[index]].ChannelId);
+            }
+
+            btnRefreshLineups_Click(null, null);
+            mergedChannelListView.EndUpdate();
+            Cursor = Cursors.Default;
+        }
+
+        private static void SplitChannels(long id)
+        {
+            var mergedChannel = WmcStore.WmcObjectStore.Fetch(id) as MergedChannel;
+            var subChannels = new List<Channel>();
+            if (mergedChannel.PrimaryChannel.ChannelType != ChannelType.Wmis)
+            {
+                subChannels.Add(mergedChannel.PrimaryChannel);
+            }
+
+            foreach (Channel channel in mergedChannel.SecondaryChannels)
+            {
+                if (channel.ChannelType == ChannelType.Wmis) continue;
+                subChannels.Add(channel);
+            }
+
+            if (subChannels.Count <= 1) return;
+            subChannels.RemoveAt(0);
+
+            foreach (var subChannel in subChannels)
+            {
+                mergedChannel.SplitChannel(subChannel);
+            }
+        }
+
+        private void mergeMenuItem_Click(object sender, EventArgs e)
+        {
+            Cursor = Cursors.WaitCursor;
+            if (mergedChannelListView.SelectedIndices.Count > 5)
+            {
+                MessageBox.Show("Sorry, EPG123 limits the merging of channels to 5 at a time.", "Sanity Check",
+                    MessageBoxButtons.OK, MessageBoxIcon.Stop);
+            }
+            
+            mergedChannelListView.BeginUpdate();
+
+            var channelIds = new List<long>();
+            foreach (int index in mergedChannelListView.SelectedIndices)
+            {
+                channelIds.Add(_allMergedChannels[_mergedChannelFilter[index]].ChannelId);
+            }
+
+            var frm = new frmMerge(channelIds);
+            frm.ShowDialog();
+            if (frm.mergeOrder.Count > 0)
+            {
+                var primary = frm.mergeOrder.First();
+                frm.mergeOrder.Remove(primary);
+                MergeChannels(primary, frm.mergeOrder);
+                btnRefreshLineups_Click(null, null);
+            }
+
+            mergedChannelListView.EndUpdate();
+            Cursor = Cursors.Default;
+        }
+
+        private void MergeChannels(long primary, List<long> mergingChannels)
+        {
+            var mergedChannel = WmcStore.WmcObjectStore.Fetch(primary) as MergedChannel;
+            foreach (var channel in mergingChannels)
+            {
+                var merging = WmcStore.WmcObjectStore.Fetch(channel) as MergedChannel;
+                merging.CombineIntoChannel(mergedChannel);
             }
         }
         #endregion
@@ -839,6 +926,7 @@ namespace epg123Client
         {
             Application.UseWaitCursor = true;
 
+            mergedChannelListView.VirtualListSize = 0;
             splitContainer1.Enabled = splitContainer2.Enabled = false;
             IsolateEpgDatabase();
             BuildScannedLineupComboBox();
@@ -921,7 +1009,7 @@ namespace epg123Client
                     IncrementProgressBar();
 
                     // do not include broadband channels
-                    if (channel.ChannelType == ChannelType.WmisBroadband) continue;
+                    if (channel.ChannelType == ChannelType.WmisBroadband || channel.ChannelType == ChannelType.UserHidden) continue;
 
                     // make sure channel has a primary channel with lineup
                     if (channel.PrimaryChannel?.Lineup == null)

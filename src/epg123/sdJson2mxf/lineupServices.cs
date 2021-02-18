@@ -350,8 +350,7 @@ namespace epg123.sdJson2mxf
                                     {
                                         map.FrequencyHz /= 1000;
                                     }
-                                    matchName = 
-                                        $"DVBS:{m.Value.Replace(".", "")}:{map.FrequencyHz}:{map.NetworkId}:{map.TransportId}:{map.ServiceId}";
+                                    matchName = $"DVBS:{m.Value.Replace(".", "")}:{map.FrequencyHz}:{map.NetworkId}:{map.TransportId}:{map.ServiceId}";
                                 }
                                 number = -1;
                                 subnumber = 0;

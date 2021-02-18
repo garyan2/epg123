@@ -49,6 +49,7 @@ namespace epg123Client
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.renameMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.renumberMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.splitMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator6 = new System.Windows.Forms.ToolStripSeparator();
             this.clipboardMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.clearListingsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -107,6 +108,8 @@ namespace epg123Client
             this.ebtnRebuild = new epg123.ElevatedButton();
             this.ebtnSetup = new epg123.ElevatedButton();
             this.btnTask = new epg123.ElevatedButton();
+            this.mergeMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator7 = new System.Windows.Forms.ToolStripSeparator();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -253,11 +256,14 @@ namespace epg123Client
             this.toolStripSeparator2,
             this.renameMenuItem,
             this.renumberMenuItem,
+            this.toolStripSeparator7,
+            this.splitMenuItem,
+            this.mergeMenuItem,
             this.toolStripSeparator6,
             this.clipboardMenuItem,
             this.clearListingsMenuItem});
             this.contextMenuStrip1.Name = "contextMenuStrip1";
-            this.contextMenuStrip1.Size = new System.Drawing.Size(184, 148);
+            this.contextMenuStrip1.Size = new System.Drawing.Size(184, 220);
             this.contextMenuStrip1.Opening += new System.ComponentModel.CancelEventHandler(this.contextMenuStrip1_Opening);
             // 
             // subscribeMenuItem
@@ -292,6 +298,13 @@ namespace epg123Client
             this.renumberMenuItem.Size = new System.Drawing.Size(183, 22);
             this.renumberMenuItem.Text = "Renumber";
             this.renumberMenuItem.Click += new System.EventHandler(this.renumberMenuItem_Click);
+            // 
+            // splitMenuItem
+            // 
+            this.splitMenuItem.Name = "splitMenuItem";
+            this.splitMenuItem.Size = new System.Drawing.Size(183, 22);
+            this.splitMenuItem.Text = "Split Channels";
+            this.splitMenuItem.Click += new System.EventHandler(this.splitMenuItem_Click);
             // 
             // toolStripSeparator6
             // 
@@ -886,6 +899,18 @@ namespace epg123Client
             this.btnTask.UseVisualStyleBackColor = true;
             this.btnTask.Click += new System.EventHandler(this.btnTask_Click);
             // 
+            // mergeMenuItem
+            // 
+            this.mergeMenuItem.Name = "mergeMenuItem";
+            this.mergeMenuItem.Size = new System.Drawing.Size(183, 22);
+            this.mergeMenuItem.Text = "Merge Channels";
+            this.mergeMenuItem.Click += new System.EventHandler(this.mergeMenuItem_Click);
+            // 
+            // toolStripSeparator7
+            // 
+            this.toolStripSeparator7.Name = "toolStripSeparator7";
+            this.toolStripSeparator7.Size = new System.Drawing.Size(180, 6);
+            // 
             // clientForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
@@ -1016,5 +1041,8 @@ namespace epg123Client
         private System.Windows.Forms.ColumnHeader columnGuideEndTime;
         private System.Windows.Forms.ToolStripButton btnUndelete;
         private System.Windows.Forms.ToolStripMenuItem clearListingsMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem splitMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator7;
+        private System.Windows.Forms.ToolStripMenuItem mergeMenuItem;
     }
 }

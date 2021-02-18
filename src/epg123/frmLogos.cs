@@ -6,6 +6,7 @@ using System.IO;
 using System.Net;
 using System.Windows.Forms;
 using epg123.SchedulesDirectAPI;
+using Microsoft.VisualBasic.FileIO;
 
 namespace epg123
 {
@@ -13,6 +14,7 @@ namespace epg123
     {
         private readonly string _callsign = string.Empty;
         private readonly SdLineupStation _station;
+        private PictureBox _selectedBox = null;
 
         public frmLogos(SdLineupStation station)
         {
@@ -44,6 +46,11 @@ namespace epg123
             Refresh();
             LoadLocalImages();
             LoadRemoteImages(_station);
+        }
+
+        private void DeleteToRecycle(string file)
+        {
+            FileSystem.DeleteFile(file, UIOption.OnlyErrorDialogs, RecycleOption.SendToRecycleBin);
         }
 
         private void LoadLocalImages()
@@ -120,31 +127,22 @@ namespace epg123
 
         private void menuDeleteLocal_Click(object sender, EventArgs e)
         {
-            PictureBox selectedBox = null;
-            var menuItem = (ToolStripMenuItem) sender;
-            var owner = (ContextMenuStrip) menuItem?.Owner;
-            if (owner != null)
-            {
-                selectedBox = (PictureBox) owner.SourceControl;
-            }
-            if (selectedBox == null) return;
-
             var path = $"{Helper.Epg123LogosFolder}\\{_callsign}";
-            if (selectedBox == pbCustomLocal) path += "_c.png";
-            if (selectedBox == pbDarkLocal) path += "_d.png";
-            if (selectedBox == pbWhiteLocal) path += "_w.png";
-            if (selectedBox == pbLightLocal) path += "_l.png";
-            if (selectedBox == pbGrayLocal) path += "_g.png";
-            if (selectedBox == pbDefaultLocal) path += ".png";
+            if (_selectedBox == pbCustomLocal) path += "_c.png";
+            if (_selectedBox == pbDarkLocal) path += "_d.png";
+            if (_selectedBox == pbWhiteLocal) path += "_w.png";
+            if (_selectedBox == pbLightLocal) path += "_l.png";
+            if (_selectedBox == pbGrayLocal) path += "_g.png";
+            if (_selectedBox == pbDefaultLocal) path += ".png";
 
-            selectedBox.Image?.Dispose();
-            selectedBox.Image = null;
-            selectedBox.Update();
-            selectedBox.BackColor = SystemColors.Control;
+            _selectedBox.Image.Dispose();
+            _selectedBox.Image = null;
+            _selectedBox.Update();
+            _selectedBox.BackColor = SystemColors.Control;
 
             try
             {
-                File.Delete(path);
+                if (File.Exists(path)) DeleteToRecycle(path);
                 return;
             }
             catch
@@ -213,6 +211,7 @@ namespace epg123
             if (e.Button != MouseButtons.Left) return;
             var img = ((PictureBox)sender).Image;
             if (img == null) return;
+            _selectedBox = (PictureBox) sender;
             DoDragDrop(img, DragDropEffects.Copy);
         }
 
@@ -261,9 +260,9 @@ namespace epg123
                     // do nothing, will return anyway since imgBitmap will be null
                 }
             }
-            if (imgBitmap == null) return;
+            var target = (PictureBox)sender;
+            if (imgBitmap == null || _selectedBox == target) return;
 
-            var target = (PictureBox) sender;
             var path = $"{Helper.Epg123LogosFolder}\\{_callsign}";
             if (target == pbCustomLocal) path += "_c.png";
             if (target == pbDarkLocal) path += "_d.png";
@@ -279,10 +278,19 @@ namespace epg123
                 target.Refresh();
             }
 
+            if (File.Exists(path)) DeleteToRecycle(path);
+
             var image = CropAndResizeImage(imgBitmap);
             image.Save(path, ImageFormat.Png);
 
             LoadLocalImages();
+        }
+
+        private void contextMenuStrip2_Opening(object sender, CancelEventArgs e)
+        {
+            var owner = (ContextMenuStrip) sender;
+            _selectedBox = (PictureBox) owner.SourceControl;
+            if (_selectedBox?.Image == null) e.Cancel = true;
         }
     }
 }

@@ -878,12 +878,19 @@ namespace epg123Client
         {
             if (ListView != null && ListView.InvokeRequired)
             {
-                ListView.Invoke(new Action(delegate
+                try
                 {
-                    ((myChannelLvi) ListView.Items[Index]).PopulateMergedChannelItems();
-                    ((myChannelLvi) ListView.Items[Index]).ShowCustomLabels(Custom);
-                    ListView.Invalidate(Bounds);
-                }));
+                    ListView.Invoke(new Action(delegate
+                    {
+                        ((myChannelLvi)ListView.Items[Index]).PopulateMergedChannelItems();
+                        ((myChannelLvi)ListView.Items[Index]).ShowCustomLabels(Custom);
+                        ListView.Invalidate(Bounds);
+                    }));
+                }
+                catch
+                {
+                    // do nothing
+                }
             }
             else
             {
