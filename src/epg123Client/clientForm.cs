@@ -821,8 +821,9 @@ namespace epg123Client
         private void btnAutoMatch_Click(object sender, EventArgs e)
         {
             Cursor = Cursors.WaitCursor;
-            foreach (var mergedChannel in _allMergedChannels)
+            foreach (var index in _mergedChannelFilter)
             {
+                var mergedChannel = _allMergedChannels[index];
                 if (((ToolStripButton)sender).Equals(btnAutoCallsign))
                 {
                     var callsign = mergedChannel.SubItems[0].Text;

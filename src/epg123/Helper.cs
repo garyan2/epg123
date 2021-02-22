@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using System.IO;
 using System.IO.Pipes;
 using System.Linq;
@@ -47,7 +48,7 @@ namespace epg123
             }
             else
             {
-                string[] folders = {Epg123BackupFolder, Epg123CacheFolder, Epg123LogosFolder, Epg123OutputFolder, Epg123SdLogosFolder};
+                string[] folders = {Epg123BackupFolder, Epg123CacheFolder, Epg123LogosFolder, Epg123OutputFolder };
                 foreach (var folder in folders)
                 {
                     if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
@@ -209,6 +210,59 @@ namespace epg123
             }
         }
 
+        public static Bitmap CropAndResizeImage(Bitmap origImg)
+        {
+            if (origImg == null) return null;
+
+            // set target image size
+            const int tgtWidth = 360;
+            const int tgtHeight = 270;
+
+            // set target aspect/image size
+            const double tgtAspect = 3.0;
+
+            // Find the min/max non-transparent pixels
+            var min = new Point(int.MaxValue, int.MaxValue);
+            var max = new Point(int.MinValue, int.MinValue);
+
+            for (var x = 0; x < origImg.Width; ++x)
+            {
+                for (var y = 0; y < origImg.Height; ++y)
+                {
+                    var pixelColor = origImg.GetPixel(x, y);
+                    if (pixelColor.A <= 0) continue;
+                    if (x < min.X) min.X = x;
+                    if (y < min.Y) min.Y = y;
+
+                    if (x > max.X) max.X = x;
+                    if (y > max.Y) max.Y = y;
+                }
+            }
+
+            // Create a new bitmap from the crop rectangle and increase canvas size if necessary
+            var offsetY = 0;
+            var cropRectangle = new Rectangle(min.X, min.Y, max.X - min.X + 1, max.Y - min.Y + 1);
+            if ((max.X - min.X + 1) / tgtAspect > (max.Y - min.Y + 1))
+            {
+                offsetY = (int)((max.X - min.X + 1) / tgtAspect - (max.Y - min.Y + 1) + 0.5) / 2;
+            }
+
+            var cropImg = new Bitmap(cropRectangle.Width, cropRectangle.Height + offsetY * 2);
+            cropImg.SetResolution(origImg.HorizontalResolution, origImg.VerticalResolution);
+            using (var g = Graphics.FromImage(cropImg))
+            {
+                g.DrawImage(origImg, 0, offsetY, cropRectangle, GraphicsUnit.Pixel);
+            }
+
+            if (tgtHeight >= cropImg.Height && tgtWidth >= cropImg.Width) return cropImg;
+
+            // resize image if needed
+            var scale = Math.Min((double)tgtWidth / cropImg.Width, (double)tgtHeight / cropImg.Height);
+            var destWidth = (int)(cropImg.Width * scale);
+            var destHeight = (int)(cropImg.Height * scale);
+            return new Bitmap(cropImg, new Size(destWidth, destHeight));
+        }
+
         #region ========== Folder and File Paths ==========
 
         /// <summary>
@@ -289,11 +343,6 @@ namespace epg123
         /// The folder used to store all the station logos
         /// </summary>
         public static string Epg123LogosFolder => Epg123ProgramDataFolder + "\\logos";
-
-        /// <summary>
-        /// The folder used to store all the station logos from Schedules Direct
-        /// </summary>
-        public static string Epg123SdLogosFolder => Epg123ProgramDataFolder + "\\sdlogos";
 
         /// <summary>
         /// The folder used to deposit generated guide files

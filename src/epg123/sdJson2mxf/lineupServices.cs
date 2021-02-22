@@ -99,12 +99,12 @@ namespace epg123.sdJson2mxf
                         $"Subscribed lineup {clientLineup.Lineup} has been EXCLUDED from download and processing.");
                     continue;
                 }
-                else if (clientLineup.IsDeleted)
+                if (clientLineup.IsDeleted)
                 {
                     Logger.WriteWarning($"Subscribed lineup {clientLineup.Lineup} has been DELETED at the headend.");
                     continue;
                 }
-                else if (flagCustom)
+                if (flagCustom)
                 {
                     foreach (var station in customLineup.Station)
                     {
@@ -166,9 +166,18 @@ namespace epg123.sdJson2mxf
                         // instantiate stationLogo
                         SdStationImage stationLogo = null;
 
+
+                        // determine station name for ATSC stations
+                        var atsc = false;
+                        var names = station.Name.Replace("-", "").Split(' ');
+                        if (names.Length == 2 && names[0] == station.Callsign && $"({names[0]})" == $"{names[1]}")
+                        {
+                            atsc = true;
+                        }
+
                         // add callsign and station name
                         mxfService.CallSign = CheckCustomCallsign(station.StationId) ?? station.Callsign;
-                        mxfService.Name = CheckCustomServicename(station.StationId) ?? station.Name;
+                        mxfService.Name = CheckCustomServicename(station.StationId) ?? (atsc ? station.Affiliate : null) ?? station.Name;
 
                         // add affiliate if available
                         if (!string.IsNullOrEmpty(station.Affiliate))
@@ -390,8 +399,7 @@ namespace epg123.sdJson2mxf
             if (StationLogosToDownload.Count > 0)
             {
                 StationLogosDownloadComplete = false;
-                Logger.WriteInformation(
-                    $"Kicking off background worker to download and process {StationLogosToDownload.Count} station logos.");
+                Logger.WriteInformation($"Kicking off background worker to download and process {StationLogosToDownload.Count} station logos.");
                 BackgroundDownloader = new System.ComponentModel.BackgroundWorker();
                 BackgroundDownloader.DoWork += BackgroundDownloader_DoWork;
                 BackgroundDownloader.RunWorkerCompleted += BackgroundDownloader_RunWorkerCompleted;
@@ -406,8 +414,7 @@ namespace epg123.sdJson2mxf
             }
             else
             {
-                Logger.WriteError(
-                    $"There are 0 stations queued for download from {clientLineups.Lineups.Count} subscribed lineups. Exiting.");
+                Logger.WriteError($"There are 0 stations queued for download from {clientLineups.Lineups.Count} subscribed lineups. Exiting.");
                 Logger.WriteError("Check that lineups are 'INCLUDED' and stations are selected in the EPG123 GUI.");
                 return false;
             }
@@ -421,8 +428,7 @@ namespace epg123.sdJson2mxf
             }
             else if (e.Error != null)
             {
-                Logger.WriteError(
-                    $"The background worker to download station logos threw an exception. Message: {e.Error.Message}");
+                Logger.WriteError($"The background worker to download station logos threw an exception. Message: {e.Error.Message}");
             }
             StationLogosDownloadComplete = true;
         }
@@ -452,81 +458,12 @@ namespace epg123.sdJson2mxf
         {
             try
             {
-                // set target image size
-                const int tgtWidth = 360;
-                const int tgtHeight = 270;
-
-                // set target aspect/image size
-                const double tgtAspect = 3.0;
-
                 var wc = new System.Net.WebClient();
                 using (var stream = new MemoryStream(wc.DownloadData(uri)))
                 {
-                    // crop image
-                    using (var origImg = Image.FromStream(stream) as Bitmap)
-                    {
-                        // Find the min/max non-transparent pixels
-                        var min = new Point(int.MaxValue, int.MaxValue);
-                        var max = new Point(int.MinValue, int.MinValue);
-
-                        if (origImg != null)
-                            for (var x = 0; x < origImg.Width; ++x)
-                            {
-                                for (var y = 0; y < origImg.Height; ++y)
-                                {
-                                    var pixelColor = origImg.GetPixel(x, y);
-                                    if (pixelColor.A <= 0) continue;
-                                    if (x < min.X) min.X = x;
-                                    if (y < min.Y) min.Y = y;
-
-                                    if (x > max.X) max.X = x;
-                                    if (y > max.Y) max.Y = y;
-                                }
-                            }
-
-                        // Create a new bitmap from the crop rectangle and increase canvas size if necessary
-                        var offsetY = 0;
-                        var cropRectangle = new Rectangle(min.X, min.Y, max.X - min.X + 1, max.Y - min.Y + 1);
-                        if ((max.X - min.X + 1) / tgtAspect > (max.Y - min.Y + 1))
-                        {
-                            offsetY = (int)((max.X - min.X + 1) / tgtAspect - (max.Y - min.Y + 1) + 0.5) / 2;
-                        }
-
-                        var cropImg = new Bitmap(cropRectangle.Width, cropRectangle.Height + offsetY * 2);
-                        if (origImg != null)
-                        {
-                            cropImg.SetResolution(origImg.HorizontalResolution, origImg.VerticalResolution);
-                            using (var g = Graphics.FromImage(cropImg))
-                            {
-                                g.DrawImage(origImg, 0, offsetY, cropRectangle, GraphicsUnit.Pixel);
-                            }
-                        }
-
-                        // resize image if needed
-                        if (tgtHeight < cropImg.Height)
-                        {
-                            var destWidth = Math.Min((int)(tgtHeight / (double)cropImg.Height * cropImg.Width), tgtWidth);
-                            var destImg = new Bitmap(destWidth, tgtHeight);
-                            destImg.SetResolution(cropImg.HorizontalResolution, cropImg.VerticalResolution);
-                            using (var g = Graphics.FromImage(destImg))
-                            {
-                                g.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceCopy;
-                                g.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
-                                g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
-                                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
-                                g.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
-
-                                using (var wrapMode = new System.Drawing.Imaging.ImageAttributes())
-                                {
-                                    wrapMode.SetWrapMode(System.Drawing.Drawing2D.WrapMode.TileFlipXY);
-                                    g.DrawImage(cropImg, new Rectangle(0, 0, destWidth, tgtHeight), 0, 0, cropImg.Width, cropImg.Height, GraphicsUnit.Pixel, wrapMode);
-                                }
-                            }
-                        }
-
-                        // save image
-                        cropImg.Save(filepath, System.Drawing.Imaging.ImageFormat.Png);
-                    }
+                    // crop and save image
+                    var cropImg = Helper.CropAndResizeImage(Image.FromStream(stream) as Bitmap);
+                    cropImg.Save(filepath, System.Drawing.Imaging.ImageFormat.Png);
                     return true;
                 }
             }

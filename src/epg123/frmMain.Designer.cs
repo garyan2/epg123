@@ -37,7 +37,6 @@
             this.cbAlternateSEFormat = new System.Windows.Forms.CheckBox();
             this.lblAlternateLogos = new System.Windows.Forms.Label();
             this.cmbAlternateLogos = new System.Windows.Forms.ComboBox();
-            this.btnSdLogos = new System.Windows.Forms.Button();
             this.lblPreferredLogos = new System.Windows.Forms.Label();
             this.cmbPreferredLogos = new System.Windows.Forms.ComboBox();
             this.cbSeriesPosterArt = new System.Windows.Forms.CheckBox();
@@ -73,6 +72,7 @@
             this.tabTask = new System.Windows.Forms.TabPage();
             this.cbAutomatch = new System.Windows.Forms.CheckBox();
             this.lblSchedStatus = new System.Windows.Forms.Label();
+            this.btnTask = new epg123.ElevatedButton();
             this.cbImport = new System.Windows.Forms.CheckBox();
             this.cbTaskWake = new System.Windows.Forms.CheckBox();
             this.tbSchedTime = new System.Windows.Forms.MaskedTextBox();
@@ -125,7 +125,6 @@
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.btnClearCache = new System.Windows.Forms.Button();
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
-            this.btnTask = new epg123.ElevatedButton();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -191,7 +190,6 @@
             this.tabConfig.Controls.Add(this.cbAlternateSEFormat);
             this.tabConfig.Controls.Add(this.lblAlternateLogos);
             this.tabConfig.Controls.Add(this.cmbAlternateLogos);
-            this.tabConfig.Controls.Add(this.btnSdLogos);
             this.tabConfig.Controls.Add(this.lblPreferredLogos);
             this.tabConfig.Controls.Add(this.cmbPreferredLogos);
             this.tabConfig.Controls.Add(this.cbSeriesPosterArt);
@@ -216,7 +214,7 @@
             // cbBrandLogo
             // 
             this.cbBrandLogo.AutoSize = true;
-            this.cbBrandLogo.Location = new System.Drawing.Point(6, 345);
+            this.cbBrandLogo.Location = new System.Drawing.Point(6, 316);
             this.cbBrandLogo.Name = "cbBrandLogo";
             this.cbBrandLogo.Size = new System.Drawing.Size(294, 17);
             this.cbBrandLogo.TabIndex = 37;
@@ -260,19 +258,6 @@
             this.cmbAlternateLogos.Size = new System.Drawing.Size(160, 21);
             this.cmbAlternateLogos.TabIndex = 34;
             this.cmbAlternateLogos.SelectedIndexChanged += new System.EventHandler(this.imageConfigs_Changed);
-            // 
-            // btnSdLogos
-            // 
-            this.btnSdLogos.Anchor = System.Windows.Forms.AnchorStyles.Right;
-            this.btnSdLogos.FlatAppearance.BorderSize = 2;
-            this.btnSdLogos.Location = new System.Drawing.Point(6, 316);
-            this.btnSdLogos.Name = "btnSdLogos";
-            this.btnSdLogos.Size = new System.Drawing.Size(297, 23);
-            this.btnSdLogos.TabIndex = 33;
-            this.btnSdLogos.Text = "Collect all station logos for subscribed lineups from SD";
-            this.toolTip1.SetToolTip(this.btnSdLogos, "Download all logos to .\\sdlogos folder");
-            this.btnSdLogos.UseVisualStyleBackColor = true;
-            this.btnSdLogos.Click += new System.EventHandler(this.btnSdLogos_Click);
             // 
             // lblPreferredLogos
             // 
@@ -383,7 +368,7 @@
             // cbModernMedia
             // 
             this.cbModernMedia.AutoSize = true;
-            this.cbModernMedia.Location = new System.Drawing.Point(6, 368);
+            this.cbModernMedia.Location = new System.Drawing.Point(6, 339);
             this.cbModernMedia.Name = "cbModernMedia";
             this.cbModernMedia.Size = new System.Drawing.Size(199, 17);
             this.cbModernMedia.TabIndex = 23;
@@ -716,6 +701,17 @@
             this.lblSchedStatus.TabIndex = 4;
             this.lblSchedStatus.Text = "Task Status";
             // 
+            // btnTask
+            // 
+            this.btnTask.FlatStyle = System.Windows.Forms.FlatStyle.System;
+            this.btnTask.Location = new System.Drawing.Point(228, 87);
+            this.btnTask.Name = "btnTask";
+            this.btnTask.Size = new System.Drawing.Size(75, 23);
+            this.btnTask.TabIndex = 21;
+            this.btnTask.Text = "Create";
+            this.btnTask.UseVisualStyleBackColor = true;
+            this.btnTask.Click += new System.EventHandler(this.btnTask_Click);
+            // 
             // cbImport
             // 
             this.cbImport.AutoSize = true;
@@ -884,9 +880,9 @@
             this.lvLineupChannels.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lvLineupChannels.FullRowSelect = true;
             this.lvLineupChannels.HideSelection = false;
-            this.lvLineupChannels.Location = new System.Drawing.Point(0, 21);
+            this.lvLineupChannels.Location = new System.Drawing.Point(0, 46);
             this.lvLineupChannels.Name = "lvLineupChannels";
-            this.lvLineupChannels.Size = new System.Drawing.Size(288, 313);
+            this.lvLineupChannels.Size = new System.Drawing.Size(432, 454);
             this.lvLineupChannels.Sorting = System.Windows.Forms.SortOrder.Ascending;
             this.lvLineupChannels.TabIndex = 3;
             this.lvLineupChannels.UseCompatibleStateImageBehavior = false;
@@ -954,7 +950,7 @@
             this.toolStrip6.Location = new System.Drawing.Point(0, 0);
             this.toolStrip6.MaximumSize = new System.Drawing.Size(432, 0);
             this.toolStrip6.Name = "toolStrip6";
-            this.toolStrip6.Size = new System.Drawing.Size(288, 31);
+            this.toolStrip6.Size = new System.Drawing.Size(432, 46);
             this.toolStrip6.Stretch = true;
             this.toolStrip6.TabIndex = 2;
             this.toolStrip6.Text = "toolStrip6";
@@ -1102,7 +1098,7 @@
             this.toolStrip5.Location = new System.Drawing.Point(0, 0);
             this.toolStrip5.MaximumSize = new System.Drawing.Size(432, 0);
             this.toolStrip5.Name = "toolStrip5";
-            this.toolStrip5.Size = new System.Drawing.Size(432, 0);
+            this.toolStrip5.Size = new System.Drawing.Size(432, 25);
             this.toolStrip5.Stretch = true;
             this.toolStrip5.TabIndex = 8;
             this.toolStrip5.Text = "toolStrip5";
@@ -1232,17 +1228,6 @@
             this.btnClearCache.UseVisualStyleBackColor = true;
             this.btnClearCache.Click += new System.EventHandler(this.btnClearCache_Click);
             // 
-            // btnTask
-            // 
-            this.btnTask.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.btnTask.Location = new System.Drawing.Point(228, 87);
-            this.btnTask.Name = "btnTask";
-            this.btnTask.Size = new System.Drawing.Size(75, 23);
-            this.btnTask.TabIndex = 21;
-            this.btnTask.Text = "Create";
-            this.btnTask.UseVisualStyleBackColor = true;
-            this.btnTask.Click += new System.EventHandler(this.btnTask_Click);
-            // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
@@ -1365,7 +1350,6 @@
         private System.Windows.Forms.CheckBox cbPrefixTitle;
         private System.Windows.Forms.CheckBox cbPrefixDescription;
         private System.Windows.Forms.CheckBox cbAppendDescription;
-        private System.Windows.Forms.Button btnSdLogos;
         private System.Windows.Forms.Label lblPreferredLogos;
         private System.Windows.Forms.ComboBox cmbPreferredLogos;
         private System.Windows.Forms.CheckBox cbSeriesPosterArt;

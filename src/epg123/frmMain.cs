@@ -409,13 +409,14 @@ namespace epg123
                     cbOadOverride.Checked = Config.OadOverride;
                     cbTMDb.Checked = Config.TMDbCoverArt;
                     cbSdLogos.Checked = Config.IncludeSdLogos;
-                    
+
                     cbTVDB.Checked = Config.TheTvdbNumbers;
                     cbPrefixDescription.Checked = Config.PrefixEpisodeDescription;
                     cbAlternateSEFormat.Checked = Config.AlternateSEFormat;
                     cbAddNewStations.Checked = Config.AutoAddNew;
                     cbSeriesPosterArt.Checked = Config.SeriesPosterArt;
                     cbModernMedia.Checked = Config.ModernMediaUiPlusSupport;
+                    cbBrandLogo.Checked = !Config.BrandLogoImage.Equals("none");
                     cmbPreferredLogos.SelectedIndex = (int)(Helper.PreferredLogos)Enum.Parse(typeof(Helper.PreferredLogos), Config.PreferredLogoStyle, true);
                     cmbAlternateLogos.SelectedIndex = (int)(Helper.PreferredLogos)Enum.Parse(typeof(Helper.PreferredLogos), Config.AlternateLogoStyle, true);
                     ckChannelNumbers.Checked = Config.XmltvIncludeChannelNumbers;
@@ -429,7 +430,6 @@ namespace epg123
                     numFillerDuration.Value = Config.XmltvFillerProgramLength;
                     rtbFillerDescription.Text = Config.XmltvFillerProgramDescription;
                     tbXmltvOutput.Text = Config.XmltvOutputFile ?? Helper.Epg123XmltvPath;
-                    cbBrandLogo.Checked = !Config.BrandLogoImage.Equals("none");
 
                     cbXmltv.Checked = Config.CreateXmltv;
                 }
@@ -1105,7 +1105,6 @@ namespace epg123
         }
         #endregion
         #region ========== TAB: Images ==========
-
         private void imageConfigs_Changed(object sender, EventArgs e)
         {
             if (sender.Equals(cbSeriesPosterArt))
@@ -1127,38 +1126,13 @@ namespace epg123
                 {
                     cmbAlternateLogos.SelectedIndex = cmbAlternateLogos.Items.Count - 1;
                 }
+                configs_Changed(cbBrandLogo, null);
             }
             else if (sender.Equals(cmbAlternateLogos))
             {
                 Config.AlternateLogoStyle = ((Helper.PreferredLogos)cmbAlternateLogos.SelectedIndex).ToString();
+                configs_Changed(cbBrandLogo, null);
             }
-        }
-        private void btnSdLogos_Click(object sender, EventArgs e)
-        {
-            Cursor = Cursors.WaitCursor;
-            Dictionary<string, string> _sdlogos = new Dictionary<string, string>();
-
-            // open form and handle the sd logo downloads and image crop/resize
-            foreach (var station in _allAvailableStations.Select(stationId => _allStations[stationId].Station))
-            {
-                if (station.StationLogos != null)
-                {
-                    for (var i = 0; i < station.StationLogos.Count; ++i)
-                    {
-                        _sdlogos.Add($"{station.Callsign}-{i + 1}", station.StationLogos[i].Url);
-                    }
-                }
-
-                if (station.Logo != null)
-                {
-                    _sdlogos.Add($"{station.Callsign}", station.Logo.Url);
-                }
-            }
-
-            var dl = new frmDownloadLogos(_sdlogos);
-            dl.ShowDialog();
-
-            Cursor = Cursors.Arrow;
         }
         #endregion
         #region ========== TAB: Config ==========
@@ -1202,11 +1176,11 @@ namespace epg123
             {
                 if (cbBrandLogo.Checked)
                 {
-                    if (!Config.PreferredLogoStyle.Equals("light") && !Config.AlternateLogoStyle.Equals("light"))
+                    if (!Config.PreferredLogoStyle.Equals("DARK") && !Config.AlternateLogoStyle.Equals("DARK"))
                     {
-                        Config.BrandLogoImage = "light";
+                        Config.BrandLogoImage = "dark";
                     }
-                    else Config.BrandLogoImage = "dark";
+                    else Config.BrandLogoImage = "light";
                 }
                 else Config.BrandLogoImage = "none";
             }
@@ -1404,9 +1378,19 @@ public class myStation
 
     public myStation(SdLineupStation station)
     {
+        var atsc = false;
+
+        // determine station name for ATSC stations
+        var names = station.Name.Replace("-", "").Split(' ');
+        if (names.Length == 2 && names[0] == station.Callsign && $"({names[0]})" == $"{names[1]}")
+        {
+            atsc = true;
+        }
+
+        // add callsign and station name
         StationId = station.StationId;
         Callsign = station.Callsign;
-        Name = station.Name;
+        Name = (atsc ? station.Affiliate : null) ?? station.Name;
         LanguageCode = station.BroadcastLanguage[0] ?? null;
         Station = station;
     }

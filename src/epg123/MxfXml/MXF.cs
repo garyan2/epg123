@@ -190,6 +190,7 @@ namespace epg123.MxfXml
         [XmlAttribute("onlyShowDynamicLineups")]
         public string OnlyShowDynamicLineups { get; set; }
 
+        [XmlElement("guideImage")]
         public MxfGuideImage GuideImage { get; set; }
     }
 

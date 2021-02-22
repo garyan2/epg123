@@ -116,7 +116,8 @@ namespace epg123.sdJson2mxf
             }
 
             // add affiliate if present
-            if (!string.IsNullOrEmpty(mxfService.Affiliate)) ret.DisplayNames.Add(new XmltvText() { Text = mxfService.Affiliate.Substring(11) });
+            var affiliate = mxfService.Affiliate?.Substring(11);
+            if (!string.IsNullOrEmpty(affiliate) && !mxfService.Name.Equals(affiliate)) ret.DisplayNames.Add(new XmltvText() { Text = affiliate });
 
             // add logo if available
             if (mxfService.ServiceLogo != null)

@@ -227,7 +227,7 @@ namespace epg123.sdJson2mxf
                             }
                             catch
                             {
-                                Logger.WriteError($"Failed to write station daily schedule file to cache directory. station: {serviceDate[0]} ; date: {serviceDate[1]}");
+                                Logger.WriteInformation($"Failed to write station daily schedule file to cache file. station: {serviceDate[0]} ; date: {serviceDate[1]}");
                             }
                         }
                     }
@@ -238,11 +238,11 @@ namespace epg123.sdJson2mxf
                             var compare = ScheduleEntries
                                 .Where(arg => arg.Value[0].Equals(response.StationId))
                                 .Single(arg => arg.Value[1].Equals(response.Metadata.StartDate));
-                            Logger.WriteError($"Md5 mismatch for station {compare.Value[0]} on {compare.Value[1]}. Expected: {compare.Key} - Downloaded {response.Metadata.Md5}");
+                            Logger.WriteWarning($"Md5 mismatch for station {compare.Value[0]} on {compare.Value[1]}. Expected: {compare.Key} - Downloaded {response.Metadata.Md5}");
                         }
                         catch
                         {
-                            Logger.WriteError($"Md5 mismatch for station {response.StationId} on {response.Metadata.StartDate}. Downloaded {response.Metadata.Md5}");
+                            Logger.WriteWarning($"Md5 mismatch for station {response.StationId} on {response.Metadata.StartDate}. Downloaded {response.Metadata.Md5}");
                         }
                     }
                 }

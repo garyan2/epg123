@@ -1087,7 +1087,7 @@ namespace epg123
             var brand = _shellDllResources[(int)shellresource.EPG_MCML].Descendants()
                 .Where(arg => arg.Name.LocalName == "BrandLogo").Descendants()
                 .Single(arg => arg.Name.LocalName == "FormLayoutInput");
-            brand.SetAttributeValue("Right", $"Parent,1,-{FilterButtonWidth}");
+            brand.SetAttributeValue("Right", $"Parent,1,-{FilterButtonWidth + 3}");
         }
 
         private static int SafeTrackBarValue(int value, TrackBar trackbar)
