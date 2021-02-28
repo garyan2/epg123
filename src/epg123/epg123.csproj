@@ -162,6 +162,7 @@
     </Compile>
     <Compile Include="sdJson2mxf\mxf2xmltv.cs" />
     <Compile Include="brandLogo.cs" />
+    <Compile Include="sdJson2mxf\sportsImages.cs" />
     <Compile Include="Task\ScheduledTask.cs" />
     <Compile Include="SchedulesDirectAPI\SdApi.cs" />
     <Compile Include="SchedulesDirectAPI\sdArtwork.cs" />

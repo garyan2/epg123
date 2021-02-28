@@ -64,23 +64,26 @@ namespace epg123.SchedulesDirectAPI
         //[JsonProperty("recommendations")]
         //public IList<sdProgramRecommendation> Recommendations { get; set; }
 
-        //[JsonProperty("hasImageArtwork")]
-        //public bool HasImageArtwork { get; set; }
+        [JsonProperty("hasImageArtwork")]
+        public bool HasImageArtwork { get; set; }
 
-        //[JsonProperty("hasSeriesArtwork")]
-        //public bool HasSeriesArtwork { get; set; }
+        [JsonProperty("hasSeriesArtwork")]
+        public bool HasSeriesArtwork { get; set; }
 
-        //[JsonProperty("hasEpisodeArtwork")]
-        //public bool HasEpisodeArtwork { get; set; }
+        [JsonProperty("hasEpisodeArtwork")]
+        public bool HasEpisodeArtwork { get; set; }
 
-        //[JsonProperty("hasMovieArtwork")]
-        //public bool HasMovieArtwork { get; set; }
+        [JsonProperty("hasMovieArtwork")]
+        public bool HasMovieArtwork { get; set; }
 
-        //[JsonProperty("hasSportsArtwork")]
-        //public bool HasSportsArtwork { get; set; }
+        [JsonProperty("hasSportsArtwork")]
+        public bool HasSportsArtwork { get; set; }
 
         [JsonProperty("md5")]
         public string Md5 { get; set; }
+
+        [JsonProperty("MD5")]
+        public string Md5_2 { get; set; }
     }
 
     public class sdProgramTitle

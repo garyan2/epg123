@@ -47,7 +47,7 @@
             // progressBarStage
             // 
             this.progressBarStage.Location = new System.Drawing.Point(12, 40);
-            this.progressBarStage.Maximum = 1100;
+            this.progressBarStage.Maximum = 1300;
             this.progressBarStage.Name = "progressBarStage";
             this.progressBarStage.Size = new System.Drawing.Size(310, 23);
             this.progressBarStage.Step = 1;

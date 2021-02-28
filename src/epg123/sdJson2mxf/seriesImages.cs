@@ -103,6 +103,9 @@ namespace epg123.sdJson2mxf
 
         private static void DownloadSeriesImageResponses(int start = 0)
         {
+            // reject 0 requests
+            if (seriesImageQueue.Count - start < 1) return;
+
             // build the array of series to request images for
             var series = new string[Math.Min(seriesImageQueue.Count - start, MaxImgQueries)];
             for (var i = 0; i < series.Length; ++i)
@@ -176,7 +179,7 @@ namespace epg123.sdJson2mxf
                         }
                     }
                 }
-                else
+                else if (epgCache.JsonFiles.ContainsKey(seriesId))
                 {
                     epgCache.UpdateAssetImages(seriesId, string.Empty);
                 }
@@ -187,13 +190,10 @@ namespace epg123.sdJson2mxf
         {
             var ret = new List<sdImage>();
             var images = sdImages.Where(arg => !string.IsNullOrEmpty(arg.Category))
-                                 .Where(arg => !string.IsNullOrEmpty(arg.Aspect))
-                                 .Where(arg => !string.IsNullOrEmpty(arg.Size)).Where(arg => arg.Size.ToLower().Equals("md"))
-                                 .Where(arg => !string.IsNullOrEmpty(arg.Uri))
-                                 .Where(arg => string.IsNullOrEmpty(arg.Tier) ||
-                                               arg.Tier.ToLower().Equals("series") ||
-                                               arg.Tier.ToLower().Equals("sport") ||
-                                               arg.Tier.ToLower().Equals("sport event")).ToArray();
+                    .Where(arg => !string.IsNullOrEmpty(arg.Aspect))
+                    .Where(arg => !string.IsNullOrEmpty(arg.Size)).Where(arg => arg.Size.ToLower().Equals("md"))
+                    .Where(arg => !string.IsNullOrEmpty(arg.Uri))
+                    .Where(arg => string.IsNullOrEmpty(arg.Tier) || arg.Tier.ToLower().Equals("series") || arg.Tier.ToLower().Equals("sport")).ToArray();
 
             // get the aspect ratios available and fix the URI
             var aspects = new HashSet<string>();

@@ -33,6 +33,7 @@
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tabConfigs = new System.Windows.Forms.TabControl();
             this.tabConfig = new System.Windows.Forms.TabPage();
+            this.cbNoCastCrew = new System.Windows.Forms.CheckBox();
             this.cbBrandLogo = new System.Windows.Forms.CheckBox();
             this.cbAlternateSEFormat = new System.Windows.Forms.CheckBox();
             this.lblAlternateLogos = new System.Windows.Forms.Label();
@@ -186,6 +187,7 @@
             // tabConfig
             // 
             this.tabConfig.BackColor = System.Drawing.SystemColors.Control;
+            this.tabConfig.Controls.Add(this.cbNoCastCrew);
             this.tabConfig.Controls.Add(this.cbBrandLogo);
             this.tabConfig.Controls.Add(this.cbAlternateSEFormat);
             this.tabConfig.Controls.Add(this.lblAlternateLogos);
@@ -210,6 +212,17 @@
             this.tabConfig.Size = new System.Drawing.Size(309, 395);
             this.tabConfig.TabIndex = 2;
             this.tabConfig.Text = "Configuration";
+            // 
+            // cbNoCastCrew
+            // 
+            this.cbNoCastCrew.AutoSize = true;
+            this.cbNoCastCrew.Location = new System.Drawing.Point(6, 363);
+            this.cbNoCastCrew.Name = "cbNoCastCrew";
+            this.cbNoCastCrew.Size = new System.Drawing.Size(247, 17);
+            this.cbNoCastCrew.TabIndex = 38;
+            this.cbNoCastCrew.Text = "Slim MXF/XMLTV - do not include Cast && Crew";
+            this.cbNoCastCrew.UseVisualStyleBackColor = true;
+            this.cbNoCastCrew.CheckedChanged += new System.EventHandler(this.configs_Changed);
             // 
             // cbBrandLogo
             // 
@@ -477,7 +490,7 @@
             this.lblXmltvLogosNote.Size = new System.Drawing.Size(297, 30);
             this.lblXmltvLogosNote.TabIndex = 28;
             this.lblXmltvLogosNote.Text = "* The option to \'Include station logos in .\\logos folder\' must be enabled to incl" +
-    "ude preferred channel logos.";
+    "ude preferred and local logos.";
             // 
             // lblXmltvOutput
             // 
@@ -904,11 +917,12 @@
             // 
             this.columnHeader23.Text = "StationID";
             this.columnHeader23.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.columnHeader23.Width = 65;
             // 
             // columnHeader24
             // 
             this.columnHeader24.Text = "Name";
-            this.columnHeader24.Width = 175;
+            this.columnHeader24.Width = 155;
             // 
             // lineupMenuStrip
             // 
@@ -1057,6 +1071,7 @@
             this.lvL5Lineup.FullRowSelect = true;
             this.lvL5Lineup.HideSelection = false;
             this.lvL5Lineup.Location = new System.Drawing.Point(0, 25);
+            this.lvL5Lineup.MultiSelect = false;
             this.lvL5Lineup.Name = "lvL5Lineup";
             this.lvL5Lineup.Size = new System.Drawing.Size(432, 475);
             this.lvL5Lineup.Sorting = System.Windows.Forms.SortOrder.Ascending;
@@ -1065,6 +1080,7 @@
             this.lvL5Lineup.View = System.Windows.Forms.View.Details;
             this.lvL5Lineup.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.LvLineupSort);
             this.lvL5Lineup.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.lvL5Lineup_ItemCheck);
+            this.lvL5Lineup.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(this.lvL5Lineup_ItemSelectionChanged);
             // 
             // columnHeader17
             // 
@@ -1080,6 +1096,7 @@
             // 
             this.columnHeader19.Text = "StationID";
             this.columnHeader19.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.columnHeader19.Width = 65;
             // 
             // columnHeader20
             // 
@@ -1377,5 +1394,6 @@
         private System.Windows.Forms.ToolStripLabel labelLineupCounts;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripMenuItem viewLogosMenuItem;
+        private System.Windows.Forms.CheckBox cbNoCastCrew;
     }
 }

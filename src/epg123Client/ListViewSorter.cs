@@ -108,16 +108,16 @@ public class ListViewColumnSorter : System.Collections.Generic.IComparer<ListVie
     /// </summary>
     /// <param name="text">channel</param>
     /// <returns></returns>
-    private static string ExtendChannelSubchannel(string text)
+    private static double ExtendChannelSubchannel(string text)
     {
         var split = text.Split('.');
         switch (split.Length)
         {
             case 1:
-                return (split[0].PadLeft(6, '0') + ".000000");
+                return double.Parse(split[0].PadLeft(6, '0') + ".000000");
             default:
                 if (split[0] == "-1") split[0] = "0";
-                return (split[0].PadLeft(6, '0') + "." + split[1].PadLeft(6, '0'));
+                return double.Parse(split[0].PadLeft(6, '0') + "." + split[1].PadLeft(6, '0'));
         }
     }
 

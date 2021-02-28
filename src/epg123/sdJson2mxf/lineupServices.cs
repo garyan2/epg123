@@ -239,16 +239,16 @@ namespace epg123.sdJson2mxf
                                     StationLogosToDownload.Add(new KeyValuePair<MxfService, string[]>(mxfService, new[] { logoPath, url }));
                                 }
                             }
-                        }
 
-                        // add the existing logo; custom logo overrides downloaded logos
-                        if (File.Exists(customPath))
-                        {
-                            logoPath = customPath;
-                        }
-                        if (File.Exists(logoPath))
-                        {
-                            mxfService.LogoImage = SdMxf.With[0].GetGuideImage($"file://{logoPath}", GetStringEncodedImage(logoPath)).Id;
+                            // add the existing logo; custom logo overrides downloaded logos
+                            if (File.Exists(customPath))
+                            {
+                                logoPath = customPath;
+                            }
+                            if (File.Exists(logoPath))
+                            {
+                                mxfService.LogoImage = SdMxf.With[0].GetGuideImage($"file://{logoPath}", GetStringEncodedImage(logoPath)).Id;
+                            }
                         }
 
                         // handle xmltv logos
@@ -257,7 +257,7 @@ namespace epg123.sdJson2mxf
                             if (stationLogo != null) mxfService.ServiceLogo = stationLogo;
                             else if (station.Logo?.Url != null) mxfService.ServiceLogo = station.Logo;
                         }
-                        else if (config.XmltvIncludeChannelLogos.Equals("local"))
+                        else if (config.XmltvIncludeChannelLogos.Equals("local") && config.IncludeSdLogos)
                         {
                             if (File.Exists(logoPath))
                             {
@@ -277,7 +277,7 @@ namespace epg123.sdJson2mxf
                                 };
                             }
                         }
-                        else if (config.XmltvIncludeChannelLogos.Equals("substitute"))
+                        else if (config.XmltvIncludeChannelLogos.Equals("substitute") && config.IncludeSdLogos)
                         {
                             if (File.Exists(logoPath))
                             {
@@ -442,10 +442,13 @@ namespace epg123.sdJson2mxf
                 {
                     serviceLogo.Key.LogoImage = SdMxf.With[0].GetGuideImage("file://" + logoPath, GetStringEncodedImage(logoPath)).Id;
 
-                    // update dimensions
-                    var image = Image.FromFile(logoPath);
-                    serviceLogo.Key.ServiceLogo.Height = image.Height;
-                    serviceLogo.Key.ServiceLogo.Width = image.Width;
+                    if (File.Exists(logoPath))
+                    {
+                        // update dimensions
+                        var image = Image.FromFile(logoPath);
+                        serviceLogo.Key.ServiceLogo.Height = image.Height;
+                        serviceLogo.Key.ServiceLogo.Width = image.Width;
+                    }
                 }
 
                 if (!BackgroundDownloader.CancellationPending) continue;

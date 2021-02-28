@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Xml;
 using System.Xml.Serialization;
 using epg123.MxfXml;
 using epg123.SchedulesDirectAPI;
@@ -85,6 +86,7 @@ namespace epg123.sdJson2mxf
                       BuildAllGenericSeriesInfoDescriptions() && BuildAllExtendedSeriesDataForUiPlus() &&
                       GetAllMoviePosters() &&
                       GetAllSeriesImages() &&
+                      GetAllSportsImages() &&
                       BuildKeywords() &&
                       WriteMxf())
                 {
@@ -165,6 +167,8 @@ namespace epg123.sdJson2mxf
             });
 
             // make sure background worker to download station logos is complete
+            processedObjects = 0; totalObjects = 1;
+            ++processStage; ReportProgress();
             var waits = 0;
             while (!StationLogosDownloadComplete)
             {
@@ -186,11 +190,13 @@ namespace epg123.sdJson2mxf
             {
                 using (var stream = new StreamWriter(Helper.Epg123MxfPath, false, Encoding.UTF8))
                 {
-                    var serializer = new XmlSerializer(typeof(Mxf));
-                    var ns = new XmlSerializerNamespaces();
-                    ns.Add("", "");
-                    TextWriter writer = stream;
-                    serializer.Serialize(writer, SdMxf, ns);
+                    using (var writer = XmlWriter.Create(stream, new XmlWriterSettings { Indent = true }))
+                    {
+                        var serializer = new XmlSerializer(typeof(Mxf));
+                        var ns = new XmlSerializerNamespaces();
+                        ns.Add("", "");
+                        serializer.Serialize(writer, SdMxf, ns);
+                    }
                 }
 
                 Logger.WriteInformation($"Completed save of the MXF file to \"{Helper.Epg123MxfPath}\".");
@@ -234,11 +240,13 @@ namespace epg123.sdJson2mxf
             {
                 using (var stream = new StreamWriter(config.XmltvOutputFile, false, Encoding.UTF8))
                 {
-                    var serializer = new XmlSerializer(typeof(xmltv));
-                    var ns = new XmlSerializerNamespaces();
-                    ns.Add("", "");
-                    TextWriter writer = stream;
-                    serializer.Serialize(writer, xmltv, ns);
+                    using (var writer = XmlWriter.Create(stream, new XmlWriterSettings { Indent = true }))
+                    {
+                        var serializer = new XmlSerializer(typeof(xmltv));
+                        var ns = new XmlSerializerNamespaces();
+                        ns.Add("", "");
+                        serializer.Serialize(writer, xmltv, ns);
+                    }
                 }
                 Logger.WriteInformation($"Completed save of the XMLTV file to \"{Helper.Epg123XmltvPath}\".");
             }

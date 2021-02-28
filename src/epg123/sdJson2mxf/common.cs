@@ -21,6 +21,8 @@ namespace epg123.sdJson2mxf
                                                     "TASK: Build extended series data for MMUI+ ...",
                                                     "TASK: Build movie posters ...",
                                                     "TASK: Build series images ...",
+                                                    "TASK: Build sport event images ...",
+                                                    "TASK: Waiting for download of channel logos to complete ...",
                                                     "TASK: Saving files ...",
                                                     "TASK: Clean and save cache file ..." };
 

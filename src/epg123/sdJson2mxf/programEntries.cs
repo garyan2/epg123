@@ -322,6 +322,12 @@ namespace epg123.sdJson2mxf
             {
                 prg.IsGeneric = true;
             }
+
+            // queue up the sport event to get the event image
+            if ((Helper.StringContains(sd.EntityType, "Team Event") || Helper.StringContains(sd.EntityType, "Sport event")) && sd.HasEpisodeArtwork)
+            {
+                sportEvents.Add(prg);
+            }
         }
 
         private static void DetermineProgramKeywords(ref MxfProgram prg, sdProgram sd)
@@ -631,6 +637,7 @@ namespace epg123.sdJson2mxf
 
         private static void DetermineCastAndCrew(ref MxfProgram prg, sdProgram sd)
         {
+            if (config.ExcludeCastAndCrew) return;
             prg.ActorRole = GetPersons(sd.Cast, new[] { "Actor", "Voice", "Judge" });
             prg.DirectorRole = GetPersons(sd.Crew, new[] { "Director" });
             prg.GuestActorRole = GetPersons(sd.Cast, new[] { "Guest" }); // "Guest Star", "Guest"
@@ -664,7 +671,7 @@ namespace epg123.sdJson2mxf
             var maxValue = 0;
             foreach (var rating in sdProgramContentRatings)
             {
-                if (!rating.Body.ToLower().Equals("motion picture association of america")) continue;
+                if (!rating.Body.ToLower().StartsWith("motion picture association")) continue;
 
                 switch (rating.Code.ToLower().Replace("-", ""))
                 {

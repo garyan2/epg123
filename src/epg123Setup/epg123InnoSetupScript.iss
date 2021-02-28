@@ -51,7 +51,7 @@ AppCopyright=2016
 VersionInfoVersion={#MyAppVersion}
 VersionInfoCompany={#MyAppPublisher}
 VersionInfoDescription=Media Center Electronic Program Guide in 1-2-3
-VersionInfoCopyright=2020
+VersionInfoCopyright=2021
 VersionInfoProductName={#MyAppName}
 VersionInfoProductVersion={#MyAppVersion}
 VersionInfoProductTextVersion={#MyAppVersion}
@@ -79,7 +79,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 [Files]
 Source: "misc\dotNetFx40_Full_setup.exe"; DestDir: "{tmp}"; Flags: dontcopy
 Source: "..\..\bin\Release\epg123.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: main1
-Source: "..\..\bin\Release\epg123.exe.config"; DestDir: "{app}"; Flags: ignoreversion; Components: main1
+Source: "..\..\bin\Release\epg123.exe.config"; DestDir: "{app}"; Flags: ignoreversion; Attribs: hidden; Components: main1
 Source: "..\..\bin\Release\hdhr2mxf.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: hdhr
 Source: "..\..\bin\Release\Newtonsoft.Json.dll"; DestDir: "{app}"; Flags: ignoreversion; Components: main1 hdhr
 Source: "..\..\bin\Release\epg123Client.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: main2
@@ -87,7 +87,7 @@ Source: "..\..\bin\Release\epg123Client.exe.config"; DestDir: "{app}"; Flags: ig
 Source: "..\..\bin\Release\epg123Transfer.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: main2
 Source: "..\..\bin\Release\epg123Transfer.exe.config"; DestDir: "{app}"; Flags: ignoreversion; Attribs: hidden; MinVersion: 6.1; OnlyBelowVersion: 6.2; Components: main2
 Source: "..\..\bin\Release\epgTray.exe"; DestDir: "{app}"; BeforeInstall: TaskKill('epgTray.exe'); Flags: ignoreversion signonce; Components: main2
-Source: "..\..\bin\Release\epgTray.exe.config"; DestDir: "{app}"; Flags: ignoreversion; Components: main2
+Source: "..\..\bin\Release\epgTray.exe.config"; DestDir: "{app}"; Flags: ignoreversion; Attribs: hidden; Components: main2
 Source: "docs\epg123_Guide.pdf"; DestDir: "{app}"; Flags: ignoreversion; Components: help
 Source: "docs\license.rtf"; DestDir: "{app}"; Flags: ignoreversion
 Source: "docs\customLineup.xml.example"; DestDir: "{app}"; Flags: ignoreversion; Components: main1
@@ -99,6 +99,7 @@ Name: "{commonprograms}\{#MyAppName}\{#MyClientName}"; Filename: "{app}\{#MyClie
 Name: "{commonprograms}\{#MyAppName}\EPG123 Transfer Tool"; Filename: "{app}\epg123Transfer.exe"; Components: main2
 Name: "{commonprograms}\{#MyAppName}\EPG123 Guide"; Filename: "{app}\epg123_Guide.pdf"; Components: help
 Name: "{commonprograms}\{#MyAppName}\HDHR2MXF Update"; Filename: "{app}\hdhr2mxf.exe"; Parameters: "-update -import"; Components: hdhr
+Name: "{commonprograms}\{#MyAppName}\EPG123 Tray"; Filename: "{app}\epgTray.exe"; Components: main2
 Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon; Components: main1
 Name: "{commondesktop}\{#MyClientName}"; Filename: "{app}\{#MyClientExeName}"; Tasks: desktopicon; Components: main2
 Name: "{commonstartup}\EPG123 Tray"; Filename: "{app}\epgTray.exe"; Components: main2

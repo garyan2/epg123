@@ -32,7 +32,7 @@ namespace epg123.sdJson2mxf
 
                 // import the cached description if exists, otherwise queue it up
                 var seriesId = $"SH{series.TmsSeriesId}0000";
-                if (epgCache.JsonFiles.ContainsKey(seriesId))
+                if (epgCache.JsonFiles.ContainsKey(seriesId) && epgCache.JsonFiles[seriesId].JsonEntry != "")
                 {
                     try
                     {
@@ -99,6 +99,9 @@ namespace epg123.sdJson2mxf
 
         private static void DownloadGenericSeriesDescriptions(int start = 0)
         {
+            // reject 0 requests
+            if (seriesDescriptionQueue.Count - start < 1) return;
+
             // build the array of series to request descriptions for
             var series = new string[Math.Min(seriesDescriptionQueue.Count - start, MaxImgQueries)];
             for (var i = 0; i < series.Length; ++i)

@@ -27,6 +27,7 @@ namespace epgTray
         private ToolStripMenuItem _viewLogMenuItem;
         private ToolStripMenuItem _runUpdateMenuItem;
         private ToolStripMenuItem _notificationMenuItem;
+        private ToolStripMenuItem _gotoDownloadMenuItem;
         private Timer _timer;
         public bool Shutdown;
         private readonly Thread _serverThread;
@@ -81,6 +82,7 @@ namespace epgTray
             _viewLogMenuItem = new ToolStripMenuItem();
             _runUpdateMenuItem = new ToolStripMenuItem();
             _notificationMenuItem = new ToolStripMenuItem();
+            _gotoDownloadMenuItem = new ToolStripMenuItem();
             _trayIconContextMenu.SuspendLayout();
 
             // 
@@ -89,7 +91,7 @@ namespace epgTray
             _trayIconContextMenu.Items.AddRange(new ToolStripItem[] {
             _runUpdateMenuItem, _notificationMenuItem, new ToolStripSeparator(),
                 _openConfigMenuItem, _openClientMenuItem, _openTransferToolMenuItem, _viewLogMenuItem, new ToolStripSeparator(),
-                _closeMenuItem});
+                _gotoDownloadMenuItem, _closeMenuItem});
             _trayIconContextMenu.Name = "_trayIconContextMenu";
             // 
             // CloseMenuItem
@@ -138,6 +140,12 @@ namespace epgTray
             _notificationMenuItem.Text = "Notify on ERRORs only";
             _notificationMenuItem.CheckState = Settings.Default.errorOnly ? CheckState.Checked : CheckState.Unchecked;
             _notificationMenuItem.Click += NotificationMenuItemOnClick;
+            //
+            // GotoDownload
+            //
+            _gotoDownloadMenuItem.Name = "_gotoDownloadMenuItem";
+            _gotoDownloadMenuItem.Text = "Download/Donate webpage";
+            _gotoDownloadMenuItem.Click += OpenFileMenuItem_Click;
 
             _trayIconContextMenu.ResumeLayout(false);
             _trayIcon.ContextMenuStrip = _trayIconContextMenu;
@@ -332,6 +340,9 @@ namespace epgTray
                     break;
                 case "_viewLogMenuItem":
                     filePath = Helper.Epg123TraceLogPath;
+                    break;
+                case "_gotoDownloadMenuItem":
+                    filePath = "https://epg123.garyan2.net/download";
                     break;
                 default:
                     return;

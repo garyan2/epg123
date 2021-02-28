@@ -38,6 +38,7 @@ namespace epg123
             AutoAddNew = other.AutoAddNew;
             AutoImport = other.AutoImport;
             Automatch = other.Automatch;
+            ExcludeCastAndCrew = other.ExcludeCastAndCrew;
             CreateXmltv = other.CreateXmltv;
             XmltvIncludeChannelNumbers = other.XmltvIncludeChannelNumbers;
             XmltvIncludeChannelLogos = other.XmltvIncludeChannelLogos;
@@ -106,6 +107,7 @@ namespace epg123
             if (!AutoAddNew.Equals(other.AutoAddNew)) return false;
             if (!AutoImport.Equals(other.AutoImport)) return false;
             if (!Automatch.Equals(other.Automatch)) return false;
+            if (!ExcludeCastAndCrew.Equals(other.ExcludeCastAndCrew)) return false;
             if (!CreateXmltv.Equals(other.CreateXmltv)) return false;
             if (!XmltvIncludeChannelNumbers.Equals(other.XmltvIncludeChannelNumbers)) return false;
             if (!XmltvIncludeChannelLogos.Equals(other.XmltvIncludeChannelLogos)) return false;
@@ -187,6 +189,9 @@ namespace epg123
 
         [XmlElement("Automatch")]
         public bool Automatch { get; set; } = true;
+
+        [XmlElement("ExcludeCastAndCrew")]
+        public bool ExcludeCastAndCrew { get; set; }
 
         [XmlElement("CreateXmltv")]
         public bool CreateXmltv { get; set; }

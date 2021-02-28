@@ -78,6 +78,9 @@ namespace epg123.sdJson2mxf
 
         private static bool GetMd5ScheduleEntries(string[] dates, int start)
         {
+            // reject 0 requests
+            if (SdMxf.With[0].Services.Count - start < 1) return true;
+
             // build request for station schedules
             var requests = new sdScheduleRequest[Math.Min(SdMxf.With[0].Services.Count - start, MaxQueries / dates.Length)];
             for (var i = 0; i < requests.Length; ++i)

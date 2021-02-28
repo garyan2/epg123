@@ -82,6 +82,9 @@ namespace epg123.sdJson2mxf
 
         private static void DownloadMovieImageResponses(int start = 0)
         {
+            // reject 0 requests
+            if (movieImageQueue.Count - start < 1) return;
+
             // build the array of movies to request images for
             var movies = new string[Math.Min(movieImageQueue.Count - start, MaxImgQueries)];
             for (var i = 0; i < movies.Length; ++i)
@@ -153,9 +156,9 @@ namespace epg123.sdJson2mxf
         {
             var ret = new List<sdImage>();
             var images = sdImages.Where(arg => !string.IsNullOrEmpty(arg.Category))
-                                 .Where(arg => !string.IsNullOrEmpty(arg.Aspect)).Where(arg => arg.Aspect.ToLower().Equals("2x3"))
-                                 .Where(arg => !string.IsNullOrEmpty(arg.Size)).Where(arg => arg.Size.ToLower().Equals("md"))
-                                 .Where(arg => !string.IsNullOrEmpty(arg.Uri));
+                     .Where(arg => !string.IsNullOrEmpty(arg.Aspect)).Where(arg => arg.Aspect.ToLower().Equals("2x3"))
+                     .Where(arg => !string.IsNullOrEmpty(arg.Size)).Where(arg => arg.Size.ToLower().Equals("md"))
+                     .Where(arg => !string.IsNullOrEmpty(arg.Uri));
 
             // get the aspect ratios available and fix the URI
             var links = new sdImage[3];

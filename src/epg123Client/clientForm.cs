@@ -8,7 +8,6 @@ using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml;
 using epg123;
@@ -547,9 +546,11 @@ namespace epg123Client
                 else
                 {
                     // Set the column number that is to be sorted; default to ascending.
+                    SetSortArrow(((ListView)sender).Columns[_mergedChannelColumnSorter.SortColumn], SortOrder.None);
                     _mergedChannelColumnSorter.SortColumn = e.Column;
                     _mergedChannelColumnSorter.Order = SortOrder.Ascending;
                 }
+                SetSortArrow(((ListView)sender).Columns[e.Column], _mergedChannelColumnSorter.Order);
 
                 // Perform the sort with these new sort options.
                 _allMergedChannels.Sort(_mergedChannelColumnSorter);
@@ -567,15 +568,34 @@ namespace epg123Client
                 else
                 {
                     // Set the column number that is to be sorted; default to ascending.
+                    SetSortArrow(((ListView)sender).Columns[_lineupChannelColumnSorter.SortColumn], SortOrder.None);
                     _lineupChannelColumnSorter.SortColumn = e.Column;
                     _lineupChannelColumnSorter.Order = SortOrder.Ascending;
                 }
+                SetSortArrow(((ListView)sender).Columns[e.Column], _lineupChannelColumnSorter.Order);
 
                 // Perform the sort with these new sort options.
                 _lineupListViewItems.Sort(_lineupChannelColumnSorter);
                 lineupChannelListView.Refresh();
             }
             Cursor = Cursors.Arrow;
+        }
+
+        private void SetSortArrow(ColumnHeader head, SortOrder order)
+        {
+            const string ascArrow = "▲";
+            const string descArrow = "▼";
+
+            // remove arrow
+            if (head.Text.EndsWith(ascArrow) || head.Text.EndsWith(descArrow))
+                head.Text = head.Text.Substring(0, head.Text.Length - 1);
+
+            // add arrow
+            switch (order)
+            {
+                case SortOrder.Ascending: head.Text += ascArrow; break;
+                case SortOrder.Descending: head.Text += descArrow; break;
+            }
         }
 
         private void AdjustColumnWidths(ListView listView)
@@ -913,6 +933,7 @@ namespace epg123Client
             // reset sorting column and order
             _lineupChannelColumnSorter.Order = SortOrder.Ascending;
             _lineupChannelColumnSorter.SortColumn = 1;
+            SetSortArrow(lineupChannelListView.Columns[1], SortOrder.Ascending);
             _lineupListViewItems.Sort(_lineupChannelColumnSorter);
 
             // resume listview drawing
@@ -926,6 +947,16 @@ namespace epg123Client
         private void btnRefreshLineups_Click(object sender, EventArgs e)
         {
             Application.UseWaitCursor = true;
+
+            foreach (ColumnHeader head in mergedChannelListView.Columns)
+            {
+                SetSortArrow(head, SortOrder.None);
+            }
+
+            foreach (ColumnHeader head in lineupChannelListView.Columns)
+            {
+                SetSortArrow(head, SortOrder.None);
+            }
 
             mergedChannelListView.VirtualListSize = 0;
             splitContainer1.Enabled = splitContainer2.Enabled = false;
@@ -990,6 +1021,7 @@ namespace epg123Client
                 // reset sorting column and order
                 _mergedChannelColumnSorter.Order = SortOrder.Ascending;
                 _mergedChannelColumnSorter.SortColumn = 1;
+                SetSortArrow(mergedChannelListView.Columns[1], SortOrder.Ascending);
 
                 // notify something is going on
                 lblToolStripStatus.Text = "Collecting merged channels...";

@@ -8,6 +8,7 @@ using System.Drawing.Text;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
@@ -161,6 +162,11 @@ namespace epg123
                 }
                 Helper.DeleteFile(Helper.EButtonPath);
             }
+
+            // double buffer list views
+            lvLineupChannels.DoubleBuffered(true);
+            lvL5Lineup.DoubleBuffered(true);
+
             Cursor = Cursors.Arrow;
         }
 
@@ -430,6 +436,7 @@ namespace epg123
                     numFillerDuration.Value = Config.XmltvFillerProgramLength;
                     rtbFillerDescription.Text = Config.XmltvFillerProgramDescription;
                     tbXmltvOutput.Text = Config.XmltvOutputFile ?? Helper.Epg123XmltvPath;
+                    cbNoCastCrew.Checked = Config.ExcludeCastAndCrew;
 
                     cbXmltv.Checked = Config.CreateXmltv;
                 }
@@ -973,13 +980,20 @@ namespace epg123
                     SortColumn = (int)LineupColumn.CallSign,
                     Order = SortOrder.Ascending
                 };
+                foreach (ColumnHeader head in listview.Columns)
+                {
+                    SetSortArrow(head, SortOrder.None);
+                }
                 listview.Sort();
+                SetSortArrow(listview.Columns[(int)LineupColumn.CallSign], SortOrder.Ascending);
+                listview.Refresh();
             }
         }
         private void LvLineupSort(object sender, ColumnClickEventArgs e)
         {
             // Determine which column sorter this click applies to
             var lvcs = (ListViewColumnSorter)((ListView)sender).ListViewItemSorter;
+            lvcs.ClickHeader();
 
             // Determine if clicked column is already the column that is being sorted
             if (e.Column == lvcs.SortColumn)
@@ -990,12 +1004,30 @@ namespace epg123
             else
             {
                 // Set the column number that is to be sorted; default to ascending.
+                SetSortArrow(((ListView)sender).Columns[lvcs.SortColumn], SortOrder.None);
                 lvcs.SortColumn = e.Column;
                 lvcs.Order = SortOrder.Ascending;
             }
 
             // Perform the sort with these new sort options.
             ((ListView)sender).Sort();
+            SetSortArrow(((ListView)sender).Columns[e.Column], lvcs.Order);
+        }
+        private void SetSortArrow(ColumnHeader head, SortOrder order)
+        {
+            const string ascArrow = "▲";
+            const string descArrow = "▼";
+
+            // remove arrow
+            if (head.Text.EndsWith(ascArrow) || head.Text.EndsWith(descArrow))
+                head.Text = head.Text.Substring(0, head.Text.Length - 1);
+
+            // add arrow
+            switch (order)
+            {
+                case SortOrder.Ascending: head.Text += ascArrow; break;
+                case SortOrder.Descending: head.Text += descArrow; break;
+            }
         }
         #endregion
 
@@ -1188,6 +1220,10 @@ namespace epg123
             {
                 Config.ModernMediaUiPlusSupport = cbModernMedia.Checked;
             }
+            else if (sender.Equals(cbNoCastCrew))
+            {
+                Config.ExcludeCastAndCrew = cbNoCastCrew.Checked;
+            }
         }
         #endregion
         #region ========== TAB: Task ==========
@@ -1247,7 +1283,7 @@ namespace epg123
             lvLineupChannels.BeginUpdate();
 
             var selectedLineup = (myLineup)comboLineups.SelectedItem;
-            menuInclude.Checked = lvLineupChannels.Enabled = selectedLineup.Include;
+            menuInclude.Checked = lvLineupChannels.Enabled = btnSelectAll.Enabled = btnSelectNone.Enabled = selectedLineup.Include;
             menuExclude.Checked = !selectedLineup.Include;
             btnIncludeExclude.Image = selectedLineup.Include ? Resources.GreenLight.ToBitmap() : Resources.RedLight.ToBitmap();
             lvLineupChannels.ForeColor = selectedLineup.Include ? DefaultForeColor : Color.LightGray;
@@ -1321,6 +1357,20 @@ namespace epg123
             var frm = new frmLogos(station.Station);
             frm.Show(this);
         }
+
+        private void lvL5Lineup_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
+        {
+            if (e.IsSelected) e.Item.Selected = false;
+        }
+    }
+}
+
+public static class ControlExtensions
+{
+    public static void DoubleBuffered(this Control control, bool enable)
+    {
+        var doubleBufferPropertyInfo = control.GetType().GetProperty("DoubleBuffered", BindingFlags.Instance | BindingFlags.NonPublic);
+        doubleBufferPropertyInfo?.SetValue(control, enable, null);
     }
 }
 
@@ -1412,7 +1462,12 @@ public class myChannelLvi : ListViewItem
         SubItems[3].Text = Station.CustomServiceName ?? Station.Name;
 
         Checked = Station.Include;
+        this.ForeColor = station.Include ? SystemColors.WindowText : SystemColors.GrayText;
 
-        Station.IncludeChanged += (sender, args) => Checked = Station.Include;
+        Station.IncludeChanged += (sender, args) =>
+        {
+            Checked = Station.Include;
+            this.ForeColor = station.Include ? SystemColors.WindowText : SystemColors.GrayText;
+        };
     }
 }
