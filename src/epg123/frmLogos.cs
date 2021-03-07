@@ -50,7 +50,14 @@ namespace epg123
 
         private void DeleteToRecycle(string file)
         {
-            FileSystem.DeleteFile(file, UIOption.OnlyErrorDialogs, RecycleOption.SendToRecycleBin);
+            try
+            {
+                FileSystem.DeleteFile(file, UIOption.OnlyErrorDialogs, RecycleOption.SendToRecycleBin);
+            }
+            catch
+            {
+                // do nothing
+            }
         }
 
         private void LoadLocalImages()
@@ -59,36 +66,42 @@ namespace epg123
             {
                 pbCustomLocal.BackColor = Color.FromArgb(255, 6, 15, 30);
                 pbCustomLocal.Image = Image.FromFile($"{Helper.Epg123LogosFolder}\\{_callsign}_c.png");
+                pbCustomLocal.Refresh();
             }
 
             if (File.Exists($"{Helper.Epg123LogosFolder}\\{_callsign}_d.png") && pbDarkLocal.Image == null)
             {
                 pbDarkLocal.BackColor = Color.FromArgb(255, 6, 15, 30); ;
                 pbDarkLocal.Image = Image.FromFile($"{Helper.Epg123LogosFolder}\\{_callsign}_d.png");
+                pbDarkLocal.Refresh();
             }
 
             if (File.Exists($"{Helper.Epg123LogosFolder}\\{_callsign}_w.png") && pbWhiteLocal.Image == null)
             {
                 pbWhiteLocal.BackColor = Color.FromArgb(255, 6, 15, 30); ;
                 pbWhiteLocal.Image = Image.FromFile($"{Helper.Epg123LogosFolder}\\{_callsign}_w.png");
+                pbWhiteLocal.Refresh();
             }
 
             if (File.Exists($"{Helper.Epg123LogosFolder}\\{_callsign}_l.png") && pbLightLocal.Image == null)
             {
                 pbLightLocal.BackColor = Color.White;
                 pbLightLocal.Image = Image.FromFile($"{Helper.Epg123LogosFolder}\\{_callsign}_l.png");
+                pbLightLocal.Refresh();
             }
 
             if (File.Exists($"{Helper.Epg123LogosFolder}\\{_callsign}_g.png") && pbGrayLocal.Image == null)
             {
                 pbGrayLocal.BackColor = Color.White;
                 pbGrayLocal.Image = Image.FromFile($"{Helper.Epg123LogosFolder}\\{_callsign}_g.png");
+                pbGrayLocal.Refresh();
             }
 
             if (File.Exists($"{Helper.Epg123LogosFolder}\\{_callsign}.png") && pbDefaultLocal.Image == null)
             {
                 pbDefaultLocal.BackColor = Color.FromArgb(255, 6, 15, 30);
                 pbDefaultLocal.Image = Image.FromFile($"{Helper.Epg123LogosFolder}\\{_callsign}.png");
+                pbDefaultLocal.Refresh();
             }
         }
 
@@ -108,18 +121,22 @@ namespace epg123
                     case "dark":
                         pbDarkRemote.BackColor = Color.FromArgb(255, 6, 15, 30); ;
                         pbDarkRemote.Load(image.Url);
+                        pbDarkRemote.Refresh();
                         break;
                     case "white":
                         pbWhiteRemote.BackColor = Color.FromArgb(255, 6, 15, 30); ;
                         pbWhiteRemote.Load(image.Url);
+                        pbWhiteRemote.Refresh();
                         break;
                     case "light":
                         pbLightRemote.BackColor = Color.White;
                         pbLightRemote.Load(image.Url);
+                        pbLightRemote.Refresh();
                         break;
                     case "gray":
                         pbGrayRemote.BackColor = Color.White;
                         pbGrayRemote.Load(image.Url);
+                        pbGrayRemote.Refresh();
                         break;
                 }
             }
@@ -156,7 +173,7 @@ namespace epg123
         private void picDragSource_MouseDown(object sender, MouseEventArgs e)
         {
             if (e.Button != MouseButtons.Left) return;
-            var img = ((PictureBox)sender).Image;
+            var img = ((PictureBox)sender).Image?.Clone();
             if (img == null) return;
             _selectedBox = (PictureBox) sender;
             DoDragDrop(img, DragDropEffects.Copy);
@@ -186,7 +203,7 @@ namespace epg123
             }
             else if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
-                imgBitmap = Image.FromFile(((string[]) e.Data.GetData(DataFormats.FileDrop))[0]) as Bitmap;
+                imgBitmap = Image.FromFile(((string[]) e.Data.GetData(DataFormats.FileDrop))[0]).Clone() as Bitmap;
             }
             else if (e.Data.GetDataPresent(DataFormats.StringFormat))
             {
@@ -229,7 +246,10 @@ namespace epg123
 
             var image = Helper.CropAndResizeImage(imgBitmap);
             image.Save(path, ImageFormat.Png);
+            imgBitmap.Dispose();
+            image.Dispose();
 
+            GC.Collect();
             LoadLocalImages();
         }
 
@@ -238,6 +258,15 @@ namespace epg123
             var owner = (ContextMenuStrip) sender;
             _selectedBox = (PictureBox) owner.SourceControl;
             if (_selectedBox?.Image == null) e.Cancel = true;
+        }
+
+        private void frmLogos_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            pbCustomLocal.Image?.Dispose();
+            pbDarkLocal.Image?.Dispose();
+            pbWhiteLocal.Image?.Dispose();
+            pbLightLocal.Image?.Dispose();
+            pbGrayLocal.Image?.Dispose();
         }
     }
 }

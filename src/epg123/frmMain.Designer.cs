@@ -33,11 +33,10 @@
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tabConfigs = new System.Windows.Forms.TabControl();
             this.tabConfig = new System.Windows.Forms.TabPage();
+            this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.cbNoCastCrew = new System.Windows.Forms.CheckBox();
             this.cbBrandLogo = new System.Windows.Forms.CheckBox();
             this.cbAlternateSEFormat = new System.Windows.Forms.CheckBox();
-            this.lblAlternateLogos = new System.Windows.Forms.Label();
-            this.cmbAlternateLogos = new System.Windows.Forms.ComboBox();
             this.lblPreferredLogos = new System.Windows.Forms.Label();
             this.cmbPreferredLogos = new System.Windows.Forms.ComboBox();
             this.cbSeriesPosterArt = new System.Windows.Forms.CheckBox();
@@ -53,6 +52,7 @@
             this.cbOadOverride = new System.Windows.Forms.CheckBox();
             this.cbAddNewStations = new System.Windows.Forms.CheckBox();
             this.tabXmltv = new System.Windows.Forms.TabPage();
+            this.cbXmltvSingleImage = new System.Windows.Forms.CheckBox();
             this.ckXmltvExtendedInfo = new System.Windows.Forms.CheckBox();
             this.lblXmltvLogosNote = new System.Windows.Forms.Label();
             this.lblXmltvOutput = new System.Windows.Forms.Label();
@@ -95,7 +95,6 @@
             this.columnHeader23 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader24 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.lineupMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.viewLogosMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.copyToClipboardMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStrip6 = new System.Windows.Forms.ToolStrip();
             this.btnIncludeExclude = new System.Windows.Forms.ToolStripDropDownButton();
@@ -132,6 +131,7 @@
             this.splitContainer1.SuspendLayout();
             this.tabConfigs.SuspendLayout();
             this.tabConfig.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numDays)).BeginInit();
             this.tabXmltv.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numFillerDuration)).BeginInit();
@@ -187,11 +187,10 @@
             // tabConfig
             // 
             this.tabConfig.BackColor = System.Drawing.SystemColors.Control;
+            this.tabConfig.Controls.Add(this.pictureBox1);
             this.tabConfig.Controls.Add(this.cbNoCastCrew);
             this.tabConfig.Controls.Add(this.cbBrandLogo);
             this.tabConfig.Controls.Add(this.cbAlternateSEFormat);
-            this.tabConfig.Controls.Add(this.lblAlternateLogos);
-            this.tabConfig.Controls.Add(this.cmbAlternateLogos);
             this.tabConfig.Controls.Add(this.lblPreferredLogos);
             this.tabConfig.Controls.Add(this.cmbPreferredLogos);
             this.tabConfig.Controls.Add(this.cbSeriesPosterArt);
@@ -213,10 +212,19 @@
             this.tabConfig.TabIndex = 2;
             this.tabConfig.Text = "Configuration";
             // 
+            // pictureBox1
+            // 
+            this.pictureBox1.Location = new System.Drawing.Point(284, 265);
+            this.pictureBox1.Name = "pictureBox1";
+            this.pictureBox1.Size = new System.Drawing.Size(16, 16);
+            this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+            this.pictureBox1.TabIndex = 39;
+            this.pictureBox1.TabStop = false;
+            // 
             // cbNoCastCrew
             // 
             this.cbNoCastCrew.AutoSize = true;
-            this.cbNoCastCrew.Location = new System.Drawing.Point(6, 363);
+            this.cbNoCastCrew.Location = new System.Drawing.Point(6, 336);
             this.cbNoCastCrew.Name = "cbNoCastCrew";
             this.cbNoCastCrew.Size = new System.Drawing.Size(247, 17);
             this.cbNoCastCrew.TabIndex = 38;
@@ -227,7 +235,7 @@
             // cbBrandLogo
             // 
             this.cbBrandLogo.AutoSize = true;
-            this.cbBrandLogo.Location = new System.Drawing.Point(6, 316);
+            this.cbBrandLogo.Location = new System.Drawing.Point(6, 289);
             this.cbBrandLogo.Name = "cbBrandLogo";
             this.cbBrandLogo.Size = new System.Drawing.Size(294, 17);
             this.cbBrandLogo.TabIndex = 37;
@@ -247,31 +255,6 @@
             this.cbAlternateSEFormat.UseVisualStyleBackColor = true;
             this.cbAlternateSEFormat.CheckedChanged += new System.EventHandler(this.configs_Changed);
             // 
-            // lblAlternateLogos
-            // 
-            this.lblAlternateLogos.AutoSize = true;
-            this.lblAlternateLogos.Location = new System.Drawing.Point(15, 292);
-            this.lblAlternateLogos.Name = "lblAlternateLogos";
-            this.lblAlternateLogos.Size = new System.Drawing.Size(98, 13);
-            this.lblAlternateLogos.TabIndex = 35;
-            this.lblAlternateLogos.Text = "Alternate SD logos:";
-            // 
-            // cmbAlternateLogos
-            // 
-            this.cmbAlternateLogos.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cmbAlternateLogos.FormattingEnabled = true;
-            this.cmbAlternateLogos.Items.AddRange(new object[] {
-            "white logos",
-            "gray logos",
-            "logos for dark backgrounds",
-            "logos for light backgrounds",
-            "none"});
-            this.cmbAlternateLogos.Location = new System.Drawing.Point(119, 289);
-            this.cmbAlternateLogos.Name = "cmbAlternateLogos";
-            this.cmbAlternateLogos.Size = new System.Drawing.Size(160, 21);
-            this.cmbAlternateLogos.TabIndex = 34;
-            this.cmbAlternateLogos.SelectedIndexChanged += new System.EventHandler(this.imageConfigs_Changed);
-            // 
             // lblPreferredLogos
             // 
             this.lblPreferredLogos.AutoSize = true;
@@ -290,7 +273,7 @@
             "gray logos",
             "logos for dark backgrounds",
             "logos for light backgrounds",
-            "do not download SD logos"});
+            "do not use SD logos"});
             this.cmbPreferredLogos.Location = new System.Drawing.Point(119, 262);
             this.cmbPreferredLogos.Name = "cmbPreferredLogos";
             this.cmbPreferredLogos.Size = new System.Drawing.Size(160, 21);
@@ -381,7 +364,7 @@
             // cbModernMedia
             // 
             this.cbModernMedia.AutoSize = true;
-            this.cbModernMedia.Location = new System.Drawing.Point(6, 339);
+            this.cbModernMedia.Location = new System.Drawing.Point(6, 312);
             this.cbModernMedia.Name = "cbModernMedia";
             this.cbModernMedia.Size = new System.Drawing.Size(199, 17);
             this.cbModernMedia.TabIndex = 23;
@@ -447,6 +430,7 @@
             // tabXmltv
             // 
             this.tabXmltv.BackColor = System.Drawing.SystemColors.Control;
+            this.tabXmltv.Controls.Add(this.cbXmltvSingleImage);
             this.tabXmltv.Controls.Add(this.ckXmltvExtendedInfo);
             this.tabXmltv.Controls.Add(this.lblXmltvLogosNote);
             this.tabXmltv.Controls.Add(this.lblXmltvOutput);
@@ -471,10 +455,21 @@
             this.tabXmltv.TabIndex = 3;
             this.tabXmltv.Text = "XMLTV";
             // 
+            // cbXmltvSingleImage
+            // 
+            this.cbXmltvSingleImage.AutoSize = true;
+            this.cbXmltvSingleImage.Location = new System.Drawing.Point(6, 294);
+            this.cbXmltvSingleImage.Name = "cbXmltvSingleImage";
+            this.cbXmltvSingleImage.Size = new System.Drawing.Size(277, 17);
+            this.cbXmltvSingleImage.TabIndex = 30;
+            this.cbXmltvSingleImage.Text = "Trim XMLTV - do not include additional image formats";
+            this.cbXmltvSingleImage.UseVisualStyleBackColor = true;
+            this.cbXmltvSingleImage.CheckedChanged += new System.EventHandler(this.ckXmltvConfigs_Changed);
+            // 
             // ckXmltvExtendedInfo
             // 
             this.ckXmltvExtendedInfo.AutoSize = true;
-            this.ckXmltvExtendedInfo.Location = new System.Drawing.Point(6, 284);
+            this.ckXmltvExtendedInfo.Location = new System.Drawing.Point(6, 271);
             this.ckXmltvExtendedInfo.Name = "ckXmltvExtendedInfo";
             this.ckXmltvExtendedInfo.Size = new System.Drawing.Size(199, 17);
             this.ckXmltvExtendedInfo.TabIndex = 29;
@@ -485,7 +480,7 @@
             // lblXmltvLogosNote
             // 
             this.lblXmltvLogosNote.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblXmltvLogosNote.Location = new System.Drawing.Point(7, 350);
+            this.lblXmltvLogosNote.Location = new System.Drawing.Point(7, 355);
             this.lblXmltvLogosNote.Name = "lblXmltvLogosNote";
             this.lblXmltvLogosNote.Size = new System.Drawing.Size(297, 30);
             this.lblXmltvLogosNote.TabIndex = 28;
@@ -495,7 +490,7 @@
             // lblXmltvOutput
             // 
             this.lblXmltvOutput.AutoSize = true;
-            this.lblXmltvOutput.Location = new System.Drawing.Point(6, 309);
+            this.lblXmltvOutput.Location = new System.Drawing.Point(6, 314);
             this.lblXmltvOutput.Name = "lblXmltvOutput";
             this.lblXmltvOutput.Size = new System.Drawing.Size(58, 13);
             this.lblXmltvOutput.TabIndex = 27;
@@ -503,7 +498,7 @@
             // 
             // btnXmltvOutput
             // 
-            this.btnXmltvOutput.Location = new System.Drawing.Point(280, 325);
+            this.btnXmltvOutput.Location = new System.Drawing.Point(280, 330);
             this.btnXmltvOutput.Name = "btnXmltvOutput";
             this.btnXmltvOutput.Size = new System.Drawing.Size(26, 22);
             this.btnXmltvOutput.TabIndex = 26;
@@ -515,7 +510,7 @@
             // 
             this.tbXmltvOutput.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.tbXmltvOutput.Cursor = System.Windows.Forms.Cursors.Default;
-            this.tbXmltvOutput.Location = new System.Drawing.Point(6, 326);
+            this.tbXmltvOutput.Location = new System.Drawing.Point(6, 331);
             this.tbXmltvOutput.Name = "tbXmltvOutput";
             this.tbXmltvOutput.ReadOnly = true;
             this.tbXmltvOutput.Size = new System.Drawing.Size(268, 20);
@@ -525,7 +520,7 @@
             // rtbFillerDescription
             // 
             this.rtbFillerDescription.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.rtbFillerDescription.Location = new System.Drawing.Point(24, 232);
+            this.rtbFillerDescription.Location = new System.Drawing.Point(23, 219);
             this.rtbFillerDescription.Name = "rtbFillerDescription";
             this.rtbFillerDescription.Size = new System.Drawing.Size(280, 46);
             this.rtbFillerDescription.TabIndex = 24;
@@ -536,7 +531,7 @@
             // lblFillerDescription
             // 
             this.lblFillerDescription.AutoSize = true;
-            this.lblFillerDescription.Location = new System.Drawing.Point(21, 216);
+            this.lblFillerDescription.Location = new System.Drawing.Point(158, 10);
             this.lblFillerDescription.Name = "lblFillerDescription";
             this.lblFillerDescription.Size = new System.Drawing.Size(126, 13);
             this.lblFillerDescription.TabIndex = 23;
@@ -895,13 +890,17 @@
             this.lvLineupChannels.HideSelection = false;
             this.lvLineupChannels.Location = new System.Drawing.Point(0, 46);
             this.lvLineupChannels.Name = "lvLineupChannels";
+            this.lvLineupChannels.OwnerDraw = true;
             this.lvLineupChannels.Size = new System.Drawing.Size(432, 454);
             this.lvLineupChannels.Sorting = System.Windows.Forms.SortOrder.Ascending;
             this.lvLineupChannels.TabIndex = 3;
             this.lvLineupChannels.UseCompatibleStateImageBehavior = false;
             this.lvLineupChannels.View = System.Windows.Forms.View.Details;
             this.lvLineupChannels.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.LvLineupSort);
+            this.lvLineupChannels.DrawColumnHeader += new System.Windows.Forms.DrawListViewColumnHeaderEventHandler(this.lvLineupChannels_DrawColumnHeader);
+            this.lvLineupChannels.DrawSubItem += new System.Windows.Forms.DrawListViewSubItemEventHandler(this.lvLineupChannels_DrawSubItem);
             this.lvLineupChannels.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.lvLineupChannels_ItemCheck);
+            this.lvLineupChannels.MouseClick += new System.Windows.Forms.MouseEventHandler(this.lvLineupChannels_MouseClick);
             // 
             // columnHeader21
             // 
@@ -922,24 +921,16 @@
             // columnHeader24
             // 
             this.columnHeader24.Text = "Name";
-            this.columnHeader24.Width = 155;
+            this.columnHeader24.Width = 180;
             // 
             // lineupMenuStrip
             // 
             this.lineupMenuStrip.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.lineupMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.viewLogosMenuItem,
             this.copyToClipboardMenuItem});
             this.lineupMenuStrip.Name = "contextMenuStrip1";
-            this.lineupMenuStrip.Size = new System.Drawing.Size(172, 48);
+            this.lineupMenuStrip.Size = new System.Drawing.Size(172, 26);
             this.lineupMenuStrip.Opening += new System.ComponentModel.CancelEventHandler(this.lineupMenuStrip_Opening);
-            // 
-            // viewLogosMenuItem
-            // 
-            this.viewLogosMenuItem.Name = "viewLogosMenuItem";
-            this.viewLogosMenuItem.Size = new System.Drawing.Size(171, 22);
-            this.viewLogosMenuItem.Text = "View/Edit Logos";
-            this.viewLogosMenuItem.Click += new System.EventHandler(this.viewLogosMenuItem_Click);
             // 
             // copyToClipboardMenuItem
             // 
@@ -1274,6 +1265,7 @@
             this.tabConfigs.ResumeLayout(false);
             this.tabConfig.ResumeLayout(false);
             this.tabConfig.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numDays)).EndInit();
             this.tabXmltv.ResumeLayout(false);
             this.tabXmltv.PerformLayout();
@@ -1372,8 +1364,6 @@
         private System.Windows.Forms.CheckBox cbSeriesPosterArt;
         private System.Windows.Forms.CheckBox cbTMDb;
         private System.Windows.Forms.CheckBox cbSdLogos;
-        private System.Windows.Forms.Label lblAlternateLogos;
-        private System.Windows.Forms.ComboBox cmbAlternateLogos;
         private System.Windows.Forms.CheckBox cbAlternateSEFormat;
         private System.Windows.Forms.CheckBox cbBrandLogo;
         private System.Windows.Forms.CheckBox ckXmltvExtendedInfo;
@@ -1393,7 +1383,8 @@
         private System.Windows.Forms.ToolStripComboBox comboLineups;
         private System.Windows.Forms.ToolStripLabel labelLineupCounts;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
-        private System.Windows.Forms.ToolStripMenuItem viewLogosMenuItem;
         private System.Windows.Forms.CheckBox cbNoCastCrew;
+        private System.Windows.Forms.PictureBox pictureBox1;
+        private System.Windows.Forms.CheckBox cbXmltvSingleImage;
     }
 }

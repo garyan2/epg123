@@ -268,8 +268,8 @@ namespace epg123.sdJson2mxf
                 Live = BuildLiveFlag(scheduleEntry),
                 New = (!scheduleEntry.IsRepeat) ? string.Empty : null,
                 Subtitles = BuildProgramSubtitles(scheduleEntry),
-                Rating = BuildProgramRatings(mxfProgram, scheduleEntry),
-                StarRating = BuildProgramStarRatings(mxfProgram)
+                //Rating = BuildProgramRatings(mxfProgram, scheduleEntry),
+                //StarRating = BuildProgramStarRatings(mxfProgram)
             };
         }
 
@@ -356,9 +356,9 @@ namespace epg123.sdJson2mxf
         private static List<XmltvIcon> BuildProgramIcons(MxfProgram mxfProgram)
         {
             // a movie will have a guide image from the program
-            if (mxfProgram.ProgramImages != null)
+            if (mxfProgram.IsMovie && mxfProgram.ProgramImages != null)
             {
-                return mxfProgram.ProgramImages.Select(image => new XmltvIcon() {Src = image.Uri, Height = image.Height, Width = image.Width}).ToList();
+                return mxfProgram.ProgramImages.Select(image => new XmltvIcon {Src = image.Uri, Height = image.Height, Width = image.Width}).ToList();
             }
 
             // get the series info class from the program if it is a series
@@ -367,6 +367,14 @@ namespace epg123.sdJson2mxf
             if (!mxfSeriesInfo.Id.Equals(mxfProgram.Series))
             {
                 mxfSeriesInfo = SdMxf.With[0].SeriesInfos.SingleOrDefault(arg => arg.Id.Equals(mxfProgram.Series));
+            }
+
+            if (config.XmltvSingleImage)
+            {
+                var imageId = !string.IsNullOrEmpty(mxfProgram.GuideImage) ? mxfProgram.GuideImage : mxfSeriesInfo?.GuideImage;
+                if (imageId == null) return null;
+                var image = SdMxf.With[0].GuideImages.SingleOrDefault(arg => arg.Id == imageId);
+                return image == null ? null : new List<XmltvIcon>(1) { new XmltvIcon() { Src = image.ImageUrl }};
             }
 
             return mxfSeriesInfo?.SeriesImages?.Select(image => new XmltvIcon() {Src = image.Uri, Height = image.Height, Width = image.Width}).ToList();

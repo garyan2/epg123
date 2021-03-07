@@ -11,6 +11,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Windows.Forms;
 using System.Xml.Serialization;
 using epg123.Properties;
@@ -40,6 +41,7 @@ namespace epg123
         public bool Match;
         private readonly double _dpiScaleFactor = 1.0;
         private bool _lockCustomCheckboxes;
+        private Thread _logoThread;
 
         public frmMain()
         {
@@ -192,6 +194,13 @@ namespace epg123
             }
             Settings.Default.WindowMaximized = (WindowState == FormWindowState.Maximized);
             Settings.Default.Save();
+
+            // end the thread if still running
+            if (_logoThread?.IsAlive ?? false)
+            {
+                _logoThread.Interrupt();
+                if (!_logoThread.Join(100)) _logoThread.Abort();
+            }
         }
 
         #region ========== Elevated Rights, Registry, and Event Log =========
@@ -424,7 +433,6 @@ namespace epg123
                     cbModernMedia.Checked = Config.ModernMediaUiPlusSupport;
                     cbBrandLogo.Checked = !Config.BrandLogoImage.Equals("none");
                     cmbPreferredLogos.SelectedIndex = (int)(Helper.PreferredLogos)Enum.Parse(typeof(Helper.PreferredLogos), Config.PreferredLogoStyle, true);
-                    cmbAlternateLogos.SelectedIndex = (int)(Helper.PreferredLogos)Enum.Parse(typeof(Helper.PreferredLogos), Config.AlternateLogoStyle, true);
                     ckChannelNumbers.Checked = Config.XmltvIncludeChannelNumbers;
                     ckChannelLogos.Checked = !string.IsNullOrEmpty(Config.XmltvIncludeChannelLogos) && (Config.XmltvIncludeChannelLogos != "false");
                     ckLocalLogos.Checked = (Config.XmltvIncludeChannelLogos == "local") || (Config.XmltvIncludeChannelLogos == "substitute");
@@ -437,7 +445,7 @@ namespace epg123
                     rtbFillerDescription.Text = Config.XmltvFillerProgramDescription;
                     tbXmltvOutput.Text = Config.XmltvOutputFile ?? Helper.Epg123XmltvPath;
                     cbNoCastCrew.Checked = Config.ExcludeCastAndCrew;
-
+                    cbXmltvSingleImage.Checked = Config.XmltvSingleImage;
                     cbXmltv.Checked = Config.CreateXmltv;
                 }
 
@@ -567,6 +575,7 @@ namespace epg123
                     Channels = lineupMap.Map.ToList()
                 });
             }
+            GetAllServiceLogos(false);
 
             // cleanup dead lineups and populate combo box
             foreach (var lineup in _allLineups)
@@ -1012,6 +1021,9 @@ namespace epg123
             // Perform the sort with these new sort options.
             ((ListView)sender).Sort();
             SetSortArrow(((ListView)sender).Columns[e.Column], lvcs.Order);
+
+            if (lvLineupChannels.Items.Count > 0)
+                lvLineupChannels.EnsureVisible(0);
         }
         private void SetSortArrow(ColumnHeader head, SortOrder order)
         {
@@ -1051,7 +1063,8 @@ namespace epg123
             if (sender.Equals(cbXmltv))
             {
                 Config.CreateXmltv = ckChannelNumbers.Enabled = ckChannelLogos.Enabled = ckXmltvFillerData.Enabled = ckXmltvExtendedInfo.Enabled =
-                    lblXmltvOutput.Enabled = tbXmltvOutput.Enabled = btnXmltvOutput.Enabled = lblXmltvLogosNote.Enabled = cbXmltv.Checked;
+                    cbXmltvSingleImage.Enabled = lblXmltvOutput.Enabled = tbXmltvOutput.Enabled = btnXmltvOutput.Enabled = lblXmltvLogosNote.Enabled =
+                        cbXmltv.Checked;
                 if (!cbXmltv.Checked)
                 {
                     ckUrlLogos.Enabled = ckLocalLogos.Enabled = ckSubstitutePath.Enabled = txtSubstitutePath.Enabled = false;
@@ -1123,6 +1136,10 @@ namespace epg123
             {
                 Config.XmltvExtendedInfoInTitleDescriptions = ckXmltvExtendedInfo.Checked;
             }
+            else if (sender.Equals(cbXmltvSingleImage))
+            {
+                Config.XmltvSingleImage = cbXmltvSingleImage.Checked;
+            }
         }
         private void btnXmltvOutput_Click(object sender, EventArgs e)
         {
@@ -1149,20 +1166,25 @@ namespace epg123
             }
             else if (sender.Equals(cbSdLogos))
             {
-                Config.IncludeSdLogos = lblPreferredLogos.Enabled = cmbPreferredLogos.Enabled = lblAlternateLogos.Enabled = cmbAlternateLogos.Enabled = cbSdLogos.Checked;
+                Config.IncludeSdLogos = lblPreferredLogos.Enabled = cmbPreferredLogos.Enabled = cbSdLogos.Checked;
+                GetAllServiceLogos(true);
             }
             else if (sender.Equals(cmbPreferredLogos))
             {
                 Config.PreferredLogoStyle = ((Helper.PreferredLogos)cmbPreferredLogos.SelectedIndex).ToString();
-                if (Config.PreferredLogoStyle.Equals("none"))
+                switch (Config.PreferredLogoStyle)
                 {
-                    cmbAlternateLogos.SelectedIndex = cmbAlternateLogos.Items.Count - 1;
+                    case "DARK":
+                        Config.AlternateLogoStyle = Helper.PreferredLogos.WHITE.ToString();
+                        break;
+                    case "LIGHT":
+                        Config.AlternateLogoStyle = Helper.PreferredLogos.GRAY.ToString();
+                        break;
+                    default:
+                        Config.AlternateLogoStyle = Config.PreferredLogoStyle;
+                        break;
                 }
-                configs_Changed(cbBrandLogo, null);
-            }
-            else if (sender.Equals(cmbAlternateLogos))
-            {
-                Config.AlternateLogoStyle = ((Helper.PreferredLogos)cmbAlternateLogos.SelectedIndex).ToString();
+                GetAllServiceLogos(true);
                 configs_Changed(cbBrandLogo, null);
             }
         }
@@ -1208,11 +1230,11 @@ namespace epg123
             {
                 if (cbBrandLogo.Checked)
                 {
-                    if (!Config.PreferredLogoStyle.Equals("DARK") && !Config.AlternateLogoStyle.Equals("DARK"))
+                    if (!Config.PreferredLogoStyle.Equals("LIGHT", StringComparison.OrdinalIgnoreCase) && !Config.AlternateLogoStyle.Equals("LIGHT", StringComparison.OrdinalIgnoreCase))
                     {
-                        Config.BrandLogoImage = "dark";
+                        Config.BrandLogoImage = "light";
                     }
-                    else Config.BrandLogoImage = "light";
+                    else Config.BrandLogoImage = "dark";
                 }
                 else Config.BrandLogoImage = "none";
             }
@@ -1347,20 +1369,213 @@ namespace epg123
             menuExclude.Checked = !include;
             btnIncludeExclude.Image = include ? Resources.GreenLight.ToBitmap() : Resources.RedLight.ToBitmap();
             lvLineupChannels.ForeColor = include ? DefaultForeColor : Color.LightGray;
+
+            btnSelectAll.Enabled = btnSelectNone.Enabled = include;
         }
 
-        private void viewLogosMenuItem_Click(object sender, EventArgs e)
+        private void lvLineupChannels_MouseClick(object sender, MouseEventArgs e)
         {
-            if (lvLineupChannels.SelectedItems.Count != 1) return;
-            var item = lvLineupChannels.SelectedItems[0] as myChannelLvi;
-            var station = item.Station;
-            var frm = new frmLogos(station.Station);
-            frm.Show(this);
+            var lvi = ((ListView) sender).GetItemAt(e.X, e.Y);
+            if (lvi == null || e.Button != MouseButtons.Left) return;
+
+            var minX = lvi.SubItems[3].Bounds.X;
+            if (e.X > minX && e.X < minX + 48)
+            {
+                var item = lvLineupChannels.SelectedItems[0] as myChannelLvi;
+                var station = item.Station;
+                var frm = new frmLogos(station.Station);
+                frm.FormClosed += (o, args) =>
+                {
+                    _allStations[station.StationId].ServiceLogo = GetServiceBitmap(station.Callsign);
+                };
+                frm.Show(this);
+            }
         }
 
         private void lvL5Lineup_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
         {
             if (e.IsSelected) e.Item.Selected = false;
+        }
+
+        private void lvLineupChannels_DrawSubItem(object sender, DrawListViewSubItemEventArgs e)
+        {
+            var backColor = e.SubItem.BackColor = e.Item.BackColor;
+            var foreColor = e.SubItem.ForeColor = e.Item.ForeColor;
+            if (e.ColumnIndex == 0 || e.Header != columnHeader24)
+            {
+                e.DrawDefault = true;
+                return;
+            }
+
+            // set minimum column width
+            var textSize = e.Graphics.MeasureString(e.SubItem.Text, lvLineupChannels.Font);
+            if (e.Item.ListView.Columns[e.ColumnIndex].Width < (int)textSize.Width + 51)
+            {
+                e.Item.ListView.Columns[e.ColumnIndex].Width = (int)textSize.Width + 51;
+                return;
+            }
+
+            if (!e.Item.ListView.Enabled)
+            {
+                backColor = SystemColors.Control;
+                foreColor = Color.LightGray;
+            }
+            else if (e.Item.ListView.SelectedItems.Contains(e.Item))
+            {
+                if ((e.ItemState & ListViewItemStates.Selected) != 0 && e.Item.ListView.ContainsFocus)
+                {
+                    backColor = SystemColors.Highlight;
+                    foreColor = SystemColors.HighlightText;
+                }
+                else
+                {
+                    backColor = SystemColors.Control;
+                    foreColor = SystemColors.ControlText;
+                }
+            }
+
+            e.DrawBackground();
+            e.Graphics.FillRectangle(new SolidBrush(backColor), e.Bounds);
+
+            var sf = new StringFormat {LineAlignment = StringAlignment.Center, FormatFlags = StringFormatFlags.NoWrap};
+            e.Graphics.DrawString(e.SubItem.Text, lvLineupChannels.Font, new SolidBrush(foreColor),
+                new Rectangle(e.Bounds.X + 51, e.Bounds.Y, e.Bounds.Width + 51, e.Bounds.Height), sf);
+
+            if (((myChannelLvi) e.Item).Station.ServiceLogo != null)
+            {
+                var imageRect = new Rectangle(e.Bounds.X, e.Bounds.Y, 48, 16);
+                e.Graphics.DrawImage(((myChannelLvi)e.Item).Station.ServiceLogo, imageRect);
+            }
+        }
+
+        private void lvLineupChannels_DrawColumnHeader(object sender, DrawListViewColumnHeaderEventArgs e)
+        {
+            if (e.ColumnIndex != 3)
+            {
+                e.DrawDefault = true;
+                return;
+            }
+
+            e.DrawBackground();
+
+            var mouse = PointToClient(Cursor.Position);
+            mouse.X -= splitContainer1.SplitterDistance + splitContainer1.SplitterWidth + tabLineups.Margin.Left +
+                       lvLineupChannels.Margin.Left + e.Bounds.Location.X;
+            mouse.Y -= tabLineups.Margin.Top + tabLineups.ItemSize.Height + toolStrip6.Margin.Top + toolStrip6.Height + toolStrip6.Margin.Bottom + lvLineupChannels.Margin.Top;
+
+            if (Cursor == Cursors.Default && mouse.X > 7 &&  mouse.X < e.Bounds.Width + 7 && mouse.Y >= 0 && mouse.Y < e.Bounds.Height)
+            {
+                e.Graphics.FillRectangle(new SolidBrush(Color.FromArgb(255, 217, 235, 249)), e.Bounds);
+            }
+
+            e.Graphics.DrawLine(SystemPens.ControlLight, e.Bounds.Right - 1, e.Bounds.Y, e.Bounds.Right - 1, e.Bounds.Bottom);
+            e.Graphics.DrawLine(SystemPens.ControlLight, e.Bounds.Left + 48, e.Bounds.Y, e.Bounds.Left + 48, e.Bounds.Bottom);
+
+            var sf = new StringFormat { LineAlignment = StringAlignment.Center, FormatFlags = StringFormatFlags.NoWrap };
+            e.Graphics.DrawString(e.Header.Text, lvLineupChannels.Font, new SolidBrush(e.ForeColor),
+                new Rectangle(e.Bounds.X + 51, e.Bounds.Y, e.Bounds.Width - 48, e.Bounds.Height), sf);
+            sf.Alignment = StringAlignment.Center;
+            e.Graphics.DrawString("Logo", lvLineupChannels.Font, new SolidBrush(e.ForeColor),
+                new Rectangle(e.Bounds.X, e.Bounds.Y, 48, e.Bounds.Height), sf);
+        }
+
+        private Bitmap GetServiceBitmap(string callsign)
+        {
+            if (!Config.IncludeSdLogos) return null;
+
+            var custom = false;
+            var path = $"{Helper.Epg123LogosFolder}\\{callsign}";
+            if (File.Exists($"{path}_c.png"))
+            {
+                path += "_c.png";
+                custom = true;
+            }
+            else if (Config.PreferredLogoStyle.Equals("NONE", StringComparison.OrdinalIgnoreCase))
+            {
+                // prevent remaining logos from possibly being used
+            }
+            else if (File.Exists($"{path}_{Config.PreferredLogoStyle.Substring(0, 1)}.png"))
+            {
+                path += $"_{Config.PreferredLogoStyle.Substring(0, 1)}.png";
+            }
+            else if (File.Exists($"{path}_{Config.AlternateLogoStyle.Substring(0, 1)}.png"))
+            {
+                path += $"_{Config.AlternateLogoStyle.Substring(0, 1)}.png";
+            }
+            else if (File.Exists($"{path}.png"))
+            {
+                path += ".png";
+            }
+            if (!path.EndsWith(".png")) return null;
+
+            var source = Image.FromFile(path) as Bitmap;
+            var ratio = (double)source.Width / source.Height;
+            var offsetX = 0;
+            var offsetY = 0;
+            if (ratio < 3.0)
+            {
+                offsetX = (source.Height * 3 - source.Width) / 2;
+            }
+            else
+            {
+                offsetY = (source.Width / 3 - source.Height) / 2;
+            }
+
+            var retBitmap = new Bitmap(source.Width + offsetX * 2, source.Height + offsetY * 2);
+            retBitmap.SetResolution(source.HorizontalResolution, source.VerticalResolution);
+            using (var g = Graphics.FromImage(retBitmap))
+            {
+                g.SmoothingMode = SmoothingMode.AntiAlias;
+                if (Config.AlternateLogoStyle.Equals("GRAY", StringComparison.OrdinalIgnoreCase))
+                {
+                    g.Clear(Color.White);
+                }
+                else g.Clear(Color.FromArgb(255, 6, 15, 30));
+                g.DrawImage(source, offsetX, offsetY);
+
+                // draw a box around the border
+                var thickness = 1 * retBitmap.Height / 16;
+                if (custom) g.DrawRectangle(new Pen(Color.Red, thickness), 0, 0, retBitmap.Width - thickness, retBitmap.Height - thickness);
+            }
+
+            // free up the file for edit
+            source.Dispose();
+            GC.Collect();
+
+            return new Bitmap(retBitmap, 48, 16);
+        }
+
+        private void GetAllServiceLogos(bool refresh = false)
+        {
+            // end logos thread if still running from earlier build
+            if (_logoThread?.IsAlive ?? false)
+            {
+                _logoThread.Interrupt();
+                if (!_logoThread.Join(100)) _logoThread.Abort();
+            }
+
+            pictureBox1.Image = Resources.RedLight.ToBitmap();
+            ThreadStart starter = () =>
+            {
+                foreach (var station in _allStations)
+                {
+                    if (!refresh && station.Value.ServiceLogo != null) continue;
+                    try
+                    {
+                        station.Value.ServiceLogo = GetServiceBitmap(station.Value.Callsign);
+                    }
+                    catch
+                    {
+                        // do nothing
+                    }
+                }
+            };
+            starter += () =>
+            {
+                pictureBox1.Image = Resources.GreenLight.ToBitmap();
+            };
+            _logoThread = new Thread(starter);
+            _logoThread.Start();
         }
     }
 }
@@ -1416,6 +1631,23 @@ public class myStation
         }
     }
 
+    private Bitmap _serviceLogo;
+    public event EventHandler LogoChanged;
+    protected virtual void OnLogoChanged(EventArgs e)
+    {
+        var handler = LogoChanged;
+        handler?.Invoke(this, e);
+    }
+    public Bitmap ServiceLogo
+    {
+        get => _serviceLogo;
+        set
+        {
+            _serviceLogo = value;
+            OnLogoChanged(EventArgs.Empty);
+        }
+    }
+
     public bool HDOverride { get; set; }
     public bool SDOverride { get; set; }
     public string CustomCallsign { get; set; }
@@ -1462,12 +1694,34 @@ public class myChannelLvi : ListViewItem
         SubItems[3].Text = Station.CustomServiceName ?? Station.Name;
 
         Checked = Station.Include;
-        this.ForeColor = station.Include ? SystemColors.WindowText : SystemColors.GrayText;
+        ForeColor = station.Include ? SystemColors.WindowText : SystemColors.GrayText;
 
         Station.IncludeChanged += (sender, args) =>
         {
             Checked = Station.Include;
-            this.ForeColor = station.Include ? SystemColors.WindowText : SystemColors.GrayText;
+            ForeColor = station.Include ? SystemColors.WindowText : SystemColors.GrayText;
+        };
+
+        Station.LogoChanged += (sender, args) =>
+        {
+            try
+            {
+                if (ListView?.InvokeRequired ?? false)
+                {
+                    ListView?.Invoke(new Action(delegate
+                    {
+                        ListView?.Invalidate(Bounds);
+                    }));
+                }
+                else
+                {
+                    ListView?.Invalidate(Bounds);
+                }
+            }
+            catch
+            {
+                // do nothing
+            }
         };
     }
 }

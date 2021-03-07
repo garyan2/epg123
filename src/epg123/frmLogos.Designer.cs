@@ -330,6 +330,7 @@
             this.Name = "frmLogos";
             this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
             this.Text = "Station Logos";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.frmLogos_FormClosing);
             this.Load += new System.EventHandler(this.frmLogos_Load);
             this.Shown += new System.EventHandler(this.frmLogos_Shown);
             ((System.ComponentModel.ISupportInitialize)(this.pbCustomLocal)).EndInit();

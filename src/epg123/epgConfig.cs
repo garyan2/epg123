@@ -47,6 +47,7 @@ namespace epg123
             XmltvFillerProgramLength = other.XmltvFillerProgramLength;
             XmltvFillerProgramDescription = other.XmltvFillerProgramDescription;
             XmltvExtendedInfoInTitleDescriptions = other.XmltvExtendedInfoInTitleDescriptions;
+            XmltvSingleImage = other.XmltvSingleImage;
             XmltvOutputFile = other.XmltvOutputFile;
             ModernMediaUiPlusSupport = other.ModernMediaUiPlusSupport;
             BrandLogoImage = other.BrandLogoImage;
@@ -116,6 +117,7 @@ namespace epg123
             if (!XmltvFillerProgramLength.Equals(other.XmltvFillerProgramLength)) return false;
             if (!XmltvFillerProgramDescription.Equals(other.XmltvFillerProgramDescription)) return false;
             if (!XmltvExtendedInfoInTitleDescriptions.Equals(other.XmltvExtendedInfoInTitleDescriptions)) return false;
+            if (!XmltvSingleImage.Equals(other.XmltvSingleImage)) return false;
             if (!XmltvOutputFile.Equals(other.XmltvOutputFile)) return false;
             if (!ModernMediaUiPlusSupport.Equals(other.ModernMediaUiPlusSupport)) return false;
             if (!BrandLogoImage.Equals(other.BrandLogoImage)) return false;
@@ -176,10 +178,10 @@ namespace epg123
         public bool IncludeSdLogos { get; set; } = true;
 
         [XmlElement("PreferredLogoStyle")]
-        public string PreferredLogoStyle { get; set; } = "dark";
+        public string PreferredLogoStyle { get; set; } = "DARK";
 
         [XmlElement("AlternateLogoStyle")]
-        public string AlternateLogoStyle { get; set; } = "white";
+        public string AlternateLogoStyle { get; set; } = "WHITE";
 
         [XmlElement("AutoAddNew")]
         public bool AutoAddNew { get; set; } = true;
@@ -216,6 +218,9 @@ namespace epg123
 
         [XmlElement("XmltvExtendedInfoInTitleDescriptions")]
         public bool XmltvExtendedInfoInTitleDescriptions { get; set; }
+
+        [XmlElement("XmltvSingleImage")]
+        public bool XmltvSingleImage { get; set; }
 
         [XmlElement("XmltvOutputFile")]
         public string XmltvOutputFile { get; set; } = Helper.Epg123XmltvPath;
