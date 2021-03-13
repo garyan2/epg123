@@ -590,7 +590,7 @@ namespace epg123
 
             labelLineupCounts.Text = $"subscribed to {comboLineups.Items.Count} out of {sdApi.MaxLineups} allowed lineups";
 
-            if (comboLineups.Items.Count > -1) comboLineups.SelectedIndex = 0;
+            if (comboLineups.Items.Count > 0) comboLineups.SelectedIndex = 0;
         }
         public string GetChannelNumber(SdLineupMap map)
         {
@@ -941,6 +941,7 @@ namespace epg123
 
             foreach (var lineup in gui.NewLineups)
             {
+                if (!_allLineups.ContainsKey(lineup)) continue;
                 _allLineups[lineup].Include = true;
             }
 

@@ -28,7 +28,6 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmMain));
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tabConfigs = new System.Windows.Forms.TabControl();
@@ -94,7 +93,7 @@
             this.columnHeader22 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader23 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader24 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.lineupMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.lineupMenuStrip = new System.Windows.Forms.ContextMenuStrip();
             this.copyToClipboardMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStrip6 = new System.Windows.Forms.ToolStrip();
             this.btnIncludeExclude = new System.Windows.Forms.ToolStripDropDownButton();
@@ -122,7 +121,7 @@
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnExecute = new System.Windows.Forms.Button();
             this.btnHelp = new System.Windows.Forms.Button();
-            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.toolTip1 = new System.Windows.Forms.ToolTip();
             this.btnClearCache = new System.Windows.Forms.Button();
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -911,12 +910,13 @@
             // 
             this.columnHeader22.Text = "Channel";
             this.columnHeader22.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.columnHeader22.Width = 65;
             // 
             // columnHeader23
             // 
             this.columnHeader23.Text = "StationID";
             this.columnHeader23.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            this.columnHeader23.Width = 65;
+            this.columnHeader23.Width = 70;
             // 
             // columnHeader24
             // 

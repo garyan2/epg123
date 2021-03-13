@@ -276,11 +276,18 @@ namespace epg123Client
             try
             {
                 // unsubscribe all channels with this lineup as a primary
-                foreach (MergedChannel mergedChannel in WmcMergedLineup.UncachedChannels)
+                if (!(WmcObjectStore.Fetch(lineupId) is Lineup lineup)) return;
+                foreach (var channel in lineup.GetChannels())
                 {
-                    if ((mergedChannel.PrimaryChannel?.Lineup?.Id ?? 0).Equals(lineupId))
+                    foreach (MergedChannel mergedChannel in channel.ReferencingPrimaryChannels)
                     {
                         SubscribeLineupChannel(0, mergedChannel.Id);
+                    }
+
+                    foreach (MergedChannel mergedChannel in channel.ReferencingSecondaryChannels)
+                    {
+                        mergedChannel.SecondaryChannels.RemoveAllMatching(channel);
+                        mergedChannel.Update();
                     }
                 }
             }
@@ -631,6 +638,13 @@ namespace epg123Client
                 }
                 else
                 {
+                    foreach (Channel secondary in mergedChannel.SecondaryChannels)
+                    {
+                        if (secondary.Lineup == null)
+                        {
+                            mergedChannel.SecondaryChannels.RemoveAllMatching(secondary);
+                        }
+                    }
                     mergedChannel.AddChannelListings(listings);
                 }
                 mergedChannel.UserBlockedState = listings == null ? UserBlockedState.Blocked : UserBlockedState.Enabled;
@@ -880,11 +894,11 @@ namespace epg123Client
             {
                 try
                 {
-                    ListView.Invoke(new Action(delegate
+                    ListView?.Invoke(new Action(delegate
                     {
-                        ((myChannelLvi)ListView.Items[Index]).PopulateMergedChannelItems();
-                        ((myChannelLvi)ListView.Items[Index]).ShowCustomLabels(Custom);
-                        ListView.Invalidate(Bounds);
+                        ((myChannelLvi)ListView?.Items[Index]).PopulateMergedChannelItems();
+                        ((myChannelLvi)ListView?.Items[Index]).ShowCustomLabels(Custom);
+                        ListView?.Invalidate(Bounds);
                     }));
                 }
                 catch

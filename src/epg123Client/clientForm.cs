@@ -600,7 +600,7 @@ namespace epg123Client
 
         private void AdjustColumnWidths(ListView listView)
         {
-            int[] minWidths = {60, 60, 100, 100, 100, 60, 60};
+            int[] minWidths = {60, 65, 100, 100, 100, 60, 60};
             foreach (ColumnHeader header in listView.Columns)
             {
                 var currentWidth = header.Width;

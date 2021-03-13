@@ -49,7 +49,9 @@ namespace epg123Client
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.renameMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.renumberMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator7 = new System.Windows.Forms.ToolStripSeparator();
             this.splitMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.mergeMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator6 = new System.Windows.Forms.ToolStripSeparator();
             this.clipboardMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.clearListingsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -93,10 +95,14 @@ namespace epg123Client
             this.lblDatabaseUtilities = new System.Windows.Forms.Label();
             this.btnTweakWmc = new System.Windows.Forms.Button();
             this.btnBackup = new System.Windows.Forms.Button();
+            this.ebtnRestore = new epg123.ElevatedButton();
+            this.ebtnRebuild = new epg123.ElevatedButton();
+            this.ebtnSetup = new epg123.ElevatedButton();
             this.btnImport = new System.Windows.Forms.Button();
             this.grpScheduledTask = new System.Windows.Forms.GroupBox();
             this.cbAutomatch = new System.Windows.Forms.CheckBox();
             this.rdoClientMode = new System.Windows.Forms.RadioButton();
+            this.btnTask = new epg123.ElevatedButton();
             this.tbTaskInfo = new System.Windows.Forms.TextBox();
             this.cbTaskWake = new System.Windows.Forms.CheckBox();
             this.rdoFullMode = new System.Windows.Forms.RadioButton();
@@ -104,12 +110,6 @@ namespace epg123Client
             this.tbSchedTime = new System.Windows.Forms.MaskedTextBox();
             this.lblUpdateTime = new System.Windows.Forms.Label();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
-            this.ebtnRestore = new epg123.ElevatedButton();
-            this.ebtnRebuild = new epg123.ElevatedButton();
-            this.ebtnSetup = new epg123.ElevatedButton();
-            this.btnTask = new epg123.ElevatedButton();
-            this.mergeMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparator7 = new System.Windows.Forms.ToolStripSeparator();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -221,10 +221,12 @@ namespace epg123Client
             // columnCallSign
             // 
             this.columnCallSign.Text = "Call Sign";
+            this.columnCallSign.Width = 100;
             // 
             // columnNumber
             // 
             this.columnNumber.Text = "Number";
+            this.columnNumber.Width = 65;
             // 
             // columnServiceName
             // 
@@ -263,7 +265,7 @@ namespace epg123Client
             this.clipboardMenuItem,
             this.clearListingsMenuItem});
             this.contextMenuStrip1.Name = "contextMenuStrip1";
-            this.contextMenuStrip1.Size = new System.Drawing.Size(184, 220);
+            this.contextMenuStrip1.Size = new System.Drawing.Size(184, 198);
             this.contextMenuStrip1.Opening += new System.ComponentModel.CancelEventHandler(this.contextMenuStrip1_Opening);
             // 
             // subscribeMenuItem
@@ -299,12 +301,24 @@ namespace epg123Client
             this.renumberMenuItem.Text = "Renumber";
             this.renumberMenuItem.Click += new System.EventHandler(this.renumberMenuItem_Click);
             // 
+            // toolStripSeparator7
+            // 
+            this.toolStripSeparator7.Name = "toolStripSeparator7";
+            this.toolStripSeparator7.Size = new System.Drawing.Size(180, 6);
+            // 
             // splitMenuItem
             // 
             this.splitMenuItem.Name = "splitMenuItem";
             this.splitMenuItem.Size = new System.Drawing.Size(183, 22);
             this.splitMenuItem.Text = "Split Channels";
             this.splitMenuItem.Click += new System.EventHandler(this.splitMenuItem_Click);
+            // 
+            // mergeMenuItem
+            // 
+            this.mergeMenuItem.Name = "mergeMenuItem";
+            this.mergeMenuItem.Size = new System.Drawing.Size(183, 22);
+            this.mergeMenuItem.Text = "Merge Channels";
+            this.mergeMenuItem.Click += new System.EventHandler(this.mergeMenuItem_Click);
             // 
             // toolStripSeparator6
             // 
@@ -541,6 +555,7 @@ namespace epg123Client
             // columnHeader5
             // 
             this.columnHeader5.Text = "Number";
+            this.columnHeader5.Width = 65;
             // 
             // columnHeader6
             // 
@@ -738,6 +753,39 @@ namespace epg123Client
             this.btnBackup.UseVisualStyleBackColor = true;
             this.btnBackup.Click += new System.EventHandler(this.btnBackup_Click);
             // 
+            // ebtnRestore
+            // 
+            this.ebtnRestore.FlatStyle = System.Windows.Forms.FlatStyle.System;
+            this.ebtnRestore.Location = new System.Drawing.Point(282, 44);
+            this.ebtnRestore.Name = "ebtnRestore";
+            this.ebtnRestore.Size = new System.Drawing.Size(72, 23);
+            this.ebtnRestore.TabIndex = 16;
+            this.ebtnRestore.Text = "Restore";
+            this.ebtnRestore.UseVisualStyleBackColor = true;
+            this.ebtnRestore.Click += new System.EventHandler(this.btnRestore_Click);
+            // 
+            // ebtnRebuild
+            // 
+            this.ebtnRebuild.FlatStyle = System.Windows.Forms.FlatStyle.System;
+            this.ebtnRebuild.Location = new System.Drawing.Point(204, 70);
+            this.ebtnRebuild.Name = "ebtnRebuild";
+            this.ebtnRebuild.Size = new System.Drawing.Size(150, 23);
+            this.ebtnRebuild.TabIndex = 14;
+            this.ebtnRebuild.Text = "Rebuild WMC Database";
+            this.ebtnRebuild.UseVisualStyleBackColor = true;
+            this.ebtnRebuild.Click += new System.EventHandler(this.btnRebuild_Click);
+            // 
+            // ebtnSetup
+            // 
+            this.ebtnSetup.FlatStyle = System.Windows.Forms.FlatStyle.System;
+            this.ebtnSetup.Location = new System.Drawing.Point(6, 19);
+            this.ebtnSetup.Name = "ebtnSetup";
+            this.ebtnSetup.Size = new System.Drawing.Size(93, 23);
+            this.ebtnSetup.TabIndex = 13;
+            this.ebtnSetup.Text = "Client Setup";
+            this.ebtnSetup.UseVisualStyleBackColor = true;
+            this.ebtnSetup.Click += new System.EventHandler(this.btnSetup_Click);
+            // 
             // btnImport
             // 
             this.btnImport.Enabled = false;
@@ -787,6 +835,17 @@ namespace epg123Client
             this.rdoClientMode.Text = "Client Mode";
             this.rdoClientMode.UseVisualStyleBackColor = true;
             this.rdoClientMode.CheckedChanged += new System.EventHandler(this.rdoMode_CheckedChanged);
+            // 
+            // btnTask
+            // 
+            this.btnTask.FlatStyle = System.Windows.Forms.FlatStyle.System;
+            this.btnTask.Location = new System.Drawing.Point(326, 19);
+            this.btnTask.Name = "btnTask";
+            this.btnTask.Size = new System.Drawing.Size(80, 23);
+            this.btnTask.TabIndex = 10;
+            this.btnTask.Text = "Create";
+            this.btnTask.UseVisualStyleBackColor = true;
+            this.btnTask.Click += new System.EventHandler(this.btnTask_Click);
             // 
             // tbTaskInfo
             // 
@@ -854,62 +913,6 @@ namespace epg123Client
             // openFileDialog1
             // 
             this.openFileDialog1.FileName = "openFileDialog1";
-            // 
-            // ebtnRestore
-            // 
-            this.ebtnRestore.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.ebtnRestore.Location = new System.Drawing.Point(282, 44);
-            this.ebtnRestore.Name = "ebtnRestore";
-            this.ebtnRestore.Size = new System.Drawing.Size(72, 23);
-            this.ebtnRestore.TabIndex = 16;
-            this.ebtnRestore.Text = "Restore";
-            this.ebtnRestore.UseVisualStyleBackColor = true;
-            this.ebtnRestore.Click += new System.EventHandler(this.btnRestore_Click);
-            // 
-            // ebtnRebuild
-            // 
-            this.ebtnRebuild.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.ebtnRebuild.Location = new System.Drawing.Point(204, 70);
-            this.ebtnRebuild.Name = "ebtnRebuild";
-            this.ebtnRebuild.Size = new System.Drawing.Size(150, 23);
-            this.ebtnRebuild.TabIndex = 14;
-            this.ebtnRebuild.Text = "Rebuild WMC Database";
-            this.ebtnRebuild.UseVisualStyleBackColor = true;
-            this.ebtnRebuild.Click += new System.EventHandler(this.btnRebuild_Click);
-            // 
-            // ebtnSetup
-            // 
-            this.ebtnSetup.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.ebtnSetup.Location = new System.Drawing.Point(6, 19);
-            this.ebtnSetup.Name = "ebtnSetup";
-            this.ebtnSetup.Size = new System.Drawing.Size(93, 23);
-            this.ebtnSetup.TabIndex = 13;
-            this.ebtnSetup.Text = "Client Setup";
-            this.ebtnSetup.UseVisualStyleBackColor = true;
-            this.ebtnSetup.Click += new System.EventHandler(this.btnSetup_Click);
-            // 
-            // btnTask
-            // 
-            this.btnTask.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.btnTask.Location = new System.Drawing.Point(326, 19);
-            this.btnTask.Name = "btnTask";
-            this.btnTask.Size = new System.Drawing.Size(80, 23);
-            this.btnTask.TabIndex = 10;
-            this.btnTask.Text = "Create";
-            this.btnTask.UseVisualStyleBackColor = true;
-            this.btnTask.Click += new System.EventHandler(this.btnTask_Click);
-            // 
-            // mergeMenuItem
-            // 
-            this.mergeMenuItem.Name = "mergeMenuItem";
-            this.mergeMenuItem.Size = new System.Drawing.Size(183, 22);
-            this.mergeMenuItem.Text = "Merge Channels";
-            this.mergeMenuItem.Click += new System.EventHandler(this.mergeMenuItem_Click);
-            // 
-            // toolStripSeparator7
-            // 
-            this.toolStripSeparator7.Name = "toolStripSeparator7";
-            this.toolStripSeparator7.Size = new System.Drawing.Size(180, 6);
             // 
             // clientForm
             // 

@@ -673,9 +673,9 @@ namespace epg123
                     case "FocusFont":
                         e.SetAttributeValue("FontSize", $"{ScaleNumber(22)}"); // default is 22
                         break;
-                    case "FocusImage":
-                        e.SetAttributeValue("BaseImage", "null");
-                        break;
+                    //case "FocusImage":
+                    //    e.SetAttributeValue("BaseImage", "null");
+                    //    break;
                     case "IconMinSize":
                         e.SetAttributeValue("Size", $"{ScaleNumber(39)},{ScaleNumber(32)}");
                         break;

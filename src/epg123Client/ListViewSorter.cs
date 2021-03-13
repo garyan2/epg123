@@ -61,6 +61,7 @@ public class ListViewColumnSorter : System.Collections.Generic.IComparer<ListVie
                 break;
             case 1:
                 if ((compareResult = InitialNullResult(x, y)) == NoNulls) compareResult = _objectCompare.Compare(ExtendChannelSubchannel(x?.SubItems[_columnToSort].Text), ExtendChannelSubchannel(y?.SubItems[_columnToSort].Text));
+                if (compareResult == 0) compareResult = _objectCompare.Compare(x?.SubItems[0].Text, y?.SubItems[0].Text);
                 break;
             case 2:
             case 3:
@@ -108,16 +109,16 @@ public class ListViewColumnSorter : System.Collections.Generic.IComparer<ListVie
     /// </summary>
     /// <param name="text">channel</param>
     /// <returns></returns>
-    private static double ExtendChannelSubchannel(string text)
+    private static string ExtendChannelSubchannel(string text)
     {
         var split = text.Split('.');
+        if (split[0] == "-1") split[0] = "0";
         switch (split.Length)
         {
             case 1:
-                return double.Parse(split[0].PadLeft(6, '0') + ".000000");
+                return (split[0].PadLeft(6, '0') + ".000000");
             default:
-                if (split[0] == "-1") split[0] = "0";
-                return double.Parse(split[0].PadLeft(6, '0') + "." + split[1].PadLeft(6, '0'));
+                return (split[0].PadLeft(6, '0') + "." + split[1].PadLeft(6, '0'));
         }
     }
 
