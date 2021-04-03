@@ -11,6 +11,7 @@ namespace epg123
         {
             Application.EnableVisualStyles();
             InitializeComponent();
+            progressBarStage.Maximum = (sdJson2mxf.sdJson2Mxf.Stages.Length + 1) * 100;
 
             sdJson2mxf.sdJson2Mxf.BackgroundWorker = backgroundWorker1;
             backgroundWorker1.WorkerReportsProgress = true;

@@ -266,7 +266,7 @@ namespace epg123.MxfXml
         [XmlArrayItem("Season")]
         public List<MxfSeason> Seasons { get; set; }
         private readonly Dictionary<string, MxfSeason> _seasons = new Dictionary<string, MxfSeason>();
-        public string GetSeasonId(string seriesId, int seasonNumber)
+        public string GetSeasonId(string seriesId, int seasonNumber, string protoTypicalProgram)
         {
             if (_seasons.TryGetValue($"{seriesId}_{seasonNumber}", out var season)) return season.Id;
             Seasons.Add(season = new MxfSeason
@@ -274,7 +274,8 @@ namespace epg123.MxfXml
                 Index = Seasons.Count + 1,
                 SeasonNumber = seasonNumber,
                 Series = GetSeriesInfo(seriesId).Id,
-                Zap2It = seriesId
+                Zap2It = seriesId,
+                ProtoTypicalProgram = protoTypicalProgram
             });
             _seasons.Add(seriesId + "_" + seasonNumber, season);
             return season.Id;

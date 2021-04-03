@@ -13,7 +13,7 @@ namespace epg123.sdJson2mxf
         private static int processedObjects;
         private static int totalObjects;
         private static int processStage;
-        private static readonly string[] Stages = { "TASK: Process subscribed lineups and stations ...",
+        public static readonly string[] Stages = { "TASK: Process subscribed lineups and stations ...",
                                                     "TASK: Build schedules - Stage 1 ...",
                                                     "TASK: Build schedules - Stage 2 ...",
                                                     "TASK: Build programs ...",
@@ -21,6 +21,7 @@ namespace epg123.sdJson2mxf
                                                     "TASK: Build extended series data for MMUI+ ...",
                                                     "TASK: Build movie posters ...",
                                                     "TASK: Build series images ...",
+                                                    "TASK: Build season images ...",
                                                     "TASK: Build sport event images ...",
                                                     "TASK: Waiting for download of channel logos to complete ...",
                                                     "TASK: Saving files ...",

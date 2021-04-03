@@ -31,6 +31,7 @@ namespace epg123
             AppendEpisodeDesc = other.AppendEpisodeDesc;
             OadOverride = other.OadOverride;
             SeriesPosterArt = other.SeriesPosterArt;
+            SeriesWsArt = other.SeriesWsArt;
             TMDbCoverArt = other.TMDbCoverArt;
             IncludeSdLogos = other.IncludeSdLogos;
             PreferredLogoStyle = other.PreferredLogoStyle;
@@ -101,6 +102,7 @@ namespace epg123
             if (!AppendEpisodeDesc.Equals(other.AppendEpisodeDesc)) return false;
             if (!OadOverride.Equals(other.OadOverride)) return false;
             if (!SeriesPosterArt.Equals(other.SeriesPosterArt)) return false;
+            if (!SeriesWsArt.Equals(other.SeriesWsArt)) return false;
             if (!TMDbCoverArt.Equals(other.TMDbCoverArt)) return false;
             if (!IncludeSdLogos.Equals(other.IncludeSdLogos)) return false;
             if (!PreferredLogoStyle.Equals(other.PreferredLogoStyle)) return false;
@@ -170,6 +172,9 @@ namespace epg123
 
         [XmlElement("SeriesPosterArt")]
         public bool SeriesPosterArt { get; set; }
+
+        [XmlElement("SeriesWsArt")]
+        public bool SeriesWsArt { get; set; }
 
         [XmlElement("TMDbCoverArt")]
         public bool TMDbCoverArt { get; set; } = true;

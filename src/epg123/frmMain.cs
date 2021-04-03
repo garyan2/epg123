@@ -430,6 +430,7 @@ namespace epg123
                     cbAlternateSEFormat.Checked = Config.AlternateSEFormat;
                     cbAddNewStations.Checked = Config.AutoAddNew;
                     cbSeriesPosterArt.Checked = Config.SeriesPosterArt;
+                    cbSeriesWsArt.Checked = Config.SeriesWsArt;
                     cbModernMedia.Checked = Config.ModernMediaUiPlusSupport;
                     cbBrandLogo.Checked = !Config.BrandLogoImage.Equals("none");
                     cmbPreferredLogos.SelectedIndex = (int)(Helper.PreferredLogos)Enum.Parse(typeof(Helper.PreferredLogos), Config.PreferredLogoStyle, true);
@@ -1044,10 +1045,299 @@ namespace epg123
         }
         #endregion
 
-        #region ========== Include/Exclude Stations and Lineups ==========
+        #region ========== Lineup ListViews ==========
+        private readonly Dictionary<string, myStation> _allStations = new Dictionary<string, myStation>();
+        private readonly Dictionary<string, myLineup> _allLineups = new Dictionary<string, myLineup>();
+        private readonly HashSet<string> _allAvailableStations = new HashSet<string>();
+
+        #region ===== Station Logos =====
+        private void lvLineupChannels_MouseClick(object sender, MouseEventArgs e)
+        {
+            var lvi = ((ListView)sender).GetItemAt(e.X, e.Y);
+            if (lvi == null || e.Button != MouseButtons.Left) return;
+
+            var minX = lvi.SubItems[3].Bounds.X;
+            if (e.X > minX && e.X < minX + 48)
+            {
+                var item = lvLineupChannels.SelectedItems[0] as myChannelLvi;
+                var station = item.Station;
+                var frm = new frmLogos(station.Station);
+                frm.FormClosed += (o, args) =>
+                {
+                    _allStations[station.StationId].ServiceLogo = GetServiceBitmap(station.Callsign);
+                };
+                frm.Show(this);
+            }
+        }
+
+        private void lvLineupChannels_DrawSubItem(object sender, DrawListViewSubItemEventArgs e)
+        {
+            var backColor = e.SubItem.BackColor = e.Item.BackColor;
+            var foreColor = e.SubItem.ForeColor = e.Item.ForeColor;
+            if (e.ColumnIndex == 0 || e.Header != columnHeader24)
+            {
+                e.DrawDefault = true;
+                return;
+            }
+
+            // set minimum column width
+            var textSize = e.Graphics.MeasureString(e.SubItem.Text, lvLineupChannels.Font);
+            if (e.Item.ListView.Columns[e.ColumnIndex].Width < (int)textSize.Width + 51)
+            {
+                e.Item.ListView.Columns[e.ColumnIndex].Width = (int)textSize.Width + 51;
+                return;
+            }
+
+            if (!e.Item.ListView.Enabled)
+            {
+                backColor = SystemColors.Control;
+                foreColor = Color.LightGray;
+            }
+            else if (e.Item.ListView.SelectedItems.Contains(e.Item))
+            {
+                if ((e.ItemState & ListViewItemStates.Selected) != 0 && e.Item.ListView.ContainsFocus)
+                {
+                    backColor = SystemColors.Highlight;
+                    foreColor = SystemColors.HighlightText;
+                }
+                else
+                {
+                    backColor = SystemColors.Control;
+                    foreColor = SystemColors.ControlText;
+                }
+            }
+
+            e.DrawBackground();
+            e.Graphics.FillRectangle(new SolidBrush(backColor), e.Bounds);
+
+            var sf = new StringFormat { LineAlignment = StringAlignment.Center, FormatFlags = StringFormatFlags.NoWrap };
+            e.Graphics.DrawString(e.SubItem.Text, lvLineupChannels.Font, new SolidBrush(foreColor),
+                new Rectangle(e.Bounds.X + 51, e.Bounds.Y, e.Bounds.Width + 51, e.Bounds.Height), sf);
+
+            if (((myChannelLvi)e.Item).Station.ServiceLogo != null)
+            {
+                var imageRect = new Rectangle(e.Bounds.X, e.Bounds.Y, 48, 16);
+                e.Graphics.DrawImage(((myChannelLvi)e.Item).Station.ServiceLogo, imageRect);
+            }
+        }
+
+        private Bitmap GetServiceBitmap(string callsign)
+        {
+            if (!Config.IncludeSdLogos) return null;
+
+            var custom = false;
+            var path = $"{Helper.Epg123LogosFolder}\\{callsign}";
+            if (File.Exists($"{path}_c.png"))
+            {
+                path += "_c.png";
+                custom = true;
+            }
+            else if (Config.PreferredLogoStyle.Equals("NONE", StringComparison.OrdinalIgnoreCase))
+            {
+                // prevent remaining logos from possibly being used
+            }
+            else if (File.Exists($"{path}_{Config.PreferredLogoStyle.Substring(0, 1)}.png"))
+            {
+                path += $"_{Config.PreferredLogoStyle.Substring(0, 1)}.png";
+            }
+            else if (File.Exists($"{path}_{Config.AlternateLogoStyle.Substring(0, 1)}.png"))
+            {
+                path += $"_{Config.AlternateLogoStyle.Substring(0, 1)}.png";
+            }
+            else if (File.Exists($"{path}.png"))
+            {
+                path += ".png";
+            }
+            if (!path.EndsWith(".png")) return null;
+
+            var source = Image.FromFile(path) as Bitmap;
+            var ratio = (double)source.Width / source.Height;
+            var offsetX = 0;
+            var offsetY = 0;
+            if (ratio < 3.0)
+            {
+                offsetX = (source.Height * 3 - source.Width) / 2;
+            }
+            else
+            {
+                offsetY = (source.Width / 3 - source.Height) / 2;
+            }
+
+            var retBitmap = new Bitmap(source.Width + offsetX * 2, source.Height + offsetY * 2);
+            retBitmap.SetResolution(source.HorizontalResolution, source.VerticalResolution);
+            using (var g = Graphics.FromImage(retBitmap))
+            {
+                g.SmoothingMode = SmoothingMode.AntiAlias;
+                if (Config.AlternateLogoStyle.Equals("GRAY", StringComparison.OrdinalIgnoreCase))
+                {
+                    g.Clear(Color.White);
+                }
+                else g.Clear(Color.FromArgb(255, 6, 15, 30));
+                g.DrawImage(source, offsetX, offsetY);
+
+                // draw a box around the border
+                var thickness = 1 * retBitmap.Height / 16;
+                if (custom) g.DrawRectangle(new Pen(Color.Red, thickness), 0, 0, retBitmap.Width - thickness, retBitmap.Height - thickness);
+            }
+
+            // free up the file for edit
+            source.Dispose();
+            GC.Collect();
+
+            return new Bitmap(retBitmap, 48, 16);
+        }
+
+        private void GetAllServiceLogos(bool refresh = false)
+        {
+            // end logos thread if still running from earlier build
+            if (_logoThread?.IsAlive ?? false)
+            {
+                _logoThread.Interrupt();
+                if (!_logoThread.Join(100)) _logoThread.Abort();
+            }
+
+            pictureBox1.Image = Resources.RedLight.ToBitmap();
+            ThreadStart starter = () =>
+            {
+                foreach (var station in _allStations)
+                {
+                    if (!refresh && station.Value.ServiceLogo != null) continue;
+                    try
+                    {
+                        station.Value.ServiceLogo = GetServiceBitmap(station.Value.Callsign);
+                    }
+                    catch
+                    {
+                        // do nothing
+                    }
+                }
+            };
+            starter += () =>
+            {
+                pictureBox1.Image = Resources.GreenLight.ToBitmap();
+            };
+            _logoThread = new Thread(starter);
+            _logoThread.Start();
+        }
+        #endregion
+        #region ===== Subscribed Lineups =====
+        private void toolStrip6_Resize(object sender, EventArgs e)
+        {
+            comboLineups.Width = toolStrip6.Bounds.Width - btnIncludeExclude.Bounds.Right - 4;
+            labelLineupCounts.Width = toolStrip6.Bounds.Width - toolStripSeparator1.Bounds.Right - 4;
+        }
+
+        private void menuIncludeExclude_Click(object sender, EventArgs e)
+        {
+            var include = false;
+            var menu = (ToolStripMenuItem)sender;
+            if (menu.Equals(menuInclude))
+            {
+                include = true;
+            }
+
+            var selectedLineup = (myLineup)comboLineups.SelectedItem;
+            selectedLineup.Include = include;
+
+            menuInclude.Checked = lvLineupChannels.Enabled = include;
+            menuExclude.Checked = !include;
+            btnIncludeExclude.Image = include ? Resources.GreenLight.ToBitmap() : Resources.RedLight.ToBitmap();
+            lvLineupChannels.ForeColor = include ? DefaultForeColor : Color.LightGray;
+
+            btnSelectAll.Enabled = btnSelectNone.Enabled = include;
+        }
+
+        private void subscribedLineup_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (comboLineups.SelectedIndex == -1) return;
+
+            lvLineupChannels.Items.Clear();
+            lvLineupChannels.BeginUpdate();
+
+            var selectedLineup = (myLineup)comboLineups.SelectedItem;
+            menuInclude.Checked = lvLineupChannels.Enabled = btnSelectAll.Enabled = btnSelectNone.Enabled = selectedLineup.Include;
+            menuExclude.Checked = !selectedLineup.Include;
+            btnIncludeExclude.Image = selectedLineup.Include ? Resources.GreenLight.ToBitmap() : Resources.RedLight.ToBitmap();
+            lvLineupChannels.ForeColor = selectedLineup.Include ? DefaultForeColor : Color.LightGray;
+
+            var channels = new List<myChannelLvi>();
+            foreach (var channel in _allLineups[selectedLineup.Lineup.Lineup].Channels)
+            {
+                var channelIsNew = Config.StationId.SingleOrDefault(arg => arg.StationId.Replace("-", "") == channel.StationId) == null;
+                channels.Add(new myChannelLvi(GetChannelNumber(channel), _allStations[channel.StationId])
+                {
+                    ImageKey = GetLanguageIcon(_allStations[channel.StationId].LanguageCode),
+                    BackColor = channelIsNew ? Color.Pink : default
+                });
+            }
+            lvLineupChannels.Items.AddRange(channels.ToArray());
+
+            lvLineupChannels.EndUpdate();
+        }
+
+        private void btnSelectAllNone_Click(object sender, EventArgs e)
+        {
+            var enable = ((ToolStripButton)sender).Equals(btnSelectAll);
+
+            lvLineupChannels.BeginUpdate();
+            foreach (myChannelLvi item in lvLineupChannels.Items)
+            {
+                if (item.Checked == enable) continue;
+                item.Station.Include = enable;
+            }
+            lvLineupChannels.EndUpdate();
+        }
+
+        private void lvLineupChannels_ItemCheck(object sender, ItemCheckEventArgs e)
+        {
+            // Ignore item checks when selecting multiple items
+            if ((ModifierKeys & (Keys.Shift | Keys.Control)) > 0)
+            {
+                e.NewValue = e.CurrentValue;
+            }
+
+            // determine what station id it is
+            var stationId = lvLineupChannels.Items[e.Index].SubItems[(int)LineupColumn.StationID].Text;
+
+            // set the include state
+            _allStations[stationId].Include = e.NewValue == CheckState.Checked;
+        }
+
+        private void lvLineupChannels_DrawColumnHeader(object sender, DrawListViewColumnHeaderEventArgs e)
+        {
+            if (e.ColumnIndex != 3)
+            {
+                e.DrawDefault = true;
+                return;
+            }
+
+            e.DrawBackground();
+
+            var mouse = PointToClient(Cursor.Position);
+            mouse.X -= splitContainer1.SplitterDistance + splitContainer1.SplitterWidth + tabLineups.Margin.Left +
+                       lvLineupChannels.Margin.Left + e.Bounds.Location.X;
+            mouse.Y -= tabLineups.Margin.Top + tabLineups.ItemSize.Height + toolStrip6.Margin.Top + toolStrip6.Height + toolStrip6.Margin.Bottom + lvLineupChannels.Margin.Top;
+
+            if (Cursor == Cursors.Default && mouse.X > 7 && mouse.X < e.Bounds.Width + 7 && mouse.Y >= 0 && mouse.Y < e.Bounds.Height)
+            {
+                e.Graphics.FillRectangle(new SolidBrush(Color.FromArgb(255, 217, 235, 249)), e.Bounds);
+            }
+
+            e.Graphics.DrawLine(SystemPens.ControlLight, e.Bounds.Right - 1, e.Bounds.Y, e.Bounds.Right - 1, e.Bounds.Bottom);
+            e.Graphics.DrawLine(SystemPens.ControlLight, e.Bounds.Left + 48, e.Bounds.Y, e.Bounds.Left + 48, e.Bounds.Bottom);
+
+            var sf = new StringFormat { LineAlignment = StringAlignment.Center, FormatFlags = StringFormatFlags.NoWrap };
+            e.Graphics.DrawString(e.Header.Text, lvLineupChannels.Font, new SolidBrush(e.ForeColor),
+                new Rectangle(e.Bounds.X + 51, e.Bounds.Y, e.Bounds.Width - 48, e.Bounds.Height), sf);
+            sf.Alignment = StringAlignment.Center;
+            e.Graphics.DrawString("Logo", lvLineupChannels.Font, new SolidBrush(e.ForeColor),
+                new Rectangle(e.Bounds.X, e.Bounds.Y, 48, e.Bounds.Height), sf);
+        }
+        #endregion
+        #region ===== Custom Lineup =====
         private void LineupEnableToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var include = L5includeToolStripMenuItem.Equals((ToolStripMenuItem) sender);
+            var include = L5includeToolStripMenuItem.Equals((ToolStripMenuItem)sender);
 
             L5includeToolStripMenuItem.Checked = include;
             L5excludeToolStripMenuItem.Checked = !include;
@@ -1055,9 +1345,26 @@ namespace epg123
             lvL5Lineup.Enabled = include;
             lvL5Lineup.ForeColor = include ? DefaultForeColor : Color.LightGray;
         }
+
+        private void btnCustomLineup_ButtonClick(object sender, EventArgs e)
+        {
+            MessageBox.Show($"This feature is not yet implemented. You can manually edit the custom lineup file \"{Helper.Epg123CustomLineupsXmlPath}\".",
+                "Not Implemented", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        private void lvL5Lineup_ItemCheck(object sender, ItemCheckEventArgs e)
+        {
+            if (_lockCustomCheckboxes && lvL5Lineup.Focused) e.NewValue = e.CurrentValue;
+        }
+
+        private void lvL5Lineup_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
+        {
+            if (e.IsSelected) e.Item.Selected = false;
+        }
+        #endregion
         #endregion
 
-        #region ===== Configuration Tabs =====
+        #region ========== Configuration Tabs ==========
         #region ========== TAB: XMLTV ==========
         private void ckXmltvConfigs_Changed(object sender, EventArgs e)
         {
@@ -1159,7 +1466,13 @@ namespace epg123
         {
             if (sender.Equals(cbSeriesPosterArt))
             {
+                if (cbSeriesWsArt.Checked && cbSeriesPosterArt.Checked) cbSeriesWsArt.Checked = false;
                 Config.SeriesPosterArt = cbSeriesPosterArt.Checked;
+            }
+            else if (sender.Equals(cbSeriesWsArt))
+            {
+                if (cbSeriesPosterArt.Checked && cbSeriesWsArt.Checked) cbSeriesPosterArt.Checked = false;
+                Config.SeriesWsArt = cbSeriesWsArt.Checked;
             }
             else if (sender.Equals(cbTMDb))
             {
@@ -1261,19 +1574,13 @@ namespace epg123
                 Config.Automatch = cbAutomatch.Checked;
             }
         }
+
+        private void tabTask_Enter(object sender, EventArgs e)
+        {
+            UpdateTaskPanel(true);
+        }
         #endregion
         #endregion
-
-        private void lvL5Lineup_ItemCheck(object sender, ItemCheckEventArgs e)
-        {
-            if (_lockCustomCheckboxes && lvL5Lineup.Focused) e.NewValue = e.CurrentValue;
-        }
-
-        private void btnCustomLineup_ButtonClick(object sender, EventArgs e)
-        {
-            MessageBox.Show($"This feature is not yet implemented. You can manually edit the custom lineup file \"{Helper.Epg123CustomLineupsXmlPath}\".",
-                "Not Implemented", MessageBoxButtons.OK, MessageBoxIcon.Information);
-        }
 
         private void lineupMenuStrip_Opening(object sender, CancelEventArgs e)
         {
@@ -1286,297 +1593,6 @@ namespace epg123
             textToAdd += "Call Sign\tChannel\tStationID\tName\r\n";
             textToAdd = lvLineupChannels.Items.Cast<ListViewItem>().Aggregate(textToAdd, (current, listViewItem) => current + $"{listViewItem.SubItems[0].Text}\t{listViewItem.SubItems[1].Text}\t{listViewItem.SubItems[2].Text}\t{listViewItem.SubItems[3].Text}\r\n");
             Clipboard.SetText(textToAdd);
-        }
-
-        private void tabTask_Enter(object sender, EventArgs e)
-        {
-            UpdateTaskPanel(true);
-        }
-
-        private readonly Dictionary<string, myStation> _allStations = new Dictionary<string, myStation>();
-        private readonly Dictionary<string, myLineup> _allLineups = new Dictionary<string, myLineup>();
-        private readonly HashSet<string> _allAvailableStations = new HashSet<string>();
-
-
-        private void subscribedLineup_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            if (comboLineups.SelectedIndex == -1) return;
-
-            lvLineupChannels.Items.Clear();
-            lvLineupChannels.BeginUpdate();
-
-            var selectedLineup = (myLineup)comboLineups.SelectedItem;
-            menuInclude.Checked = lvLineupChannels.Enabled = btnSelectAll.Enabled = btnSelectNone.Enabled = selectedLineup.Include;
-            menuExclude.Checked = !selectedLineup.Include;
-            btnIncludeExclude.Image = selectedLineup.Include ? Resources.GreenLight.ToBitmap() : Resources.RedLight.ToBitmap();
-            lvLineupChannels.ForeColor = selectedLineup.Include ? DefaultForeColor : Color.LightGray;
-
-            var channels = new List<myChannelLvi>();
-            foreach (var channel in _allLineups[selectedLineup.Lineup.Lineup].Channels)
-            {
-                var channelIsNew = Config.StationId.SingleOrDefault(arg => arg.StationId.Replace("-", "") == channel.StationId) == null;
-                channels.Add(new myChannelLvi(GetChannelNumber(channel), _allStations[channel.StationId])
-                {
-                    ImageKey = GetLanguageIcon(_allStations[channel.StationId].LanguageCode),
-                    BackColor = channelIsNew ? Color.Pink : default
-                });
-            }
-            lvLineupChannels.Items.AddRange(channels.ToArray());
-
-            lvLineupChannels.EndUpdate();
-        }
-
-        private void btnSelectAllNone_Click(object sender, EventArgs e)
-        {
-            var enable = ((ToolStripButton) sender).Equals(btnSelectAll);
-
-            lvLineupChannels.BeginUpdate();
-            foreach (myChannelLvi item in lvLineupChannels.Items)
-            {
-                if (item.Checked == enable) continue;
-                item.Station.Include = enable;
-            }
-            lvLineupChannels.EndUpdate();
-        }
-
-        private void lvLineupChannels_ItemCheck(object sender, ItemCheckEventArgs e)
-        {
-            // Ignore item checks when selecting multiple items
-            if ((ModifierKeys & (Keys.Shift | Keys.Control)) > 0)
-            {
-                e.NewValue = e.CurrentValue;
-            }
-
-            // determine what station id it is
-            var stationId = lvLineupChannels.Items[e.Index].SubItems[(int)LineupColumn.StationID].Text;
-
-            // set the include state
-            _allStations[stationId].Include = e.NewValue == CheckState.Checked;
-        }
-
-        private void menuIncludeExclude_Click(object sender, EventArgs e)
-        {
-            var include = false;
-            var menu = (ToolStripMenuItem) sender;
-            if (menu.Equals(menuInclude))
-            {
-                include = true;
-            }
-
-            var selectedLineup = (myLineup)comboLineups.SelectedItem;
-            selectedLineup.Include = include;
-
-            menuInclude.Checked = lvLineupChannels.Enabled = include;
-            menuExclude.Checked = !include;
-            btnIncludeExclude.Image = include ? Resources.GreenLight.ToBitmap() : Resources.RedLight.ToBitmap();
-            lvLineupChannels.ForeColor = include ? DefaultForeColor : Color.LightGray;
-
-            btnSelectAll.Enabled = btnSelectNone.Enabled = include;
-        }
-
-        private void lvLineupChannels_MouseClick(object sender, MouseEventArgs e)
-        {
-            var lvi = ((ListView) sender).GetItemAt(e.X, e.Y);
-            if (lvi == null || e.Button != MouseButtons.Left) return;
-
-            var minX = lvi.SubItems[3].Bounds.X;
-            if (e.X > minX && e.X < minX + 48)
-            {
-                var item = lvLineupChannels.SelectedItems[0] as myChannelLvi;
-                var station = item.Station;
-                var frm = new frmLogos(station.Station);
-                frm.FormClosed += (o, args) =>
-                {
-                    _allStations[station.StationId].ServiceLogo = GetServiceBitmap(station.Callsign);
-                };
-                frm.Show(this);
-            }
-        }
-
-        private void lvL5Lineup_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
-        {
-            if (e.IsSelected) e.Item.Selected = false;
-        }
-
-        private void lvLineupChannels_DrawSubItem(object sender, DrawListViewSubItemEventArgs e)
-        {
-            var backColor = e.SubItem.BackColor = e.Item.BackColor;
-            var foreColor = e.SubItem.ForeColor = e.Item.ForeColor;
-            if (e.ColumnIndex == 0 || e.Header != columnHeader24)
-            {
-                e.DrawDefault = true;
-                return;
-            }
-
-            // set minimum column width
-            var textSize = e.Graphics.MeasureString(e.SubItem.Text, lvLineupChannels.Font);
-            if (e.Item.ListView.Columns[e.ColumnIndex].Width < (int)textSize.Width + 51)
-            {
-                e.Item.ListView.Columns[e.ColumnIndex].Width = (int)textSize.Width + 51;
-                return;
-            }
-
-            if (!e.Item.ListView.Enabled)
-            {
-                backColor = SystemColors.Control;
-                foreColor = Color.LightGray;
-            }
-            else if (e.Item.ListView.SelectedItems.Contains(e.Item))
-            {
-                if ((e.ItemState & ListViewItemStates.Selected) != 0 && e.Item.ListView.ContainsFocus)
-                {
-                    backColor = SystemColors.Highlight;
-                    foreColor = SystemColors.HighlightText;
-                }
-                else
-                {
-                    backColor = SystemColors.Control;
-                    foreColor = SystemColors.ControlText;
-                }
-            }
-
-            e.DrawBackground();
-            e.Graphics.FillRectangle(new SolidBrush(backColor), e.Bounds);
-
-            var sf = new StringFormat {LineAlignment = StringAlignment.Center, FormatFlags = StringFormatFlags.NoWrap};
-            e.Graphics.DrawString(e.SubItem.Text, lvLineupChannels.Font, new SolidBrush(foreColor),
-                new Rectangle(e.Bounds.X + 51, e.Bounds.Y, e.Bounds.Width + 51, e.Bounds.Height), sf);
-
-            if (((myChannelLvi) e.Item).Station.ServiceLogo != null)
-            {
-                var imageRect = new Rectangle(e.Bounds.X, e.Bounds.Y, 48, 16);
-                e.Graphics.DrawImage(((myChannelLvi)e.Item).Station.ServiceLogo, imageRect);
-            }
-        }
-
-        private void lvLineupChannels_DrawColumnHeader(object sender, DrawListViewColumnHeaderEventArgs e)
-        {
-            if (e.ColumnIndex != 3)
-            {
-                e.DrawDefault = true;
-                return;
-            }
-
-            e.DrawBackground();
-
-            var mouse = PointToClient(Cursor.Position);
-            mouse.X -= splitContainer1.SplitterDistance + splitContainer1.SplitterWidth + tabLineups.Margin.Left +
-                       lvLineupChannels.Margin.Left + e.Bounds.Location.X;
-            mouse.Y -= tabLineups.Margin.Top + tabLineups.ItemSize.Height + toolStrip6.Margin.Top + toolStrip6.Height + toolStrip6.Margin.Bottom + lvLineupChannels.Margin.Top;
-
-            if (Cursor == Cursors.Default && mouse.X > 7 &&  mouse.X < e.Bounds.Width + 7 && mouse.Y >= 0 && mouse.Y < e.Bounds.Height)
-            {
-                e.Graphics.FillRectangle(new SolidBrush(Color.FromArgb(255, 217, 235, 249)), e.Bounds);
-            }
-
-            e.Graphics.DrawLine(SystemPens.ControlLight, e.Bounds.Right - 1, e.Bounds.Y, e.Bounds.Right - 1, e.Bounds.Bottom);
-            e.Graphics.DrawLine(SystemPens.ControlLight, e.Bounds.Left + 48, e.Bounds.Y, e.Bounds.Left + 48, e.Bounds.Bottom);
-
-            var sf = new StringFormat { LineAlignment = StringAlignment.Center, FormatFlags = StringFormatFlags.NoWrap };
-            e.Graphics.DrawString(e.Header.Text, lvLineupChannels.Font, new SolidBrush(e.ForeColor),
-                new Rectangle(e.Bounds.X + 51, e.Bounds.Y, e.Bounds.Width - 48, e.Bounds.Height), sf);
-            sf.Alignment = StringAlignment.Center;
-            e.Graphics.DrawString("Logo", lvLineupChannels.Font, new SolidBrush(e.ForeColor),
-                new Rectangle(e.Bounds.X, e.Bounds.Y, 48, e.Bounds.Height), sf);
-        }
-
-        private Bitmap GetServiceBitmap(string callsign)
-        {
-            if (!Config.IncludeSdLogos) return null;
-
-            var custom = false;
-            var path = $"{Helper.Epg123LogosFolder}\\{callsign}";
-            if (File.Exists($"{path}_c.png"))
-            {
-                path += "_c.png";
-                custom = true;
-            }
-            else if (Config.PreferredLogoStyle.Equals("NONE", StringComparison.OrdinalIgnoreCase))
-            {
-                // prevent remaining logos from possibly being used
-            }
-            else if (File.Exists($"{path}_{Config.PreferredLogoStyle.Substring(0, 1)}.png"))
-            {
-                path += $"_{Config.PreferredLogoStyle.Substring(0, 1)}.png";
-            }
-            else if (File.Exists($"{path}_{Config.AlternateLogoStyle.Substring(0, 1)}.png"))
-            {
-                path += $"_{Config.AlternateLogoStyle.Substring(0, 1)}.png";
-            }
-            else if (File.Exists($"{path}.png"))
-            {
-                path += ".png";
-            }
-            if (!path.EndsWith(".png")) return null;
-
-            var source = Image.FromFile(path) as Bitmap;
-            var ratio = (double)source.Width / source.Height;
-            var offsetX = 0;
-            var offsetY = 0;
-            if (ratio < 3.0)
-            {
-                offsetX = (source.Height * 3 - source.Width) / 2;
-            }
-            else
-            {
-                offsetY = (source.Width / 3 - source.Height) / 2;
-            }
-
-            var retBitmap = new Bitmap(source.Width + offsetX * 2, source.Height + offsetY * 2);
-            retBitmap.SetResolution(source.HorizontalResolution, source.VerticalResolution);
-            using (var g = Graphics.FromImage(retBitmap))
-            {
-                g.SmoothingMode = SmoothingMode.AntiAlias;
-                if (Config.AlternateLogoStyle.Equals("GRAY", StringComparison.OrdinalIgnoreCase))
-                {
-                    g.Clear(Color.White);
-                }
-                else g.Clear(Color.FromArgb(255, 6, 15, 30));
-                g.DrawImage(source, offsetX, offsetY);
-
-                // draw a box around the border
-                var thickness = 1 * retBitmap.Height / 16;
-                if (custom) g.DrawRectangle(new Pen(Color.Red, thickness), 0, 0, retBitmap.Width - thickness, retBitmap.Height - thickness);
-            }
-
-            // free up the file for edit
-            source.Dispose();
-            GC.Collect();
-
-            return new Bitmap(retBitmap, 48, 16);
-        }
-
-        private void GetAllServiceLogos(bool refresh = false)
-        {
-            // end logos thread if still running from earlier build
-            if (_logoThread?.IsAlive ?? false)
-            {
-                _logoThread.Interrupt();
-                if (!_logoThread.Join(100)) _logoThread.Abort();
-            }
-
-            pictureBox1.Image = Resources.RedLight.ToBitmap();
-            ThreadStart starter = () =>
-            {
-                foreach (var station in _allStations)
-                {
-                    if (!refresh && station.Value.ServiceLogo != null) continue;
-                    try
-                    {
-                        station.Value.ServiceLogo = GetServiceBitmap(station.Value.Callsign);
-                    }
-                    catch
-                    {
-                        // do nothing
-                    }
-                }
-            };
-            starter += () =>
-            {
-                pictureBox1.Image = Resources.GreenLight.ToBitmap();
-            };
-            _logoThread = new Thread(starter);
-            _logoThread.Start();
         }
     }
 }
@@ -1665,7 +1681,7 @@ public class myStation
 
         // determine station name for ATSC stations
         var names = station.Name.Replace("-", "").Split(' ');
-        if (names.Length == 2 && names[0] == station.Callsign && $"({names[0]})" == $"{names[1]}")
+        if (!string.IsNullOrEmpty(station.Affiliate) && names.Length == 2 && names[0] == station.Callsign && $"({names[0]})" == $"{names[1]}")
         {
             atsc = true;
         }
@@ -1673,7 +1689,7 @@ public class myStation
         // add callsign and station name
         StationId = station.StationId;
         Callsign = station.Callsign;
-        Name = (atsc ? station.Affiliate : null) ?? station.Name;
+        Name = (atsc ? $"{station.Callsign} ({station.Affiliate})" : null) ?? station.Name;
         LanguageCode = station.BroadcastLanguage[0] ?? null;
         Station = station;
     }

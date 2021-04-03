@@ -83,9 +83,11 @@ namespace epg123.sdJson2mxf
                 if (BuildLineupServices() && ServiceCountSafetyCheck() &&
                       GetAllScheduleEntryMd5S(config.DaysToDownload) &&
                       BuildAllProgramEntries() &&
-                      BuildAllGenericSeriesInfoDescriptions() && BuildAllExtendedSeriesDataForUiPlus() &&
+                      BuildAllGenericSeriesInfoDescriptions() && 
+                      BuildAllExtendedSeriesDataForUiPlus() &&
                       GetAllMoviePosters() &&
                       GetAllSeriesImages() &&
+                      GetAllSeasonImages() &&
                       GetAllSportsImages() &&
                       BuildKeywords() &&
                       WriteMxf())

@@ -229,6 +229,11 @@ namespace epg123
                 bool nologo, import, force, showGui, advanced, nogc, verbose, noverify;
                 var match = nologo = import = force = showGui = advanced = nogc = verbose = noverify = false;
 
+                if (File.Exists($"{Helper.Epg123ProgramDataFolder}\\nogc.txt"))
+                {
+                    File.Delete($"{Helper.Epg123ProgramDataFolder}\\nogc.txt");
+                    nogc = true;
+                }
                 if (args.Length > 0)
                 {
                     for (var i = 0; i < args.Length; ++i)

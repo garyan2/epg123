@@ -324,7 +324,7 @@ namespace epg123.sdJson2mxf
             }
 
             // queue up the sport event to get the event image
-            if ((Helper.StringContains(sd.EntityType, "Team Event") || Helper.StringContains(sd.EntityType, "Sport event")) && sd.HasEpisodeArtwork)
+            if ((Helper.StringContains(sd.EntityType, "Team Event") || Helper.StringContains(sd.EntityType, "Sport event")) && (sd.HasSportsArtwork | sd.HasEpisodeArtwork))
             {
                 sportEvents.Add(prg);
             }
@@ -526,7 +526,7 @@ namespace epg123.sdJson2mxf
             // if there is a season number, create as seasonInfo entry
             if (prg.SeasonNumber != 0)
             {
-                prg.Season = SdMxf.With[0].GetSeasonId(prg.TmsId.Substring(2, 8), prg.SeasonNumber);
+                prg.Season = SdMxf.With[0].GetSeasonId(prg.TmsId.Substring(2, 8), prg.SeasonNumber, sd.HasSeasonArtwork ? prg.TmsId : null);
             }
         }
 

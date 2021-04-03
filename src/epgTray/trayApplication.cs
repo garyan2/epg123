@@ -352,6 +352,9 @@ namespace epgTray
 
         private void RunUpdateMenuItem_Click(object sender, EventArgs e)
         {
+            var nogcFile = File.Create($"{Helper.Epg123ProgramDataFolder}\\nogc.txt");
+            nogcFile.Close();
+
             var startInfo = new ProcessStartInfo
             {
                 FileName = "schtasks.exe",

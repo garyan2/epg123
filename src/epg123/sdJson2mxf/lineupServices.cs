@@ -170,14 +170,14 @@ namespace epg123.sdJson2mxf
                         // determine station name for ATSC stations
                         var atsc = false;
                         var names = station.Name.Replace("-", "").Split(' ');
-                        if (names.Length == 2 && names[0] == station.Callsign && $"({names[0]})" == $"{names[1]}")
+                        if (!string.IsNullOrEmpty(station.Affiliate) && names.Length == 2 && names[0] == station.Callsign && $"({names[0]})" == $"{names[1]}")
                         {
                             atsc = true;
                         }
 
                         // add callsign and station name
                         mxfService.CallSign = CheckCustomCallsign(station.StationId) ?? station.Callsign;
-                        mxfService.Name = CheckCustomServicename(station.StationId) ?? (atsc ? station.Affiliate : null) ?? station.Name;
+                        mxfService.Name = CheckCustomServicename(station.StationId) ?? (atsc ? $"{station.Callsign} ({station.Affiliate})" : null) ?? station.Name;
 
                         // add affiliate if available
                         if (!string.IsNullOrEmpty(station.Affiliate))

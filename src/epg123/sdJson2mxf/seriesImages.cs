@@ -53,7 +53,16 @@ namespace epg123.sdJson2mxf
                         series.SeriesImages = (List<sdImage>)serializer.Deserialize(reader, typeof(List<sdImage>));
                     }
 
-                    var image = series.SeriesImages.SingleOrDefault(arg => arg.Aspect.ToLower().Equals(config.SeriesPosterArt ? "2x3" : "4x3"));
+                    sdImage image = null;
+                    if (config.SeriesPosterArt || config.SeriesWsArt)
+                    {
+                        image = series.SeriesImages.SingleOrDefault(arg =>
+                            arg.Aspect.ToLower().Equals(config.SeriesPosterArt ? "2x3" : "16x9"));
+                    }
+                    if (image == null)
+                    {
+                        image = series.SeriesImages.SingleOrDefault(arg => arg.Aspect.ToLower().Equals("4x3"));
+                    }
                     if (image != null)
                     {
                         series.GuideImage = SdMxf.With[0].GetGuideImage(image.Uri).Id;
@@ -154,7 +163,16 @@ namespace epg123.sdJson2mxf
 
                 if (mxfSeriesInfo.SeriesImages.Count > 0)
                 {
-                    var image = mxfSeriesInfo.SeriesImages.SingleOrDefault(arg => arg.Aspect.ToLower().Equals(config.SeriesPosterArt ? "2x3" : "4x3"));
+                    sdImage image = null;
+                    if (config.SeriesPosterArt || config.SeriesWsArt)
+                    {
+                        image = mxfSeriesInfo.SeriesImages.SingleOrDefault(arg =>
+                            arg.Aspect.ToLower().Equals(config.SeriesPosterArt ? "2x3" : "16x9"));
+                    }
+                    if (image == null)
+                    {
+                        image = mxfSeriesInfo.SeriesImages.SingleOrDefault(arg => arg.Aspect.ToLower().Equals("4x3"));
+                    }
                     if (image != null)
                     {
                         mxfSeriesInfo.GuideImage = SdMxf.With[0].GetGuideImage(image.Uri).Id;
@@ -191,7 +209,7 @@ namespace epg123.sdJson2mxf
             var ret = new List<sdImage>();
             var images = sdImages.Where(arg => !string.IsNullOrEmpty(arg.Category))
                     .Where(arg => !string.IsNullOrEmpty(arg.Aspect))
-                    .Where(arg => !string.IsNullOrEmpty(arg.Size)).Where(arg => arg.Size.ToLower().Equals("md"))
+                    .Where(arg => !string.IsNullOrEmpty(arg.Size)).Where(arg => arg.Size.ToLower().Equals("md") || arg.Size.ToLower().Equals("sm"))
                     .Where(arg => !string.IsNullOrEmpty(arg.Uri))
                     .Where(arg => string.IsNullOrEmpty(arg.Tier) || arg.Tier.ToLower().Equals("series") || arg.Tier.ToLower().Equals("sport")).ToArray();
 
@@ -209,7 +227,7 @@ namespace epg123.sdJson2mxf
             // determine which image to return with each aspect
             foreach (var aspect in aspects)
             {
-                var imgAspects = images.Where(arg => arg.Aspect.ToLower().Equals(aspect));
+                var imgAspects = images.Where(arg => arg.Aspect.Equals(aspect) && arg.Size.ToLower().Equals(aspect.Equals("16x9") ? "sm" : "md"));
 
                 var links = new sdImage[8];
                 foreach (var image in imgAspects)

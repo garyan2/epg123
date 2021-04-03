@@ -12,10 +12,10 @@ using System.Windows.Forms;
 using System.Xml;
 using epg123;
 using epg123.Task;
-using epg123Client.Properties;
 using Microsoft.MediaCenter.Guide;
 using Microsoft.MediaCenter.Store;
 using Microsoft.MediaCenter.Store.MXF;
+using Settings = epg123Client.Properties.Settings;
 
 namespace epg123Client
 {

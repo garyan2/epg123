@@ -177,14 +177,14 @@ namespace epg123.sdJson2mxf
             // fill mxf programs with cached values and queue the rest
             foreach (var series in SdMxf.With[0].SeriesInfos)
             {
-                var seriesId = $"SH{series.TmsSeriesId}0000";
-
                 // sports events will not have a generic description
-                if (series.TmsSeriesId.StartsWith("SP"))
+                if (!series.TmsSeriesId.StartsWith("SH"))
                 {
                     ++processedObjects; ReportProgress();
                     continue;
                 }
+
+                var seriesId = $"SH{series.TmsSeriesId}0000";
 
                 // generic series information already in support file array
                 if (ModernMediaUiPlus.Programs.ContainsKey(seriesId))

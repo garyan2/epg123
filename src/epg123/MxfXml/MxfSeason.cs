@@ -1,4 +1,6 @@
-﻿using System.Xml.Serialization;
+﻿using System.Collections.Generic;
+using System.Xml.Serialization;
+using epg123.SchedulesDirectAPI;
 
 namespace epg123.MxfXml
 {
@@ -9,6 +11,12 @@ namespace epg123.MxfXml
 
         [XmlIgnore]
         public string Zap2It;
+
+        [XmlIgnore]
+        public string ProtoTypicalProgram;
+
+        [XmlIgnore]
+        public IList<sdImage> seasonImages;
 
         /// <summary>
         /// An ID that is unique to the document and defines this element.

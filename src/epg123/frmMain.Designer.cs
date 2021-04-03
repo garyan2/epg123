@@ -28,10 +28,12 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmMain));
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tabConfigs = new System.Windows.Forms.TabControl();
             this.tabConfig = new System.Windows.Forms.TabPage();
+            this.cbSeriesWsArt = new System.Windows.Forms.CheckBox();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.cbNoCastCrew = new System.Windows.Forms.CheckBox();
             this.cbBrandLogo = new System.Windows.Forms.CheckBox();
@@ -72,7 +74,6 @@
             this.tabTask = new System.Windows.Forms.TabPage();
             this.cbAutomatch = new System.Windows.Forms.CheckBox();
             this.lblSchedStatus = new System.Windows.Forms.Label();
-            this.btnTask = new epg123.ElevatedButton();
             this.cbImport = new System.Windows.Forms.CheckBox();
             this.cbTaskWake = new System.Windows.Forms.CheckBox();
             this.tbSchedTime = new System.Windows.Forms.MaskedTextBox();
@@ -93,7 +94,7 @@
             this.columnHeader22 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader23 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader24 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.lineupMenuStrip = new System.Windows.Forms.ContextMenuStrip();
+            this.lineupMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.copyToClipboardMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStrip6 = new System.Windows.Forms.ToolStrip();
             this.btnIncludeExclude = new System.Windows.Forms.ToolStripDropDownButton();
@@ -121,9 +122,10 @@
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnExecute = new System.Windows.Forms.Button();
             this.btnHelp = new System.Windows.Forms.Button();
-            this.toolTip1 = new System.Windows.Forms.ToolTip();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.btnClearCache = new System.Windows.Forms.Button();
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
+            this.btnTask = new epg123.ElevatedButton();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -186,6 +188,7 @@
             // tabConfig
             // 
             this.tabConfig.BackColor = System.Drawing.SystemColors.Control;
+            this.tabConfig.Controls.Add(this.cbSeriesWsArt);
             this.tabConfig.Controls.Add(this.pictureBox1);
             this.tabConfig.Controls.Add(this.cbNoCastCrew);
             this.tabConfig.Controls.Add(this.cbBrandLogo);
@@ -211,9 +214,20 @@
             this.tabConfig.TabIndex = 2;
             this.tabConfig.Text = "Configuration";
             // 
+            // cbSeriesWsArt
+            // 
+            this.cbSeriesWsArt.AutoSize = true;
+            this.cbSeriesWsArt.Location = new System.Drawing.Point(6, 216);
+            this.cbSeriesWsArt.Name = "cbSeriesWsArt";
+            this.cbSeriesWsArt.Size = new System.Drawing.Size(258, 17);
+            this.cbSeriesWsArt.TabIndex = 40;
+            this.cbSeriesWsArt.Text = "Use 16x9 posters for series images instead of 4x3";
+            this.cbSeriesWsArt.UseVisualStyleBackColor = true;
+            this.cbSeriesWsArt.CheckedChanged += new System.EventHandler(this.imageConfigs_Changed);
+            // 
             // pictureBox1
             // 
-            this.pictureBox1.Location = new System.Drawing.Point(284, 265);
+            this.pictureBox1.Location = new System.Drawing.Point(284, 288);
             this.pictureBox1.Name = "pictureBox1";
             this.pictureBox1.Size = new System.Drawing.Size(16, 16);
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
@@ -223,7 +237,7 @@
             // cbNoCastCrew
             // 
             this.cbNoCastCrew.AutoSize = true;
-            this.cbNoCastCrew.Location = new System.Drawing.Point(6, 336);
+            this.cbNoCastCrew.Location = new System.Drawing.Point(6, 359);
             this.cbNoCastCrew.Name = "cbNoCastCrew";
             this.cbNoCastCrew.Size = new System.Drawing.Size(247, 17);
             this.cbNoCastCrew.TabIndex = 38;
@@ -234,7 +248,7 @@
             // cbBrandLogo
             // 
             this.cbBrandLogo.AutoSize = true;
-            this.cbBrandLogo.Location = new System.Drawing.Point(6, 289);
+            this.cbBrandLogo.Location = new System.Drawing.Point(6, 312);
             this.cbBrandLogo.Name = "cbBrandLogo";
             this.cbBrandLogo.Size = new System.Drawing.Size(294, 17);
             this.cbBrandLogo.TabIndex = 37;
@@ -257,7 +271,7 @@
             // lblPreferredLogos
             // 
             this.lblPreferredLogos.AutoSize = true;
-            this.lblPreferredLogos.Location = new System.Drawing.Point(14, 265);
+            this.lblPreferredLogos.Location = new System.Drawing.Point(14, 288);
             this.lblPreferredLogos.Name = "lblPreferredLogos";
             this.lblPreferredLogos.Size = new System.Drawing.Size(99, 13);
             this.lblPreferredLogos.TabIndex = 32;
@@ -273,7 +287,7 @@
             "logos for dark backgrounds",
             "logos for light backgrounds",
             "do not use SD logos"});
-            this.cmbPreferredLogos.Location = new System.Drawing.Point(119, 262);
+            this.cmbPreferredLogos.Location = new System.Drawing.Point(119, 285);
             this.cmbPreferredLogos.Name = "cmbPreferredLogos";
             this.cmbPreferredLogos.Size = new System.Drawing.Size(160, 21);
             this.cmbPreferredLogos.TabIndex = 31;
@@ -293,7 +307,7 @@
             // cbTMDb
             // 
             this.cbTMDb.AutoSize = true;
-            this.cbTMDb.Location = new System.Drawing.Point(6, 216);
+            this.cbTMDb.Location = new System.Drawing.Point(6, 239);
             this.cbTMDb.Name = "cbTMDb";
             this.cbTMDb.Size = new System.Drawing.Size(249, 17);
             this.cbTMDb.TabIndex = 28;
@@ -304,7 +318,7 @@
             // cbSdLogos
             // 
             this.cbSdLogos.AutoSize = true;
-            this.cbSdLogos.Location = new System.Drawing.Point(6, 239);
+            this.cbSdLogos.Location = new System.Drawing.Point(6, 262);
             this.cbSdLogos.Name = "cbSdLogos";
             this.cbSdLogos.Size = new System.Drawing.Size(199, 17);
             this.cbSdLogos.TabIndex = 29;
@@ -363,7 +377,7 @@
             // cbModernMedia
             // 
             this.cbModernMedia.AutoSize = true;
-            this.cbModernMedia.Location = new System.Drawing.Point(6, 312);
+            this.cbModernMedia.Location = new System.Drawing.Point(6, 335);
             this.cbModernMedia.Name = "cbModernMedia";
             this.cbModernMedia.Size = new System.Drawing.Size(199, 17);
             this.cbModernMedia.TabIndex = 23;
@@ -708,17 +722,6 @@
             this.lblSchedStatus.TabIndex = 4;
             this.lblSchedStatus.Text = "Task Status";
             // 
-            // btnTask
-            // 
-            this.btnTask.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.btnTask.Location = new System.Drawing.Point(228, 87);
-            this.btnTask.Name = "btnTask";
-            this.btnTask.Size = new System.Drawing.Size(75, 23);
-            this.btnTask.TabIndex = 21;
-            this.btnTask.Text = "Create";
-            this.btnTask.UseVisualStyleBackColor = true;
-            this.btnTask.Click += new System.EventHandler(this.btnTask_Click);
-            // 
             // cbImport
             // 
             this.cbImport.AutoSize = true;
@@ -953,12 +956,14 @@
             this.labelLineupCounts});
             this.toolStrip6.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.Flow;
             this.toolStrip6.Location = new System.Drawing.Point(0, 0);
-            this.toolStrip6.MaximumSize = new System.Drawing.Size(432, 0);
+            this.toolStrip6.MaximumSize = new System.Drawing.Size(0, 46);
+            this.toolStrip6.MinimumSize = new System.Drawing.Size(0, 46);
             this.toolStrip6.Name = "toolStrip6";
             this.toolStrip6.Size = new System.Drawing.Size(432, 46);
             this.toolStrip6.Stretch = true;
             this.toolStrip6.TabIndex = 2;
             this.toolStrip6.Text = "toolStrip6";
+            this.toolStrip6.Resize += new System.EventHandler(this.toolStrip6_Resize);
             // 
             // btnIncludeExclude
             // 
@@ -992,6 +997,7 @@
             // 
             // comboLineups
             // 
+            this.comboLineups.AutoSize = false;
             this.comboLineups.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboLineups.FlatStyle = System.Windows.Forms.FlatStyle.Standard;
             this.comboLineups.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
@@ -1035,7 +1041,7 @@
             this.labelLineupCounts.Font = new System.Drawing.Font("Segoe UI", 8.5F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Italic | System.Drawing.FontStyle.Underline))));
             this.labelLineupCounts.Name = "labelLineupCounts";
             this.labelLineupCounts.Overflow = System.Windows.Forms.ToolStripItemOverflow.Never;
-            this.labelLineupCounts.Size = new System.Drawing.Size(350, 19);
+            this.labelLineupCounts.Size = new System.Drawing.Size(348, 19);
             // 
             // tabCustom
             // 
@@ -1104,7 +1110,6 @@
             this.btnCustomLineup});
             this.toolStrip5.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.HorizontalStackWithOverflow;
             this.toolStrip5.Location = new System.Drawing.Point(0, 0);
-            this.toolStrip5.MaximumSize = new System.Drawing.Size(432, 0);
             this.toolStrip5.Name = "toolStrip5";
             this.toolStrip5.Size = new System.Drawing.Size(432, 25);
             this.toolStrip5.Stretch = true;
@@ -1235,6 +1240,17 @@
             this.btnClearCache.Text = "Clear Cache";
             this.btnClearCache.UseVisualStyleBackColor = true;
             this.btnClearCache.Click += new System.EventHandler(this.btnClearCache_Click);
+            // 
+            // btnTask
+            // 
+            this.btnTask.FlatStyle = System.Windows.Forms.FlatStyle.System;
+            this.btnTask.Location = new System.Drawing.Point(228, 87);
+            this.btnTask.Name = "btnTask";
+            this.btnTask.Size = new System.Drawing.Size(75, 23);
+            this.btnTask.TabIndex = 21;
+            this.btnTask.Text = "Create";
+            this.btnTask.UseVisualStyleBackColor = true;
+            this.btnTask.Click += new System.EventHandler(this.btnTask_Click);
             // 
             // frmMain
             // 
@@ -1374,17 +1390,18 @@
         private System.Windows.Forms.ColumnHeader columnHeader22;
         private System.Windows.Forms.ColumnHeader columnHeader23;
         private System.Windows.Forms.ColumnHeader columnHeader24;
+        private System.Windows.Forms.CheckBox cbNoCastCrew;
+        private System.Windows.Forms.PictureBox pictureBox1;
+        private System.Windows.Forms.CheckBox cbXmltvSingleImage;
+        private System.Windows.Forms.CheckBox cbSeriesWsArt;
         private System.Windows.Forms.ToolStrip toolStrip6;
         private System.Windows.Forms.ToolStripDropDownButton btnIncludeExclude;
         private System.Windows.Forms.ToolStripMenuItem menuInclude;
         private System.Windows.Forms.ToolStripMenuItem menuExclude;
+        private System.Windows.Forms.ToolStripComboBox comboLineups;
         private System.Windows.Forms.ToolStripButton btnSelectAll;
         private System.Windows.Forms.ToolStripButton btnSelectNone;
-        private System.Windows.Forms.ToolStripComboBox comboLineups;
-        private System.Windows.Forms.ToolStripLabel labelLineupCounts;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
-        private System.Windows.Forms.CheckBox cbNoCastCrew;
-        private System.Windows.Forms.PictureBox pictureBox1;
-        private System.Windows.Forms.CheckBox cbXmltvSingleImage;
+        private System.Windows.Forms.ToolStripLabel labelLineupCounts;
     }
 }
