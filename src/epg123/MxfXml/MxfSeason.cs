@@ -1,22 +1,36 @@
 ﻿using System.Collections.Generic;
 using System.Xml.Serialization;
-using epg123.SchedulesDirectAPI;
 
 namespace epg123.MxfXml
 {
+    public partial class Mxf
+    {
+        private readonly Dictionary<string, MxfSeason> _seasons = new Dictionary<string, MxfSeason>();
+        public MxfSeason GetSeasonId(string seriesId, int seasonNumber, string protoTypicalProgram)
+        {
+            if (_seasons.TryGetValue($"{seriesId}_{seasonNumber}", out var season)) return season;
+            With.Seasons.Add(season = new MxfSeason
+            {
+                Index = With.Seasons.Count + 1,
+                mxfSeriesInfo = GetSeriesInfo(seriesId),
+                SeasonNumber = seasonNumber,
+                ProtoTypicalProgram = protoTypicalProgram
+            });
+            _seasons.Add(seriesId + "_" + seasonNumber, season);
+            return season;
+        }
+    }
+
     public class MxfSeason
     {
-        [XmlIgnore]
-        public int Index;
+        public override string ToString() { return Id; }
 
-        [XmlIgnore]
-        public string Zap2It;
+        [XmlIgnore] public int Index;
+        [XmlIgnore] public string ProtoTypicalProgram;
+        [XmlIgnore] public MxfGuideImage mxfGuideImage;
+        [XmlIgnore] public MxfSeriesInfo mxfSeriesInfo;
 
-        [XmlIgnore]
-        public string ProtoTypicalProgram;
-
-        [XmlIgnore]
-        public IList<sdImage> seasonImages;
+        [XmlIgnore] public Dictionary<string, dynamic> extras = new Dictionary<string, dynamic>();
 
         /// <summary>
         /// An ID that is unique to the document and defines this element.
@@ -36,7 +50,7 @@ namespace epg123.MxfXml
         [XmlAttribute("uid")]
         public string Uid
         {
-            get => $"!Season!{Zap2It}_{SeasonNumber}";
+            get => $"!Season!{mxfSeriesInfo.SeriesId}_{SeasonNumber}";
             set { }
         }
 
@@ -51,14 +65,17 @@ namespace epg123.MxfXml
         /// This value contains the GuideImage id attribute.
         /// </summary>
         [XmlAttribute("guideImage")]
-        public string GuideImage { get; set; }
+        public string GuideImage
+        {
+            get => mxfGuideImage?.ToString();
+            set { }
+        }
 
         /// <summary>
         /// Undocumented
         /// </summary>
         [XmlAttribute("seasonNumber")]
         public int SeasonNumber { get; set; }
-        public bool ShouldSerializeSeasonNumber() { return SeasonNumber != 0; }
 
         /// <summary>
         /// Undocumented
@@ -71,14 +88,22 @@ namespace epg123.MxfXml
         /// This value should be specified because it doesn't make sense for a season to not be part of a series.
         /// </summary>
         [XmlAttribute("series")]
-        public string Series { get; set; }
+        public string Series
+        {
+            get => mxfSeriesInfo?.ToString();
+            set { }
+        }
 
         /// <summary>
         /// The name of this season.
         /// The maximum length is 512 characters.
         /// </summary>
-        [XmlAttribute("title")]
-        public string Title { get; set; }
+        [XmlAttribute("title"), XmlIgnore]
+        public string Title
+        {
+            get => $"{mxfSeriesInfo?.Title}, Season {SeasonNumber}";
+            set { }
+        }
 
         /// <summary>
         /// The name of the studio that created this season.

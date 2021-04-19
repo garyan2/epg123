@@ -14,10 +14,10 @@ namespace epg123.sdJson2mxf
         {
             for (var i = 0; i < Groups.Length; ++i)
             {
-                SdMxf.With[0].KeywordGroups.Add(new MxfKeywordGroup() { Index = i + 1, Alpha = "m1" });
-                SdMxf.With[0].KeywordGroups[i].GetKeywordId(Groups[i]);
-                SdMxf.With[0].KeywordGroups[i].Index = (i + 1) * 1000;
-                SdMxf.With[0].KeywordGroups[i].GetKeywordId("All");
+                SdMxf.With.KeywordGroups.Add(new MxfKeywordGroup() { Index = i + 1, Alpha = "m1" });
+                SdMxf.With.KeywordGroups[i].GetKeywordId(Groups[i]);
+                SdMxf.With.KeywordGroups[i].Index = (i + 1) * 1000;
+                SdMxf.With.KeywordGroups[i].GetKeywordId("All");
             }
         }
 
@@ -26,9 +26,9 @@ namespace epg123.sdJson2mxf
             for (var groupIdx = 0; groupIdx < Groups.Length; ++groupIdx)
             {
                 // build keywords from keywordgroups
-                foreach (var category in SdMxf.With[0].KeywordGroups[groupIdx].Cats)
+                foreach (var category in SdMxf.With.KeywordGroups[groupIdx].Cats)
                 {
-                    SdMxf.With[0].Keywords.Add(new MxfKeyword()
+                    SdMxf.With.Keywords.Add(new MxfKeyword()
                     {
                         Word = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(category.Key.ToLower()),
                         Id = category.Value
@@ -37,16 +37,16 @@ namespace epg123.sdJson2mxf
 
                 // create an overflow group to give us a possible 200 categories per group
                 var overflow = groupIdx + Groups.Length;
-                SdMxf.With[0].KeywordGroups.Add(new MxfKeywordGroup() { Index = groupIdx + 1, Alpha = string.Empty });
-                SdMxf.With[0].KeywordGroups[overflow].GetKeywordId(Groups[groupIdx]);
-                SdMxf.With[0].KeywordGroups[overflow].Index = (groupIdx + 1) * 1000;
-                SdMxf.With[0].KeywordGroups[overflow].GetKeywordId("All");
+                SdMxf.With.KeywordGroups.Add(new MxfKeywordGroup() { Index = groupIdx + 1, Alpha = string.Empty });
+                SdMxf.With.KeywordGroups[overflow].GetKeywordId(Groups[groupIdx]);
+                SdMxf.With.KeywordGroups[overflow].Index = (groupIdx + 1) * 1000;
+                SdMxf.With.KeywordGroups[overflow].GetKeywordId("All");
 
                 // populate the overflow group starting with the 100th category
-                for (var i = 99; i < SdMxf.With[0].KeywordGroups[groupIdx].Sorted.Count; ++i)
+                for (var i = 99; i < SdMxf.With.KeywordGroups[groupIdx].Sorted.Count; ++i)
                 {
-                    SdMxf.With[0].KeywordGroups[overflow].Cats.Add(SdMxf.With[0].KeywordGroups[groupIdx].Sorted.ElementAt(i).Key,
-                                                                   SdMxf.With[0].KeywordGroups[groupIdx].Sorted.ElementAt(i).Value);
+                    SdMxf.With.KeywordGroups[overflow].Cats.Add(SdMxf.With.KeywordGroups[groupIdx].Sorted.ElementAt(i).Key,
+                                                                   SdMxf.With.KeywordGroups[groupIdx].Sorted.ElementAt(i).Value);
                 }
             }
 
@@ -54,10 +54,10 @@ namespace epg123.sdJson2mxf
             var newGroups = new List<MxfKeywordGroup>();
             for (var i = 0; i < Groups.Length; ++i)
             {
-                newGroups.Add(SdMxf.With[0].KeywordGroups[Groups.Length + i]);
-                newGroups.Add(SdMxf.With[0].KeywordGroups[i]);
+                newGroups.Add(SdMxf.With.KeywordGroups[Groups.Length + i]);
+                newGroups.Add(SdMxf.With.KeywordGroups[i]);
             }
-            SdMxf.With[0].KeywordGroups = newGroups;
+            SdMxf.With.KeywordGroups = newGroups;
             Logger.WriteVerbose("Completed compiling keywords and keyword groups.");
             return true;
         }

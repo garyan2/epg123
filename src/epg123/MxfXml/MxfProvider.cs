@@ -4,8 +4,7 @@ namespace epg123.MxfXml
 {
     public class MxfProvider
     {
-        [XmlIgnore]
-        public int Index { get; set; }
+        [XmlIgnore] public int Index { get; set; }
 
         /// <summary>
         /// An ID that is unique to the document and defines this element.

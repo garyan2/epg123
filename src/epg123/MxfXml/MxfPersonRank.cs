@@ -4,11 +4,17 @@ namespace epg123.MxfXml
 {
     public class MxfPersonRank
     {
+        [XmlIgnore] public MxfPerson mxfPerson;
+
         /// <summary>
         /// A reference to the id value of the Person element.
         /// </summary>
         [XmlAttribute("person")]
-        public string Person { get; set; }
+        public string Person
+        {
+            get => mxfPerson?.ToString();
+            set { }
+        }
 
         /// <summary>
         /// Used to sort the names that are displayed.
@@ -19,7 +25,6 @@ namespace epg123.MxfXml
 
         /// <summary>
         /// The role an actor plays
-        /// hasExtendedCastAndCrew must be "true" to display this information
         /// </summary>
         [XmlAttribute("character")]
         public string Character { get; set; }

@@ -5,11 +5,10 @@ namespace epg123.MxfXml
 {
     public class MxfLineup
     {
-        [XmlIgnore]
-        public int Index;
+        public override string ToString() { return Id; }
 
-        [XmlIgnore]
-        private string _uid;
+        [XmlIgnore] public int Index;
+        [XmlIgnore] public string LineupId;
 
         /// <summary>
         /// An ID that is unique to the document and defines this element.
@@ -25,13 +24,13 @@ namespace epg123.MxfXml
         /// <summary>
         /// An ID that uniquely identifies the lineup.
         /// The uid value should be in the form "!Lineup!uniqueLineupName", where uniqueLineupName is a unique ID for this lineup across all Lineup elements.
-        /// Lesson learned: uid value should start with !MCLineup! and uid should be numberic only -> this is the way to present information in about guide.
+        /// Lesson learned: uid value should start with !MCLineup! -> this is the way to present information in about guide.
         /// </summary>
         [XmlAttribute("uid")]
         public string Uid
         {
-            get => $"!MCLineup!{_uid}";
-            set => _uid = value;
+            get => $"!MCLineup!{LineupId}";
+            set { }
         }
 
         /// <summary>
@@ -47,11 +46,11 @@ namespace epg123.MxfXml
         [XmlAttribute("primaryProvider")]
         public string PrimaryProvider
         {
-            get => (Index == 1) ? "!MCLineup!MainLineup" : null;
+            get => Index == 1 ? "!MCLineup!MainLineup" : null;
             set { }
         }
 
         [XmlArrayItem("Channel")]
-        public List<MxfChannel> channels { get; set; }
+        public List<MxfChannel> channels { get; set; } = new List<MxfChannel>();
     }
 }

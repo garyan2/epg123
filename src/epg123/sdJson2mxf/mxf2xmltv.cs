@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using epg123.MxfXml;
+using epg123.SchedulesDirect;
 using epg123.XmltvXml;
 
 namespace epg123.sdJson2mxf
@@ -26,7 +27,7 @@ namespace epg123.sdJson2mxf
                     Programs = new List<XmltvProgramme>()
                 };
 
-                foreach (var service in SdMxf.With[0].Services)
+                foreach (var service in SdMxf.With.Services)
                 {
                     xmltv.Channels.Add(BuildXmltvChannel(service));
 
@@ -39,8 +40,8 @@ namespace epg123.sdJson2mxf
                             Description = config.XmltvFillerProgramDescription,
                             IsGeneric = true,
                             Title = service.Name,
-                            TmsId = $"EPG123FILL{service.StationId}",
-                            Index = SdMxf.With[0].Programs.Count + 1,
+                            ProgramId = $"EPG123FILL{service.StationId}",
+                            Index = SdMxf.With.Programs.Count + 1,
                         };
 
                         // populate the schedule entries
@@ -48,10 +49,10 @@ namespace epg123.sdJson2mxf
                         var stopTime = startTime + TimeSpan.FromDays(config.DaysToDownload);
                         do
                         {
-                            service.MxfScheduleEntries.ScheduleEntry.Add(new MxfScheduleEntry()
+                            service.MxfScheduleEntries.ScheduleEntry.Add(new MxfScheduleEntry
                             {
                                 Duration = config.XmltvFillerProgramLength * 60 * 60,
-                                Program = SdMxf.With[0].GetProgram(program.TmsId, program).Id,
+                                mxfProgram = SdMxf.GetProgram(program.ProgramId, program),
                                 StartTime = startTime,
                                 IsRepeat = true
                             });
@@ -65,7 +66,7 @@ namespace epg123.sdJson2mxf
                         {
                             startTime = scheduleEntry.StartTime;
                         }
-                        xmltv.Programs.Add(BuildXmltvProgram(scheduleEntry, startTime, service.XmltvChannelId, out startTime));
+                        xmltv.Programs.Add(BuildXmltvProgram(scheduleEntry, startTime, $"EPG123.{service.StationId}.schedulesdirect.org", out startTime));
                     }
                 }
                 return true;
@@ -83,7 +84,7 @@ namespace epg123.sdJson2mxf
             // initialize the return channel
             var ret = new XmltvChannel()
             {
-                Id = mxfService.XmltvChannelId,
+                Id = $"EPG123.{mxfService.StationId}.schedulesdirect.org",
                 DisplayNames = new List<XmltvText>()
             };
 
@@ -100,7 +101,7 @@ namespace epg123.sdJson2mxf
             if (config.XmltvIncludeChannelNumbers)
             {
                 var numbers = new HashSet<string>();
-                foreach (var mxfLineup in SdMxf.With[0].Lineups)
+                foreach (var mxfLineup in SdMxf.With.Lineups)
                 {
                     foreach (var mxfChannel in mxfLineup.channels)
                     {
@@ -120,15 +121,15 @@ namespace epg123.sdJson2mxf
             if (!string.IsNullOrEmpty(affiliate) && !mxfService.Name.Equals(affiliate)) ret.DisplayNames.Add(new XmltvText() { Text = affiliate });
 
             // add logo if available
-            if (mxfService.ServiceLogo != null)
+            if (mxfService.extras.ContainsKey("logo"))
             {
-                ret.Icons = new List<XmltvIcon>()
+                ret.Icons = new List<XmltvIcon>
                 {
-                    new XmltvIcon()
+                    new XmltvIcon
                     {
-                        Src = mxfService.ServiceLogo.Url,
-                        Height = mxfService.ServiceLogo.Height,
-                        Width = mxfService.ServiceLogo.Width
+                        Src = mxfService.extras["logo"].Url,
+                        Height = mxfService.extras["logo"].Height,
+                        Width = mxfService.extras["logo"].Width
                     }
                 };
             }
@@ -139,10 +140,10 @@ namespace epg123.sdJson2mxf
         #region ========== XMLTV Programmes and Functions ==========
         private static XmltvProgramme BuildXmltvProgram(MxfScheduleEntry scheduleEntry, DateTime startTime, string channelId, out DateTime endTime)
         {
-            var mxfProgram = SdMxf.With[0].Programs[int.Parse(scheduleEntry.Program) - 1];
+            var mxfProgram = SdMxf.With.Programs[int.Parse(scheduleEntry.Program) - 1];
             if (!mxfProgram.Id.Equals(scheduleEntry.Program))
             {
-                mxfProgram = SdMxf.With[0].Programs.SingleOrDefault(arg => arg.Id.Equals(scheduleEntry.Program));
+                mxfProgram = SdMxf.With.Programs.SingleOrDefault(arg => arg.Id.Equals(scheduleEntry.Program));
             }
             endTime = startTime + TimeSpan.FromSeconds((scheduleEntry.Duration));
             if (mxfProgram == null) return null;
@@ -215,7 +216,6 @@ namespace epg123.sdJson2mxf
             }
             if (mxfProgram.MpaaRating > 0) descriptionExtended += $" {mpaaRatings[mxfProgram.MpaaRating]}";
                 
-            if (mxfProgram.ContentAdvisories != null)
             {
                 var advisories = string.Empty;
                 if (mxfProgram.HasAdult) advisories += "Adult Situations,";
@@ -229,7 +229,7 @@ namespace epg123.sdJson2mxf
                 else if (mxfProgram.HasBriefNudity) advisories += "Brief Nudity,";
                 if (mxfProgram.HasRape) advisories += "Rape,";
 
-                descriptionExtended += $" ({advisories.Trim().TrimEnd(',').Replace(",", ", ")})";
+                if (!string.IsNullOrEmpty(advisories)) descriptionExtended += $" ({advisories.Trim().TrimEnd(',').Replace(",", ", ")})";
             }
 
             if (mxfProgram.IsMovie && mxfProgram.HalfStars > 0)
@@ -300,11 +300,11 @@ namespace epg123.sdJson2mxf
         }
         private static List<string> MxfPersonRankToXmltvCrew(IEnumerable<MxfPersonRank> mxfPersons)
         {
-            return mxfPersons?.Select(person => SdMxf.With[0].People[int.Parse(person.Person.Substring(1)) - 1].Name).ToList();
+            return mxfPersons?.Select(person => SdMxf.With.People[int.Parse(person.Person.Substring(1)) - 1].Name).ToList();
         }
         private static List<XmltvActor> MxfPersonRankToXmltvActors(IEnumerable<MxfPersonRank> mxfPersons)
         {
-            return mxfPersons?.Select(person => new XmltvActor() {Actor = SdMxf.With[0].People[int.Parse(person.Person.Substring(1)) - 1].Name, Role = person.Character}).ToList();
+            return mxfPersons?.Select(person => new XmltvActor() {Actor = SdMxf.With.People[int.Parse(person.Person.Substring(1)) - 1].Name, Role = person.Character}).ToList();
         }
 
         // Date
@@ -325,7 +325,7 @@ namespace epg123.sdJson2mxf
             var categories = new HashSet<string>();
             foreach (var keywordId in mxfProgram.Keywords.Split(','))
             {
-                foreach (var keyword in SdMxf.With[0].Keywords.Where(keyword => !keyword.Word.ToLower().Contains("premiere")).Where(keyword => keyword.Id == keywordId))
+                foreach (var keyword in SdMxf.With.Keywords.Where(keyword => !keyword.Word.ToLower().Contains("premiere")).Where(keyword => keyword.Id == keywordId))
                 {
                     if (keyword.Word.Equals("Uncategorized")) continue;
                     categories.Add(keyword.Word.Equals("Movies") ? "Movie" : keyword.Word);
@@ -355,41 +355,44 @@ namespace epg123.sdJson2mxf
         // Icons
         private static List<XmltvIcon> BuildProgramIcons(MxfProgram mxfProgram)
         {
-            // a movie will have a guide image from the program
-            if (mxfProgram.IsMovie && mxfProgram.ProgramImages != null)
+            var artwork = new List<ProgramArtwork>();
+
+            // a movie or sport event will have a guide image from the program
+            if (mxfProgram.extras.ContainsKey("artwork"))
             {
-                return mxfProgram.ProgramImages.Select(image => new XmltvIcon {Src = image.Uri, Height = image.Height, Width = image.Width}).ToList();
+                artwork = mxfProgram.extras["artwork"];
+                if (artwork.Count > 0)
+                {
+                    return artwork.Select(image => new XmltvIcon { Src = image.Uri, Height = image.Height, Width = image.Width }).ToList();
+                }
+            }
+
+            // get the season class from the program if it is has a season
+            if (artwork.Count == 0 && (mxfProgram.mxfSeason?.extras.ContainsKey("artwork") ?? false))
+            {
+                artwork = mxfProgram.mxfSeason.extras["artwork"];
             }
 
             // get the series info class from the program if it is a series
-            if (string.IsNullOrEmpty(mxfProgram.Series)) return null;
-            var mxfSeriesInfo = SdMxf.With[0].SeriesInfos[int.Parse(mxfProgram.Series.Substring(2)) - 1];
-            if (!mxfSeriesInfo.Id.Equals(mxfProgram.Series))
+            if (artwork.Count == 0 && (mxfProgram.mxfSeriesInfo?.extras.ContainsKey("artwork") ?? false))
             {
-                mxfSeriesInfo = SdMxf.With[0].SeriesInfos.SingleOrDefault(arg => arg.Id.Equals(mxfProgram.Series));
+                artwork = mxfProgram.mxfSeriesInfo.extras["artwork"];
             }
 
-            if (config.XmltvSingleImage)
-            {
-                var imageId = !string.IsNullOrEmpty(mxfProgram.GuideImage) ? mxfProgram.GuideImage : mxfSeriesInfo?.GuideImage;
-                if (imageId == null) return null;
-                var image = SdMxf.With[0].GuideImages.SingleOrDefault(arg => arg.Id == imageId);
-                return image == null ? null : new List<XmltvIcon>(1) { new XmltvIcon() { Src = image.ImageUrl }};
-            }
-
-            return mxfSeriesInfo?.SeriesImages?.Select(image => new XmltvIcon() {Src = image.Uri, Height = image.Height, Width = image.Width}).ToList();
+            if (artwork.Count == 0) return null;
+            return config.XmltvSingleImage ? new List<XmltvIcon>(1) { new XmltvIcon {Src = artwork[0].Uri} } : artwork.Select(image => new XmltvIcon { Src = image.Uri, Height = image.Height, Width = image.Width }).ToList();
         }
 
         private static XmltvText GrabSportEvent(MxfProgram program)
         {
-            if (!program.IsSports || program.Genres == null) return null;
-            return (from category in program.Genres where !category.ToLower().StartsWith("sport") select new XmltvText() {Text = category}).FirstOrDefault();
+            if (!program.IsSports || !program.extras.ContainsKey("genres")) return null;
+            return (from category in ((string[])program.extras["genres"]) where !category.ToLower().StartsWith("sport") select new XmltvText {Text = category}).FirstOrDefault();
         }
 
         private static List<XmltvText> BuildSportTeams(MxfProgram program)
         {
-            if (!program.IsSports || program.Teams == null) return null;
-            return program.Teams.Select(team => new XmltvText() {Text = team}).ToList();
+            if (!program.IsSports || !program.extras.ContainsKey("teams")) return null;
+            return ((List<string>)program.extras["teams"]).Select(team => new XmltvText {Text = team}).ToList();
         }
 
         // EpisodeNums
@@ -397,7 +400,7 @@ namespace epg123.sdJson2mxf
         private static List<XmltvEpisodeNum> BuildEpisodeNumbers(MxfProgram mxfProgram, MxfScheduleEntry mxfScheduleEntry, DateTime startTime)
         {
             var list = new List<XmltvEpisodeNum>();
-            if (!mxfProgram.TmsId.StartsWith("EPG123"))
+            if (!mxfProgram.ProgramId.StartsWith("EPG123"))
             {
                 list.Add(new XmltvEpisodeNum()
                 {
@@ -412,12 +415,12 @@ namespace epg123.sdJson2mxf
                     $"{((mxfProgram.SeasonNumber != 0) ? (mxfProgram.SeasonNumber - 1).ToString() : string.Empty)}.{((mxfProgram.EpisodeNumber != 0) ? (mxfProgram.EpisodeNumber - 1).ToString() : string.Empty)}.{((mxfScheduleEntry.Part != 0) ? (mxfScheduleEntry.Part - 1).ToString() + "/" : "0/")}{((mxfScheduleEntry.Parts != 0) ? (mxfScheduleEntry.Parts).ToString() : "1")}";
                 list.Add(new XmltvEpisodeNum() { System = "xmltv_ns", Text = text });
             }
-            else if (mxfProgram.TmsId.StartsWith("EPG123"))
+            else if (mxfProgram.ProgramId.StartsWith("EPG123"))
             {
                 // filler data - create oad of scheduled start time
                 list.Add(new XmltvEpisodeNum() { System = "original-air-date", Text = startTime.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss") });
             }
-            else if (!mxfProgram.TmsId.StartsWith("MV"))
+            else if (!mxfProgram.ProgramId.StartsWith("MV"))
             {
                 // add this entry due to Plex identifying anything without an episode number as being a movie
                 var oad = mxfProgram.OriginalAirdate;
@@ -437,10 +440,10 @@ namespace epg123.sdJson2mxf
             }
             if (mxfProgram.Series == null) return list;
 
-            var mxfSeriesInfo = SdMxf.With[0].SeriesInfos[int.Parse(mxfProgram.Series.Substring(2)) - 1];
-            if (mxfSeriesInfo.TvdbSeriesId != null)
+            var mxfSeriesInfo = SdMxf.With.SeriesInfos[int.Parse(mxfProgram.Series.Substring(2)) - 1];
+            if (mxfSeriesInfo.extras.ContainsKey("tvdb"))
             {
-                list.Add(new XmltvEpisodeNum() { System = "thetvdb.com", Text = $"series/{mxfSeriesInfo.TvdbSeriesId}" });
+                list.Add(new XmltvEpisodeNum() { System = "thetvdb.com", Text = $"series/{mxfSeriesInfo.extras["tvdb"]}" });
             }
             return list;
         }
@@ -472,7 +475,7 @@ namespace epg123.sdJson2mxf
         {
             if (mxfScheduleEntry.IsRepeat && !mxfProgram.IsMovie)
             {
-                return new XmltvPreviouslyShown() { Text = string.Empty };
+                return new XmltvPreviouslyShown { Text = string.Empty };
             }
             return null;
         }
@@ -519,9 +522,6 @@ namespace epg123.sdJson2mxf
         // Rating
         private static List<XmltvRating> BuildProgramRatings(MxfProgram mxfProgram, MxfScheduleEntry mxfScheduleEntry)
         {
-            if (mxfProgram.MpaaRating == 0 && mxfScheduleEntry.TvRating == 0 &&
-                mxfProgram.ContentRatings == null) return null;
-
             var ret = new List<XmltvRating>();
             AddProgramRatingAdvisory(mxfProgram.HasAdult, ret, "Adult Situations");
             AddProgramRatingAdvisory(mxfProgram.HasBriefNudity, ret, "Brief Nudity");
@@ -533,16 +533,29 @@ namespace epg123.sdJson2mxf
             AddProgramRatingAdvisory(mxfProgram.HasRape, ret, "Rape");
             AddProgramRatingAdvisory(mxfProgram.HasStrongSexualContent, ret, "Strong Sexual Content");
             AddProgramRatingAdvisory(mxfProgram.HasViolence, ret, "Violence");
+
             AddProgramRating(mxfScheduleEntry, ret);
             return ret;
         }
         private static void AddProgramRating(MxfScheduleEntry mxfScheduleEntry, ICollection<XmltvRating> list)
         {
-            if (mxfScheduleEntry.Ratings != null)
+            var hashSet = new HashSet<string>();
+            if (mxfScheduleEntry.extras.ContainsKey("ratings"))
             {
-                foreach (var rating in mxfScheduleEntry.Ratings)
+                foreach (KeyValuePair<string, string> rating in mxfScheduleEntry.extras["ratings"])
                 {
-                    list.Add(new XmltvRating() { System = rating.Key, Value = rating.Value });
+                    if (hashSet.Contains(rating.Key)) continue;
+                    hashSet.Add(rating.Key);
+                    list.Add(new XmltvRating { System = rating.Key, Value = rating.Value });
+                }
+            }
+            if (mxfScheduleEntry.mxfProgram.extras.ContainsKey("ratings"))
+            {
+                foreach (KeyValuePair<string, string> rating in mxfScheduleEntry.mxfProgram.extras["ratings"])
+                {
+                    if (hashSet.Contains(rating.Key)) continue;
+                    hashSet.Add(rating.Key);
+                    list.Add(new XmltvRating { System = rating.Key, Value = rating.Value });
                 }
             }
 
@@ -561,7 +574,7 @@ namespace epg123.sdJson2mxf
                 }
                 if (!string.IsNullOrEmpty(rating))
                 {
-                    list.Add(new XmltvRating() { System = "VCHIP", Value = rating });
+                    list.Add(new XmltvRating { System = "VCHIP", Value = rating });
                 }
             }
         }

@@ -1,9 +1,29 @@
-﻿using System.Xml.Serialization;
+﻿using System.Collections.Generic;
+using System.Xml.Serialization;
 
 namespace epg123.MxfXml
 {
+    public partial class Mxf
+    {
+        private readonly Dictionary<string, MxfAffiliate> _affiliates = new Dictionary<string, MxfAffiliate>();
+        public MxfAffiliate GetAffiliate(string affiliateName)
+        {
+            if (_affiliates.TryGetValue(affiliateName, out var affiliate)) return affiliate;
+            With.Affiliates.Add(affiliate = new MxfAffiliate
+            {
+                Name = affiliateName
+            });
+            _affiliates.Add(affiliateName, affiliate);
+            return affiliate;
+        }
+    }
+
     public class MxfAffiliate
     {
+        public override string ToString() { return Uid; }
+
+        [XmlIgnore] public MxfGuideImage mxfGuideImage;
+
         /// <summary>
         /// The display name of the network.
         /// </summary>
@@ -26,6 +46,10 @@ namespace epg123.MxfXml
         /// This value contains a GuideImage id attribute.
         /// </summary>
         [XmlAttribute("logoImage")]
-        public string LogoImage { get; set; }
+        public string LogoImage
+        {
+            get => mxfGuideImage?.ToString();
+            set { }
+        }
     }
 }

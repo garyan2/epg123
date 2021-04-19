@@ -4,7 +4,7 @@ using System.IO;
 using System.Net;
 using System.Text;
 using System.Threading;
-using epg123.SchedulesDirectAPI;
+using epg123.SchedulesDirect;
 using Newtonsoft.Json;
 
 namespace epg123.TheMovieDbAPI
@@ -20,15 +20,15 @@ namespace epg123.TheMovieDbAPI
         private static int posterSizeIdx;
 
         #region Public Attributes
-        public static IList<sdImage> SdImages
+        public static List<ProgramArtwork> SdImages
         {
             get
             {
-                var ret = new List<sdImage>();
+                var ret = new List<ProgramArtwork>();
                 if (string.IsNullOrEmpty(PosterImageUrl)) return ret;
                 var width = int.Parse(config.Images.PosterSizes[posterSizeIdx].Substring(1));
                 var height = (int)(width * 1.5);
-                ret.Add(new sdImage()
+                ret.Add(new ProgramArtwork()
                 {
                     Aspect = "2x3",
                     Category = "Poster Art",

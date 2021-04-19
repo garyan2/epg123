@@ -15,7 +15,7 @@ using System.Threading;
 using System.Windows.Forms;
 using System.Xml.Serialization;
 using epg123.Properties;
-using epg123.SchedulesDirectAPI;
+using epg123.SchedulesDirect;
 using epg123.Task;
 
 namespace epg123
@@ -86,13 +86,13 @@ namespace epg123
             }
 
             // initialize the schedules direct api
-            sdApi.Initialize("EPG123", Helper.SdGrabberVersion);
+            SdApi.Initialize("EPG123", Helper.SdGrabberVersion);
 
             // complete the title bar label with version number
             Text += $" v{Helper.Epg123Version}";
 
             // check for updates
-            var veresp = sdApi.SdCheckVersion();
+            var veresp = SdApi.GetClientVersion();
             if (veresp != null && veresp.Version != Helper.SdGrabberVersion)
             {
                 lblUpdate.Text = $"UPDATE AVAILABLE (v{veresp.Version})";
@@ -398,7 +398,7 @@ namespace epg123
         {
             bool ret;
             var errorString = string.Empty;
-            if (ret = sdApi.SdGetToken(Config.UserAccount.LoginName, Config.UserAccount.PasswordHash, ref errorString))
+            if (ret = SdApi.GetToken(Config.UserAccount.LoginName, Config.UserAccount.PasswordHash, ref errorString))
             {
                 // get membership expiration
                 GetUserStatus();
@@ -490,7 +490,7 @@ namespace epg123
         }
         private void GetUserStatus()
         {
-            var status = sdApi.SdGetStatus();
+            var status = SdApi.GetUserStatus();
             if (status == null)
             {
                 txtAcctExpires.Text = "Unknown";
@@ -541,13 +541,13 @@ namespace epg123
             _allAvailableStations.Clear();
 
             // retrieve lineups from SD
-            var clientLineups = sdApi.SdGetLineups();
+            var clientLineups = SdApi.GetSubscribedLineups();
             if (clientLineups == null) return;
 
             foreach (var clientLineup in clientLineups.Lineups)
             {
                 // request the lineup's station maps
-                var lineupMap = sdApi.SdGetStationMaps(clientLineup.Lineup);
+                var lineupMap = SdApi.GetStationChannelMap(clientLineup.Lineup);
                 if (lineupMap == null) continue;
 
                 // build the stations
@@ -589,11 +589,11 @@ namespace epg123
                 comboLineups.Items.Add(lineup.Value);
             }
 
-            labelLineupCounts.Text = $"subscribed to {comboLineups.Items.Count} out of {sdApi.MaxLineups} allowed lineups";
+            labelLineupCounts.Text = $"subscribed to {comboLineups.Items.Count} out of {SdApi.MaxLineups} allowed lineups";
 
             if (comboLineups.Items.Count > 0) comboLineups.SelectedIndex = 0;
         }
-        public string GetChannelNumber(SdLineupMap map)
+        public string GetChannelNumber(LineupChannel map)
         {
             var number = -1;
             var subnumber = 0;
@@ -1614,10 +1614,10 @@ public class myLineup
     }
 
     public bool Include { get; set; }
-    public SdLineup Lineup { get; private set; }
-    public List<SdLineupMap> Channels { get; set; }
+    public SubscribedLineup Lineup { get; private set; }
+    public List<LineupChannel> Channels { get; set; }
 
-    public myLineup(SdLineup lineup)
+    public myLineup(SubscribedLineup lineup)
     {
         Lineup = lineup;
     }
@@ -1673,9 +1673,9 @@ public class myStation
     public string Name { get; private set; }
     public string StationId { get; private set; }
     public string LanguageCode { get; private set; }
-    public SdLineupStation Station { get; private set; }
+    public LineupStation Station { get; private set; }
 
-    public myStation(SdLineupStation station)
+    public myStation(LineupStation station)
     {
         var atsc = false;
 

@@ -6,7 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using epg123.MxfXml;
-using epg123.SchedulesDirectAPI;
+using epg123.SchedulesDirect;
 using Newtonsoft.Json;
 
 namespace epg123.sdJson2mxf
@@ -15,50 +15,52 @@ namespace epg123.sdJson2mxf
     {
         private static List<string> sportsImageQueue = new List<string>();
         private static List<MxfProgram> sportEvents = new List<MxfProgram>();
-        private static ConcurrentBag<sdArtworkResponse> sportsImageResponses = new ConcurrentBag<sdArtworkResponse>();
+        private static ConcurrentBag<ProgramMetadata> sportsImageResponses = new ConcurrentBag<ProgramMetadata>();
 
         private static bool GetAllSportsImages()
         {
             // reset counters
             processedObjects = 0;
-            Logger.WriteMessage($"Entering getAllSportsImages() for {totalObjects = sportEvents.Count} sports events.");
+            Logger.WriteMessage($"Entering GetAllSportsImages() for {totalObjects = sportEvents.Count} sports events.");
             ++processStage; ReportProgress();
 
             // scan through each series in the mxf
             foreach (var sportEvent in sportEvents)
             {
-                if (epgCache.JsonFiles.ContainsKey(sportEvent.Md5) && epgCache.JsonFiles[sportEvent.Md5].Images != null)
+                if (epgCache.JsonFiles.ContainsKey(sportEvent.extras["md5"]) && epgCache.JsonFiles[sportEvent.extras["md5"]].Images != null)
                 {
                     ++processedObjects; ReportProgress();
-                    if (string.IsNullOrEmpty(epgCache.JsonFiles[sportEvent.Md5].Images)) continue;
+                    if (string.IsNullOrEmpty(epgCache.JsonFiles[sportEvent.extras["md5"]].Images)) continue;
 
-                    using (var reader = new StringReader(epgCache.JsonFiles[sportEvent.Md5].Images))
+                    List<ProgramArtwork> artwork;
+                    using (var reader = new StringReader(epgCache.JsonFiles[sportEvent.extras["md5"]].Images))
                     {
                         var serializer = new JsonSerializer();
-                        sportEvent.ProgramImages = (List<sdImage>)serializer.Deserialize(reader, typeof(List<sdImage>));
+                        sportEvent.extras.Add("artwork", artwork = (List<ProgramArtwork>)serializer.Deserialize(reader, typeof(List<ProgramArtwork>)));
                     }
 
-                    sdImage image = null;
+                    ProgramArtwork image = null;
                     if (config.SeriesPosterArt || config.SeriesWsArt)
                     {
-                        image = sportEvent.ProgramImages.SingleOrDefault(arg =>
+                        image = artwork.SingleOrDefault(arg =>
                             arg.Aspect.ToLower().Equals(config.SeriesPosterArt ? "2x3" : "16x9"));
                     }
                     if (image == null)
                     {
-                        image = sportEvent.ProgramImages.SingleOrDefault(arg => arg.Aspect.ToLower().Equals("4x3"));
+                        image = artwork.SingleOrDefault(arg => arg.Aspect.ToLower().Equals("4x3"));
                     }
+
                     if (image != null)
                     {
-                        sportEvent.GuideImage = SdMxf.With[0].GetGuideImage(image.Uri).Id;
+                        sportEvent.mxfGuideImage = SdMxf.GetGuideImage(image.Uri);
                     }
                 }
                 else
                 {
-                    sportsImageQueue.Add(sportEvent.TmsId);
+                    sportsImageQueue.Add(sportEvent.ProgramId);
                 }
             }
-            Logger.WriteVerbose($"Found {processedObjects} cached sport event image links.");
+            Logger.WriteVerbose($"Found {processedObjects} cached/unavailable sport event image links.");
             totalObjects = processedObjects + sportsImageQueue.Count;
             ReportProgress();
 
@@ -95,7 +97,7 @@ namespace epg123.sdJson2mxf
             }
 
             // request images from Schedules Direct
-            var responses = sdApi.SdGetArtwork(events);
+            var responses = SdApi.GetArtwork(events);
             if (responses != null)
             {
                 Parallel.ForEach(responses, (response) =>
@@ -112,59 +114,48 @@ namespace epg123.sdJson2mxf
             {
                 ++processedObjects; ReportProgress();
                 if (response.Data == null) continue;
-                
-                var mxfProgram = sportEvents.SingleOrDefault(arg => arg.TmsId == response.ProgramId);
+
+                var mxfProgram = sportEvents.SingleOrDefault(arg => arg.ProgramId == response.ProgramId);
                 if (mxfProgram == null) continue;
 
                 // get sports event images
-                mxfProgram.ProgramImages = GetSportsImages(response.Data);
+                List<ProgramArtwork> artwork;
+                mxfProgram.extras.Add("artwork", artwork = GetSportsImages(response.Data));
 
-                if (mxfProgram.ProgramImages.Count > 0)
+                if (artwork.Count > 0)
                 {
-                    sdImage image = null;
+                    ProgramArtwork image = null;
                     if (config.SeriesPosterArt || config.SeriesWsArt)
                     {
-                        image = mxfProgram.ProgramImages.SingleOrDefault(arg =>
+                        image = artwork.SingleOrDefault(arg =>
                             arg.Aspect.ToLower().Equals(config.SeriesPosterArt ? "2x3" : "16x9"));
                     }
                     if (image == null)
                     {
-                        image = mxfProgram.ProgramImages.SingleOrDefault(arg => arg.Aspect.ToLower().Equals("4x3"));
+                        image = artwork.SingleOrDefault(arg => arg.Aspect.ToLower().Equals("4x3"));
                     }
                     if (image != null)
                     {
-                        mxfProgram.GuideImage = SdMxf.With[0].GetGuideImage(image.Uri).Id;
+                        mxfProgram.mxfGuideImage = SdMxf.GetGuideImage(image.Uri);
                     }
 
                     using (var writer = new StringWriter())
                     {
-                        try
-                        {
-                            var serializer = new JsonSerializer();
-                            serializer.Serialize(writer, mxfProgram.ProgramImages);
-
-                            if (!epgCache.JsonFiles.ContainsKey(mxfProgram.Md5))
-                            {
-                                epgCache.AddAsset(mxfProgram.Md5, string.Empty);
-                            }
-                            epgCache.JsonFiles[mxfProgram.Md5].Images = writer.ToString();
-                        }
-                        catch
-                        {
-                            // ignored
-                        }
+                        var serializer = new JsonSerializer();
+                        serializer.Serialize(writer, artwork);
+                        epgCache.UpdateAssetImages(mxfProgram.extras["md5"], writer.ToString());
                     }
                 }
-                else if (epgCache.JsonFiles.ContainsKey(mxfProgram.Md5))
+                else
                 {
-                    epgCache.UpdateAssetImages(mxfProgram.Md5, string.Empty);
+                    epgCache.UpdateAssetImages(mxfProgram.extras["md5"], string.Empty);
                 }
             }
         }
 
-        private static IList<sdImage> GetSportsImages(IList<sdImage> sdImages)
+        private static List<ProgramArtwork> GetSportsImages(List<ProgramArtwork> sdImages)
         {
-            var ret = new List<sdImage>();
+            var ret = new List<ProgramArtwork>();
             var images = sdImages.Where(arg => !string.IsNullOrEmpty(arg.Category))
                      .Where(arg => !string.IsNullOrEmpty(arg.Aspect))
                      .Where(arg => !string.IsNullOrEmpty(arg.Size)).Where(arg => arg.Size.ToLower().Equals("md") || arg.Size.ToLower().Equals("sm"))
@@ -175,10 +166,11 @@ namespace epg123.sdJson2mxf
             var aspects = new HashSet<string>();
             foreach (var image in images)
             {
+                if (image.Aspect.Equals("1x1")) continue;
                 aspects.Add(image.Aspect);
                 if (!image.Uri.ToLower().StartsWith("http"))
                 {
-                    image.Uri = $"{sdApi.JsonBaseUrl}{sdApi.JsonApi}image/{image.Uri.ToLower()}";
+                    image.Uri = $"{SdApi.JsonBaseUrl}{SdApi.JsonApi}image/{image.Uri.ToLower()}";
                 }
             }
 
@@ -187,7 +179,7 @@ namespace epg123.sdJson2mxf
             {
                 var imgAspects = images.Where(arg => arg.Aspect.Equals(aspect) && arg.Size.ToLower().Equals(aspect.Equals("16x9") ? "sm" : "md"));
 
-                var links = new sdImage[8];
+                var links = new ProgramArtwork[8];
                 foreach (var image in imgAspects)
                 {
                     switch (image.Category.ToLower())

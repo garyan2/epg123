@@ -1,32 +1,39 @@
 ﻿using System.Collections.Generic;
 using System.Xml.Serialization;
 using System;
-using epg123.SchedulesDirectAPI;
 
 namespace epg123.MxfXml
 {
+    public partial class Mxf
+    {
+        private readonly Dictionary<string, MxfSeriesInfo> _seriesInfos = new Dictionary<string, MxfSeriesInfo>();
+        public MxfSeriesInfo GetSeriesInfo(string seriesId, string protoTypicalProgram = null)
+        {
+            if (_seriesInfos.TryGetValue(seriesId, out var seriesInfo)) return seriesInfo;
+            With.SeriesInfos.Add(seriesInfo = new MxfSeriesInfo
+            {
+                Index = With.SeriesInfos.Count + 1,
+                SeriesId = seriesId,
+                ProtoTypicalProgram = protoTypicalProgram
+            });
+            _seriesInfos.Add(seriesId, seriesInfo);
+            return seriesInfo;
+        }
+    }
+
     public class MxfSeriesInfo
     {
+        public override string ToString() { return Id; }
+
         private DateTime _seriesStartDate = DateTime.MinValue;
         private DateTime _seriesEndDate = DateTime.MinValue;
 
-        [XmlIgnore]
-        public int Index { get; set; }
+        [XmlIgnore] public int Index;
+        [XmlIgnore] public string SeriesId;
+        [XmlIgnore] public string ProtoTypicalProgram;
+        [XmlIgnore] public MxfGuideImage mxfGuideImage;
 
-        [XmlIgnore]
-        public IList<sdImage> SeriesImages { get; set; }
-
-        /// <summary>
-        /// 8 digit number unique to the series
-        /// </summary>
-        [XmlIgnore]
-        public string TmsSeriesId { get; set; }
-
-        /// <summary>
-        /// The seried ID value for this series from thetvdb.com
-        /// </summary>
-        [XmlIgnore]
-        public string TvdbSeriesId { get; set; }
+        [XmlIgnore] public Dictionary<string, dynamic> extras = new Dictionary<string, dynamic>();
 
         /// <summary>
         /// An ID that is unique to the document and defines this element.
@@ -46,7 +53,7 @@ namespace epg123.MxfXml
         [XmlAttribute("uid")]
         public string Uid
         {
-            get => $"!Series!{TmsSeriesId}";
+            get => $"!Series!{SeriesId}";
             set { }
         }
 
@@ -104,7 +111,11 @@ namespace epg123.MxfXml
         /// This value contains the GuideImage id attribute. 
         /// </summary>
         [XmlAttribute("guideImage")]
-        public string GuideImage { get; set; }
+        public string GuideImage
+        {
+            get => mxfGuideImage?.ToString();
+            set { }
+        }
 
         /// <summary>
         /// The name of the studio that created this season.

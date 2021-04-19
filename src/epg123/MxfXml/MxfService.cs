@@ -1,35 +1,37 @@
 ﻿using System.Collections.Generic;
 using System.Xml.Serialization;
-using epg123.SchedulesDirectAPI;
 
 namespace epg123.MxfXml
 {
+    public partial class Mxf
+    {
+        private readonly Dictionary<string, MxfService> _services = new Dictionary<string, MxfService>();
+        public MxfService GetService(string stationId)
+        {
+            if (_services.TryGetValue(stationId, out var service)) return service;
+            With.Services.Add(service = new MxfService
+            {
+                Index = With.Services.Count + 1,
+                StationId = stationId
+            });
+            service.MxfScheduleEntries.Service = service.Id;
+            With.ScheduleEntries.Add(service.MxfScheduleEntries);
+            _services.Add(stationId, service);
+            return service;
+        }
+    }
+
     public class MxfService
     {
-        [XmlIgnore]
-        public int Index;
+        public override string ToString() { return Id; }
 
-        [XmlIgnore]
-        public MxfScheduleEntries MxfScheduleEntries = new MxfScheduleEntries() { ScheduleEntry = new List<MxfScheduleEntry>() };
+        [XmlIgnore] public int Index;
+        [XmlIgnore] public string StationId;
+        [XmlIgnore] public MxfAffiliate mxfAffiliate;
+        [XmlIgnore] public MxfGuideImage mxfGuideImage;
+        [XmlIgnore] public MxfScheduleEntries MxfScheduleEntries = new MxfScheduleEntries { ScheduleEntry = new List<MxfScheduleEntry>() };
 
-        [XmlIgnore]
-        public string StationId { get; set; }
-
-        [XmlIgnore]
-        public SdStationImage ServiceLogo;
-
-        [XmlIgnore]
-        public string XmltvChannelId
-        {
-            get
-            {
-                if (!string.IsNullOrEmpty(StationId))
-                {
-                    return "EPG123." + StationId + ".schedulesdirect.org";
-                }
-                return null;
-            }
-        }
+        [XmlIgnore] public Dictionary<string, dynamic> extras = new Dictionary<string, dynamic>();
 
         /// <summary>
         /// An ID that is unique to the document and defines this element.
@@ -70,13 +72,21 @@ namespace epg123.MxfXml
         /// The ID of an Affiliate element that to which this service is affiliated.
         /// </summary>
         [XmlAttribute("affiliate")]
-        public string Affiliate { get; set; }
+        public string Affiliate
+        {
+            get => mxfAffiliate?.ToString();
+            set { }
+        }
 
         /// <summary>
         /// Specifies a logo image to display.
         /// This value contains a GuideImage id attribute. When searching for a logo to display, the service is searched first, and then its affiliate.
         /// </summary>
         [XmlAttribute("logoImage")]
-        public string LogoImage { get; set; }
+        public string LogoImage
+        {
+            get => mxfGuideImage?.ToString();
+            set { }
+        }
     }
 }

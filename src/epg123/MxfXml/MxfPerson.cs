@@ -1,11 +1,29 @@
-﻿using System.Xml.Serialization;
+﻿using System.Collections.Generic;
+using System.Xml.Serialization;
 
 namespace epg123.MxfXml
 {
+    public partial class Mxf
+    {
+        private readonly Dictionary<string, MxfPerson> _people = new Dictionary<string, MxfPerson>();
+        public MxfPerson GetPersonId(string name)
+        {
+            if (_people.TryGetValue(name, out var person)) return person;
+            With.People.Add(person = new MxfPerson
+            {
+                Index = With.People.Count + 1,
+                Name = name
+            });
+            _people.Add(name, person);
+            return person;
+        }
+    }
+
     public class MxfPerson
     {
-        [XmlIgnore]
-        public int Index;
+        public override string ToString() { return Id; }
+
+        [XmlIgnore] public int Index;
 
         /// <summary>
         /// An ID that is unique to the document and defines this element.

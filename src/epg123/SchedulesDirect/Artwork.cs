@@ -3,19 +3,44 @@ using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace epg123.SchedulesDirectAPI
+namespace epg123.SchedulesDirect
 {
-    public class sdArtworkResponse
+    public static partial class SdApi
+    {
+        public static List<ProgramMetadata> GetArtwork(string[] request)
+        {
+            var dtStart = DateTime.Now;
+            var sr = GetRequestResponse(methods.POST, "metadata/programs", request, false);
+            if (sr == null)
+            {
+                Logger.WriteInformation($"Did not receive a response from Schedules Direct for artwork info of {request.Length,3} programs. ({GetStringTimeAndByteLength(DateTime.Now - dtStart)})");
+                return null;
+            }
+
+            try
+            {
+                Logger.WriteVerbose($"Successfully retrieved artwork info for {request.Length,3} programs. ({GetStringTimeAndByteLength(DateTime.Now - dtStart, sr.Length)})");
+                return JsonConvert.DeserializeObject<List<ProgramMetadata>>(sr);
+            }
+            catch (Exception ex)
+            {
+                Logger.WriteInformation($"GetArtwork() Unknown exception thrown. Message: {ex.Message}");
+            }
+            return null;
+        }
+    }
+
+    public class ProgramMetadata
     {
         [JsonProperty("programID")]
         public string ProgramId { get; set; }
 
         [JsonProperty("data")]
-        [JsonConverter(typeof(SingleOrArrayConverter<sdImage>))]
-        public IList<sdImage> Data { get; set; }
+        [JsonConverter(typeof(SingleOrArrayConverter<ProgramArtwork>))]
+        public List<ProgramArtwork> Data { get; set; }
     }
 
-    public class sdImage
+    public class ProgramArtwork
     {
         [JsonProperty("width")]
         public int Width { get; set; }

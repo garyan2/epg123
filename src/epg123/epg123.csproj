@@ -160,22 +160,28 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>resImages.resx</DependentUpon>
     </Compile>
+    <Compile Include="SchedulesDirect\AddRemoveLineups.cs" />
+    <Compile Include="SchedulesDirect\AvailableCountries.cs" />
+    <Compile Include="SchedulesDirect\AvailableSatellites.cs" />
+    <Compile Include="SchedulesDirect\AvailableTransmitters.cs" />
+    <Compile Include="SchedulesDirect\BaseResponse.cs" />
+    <Compile Include="SchedulesDirect\GenericDescriptions.cs" />
+    <Compile Include="SchedulesDirect\LineupPreview.cs" />
     <Compile Include="sdJson2mxf\mxf2xmltv.cs" />
     <Compile Include="brandLogo.cs" />
     <Compile Include="sdJson2mxf\seasonImages.cs" />
     <Compile Include="sdJson2mxf\sportsImages.cs" />
     <Compile Include="Task\ScheduledTask.cs" />
-    <Compile Include="SchedulesDirectAPI\SdApi.cs" />
-    <Compile Include="SchedulesDirectAPI\sdArtwork.cs" />
-    <Compile Include="SchedulesDirectAPI\sdClientSetup.cs" />
-    <Compile Include="SchedulesDirectAPI\sdClientVersion.cs" />
-    <Compile Include="SchedulesDirectAPI\sdJsonCommon.cs" />
-    <Compile Include="SchedulesDirectAPI\sdPrograms.cs" />
-    <Compile Include="SchedulesDirectAPI\sdStationChannelLineupMap.cs" />
-    <Compile Include="SchedulesDirectAPI\sdStationSchedule.cs" />
-    <Compile Include="SchedulesDirectAPI\sdSubscribedLineups.cs" />
-    <Compile Include="SchedulesDirectAPI\sdToken.cs" />
-    <Compile Include="SchedulesDirectAPI\sdUserStatus.cs" />
+    <Compile Include="SchedulesDirect\SdApi.cs" />
+    <Compile Include="SchedulesDirect\Artwork.cs" />
+    <Compile Include="SchedulesDirect\Headends.cs" />
+    <Compile Include="SchedulesDirect\ClientVersion.cs" />
+    <Compile Include="SchedulesDirect\Programs.cs" />
+    <Compile Include="SchedulesDirect\StationChannelMap.cs" />
+    <Compile Include="SchedulesDirect\StationSchedules.cs" />
+    <Compile Include="SchedulesDirect\SubscribedLineup.cs" />
+    <Compile Include="SchedulesDirect\Token.cs" />
+    <Compile Include="SchedulesDirect\UserStatus.cs" />
     <Compile Include="frmLineups.cs">
       <SubType>Form</SubType>
     </Compile>

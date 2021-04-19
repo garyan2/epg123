@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
 using epg123.MxfXml;
-using epg123.SchedulesDirectAPI;
+using epg123.SchedulesDirect;
 using epg123.TheMovieDbAPI;
 using epg123.XmltvXml;
 
@@ -17,14 +18,21 @@ namespace epg123.sdJson2mxf
         public static bool Success;
 
         private static epgConfig config;
-        public static Mxf SdMxf = new Mxf();
+        public static Mxf SdMxf = new Mxf
+        {
+            generatorName = "EPG123",
+            generatorDescription = "Electronic Program Guide in 1-2-3",
+            author = "GaRyan2",
+            dataSource = "Schedules Direct"
+        };
 
         public static void Build(epgConfig configuration)
         {
             var errString = string.Empty;
 
             // initialize schedules direct API
-            sdApi.Initialize("EPG123", Helper.SdGrabberVersion);
+            SdApi.Initialize("EPG123", Helper.SdGrabberVersion);
+            SdMxf.InitializeMxf();
 
             // copy configuration to local variable
             config = configuration;
@@ -37,10 +45,10 @@ namespace epg123.sdJson2mxf
             suppressedPrefixes = new List<string>(config.SuppressStationEmptyWarnings.Split(','));
 
             // login to Schedules Direct and build the mxf file
-            if (sdApi.SdGetToken(config.UserAccount.LoginName, config.UserAccount.PasswordHash, ref errString))
+            if (SdApi.GetToken(config.UserAccount.LoginName, config.UserAccount.PasswordHash, ref errString))
             {
                 // check server status
-                var susr = sdApi.SdGetStatus();
+                var susr = SdApi.GetUserStatus();
                 if (susr == null) return;
                 else if (susr.SystemStatus[0].Status.ToLower().Equals("offline"))
                 {
@@ -49,7 +57,7 @@ namespace epg123.sdJson2mxf
                 }
 
                 // check for latest version and update the display name that shows in About Guide
-                var scvr = sdApi.SdCheckVersion();
+                var scvr = SdApi.GetClientVersion();
                 if (scvr != null && !string.IsNullOrEmpty(scvr.Version))
                 {
                     SdMxf.Providers[0].DisplayName += " v" + Helper.Epg123Version;
@@ -115,8 +123,8 @@ namespace epg123.sdJson2mxf
                     CleanCacheFolder();
                     epgCache.WriteCache();
 
-                    Logger.WriteVerbose($"Downloaded and processed {sdApi.TotalDownloadBytes} of data from Schedules Direct.");
-                    Logger.WriteVerbose($"Generated .mxf file contains {SdMxf.With[0].Services.Count - 1} services, {SdMxf.With[0].SeriesInfos.Count} series, {SdMxf.With[0].Programs.Count} programs, and {SdMxf.With[0].People.Count} people with {SdMxf.With[0].GuideImages.Count} image links.");
+                    Logger.WriteVerbose($"Downloaded and processed {SdApi.TotalDownloadBytes} of data from Schedules Direct.");
+                    Logger.WriteVerbose($"Generated .mxf file contains {SdMxf.With.Services.Count - 1} services, {SdMxf.With.SeriesInfos.Count} series, {SdMxf.With.Seasons.Count} seasons, {SdMxf.With.Programs.Count} programs, {SdMxf.With.ScheduleEntries.Sum(x => x.ScheduleEntry.Count)} schedule entries, and {SdMxf.With.People.Count} people with {SdMxf.With.GuideImages.Count} image links.");
                     Logger.WriteInformation("Completed EPG123 update execution. SUCCESS.");
                 }
             }
@@ -128,6 +136,7 @@ namespace epg123.sdJson2mxf
             GC.Collect();
             Helper.SendPipeMessage("Download Complete");
         }
+
         private static void AddBrandLogoToMxf()
         {
             using (var ms = new MemoryStream())
@@ -139,33 +148,31 @@ namespace epg123.sdJson2mxf
 
         private static bool ServiceCountSafetyCheck()
         {
-            if (!(SdMxf.With[0].Services.Count < config.ExpectedServicecount * 0.95)) return true;
-            Logger.WriteError($"The expected number of stations to download is {config.ExpectedServicecount} but there are only {SdMxf.With[0].Services.Count} stations available from Schedules Direct. Aborting update for review by user.");
+            if (!(SdMxf.With.Services.Count < config.ExpectedServicecount * 0.95)) return true;
+            Logger.WriteError($"The expected number of stations to download is {config.ExpectedServicecount} but there are only {SdMxf.With.Services.Count} stations available from Schedules Direct. Aborting update for review by user.");
             return false;
         }
 
         private static bool WriteMxf()
         {
             // add dummy lineup with dummy channel
-            var service = SdMxf.With[0].GetService("DUMMY");
+            var service = SdMxf.GetService("DUMMY");
             service.CallSign = "DUMMY";
             service.Name = "DUMMY Station";
 
-            SdMxf.With[0].Lineups.Add(new MxfLineup()
+            SdMxf.With.Lineups.Add(new MxfLineup
             {
-                Index = SdMxf.With[0].Lineups.Count + 1,
+                Index = SdMxf.With.Lineups.Count + 1,
                 Uid = "ZZZ-DUMMY-EPG123",
                 Name = "ZZZ123 Dummy Lineup",
                 channels = new List<MxfChannel>()
             });
 
-            var lineupIndex = SdMxf.With[0].Lineups.Count - 1;
-            SdMxf.With[0].Lineups[lineupIndex].channels.Add(new MxfChannel()
+            var lineupIndex = SdMxf.With.Lineups.Count - 1;
+            SdMxf.With.Lineups[lineupIndex].channels.Add(new MxfChannel
             {
-                Lineup = SdMxf.With[0].Lineups[lineupIndex].Id,
-                LineupUid = "ZZZ-DUMMY-EPG123",
-                StationId = service.StationId,
-                Service = service.Id
+                mxfService = service,
+                mxfLineup = SdMxf.With.Lineups[lineupIndex],
             });
 
             // make sure background worker to download station logos is complete

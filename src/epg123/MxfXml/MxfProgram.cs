@@ -1,49 +1,39 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Xml.Serialization;
-using epg123.SchedulesDirectAPI;
 
 namespace epg123.MxfXml
 {
+    public partial class Mxf
+    {
+        private readonly Dictionary<string, MxfProgram> _programs = new Dictionary<string, MxfProgram>();
+        public MxfProgram GetProgram(string programId, MxfProgram mxfProgram = null)
+        {
+            if (_programs.TryGetValue(programId, out var program)) return program;
+            With.Programs.Add(program = new MxfProgram
+            {
+                Index = With.Programs.Count + 1,
+                ProgramId = programId
+            });
+            _programs.Add(programId, program);
+            return program;
+        }
+    }
+
     public class MxfProgram
     {
-        private DateTime Oad { get; set; } = DateTime.MinValue;
+        public override string ToString() { return Id; }
 
-        [XmlIgnore]
-        public DateTime NewDate { get; set; } = DateTime.MinValue;
+        private DateTime _originalAirDate = DateTime.MinValue;
 
-        [XmlIgnore]
-        public int Index { get; set; }
+        [XmlIgnore] public int Index;
+        [XmlIgnore] public string ProgramId;
+        [XmlIgnore] public MxfSeriesInfo mxfSeriesInfo;
+        [XmlIgnore] public MxfSeason mxfSeason;
+        [XmlIgnore] public MxfGuideImage mxfGuideImage;
+        [XmlIgnore] public bool IsAdultOnly;
 
-        [XmlIgnore]
-        public string Md5 { get; set; }
-
-        [XmlIgnore]
-        public bool IsPremiere { get; set; }
-
-        [XmlIgnore]
-        public string TmsId { get; set; }
-
-        [XmlIgnore]
-        public int Part { get; set; }
-
-        [XmlIgnore]
-        public int Parts { get; set; }
-
-        [XmlIgnore]
-        public Dictionary<string, string> ContentRatings { get; set; }
-
-        [XmlIgnore]
-        public string[] ContentAdvisories { get; set; }
-
-        [XmlIgnore]
-        public string[] Genres { get; set; }
-
-        [XmlIgnore]
-        public List<string> Teams { get; set; }
-
-        [XmlIgnore]
-        public IList<sdImage> ProgramImages { get; set; }
+        [XmlIgnore] public Dictionary<string, dynamic> extras = new Dictionary<string, dynamic>();
 
         /// <summary>
         /// An ID that is unique to the document and defines this element.
@@ -64,7 +54,7 @@ namespace epg123.MxfXml
         [XmlAttribute("uid")]
         public string Uid
         {
-            get => $"!Program!{TmsId.Substring(0, 10)}_{TmsId.Substring(10)}";
+            get => $"!Program!{ProgramId.Substring(0, 10)}_{ProgramId.Substring(10)}";
             set { }
         }
 
@@ -134,14 +124,14 @@ namespace epg123.MxfXml
         {
             get
             {
-                if (!IsGeneric && Oad != DateTime.MinValue && NewDate != DateTime.MinValue)
+                if (!IsGeneric && _originalAirDate != DateTime.MinValue && extras.ContainsKey("newAirDate"))
                 {
-                    return NewDate.ToString("yyyy-MM-dd");
+                    return extras["newAirDate"].ToString("yyyy-MM-dd");
                 }
 
-                return Oad != DateTime.MinValue ? Oad.ToString("yyyy-MM-dd") : null;
+                return _originalAirDate != DateTime.MinValue ? _originalAirDate.ToString("yyyy-MM-dd") : null;
             }
-            set => Oad = DateTime.Parse(value);
+            set => _originalAirDate = DateTime.Parse(value);
         }
 
         /// <summary>
@@ -155,14 +145,22 @@ namespace epg123.MxfXml
         /// If this value is not known, do not specify a value.
         /// </summary>
         [XmlAttribute("season")]
-        public string Season { get; set; }
+        public string Season
+        {
+            get => mxfSeason?.ToString();
+            set { }
+        }
 
         /// <summary>
         /// The ID of the series that this program belongs to, if any.
         /// If this value is not known, do not specify a value.
         /// </summary>
         [XmlAttribute("series")]
-        public string Series { get; set; }
+        public string Series
+        {
+            get => mxfSeriesInfo?.ToString();
+            set { }
+        }
 
         /// <summary>
         /// The star rating of the program. 
@@ -195,9 +193,6 @@ namespace epg123.MxfXml
         [XmlAttribute("isAction")]
         public bool IsAction { get; set; }
         public bool ShouldSerializeIsAction() { return IsAction; }
-
-        [XmlIgnore]
-        public bool IsAdultOnly { get; set; }
 
         /// <summary>
         /// Undocumented
@@ -483,7 +478,11 @@ namespace epg123.MxfXml
         /// Contains the value of a GuideImage id attribute. When a program is selected in the UI, the Guide searches for an image to display.The search order is first the program, its season, then its series.
         /// </summary>
         [XmlAttribute("guideImage")]
-        public string GuideImage { get; set; }
+        public string GuideImage
+        {
+            get => mxfGuideImage?.ToString();
+            set { }
+        }
 
         [XmlElement("ActorRole")]
         public List<MxfPersonRank> ActorRole { get; set; }

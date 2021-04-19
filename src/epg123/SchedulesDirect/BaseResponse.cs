@@ -1,9 +1,9 @@
 ﻿using System;
 using Newtonsoft.Json;
 
-namespace epg123.SchedulesDirectAPI
+namespace epg123.SchedulesDirect
 {
-    public class sdError
+    public class BaseResponse
     {
         [JsonProperty("response")]
         public string Response { get; set; }
@@ -18,6 +18,10 @@ namespace epg123.SchedulesDirectAPI
         public string Message { get; set; }
 
         [JsonProperty("datetime")]
-        public DateTime Datetime { get; set; }
+        public DateTime Datetime { get; set; } = DateTime.MinValue;
+        public bool ShouldSerializeDatetime() { return Datetime != DateTime.MinValue; }
+
+        [JsonProperty("uuid")]
+        public string Uuid { get; set; }
     }
 }

@@ -5,7 +5,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Net;
 using System.Windows.Forms;
-using epg123.SchedulesDirectAPI;
+using epg123.SchedulesDirect;
 using Microsoft.VisualBasic.FileIO;
 
 namespace epg123
@@ -13,10 +13,10 @@ namespace epg123
     public partial class frmLogos : Form
     {
         private readonly string _callsign = string.Empty;
-        private readonly SdLineupStation _station;
+        private readonly LineupStation _station;
         private PictureBox _selectedBox = null;
 
-        public frmLogos(SdLineupStation station)
+        public frmLogos(LineupStation station)
         {
             InitializeComponent();
 
@@ -105,7 +105,7 @@ namespace epg123
             }
         }
 
-        private void LoadRemoteImages(SdLineupStation station)
+        private void LoadRemoteImages(LineupStation station)
         {
             if (station.Logo != null)
             {

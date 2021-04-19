@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Windows.Forms;
-using epg123.SchedulesDirectAPI;
+using epg123.SchedulesDirect;
 
 namespace epg123
 {
@@ -27,7 +27,7 @@ namespace epg123
 
         private void BuildLineupServices(string lineup)
         {
-            var channels = sdApi.SdPreviewLineupChannels(lineup);
+            var channels = SdApi.GetLineupPreviewChannels(lineup);
             if (channels == null)
             {
                 MessageBox.Show("There was an error retrieving channels for requested lineup. See trace.log file for more detail.", "Response Error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);

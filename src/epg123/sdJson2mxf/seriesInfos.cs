@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using epg123.SchedulesDirectAPI;
+using epg123.SchedulesDirect;
 using Newtonsoft.Json;
 
 namespace epg123.sdJson2mxf
@@ -11,35 +11,35 @@ namespace epg123.sdJson2mxf
     internal static partial class sdJson2Mxf
     {
         private static List<string> seriesDescriptionQueue = new List<string>();
-        private static ConcurrentDictionary<string, sdGenericDescriptions> seriesDescriptionResponses = new ConcurrentDictionary<string, sdGenericDescriptions>();
+        private static ConcurrentDictionary<string, GenericDescription> seriesDescriptionResponses = new ConcurrentDictionary<string, GenericDescription>();
 
         private static bool BuildAllGenericSeriesInfoDescriptions()
         {
             // reset counters
             processedObjects = 0;
-            Logger.WriteMessage($"Entering buildAllGenericSeriesInfoDescriptions() for {totalObjects = SdMxf.With[0].SeriesInfos.Count} series.");
+            Logger.WriteMessage($"Entering BuildAllGenericSeriesInfoDescriptions() for {totalObjects = SdMxf.With.SeriesInfos.Count} series.");
             ++processStage; ReportProgress();
 
             // fill mxf programs with cached values and queue the rest
-            foreach (var series in SdMxf.With[0].SeriesInfos)
+            foreach (var series in SdMxf.With.SeriesInfos)
             {
                 // sports events will not have a generic description
-                if (series.TmsSeriesId.StartsWith("SP"))
+                if (series.SeriesId.StartsWith("SP"))
                 {
                     ++processedObjects; ReportProgress();
                     continue;
                 }
 
                 // import the cached description if exists, otherwise queue it up
-                var seriesId = $"SH{series.TmsSeriesId}0000";
-                if (epgCache.JsonFiles.ContainsKey(seriesId) && epgCache.JsonFiles[seriesId].JsonEntry != "")
+                var seriesId = $"SH{series.SeriesId}0000";
+                if (epgCache.JsonFiles.ContainsKey(seriesId) && epgCache.JsonFiles[seriesId].JsonEntry != null)
                 {
                     try
                     {
                         using (var reader = new StringReader(epgCache.GetAsset(seriesId)))
                         {
                             var serializer = new JsonSerializer();
-                            var cached = (sdGenericDescriptions)serializer.Deserialize(reader, typeof(sdGenericDescriptions));
+                            var cached = (GenericDescription)serializer.Deserialize(reader, typeof(GenericDescription));
                             if (cached.Code == 0)
                             {
                                 series.ShortDescription = cached.Description100;
@@ -54,10 +54,10 @@ namespace epg123.sdJson2mxf
                     }
                     catch
                     {
-                        if (int.TryParse(series.TmsSeriesId, out var dummy))
+                        if (int.TryParse(series.SeriesId, out var dummy))
                         {
                             // must use EP to query generic series description
-                            seriesDescriptionQueue.Add($"EP{series.TmsSeriesId}0000");
+                            seriesDescriptionQueue.Add($"{series.ProtoTypicalProgram}");
                         }
                         else
                         {
@@ -65,17 +65,17 @@ namespace epg123.sdJson2mxf
                         }
                     }
                 }
-                else if (!int.TryParse(series.TmsSeriesId, out var dummy))
+                else if (!int.TryParse(series.SeriesId, out var dummy) || series.ProtoTypicalProgram.StartsWith("SH"))
                 {
                     ++processedObjects; ReportProgress();
                 }
                 else
                 {
                     // must use EP to query generic series description
-                    seriesDescriptionQueue.Add($"EP{series.TmsSeriesId}0000");
+                    seriesDescriptionQueue.Add($"{series.ProtoTypicalProgram}");
                 }
             }
-            Logger.WriteVerbose($"Found {processedObjects} cached series descriptions.");
+            Logger.WriteVerbose($"Found {processedObjects} cached/unavailable series descriptions.");
 
             // maximum 500 queries at a time
             if (seriesDescriptionQueue.Count > 0)
@@ -110,7 +110,7 @@ namespace epg123.sdJson2mxf
             }
 
             // request descriptions from Schedules Direct
-            var responses = sdApi.SdGetProgramGenericDescription(series);
+            var responses = SdApi.GetGenericDescriptions(series);
             if (responses != null)
             {
                 Parallel.ForEach(responses, (response) =>
@@ -127,11 +127,11 @@ namespace epg123.sdJson2mxf
             {
                 ++processedObjects; ReportProgress();
 
-                var seriesId = response.Key.Replace("EP", "SH");
+                var seriesId = response.Key;
                 var description = response.Value;
 
                 // determine which seriesInfo this belongs to
-                var mxfSeriesInfo = SdMxf.With[0].GetSeriesInfo(seriesId.Substring(2, 8));
+                var mxfSeriesInfo = SdMxf.GetSeriesInfo(seriesId.Substring(2, 8));
 
                 // populate descriptions
                 mxfSeriesInfo.ShortDescription = description.Description100;
@@ -162,7 +162,7 @@ namespace epg123.sdJson2mxf
             seriesDescriptionQueue = new List<string>();
 
             if (!config.ModernMediaUiPlusSupport) return true;
-            Logger.WriteMessage($"Entering buildAllExtendedSeriesDataForUiPlus() for {totalObjects = SdMxf.With[0].SeriesInfos.Count} series.");
+            Logger.WriteMessage($"Entering buildAllExtendedSeriesDataForUiPlus() for {totalObjects = SdMxf.With.SeriesInfos.Count} series.");
 
             // read in cached ui+ extended information
             var oldPrograms = new Dictionary<string, ModernMediaUiPlusPrograms>();
@@ -175,16 +175,16 @@ namespace epg123.sdJson2mxf
             }
 
             // fill mxf programs with cached values and queue the rest
-            foreach (var series in SdMxf.With[0].SeriesInfos)
+            foreach (var series in SdMxf.With.SeriesInfos)
             {
                 // sports events will not have a generic description
-                if (!series.TmsSeriesId.StartsWith("SH"))
+                if (!series.SeriesId.StartsWith("SH"))
                 {
                     ++processedObjects; ReportProgress();
                     continue;
                 }
 
-                var seriesId = $"SH{series.TmsSeriesId}0000";
+                var seriesId = $"SH{series.SeriesId}0000";
 
                 // generic series information already in support file array
                 if (ModernMediaUiPlus.Programs.ContainsKey(seriesId))
@@ -238,7 +238,7 @@ namespace epg123.sdJson2mxf
             }
 
             // request programs from Schedules Direct
-            var responses = sdApi.SdGetPrograms(programs);
+            var responses = SdApi.GetPrograms(programs);
             if (responses == null) return false;
 
             // process request response
@@ -270,7 +270,7 @@ namespace epg123.sdJson2mxf
         private static void UpdateSeriesAirdate(string seriesId, DateTime airdate)
         {
             // write the mxf entry
-            SdMxf.With[0].GetSeriesInfo(seriesId.Substring(2, 8)).StartAirdate = airdate.ToString("yyyy-MM-dd");
+            SdMxf.GetSeriesInfo(seriesId.Substring(2, 8)).StartAirdate = airdate.ToString("yyyy-MM-dd");
 
             // update cache if needed
             try
@@ -278,7 +278,7 @@ namespace epg123.sdJson2mxf
                 using (var reader = new StringReader(epgCache.GetAsset(seriesId)))
                 {
                     var serializer = new JsonSerializer();
-                    var cached = (sdGenericDescriptions)serializer.Deserialize(reader, typeof(sdGenericDescriptions));
+                    var cached = (GenericDescription)serializer.Deserialize(reader, typeof(GenericDescription));
                     if (!string.IsNullOrEmpty(cached.StartAirdate)) return;
                     cached.StartAirdate = airdate.Equals(DateTime.MinValue) ? "" : airdate.ToString("yyyy-MM-dd");
                     using (var writer = new StringWriter())

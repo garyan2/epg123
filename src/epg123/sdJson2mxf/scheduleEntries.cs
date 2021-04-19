@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using System.Windows.Forms;
 using epg123.MxfXml;
-using epg123.SchedulesDirectAPI;
+using epg123.SchedulesDirect;
 using Newtonsoft.Json;
 
 namespace epg123.sdJson2mxf
@@ -18,7 +17,7 @@ namespace epg123.sdJson2mxf
 
         private static bool GetAllScheduleEntryMd5S(int days = 1)
         {
-            Logger.WriteMessage($"Entering getAllScheduleEntryMd5s() for {days} days on {SdMxf.With[0].Services.Count} stations.");
+            Logger.WriteMessage($"Entering getAllScheduleEntryMd5s() for {days} days on {SdMxf.With.Services.Count} stations.");
             if (days <= 0)
             {
                 Logger.WriteError("Invalid number of days to download. Exiting.");
@@ -27,7 +26,7 @@ namespace epg123.sdJson2mxf
 
             // reset counter
             processedObjects = 0;
-            totalObjects = SdMxf.With[0].Services.Count * days;
+            totalObjects = SdMxf.With.Services.Count * days;
             ++processStage; ReportProgress();
 
             // build date array for requests
@@ -38,7 +37,7 @@ namespace epg123.sdJson2mxf
             {
                 ++days;
                 dt -= TimeSpan.FromDays(1.0);
-                totalObjects += SdMxf.With[0].Services.Count;
+                totalObjects += SdMxf.With.Services.Count;
             }
 
             // build the date array to request
@@ -50,7 +49,7 @@ namespace epg123.sdJson2mxf
             }
 
             // maximum 5000 queries at a time
-            for (var i = 0; i < SdMxf.With[0].Services.Count; i += MaxQueries / dates.Length)
+            for (var i = 0; i < SdMxf.With.Services.Count; i += MaxQueries / dates.Length)
             {
                 if (GetMd5ScheduleEntries(dates, i)) continue;
                 Logger.WriteError("Problem occurred during getMd5ScheduleEntries(). Exiting.");
@@ -70,7 +69,7 @@ namespace epg123.sdJson2mxf
                 ++processedObjects; ReportProgress();
                 ProcessMd5ScheduleEntry(md5);
             }
-            Logger.WriteInformation($"Processed {totalObjects} daily schedules for {SdMxf.With[0].Services.Count} stations.");
+            Logger.WriteInformation($"Processed {totalObjects} daily schedules for {SdMxf.With.Services.Count} stations.");
             Logger.WriteMessage("Exiting getAllScheduleEntryMd5s(). SUCCESS.");
             GC.Collect();
             return true;
@@ -79,29 +78,29 @@ namespace epg123.sdJson2mxf
         private static bool GetMd5ScheduleEntries(string[] dates, int start)
         {
             // reject 0 requests
-            if (SdMxf.With[0].Services.Count - start < 1) return true;
+            if (SdMxf.With.Services.Count - start < 1) return true;
 
             // build request for station schedules
-            var requests = new sdScheduleRequest[Math.Min(SdMxf.With[0].Services.Count - start, MaxQueries / dates.Length)];
+            var requests = new ScheduleRequest[Math.Min(SdMxf.With.Services.Count - start, MaxQueries / dates.Length)];
             for (var i = 0; i < requests.Length; ++i)
             {
-                requests[i] = new sdScheduleRequest()
+                requests[i] = new ScheduleRequest()
                 {
-                    StationId = SdMxf.With[0].Services[start + i].StationId,
+                    StationId = SdMxf.With.Services[start + i].StationId,
                     Date = dates
                 };
             }
 
             // request schedule md5s from Schedules Direct
-            var stationResponses = sdApi.SdGetScheduleMd5S(requests);
+            var stationResponses = SdApi.GetScheduleMd5s(requests);
             if (stationResponses == null) return false;
 
             // build request of daily schedules not downloaded yet
-            IList<sdScheduleRequest> newRequests = new List<sdScheduleRequest>();
+            IList<ScheduleRequest> newRequests = new List<ScheduleRequest>();
             foreach (var request in requests)
             {
                 var requestErrors = new Dictionary<int, string>();
-                var mxfService = SdMxf.With[0].GetService(request.StationId);
+                var mxfService = SdMxf.GetService(request.StationId);
                 if (stationResponses.TryGetValue(request.StationId, out var stationResponse))
                 {
                     // if the station return is empty, go to next station
@@ -177,7 +176,7 @@ namespace epg123.sdJson2mxf
                     // create the new request for the station
                     if (newDateRequests.Count > 0)
                     {
-                        newRequests.Add(new sdScheduleRequest()
+                        newRequests.Add(new ScheduleRequest()
                         {
                             StationId = request.StationId,
                             Date = newDateRequests.ToArray()
@@ -204,7 +203,7 @@ namespace epg123.sdJson2mxf
             if (newRequests.Count > 0)
             {
                 // request daily schedules from Schedules Direct
-                var responses = sdApi.SdGetScheduleListings(newRequests.ToArray());
+                var responses = SdApi.GetScheduleListings(newRequests.ToArray());
                 if (responses == null) return false;
 
                 // process the responses
@@ -263,13 +262,13 @@ namespace epg123.sdJson2mxf
             }
 
             // read the cached file
-            sdScheduleResponse schedule;
+            ScheduleResponse schedule;
             try
             {
                 using (var reader = new StringReader(epgCache.GetAsset(md5)))
                 {
                     var serializer = new JsonSerializer();
-                    schedule = (sdScheduleResponse)serializer.Deserialize(reader, typeof(sdScheduleResponse));
+                    schedule = (ScheduleResponse)serializer.Deserialize(reader, typeof(ScheduleResponse));
                     if (schedule == null)
                     {
                         Logger.WriteError("Failed to read Md5Schedule file in cache directory.");
@@ -284,16 +283,16 @@ namespace epg123.sdJson2mxf
             }
 
             // determine which service entry applies to
-            var mxfService = SdMxf.With[0].GetService(schedule.StationId);
+            var mxfService = SdMxf.GetService(schedule.StationId);
 
             // process each program schedule entry
             var firstProgram = true;
             var discontinuity = false;
             var lastProgramId = string.Empty;
-            foreach (var program in schedule.Programs)
+            foreach (var scheduleProgram in schedule.Programs)
             {
                 // determine whether to populate StartTime attribute
-                var dtStart = program.AirDateTime;
+                var dtStart = scheduleProgram.AirDateTime;
                 var startTime = dtStart.ToString("s");
                 if (dtStart == mxfService.MxfScheduleEntries.EndTime)
                 {
@@ -308,7 +307,7 @@ namespace epg123.sdJson2mxf
                         lastProgramId,
                         mxfService.MxfScheduleEntries.ScheduleEntry.Count,
                         mxfService.MxfScheduleEntries.EndTime,
-                        program.ProgramId,
+                        scheduleProgram.ProgramId,
                         mxfService.MxfScheduleEntries.ScheduleEntry.Count + 1,
                         dtStart, mxfService.MxfScheduleEntries.EndTime);
                     if (dtStart < DateTime.UtcNow + TimeSpan.FromDays(2))
@@ -322,30 +321,36 @@ namespace epg123.sdJson2mxf
                     discontinuity = true;
                 }
                 firstProgram = false;
-                lastProgramId = program.ProgramId;
+                lastProgramId = scheduleProgram.ProgramId;
 
                 // prepopulate some of the program
-                var prog = SdMxf.With[0].GetProgram(program.ProgramId, new MxfProgram
+                var mxfProgram = SdMxf.GetProgram(scheduleProgram.ProgramId);
+                if (mxfProgram.extras.Count == 0)
                 {
-                    Index = SdMxf.With[0].Programs.Count + 1,
-                    Md5 = program.Md5,
-                    TmsId = program.ProgramId,
-                    Part = program.Multipart?.PartNumber ?? 0,
-                    Parts = program.Multipart?.TotalParts ?? 0,
-                    NewDate = config.OadOverride && program.New ? dtStart.ToLocalTime() : DateTime.MinValue
-                });
-                prog.IsSeasonFinale |= Helper.StringContains(program.IsPremiereOrFinale, "Season Finale");
-                prog.IsSeasonPremiere |= Helper.StringContains(program.IsPremiereOrFinale, "Season Premiere");
-                prog.IsSeriesFinale |= Helper.StringContains(program.IsPremiereOrFinale, "Series Finale");
-                prog.IsSeriesPremiere |= Helper.StringContains(program.IsPremiereOrFinale, "Series Premiere");
-                prog.IsPremiere = program.Premiere || Helper.StringContains(program.IsPremiereOrFinale, "Premiere");
+                    mxfProgram.ProgramId = scheduleProgram.ProgramId;
+                    mxfProgram.extras.Add("md5", scheduleProgram.Md5);
+                    if (scheduleProgram.Multipart?.PartNumber > 0)
+                    {
+                        mxfProgram.extras.Add("multipart", $"{scheduleProgram.Multipart.PartNumber}/{scheduleProgram.Multipart.TotalParts}");
+                    }
+                    if (config.OadOverride && scheduleProgram.New)
+                    {
+                        mxfProgram.extras.Add("newAirDate", dtStart.ToLocalTime());
+                    }
+                }
+                mxfProgram.IsSeasonFinale |= Helper.StringContains(scheduleProgram.IsPremiereOrFinale, "Season Finale");
+                mxfProgram.IsSeasonPremiere |= Helper.StringContains(scheduleProgram.IsPremiereOrFinale, "Season Premiere");
+                mxfProgram.IsSeriesFinale |= Helper.StringContains(scheduleProgram.IsPremiereOrFinale, "Series Finale");
+                mxfProgram.IsSeriesPremiere |= Helper.StringContains(scheduleProgram.IsPremiereOrFinale, "Series Premiere");
+                if (!mxfProgram.extras.ContainsKey("premiere")) mxfProgram.extras.Add("premiere", false);
+                else mxfProgram.extras["premiere"] |= scheduleProgram.Premiere;
 
                 // grab any tvratings from desired countries
                 var scheduleTvRatings = new Dictionary<string, string>();
-                if (program.Ratings != null)
+                if (scheduleProgram.Ratings != null)
                 {
                     var ratings = config.RatingsOrigin.Split(',');
-                    foreach (var rating in program.Ratings)
+                    foreach (var rating in scheduleProgram.Ratings)
                     {
                         if (string.IsNullOrEmpty(rating.Country) || Helper.TableContains(ratings, "ALL") || Helper.TableContains(ratings, rating.Country))
                         {
@@ -355,37 +360,36 @@ namespace epg123.sdJson2mxf
                 }
 
                 // populate the schedule entry and create program entry as required
-                mxfService.MxfScheduleEntries.ScheduleEntry.Add(new MxfScheduleEntry()
+                mxfService.MxfScheduleEntries.ScheduleEntry.Add(new MxfScheduleEntry
                 {
-                    SchedTvRatings = scheduleTvRatings,
-                    AudioFormat = EncodeAudioFormat(program.AudioProperties),
-                    Duration = program.Duration,
-                    Is3D = Helper.TableContains(program.VideoProperties, "3d"),
-                    IsBlackout = program.SubjectToBlackout,
-                    IsClassroom = program.CableInTheClassroom,
-                    IsCc = Helper.TableContains(program.AudioProperties, "cc"),
-                    IsDelay = Helper.StringContains(program.LiveTapeDelay, "delay"),
-                    IsDvs = Helper.TableContains(program.AudioProperties, "dvs"),
-                    IsEnhanced = Helper.TableContains(program.VideoProperties, "enhanced"),
-                    IsFinale = Helper.StringContains(program.IsPremiereOrFinale, "finale"),
-                    IsHdtv = CheckHdOverride(schedule.StationId) || !CheckSdOverride(schedule.StationId) && Helper.TableContains(program.VideoProperties, "hdtv"),
+                    AudioFormat = EncodeAudioFormat(scheduleProgram.AudioProperties),
+                    Duration = scheduleProgram.Duration,
+                    Is3D = Helper.TableContains(scheduleProgram.VideoProperties, "3d"),
+                    IsBlackout = scheduleProgram.SubjectToBlackout,
+                    IsClassroom = scheduleProgram.CableInTheClassroom,
+                    IsCc = Helper.TableContains(scheduleProgram.AudioProperties, "cc"),
+                    IsDelay = Helper.StringContains(scheduleProgram.LiveTapeDelay, "delay"),
+                    IsDvs = Helper.TableContains(scheduleProgram.AudioProperties, "dvs"),
+                    IsEnhanced = Helper.TableContains(scheduleProgram.VideoProperties, "enhanced"),
+                    IsFinale = Helper.StringContains(scheduleProgram.IsPremiereOrFinale, "finale"),
+                    IsHdtv = CheckHdOverride(schedule.StationId) || !CheckSdOverride(schedule.StationId) && Helper.TableContains(scheduleProgram.VideoProperties, "hdtv"),
                     //IsHdtvSimulCast = null,
-                    IsInProgress = program.JoinedInProgress,
-                    IsLetterbox = Helper.TableContains(program.VideoProperties, "letterbox"),
-                    IsLive = Helper.StringContains(program.LiveTapeDelay, "live"),
+                    IsInProgress = scheduleProgram.JoinedInProgress,
+                    IsLetterbox = Helper.TableContains(scheduleProgram.VideoProperties, "letterbox"),
+                    IsLive = Helper.StringContains(scheduleProgram.LiveTapeDelay, "live"),
                     //IsLiveSports = null,
-                    IsPremiere = prog.IsPremiere,
-                    IsRepeat = !program.New,
-                    IsSap = Helper.TableContains(program.AudioProperties, "sap"),
-                    IsSubtitled = Helper.TableContains(program.AudioProperties, "subtitled"),
-                    IsTape = Helper.StringContains(program.LiveTapeDelay, "tape"),
-                    Part = program.Multipart?.PartNumber ?? 0,
-                    Parts = program.Multipart?.TotalParts ?? 0,
-                    Program = prog.Id,
+                    IsRepeat = !scheduleProgram.New,
+                    IsSap = Helper.TableContains(scheduleProgram.AudioProperties, "sap"),
+                    IsSubtitled = Helper.TableContains(scheduleProgram.AudioProperties, "subtitled"),
+                    IsTape = Helper.StringContains(scheduleProgram.LiveTapeDelay, "tape"),
+                    Part = scheduleProgram.Multipart?.PartNumber ?? 0,
+                    Parts = scheduleProgram.Multipart?.TotalParts ?? 0,
+                    mxfProgram = mxfProgram,
                     StartTime = startTime == null ? DateTime.MinValue : DateTime.Parse(startTime),
                     //TvRating is determined in the class itself to combine with the program content ratings
-                    IsSigned = program.Signed
+                    IsSigned = scheduleProgram.Signed
                 });
+                mxfService.MxfScheduleEntries.ScheduleEntry.Last().extras.Add("ratings", scheduleTvRatings);
             }
         }
 

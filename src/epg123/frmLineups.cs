@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
-using epg123.SchedulesDirectAPI;
+using epg123.SchedulesDirect;
 
 namespace epg123
 {
     public partial class frmLineups : Form
     {
-        private readonly SdLineupResponse _oldLineups;       // existing lineup
+        private readonly LineupResponse _oldLineups;       // existing lineup
 
         public HashSet<string> NewLineups = new HashSet<string>();
         public bool Cancel = true;
@@ -18,7 +18,7 @@ namespace epg123
             InitializeComponent();
 
             // get current lineups
-            _oldLineups = sdApi.SdGetLineups();
+            _oldLineups = SdApi.GetSubscribedLineups();
             if (_oldLineups?.Lineups == null || (_oldLineups.Lineups.Count == 0)) return;
 
             // populate listview with current lineups
@@ -46,7 +46,7 @@ namespace epg123
         private void btnAdd_Click(object sender, EventArgs e)
         {
             // check to see if at capacity
-            if (listView1.Items.Count >= sdApi.MaxLineups)
+            if (listView1.Items.Count >= SdApi.MaxLineups)
             {
                 MessageBox.Show("You are at the maximum number of supported lineups and must\ndelete a lineup from the list in order to add another.");
                 return;
@@ -90,7 +90,7 @@ namespace epg123
                     var delete = listView1.Items.Cast<ListViewItem>().All(item => (string) item.Tag != lineup.Lineup);
                     if (delete)
                     {
-                        sdApi.RemoveLineup(lineup.Lineup);
+                        SdApi.RemoveLineup(lineup.Lineup);
                     }
                 }
             }
@@ -108,7 +108,7 @@ namespace epg123
                 }
 
                 if (!add) continue;
-                if (sdApi.AddLineup((string)item.Tag))
+                if (SdApi.AddLineup((string)item.Tag))
                 {
                     NewLineups.Add((string)item.Tag);
                 }

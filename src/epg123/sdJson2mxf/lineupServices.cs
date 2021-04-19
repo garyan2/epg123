@@ -7,7 +7,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Serialization;
 using epg123.MxfXml;
-using epg123.SchedulesDirectAPI;
+using epg123.SchedulesDirect;
 
 namespace epg123.sdJson2mxf
 {
@@ -15,11 +15,11 @@ namespace epg123.sdJson2mxf
     {
         private static readonly HashSet<string> IncludedStations = new HashSet<string>();
         private static readonly HashSet<string> ExcludedStations = new HashSet<string>();
-        private static SdStationMapResponse customMap;
+        private static StationChannelMap customMap;
 
         private static CustomLineup customLineup;
         private static readonly HashSet<string> CustomStations = new HashSet<string>();
-        private static readonly Dictionary<string, SdLineupStation> AllStations = new Dictionary<string, SdLineupStation>();
+        private static readonly Dictionary<string, LineupStation> AllStations = new Dictionary<string, LineupStation>();
 
         public static System.ComponentModel.BackgroundWorker BackgroundDownloader;
         public static List<KeyValuePair<MxfService, string[]>> StationLogosToDownload = new List<KeyValuePair<MxfService, string[]>>();
@@ -28,7 +28,7 @@ namespace epg123.sdJson2mxf
         private static bool BuildLineupServices()
         {
             // query what lineups client is subscribed to
-            var clientLineups = sdApi.SdGetLineups();
+            var clientLineups = SdApi.GetSubscribedLineups();
             if (clientLineups == null) return false;
 
             // determine if there are custom lineups to consider
@@ -47,7 +47,7 @@ namespace epg123.sdJson2mxf
                 {
                     customLineup = lineup;
 
-                    clientLineups.Lineups.Add(new SdLineup()
+                    clientLineups.Lineups.Add(new SubscribedLineup()
                     {
                         Lineup = lineup.Lineup,
                         Name = lineup.Name,
@@ -57,11 +57,11 @@ namespace epg123.sdJson2mxf
                         IsDeleted = false
                     });
 
-                    customMap = new SdStationMapResponse
+                    customMap = new StationChannelMap
                     {
-                        Map = new List<SdLineupMap>(),
-                        Stations = new List<SdLineupStation>(),
-                        Metadata = new sdMetadata() {Lineup = lineup.Lineup}
+                        Map = new List<LineupChannel>(),
+                        Stations = new List<LineupStation>(),
+                        Metadata = new LineupMetadata() {Lineup = lineup.Lineup}
                     };
                 }
             }
@@ -78,10 +78,10 @@ namespace epg123.sdJson2mxf
                 ++processedObjects; ReportProgress();
 
                 // request the lineup's station maps
-                SdStationMapResponse lineupMap = null;
+                StationChannelMap lineupMap = null;
                 if (!flagCustom)
                 {
-                    lineupMap = sdApi.SdGetStationMaps(clientLineup.Lineup);
+                    lineupMap = SdApi.GetStationChannelMap(clientLineup.Lineup);
                     if (lineupMap == null) continue;
 
                     foreach (var station in lineupMap.Stations)
@@ -95,8 +95,7 @@ namespace epg123.sdJson2mxf
 
                 if (!config.IncludedLineup.Contains(clientLineup.Lineup))
                 {
-                    Logger.WriteVerbose(
-                        $"Subscribed lineup {clientLineup.Lineup} has been EXCLUDED from download and processing.");
+                    Logger.WriteVerbose($"Subscribed lineup {clientLineup.Lineup} has been EXCLUDED from download and processing.");
                     continue;
                 }
                 if (clientLineup.IsDeleted)
@@ -110,7 +109,7 @@ namespace epg123.sdJson2mxf
                     {
                         if (AllStations.TryGetValue(station.StationId, out var lineupStation))
                         {
-                            customMap.Map.Add(new SdLineupMap()
+                            customMap.Map.Add(new LineupChannel()
                             {
                                 StationId = station.StationId,
                                 AtscMajor = station.Number,
@@ -121,7 +120,7 @@ namespace epg123.sdJson2mxf
                         }
                         else if (!string.IsNullOrEmpty(station.Alternate) && AllStations.TryGetValue(station.Alternate, out lineupStation))
                         {
-                            customMap.Map.Add(new SdLineupMap()
+                            customMap.Map.Add(new LineupChannel()
                             {
                                 StationId = station.Alternate,
                                 AtscMajor = station.Number,
@@ -136,13 +135,12 @@ namespace epg123.sdJson2mxf
                 }
                 if (lineupMap == null) return false;
 
-                var lineupIndex = SdMxf.With[0].Lineups.Count;
-                SdMxf.With[0].Lineups.Add(new MxfLineup()
+                var lineupIndex = SdMxf.With.Lineups.Count;
+                SdMxf.With.Lineups.Add(new MxfLineup
                 {
                     Index = lineupIndex + 1,
-                    Uid = clientLineup.Lineup,
-                    Name = "EPG123 " + clientLineup.Name + " (" + clientLineup.Location + ")",
-                    channels = new List<MxfChannel>()
+                    LineupId = clientLineup.Lineup,
+                    Name = "EPG123 " + clientLineup.Name + " (" + clientLineup.Location + ")"
                 });
 
                 // build the services and lineup
@@ -160,12 +158,11 @@ namespace epg123.sdJson2mxf
                     }
 
                     // build the service if necessary
-                    var mxfService = SdMxf.With[0].GetService(station.StationId);
+                    var mxfService = SdMxf.GetService(station.StationId);
                     if (string.IsNullOrEmpty(mxfService.CallSign))
                     {
                         // instantiate stationLogo
-                        SdStationImage stationLogo = null;
-
+                        StationImage stationLogo = null;
 
                         // determine station name for ATSC stations
                         var atsc = false;
@@ -182,11 +179,8 @@ namespace epg123.sdJson2mxf
                         // add affiliate if available
                         if (!string.IsNullOrEmpty(station.Affiliate))
                         {
-                            mxfService.Affiliate = SdMxf.With[0].GetAffiliateId(station.Affiliate);
+                            mxfService.mxfAffiliate = SdMxf.GetAffiliate(station.Affiliate);
                         }
-
-                        // set the ScheduleEntries service id
-                        mxfService.MxfScheduleEntries.Service = mxfService.Id;
 
                         // add station logo if available and allowed
                         var logoPath = $"{Helper.Epg123LogosFolder}\\{station.Callsign}.png";
@@ -247,34 +241,34 @@ namespace epg123.sdJson2mxf
                             }
                             if (File.Exists(logoPath))
                             {
-                                mxfService.LogoImage = SdMxf.With[0].GetGuideImage($"file://{logoPath}", GetStringEncodedImage(logoPath)).Id;
+                                mxfService.mxfGuideImage = SdMxf.GetGuideImage($"file://{logoPath}", GetStringEncodedImage(logoPath));
                             }
                         }
 
                         // handle xmltv logos
                         if (config.XmltvIncludeChannelLogos.Equals("url"))
                         {
-                            if (stationLogo != null) mxfService.ServiceLogo = stationLogo;
-                            else if (station.Logo?.Url != null) mxfService.ServiceLogo = station.Logo;
+                            if (stationLogo != null) mxfService.extras.Add("logo", stationLogo);
+                            else if (station.Logo?.Url != null) mxfService.extras.Add("logo", station.Logo);
                         }
                         else if (config.XmltvIncludeChannelLogos.Equals("local") && config.IncludeSdLogos)
                         {
                             if (File.Exists(logoPath))
                             {
                                 var image = Image.FromFile(logoPath);
-                                mxfService.ServiceLogo = new SdStationImage()
+                                mxfService.extras.Add("logo", new StationImage
                                 {
                                     Url = logoPath,
                                     Height = image.Height,
                                     Width = image.Width
-                                };
+                                });
                             }
                             else if (stationLogo != null)
                             {
-                                mxfService.ServiceLogo = new SdStationImage()
+                                mxfService.extras.Add("logo", new StationImage
                                 {
                                     Url = logoPath
-                                };
+                                });
                             }
                         }
                         else if (config.XmltvIncludeChannelLogos.Equals("substitute") && config.IncludeSdLogos)
@@ -282,19 +276,19 @@ namespace epg123.sdJson2mxf
                             if (File.Exists(logoPath))
                             {
                                 var image = Image.FromFile(logoPath);
-                                mxfService.ServiceLogo = new SdStationImage()
+                                mxfService.extras.Add("logo", new StationImage
                                 {
                                     Url = logoPath.Replace(Helper.Epg123LogosFolder, config.XmltvLogoSubstitutePath.TrimEnd('\\')),
                                     Height = image.Height,
                                     Width = image.Width
-                                };
+                                });
                             }
                             else if (stationLogo != null)
                             {
-                                mxfService.ServiceLogo = new SdStationImage()
+                                mxfService.extras.Add("logo", new StationImage
                                 {
                                     Url = logoPath.Replace(Helper.Epg123LogosFolder, config.XmltvLogoSubstitutePath.TrimEnd('\\'))
-                                };
+                                });
                             }
                         }
                     }
@@ -381,12 +375,10 @@ namespace epg123.sdJson2mxf
                         var channelNumber = number + ((subnumber > 0) ? "." + subnumber : null);
                         if (channelNumbers.Add(channelNumber + ":" + station.StationId))
                         {
-                            SdMxf.With[0].Lineups[lineupIndex].channels.Add(new MxfChannel()
+                            SdMxf.With.Lineups[lineupIndex].channels.Add(new MxfChannel()
                             {
-                                Lineup = SdMxf.With[0].Lineups[lineupIndex].Id,
-                                LineupUid = lineupMap.Metadata.Lineup,
-                                StationId = mxfService.StationId,
-                                Service = mxfService.Id,
+                                mxfLineup = SdMxf.With.Lineups[lineupIndex],
+                                mxfService = mxfService,
                                 Number = number,
                                 SubNumber = subnumber,
                                 MatchName = matchName
@@ -407,7 +399,7 @@ namespace epg123.sdJson2mxf
                 BackgroundDownloader.RunWorkerAsync();
             }
 
-            if (SdMxf.With[0].Services.Count > 0)
+            if (SdMxf.With.Services.Count > 0)
             {
                 Logger.WriteMessage("Exiting buildLineupServices(). SUCCESS.");
                 return true;
@@ -440,14 +432,14 @@ namespace epg123.sdJson2mxf
                 var logoPath = serviceLogo.Value[0];
                 if (DownloadSdLogo(serviceLogo.Value[1], logoPath) && string.IsNullOrEmpty(serviceLogo.Key.LogoImage))
                 {
-                    serviceLogo.Key.LogoImage = SdMxf.With[0].GetGuideImage("file://" + logoPath, GetStringEncodedImage(logoPath)).Id;
+                    serviceLogo.Key.LogoImage = SdMxf.GetGuideImage("file://" + logoPath, GetStringEncodedImage(logoPath)).Id;
 
                     if (File.Exists(logoPath))
                     {
                         // update dimensions
                         var image = Image.FromFile(logoPath);
-                        serviceLogo.Key.ServiceLogo.Height = image.Height;
-                        serviceLogo.Key.ServiceLogo.Width = image.Width;
+                        serviceLogo.Key.extras["logo"].Height = image.Height;
+                        serviceLogo.Key.extras["logo"].Width = image.Width;
                     }
                 }
 

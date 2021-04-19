@@ -3,30 +3,30 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
-using epg123.SchedulesDirectAPI;
+using epg123.SchedulesDirect;
 using Microsoft.Win32;
 
 namespace epg123
 {
     public partial class frmLineupAdd : Form
     {
-        public SdLineup AddLineup;
+        public SubscribedLineup AddLineup;
 
-        readonly List<sdCountry> _countries = new List<sdCountry>();
+        readonly List<Country> _countries = new List<Country>();
 
         private string _mask;
-        private List<SdLineup> _headends = new List<SdLineup>();
+        private List<SubscribedLineup> _headends = new List<SubscribedLineup>();
 
         public frmLineupAdd()
         {
             InitializeComponent();
             var isoCountry = System.Globalization.RegionInfo.CurrentRegion.ThreeLetterISORegionName;
 
-            var countryResp = sdApi.GetAvailableCountries();
+            var countryResp = SdApi.GetAvailableCountries();
             if (countryResp != null)
             {
                 // add the only freeview listing
-                _countries.Add(new sdCountry()
+                _countries.Add(new Country()
                 {
                     FullName = "Great Britain Freeview",
                     PostalCode = "/",
@@ -61,7 +61,7 @@ namespace epg123
 
                 // add a manual option
                 _countries.Add(null);
-                _countries.Add(new sdCountry()
+                _countries.Add(new Country()
                 {
                     FullName = "Manual lineup input...",
                     OnePostalCode = false,
@@ -160,9 +160,9 @@ namespace epg123
                 listBox1.Items.Clear();
                 listBox1.Items.Add(txtZipcode.Text);
 
-                _headends = new List<SdLineup>
+                _headends = new List<SubscribedLineup>
                 {
-                    new SdLineup()
+                    new SubscribedLineup()
                     {
                         Transport = "unknown",
                         Name = txtZipcode.Text,
@@ -174,9 +174,9 @@ namespace epg123
             else
             {
                 listBox1.Items.Clear();
-                _headends = new List<SdLineup>();
+                _headends = new List<SubscribedLineup>();
 
-                var heads = sdApi.GetHeadends(_countries[cmbCountries.SelectedIndex].ShortName, m.Value);
+                var heads = SdApi.GetHeadends(_countries[cmbCountries.SelectedIndex].ShortName, m.Value);
                 if (heads == null)
                 {
                     MessageBox.Show("No headends found for entered postal code and country.", "No Headend Found", MessageBoxButtons.OK);
@@ -187,7 +187,7 @@ namespace epg123
                 {
                     foreach (var lineup in head.Lineups)
                     {
-                        _headends.Add(new SdLineup()
+                        _headends.Add(new SubscribedLineup()
                         {
                             Transport = head.Transport,
                             Name = lineup.Name,
@@ -214,10 +214,10 @@ namespace epg123
         }
         private void GetSatellites()
         {
-            var satcom = sdApi.GetAvailableSatellites();
+            var satcom = SdApi.GetAvailableSatellites();
             for (var i = 0; i < satcom.Count; ++i)
             {
-                _headends.Add(new SdLineup()
+                _headends.Add(new SubscribedLineup()
                 {
                     Transport = "DVB-S",
                     Name = satcom[i].lineup,
@@ -229,12 +229,12 @@ namespace epg123
         }
         private void GetTransmitters(string country)
         {
-            var xmitters = sdApi.GetTransmitters(country);
+            var xmitters = SdApi.GetTransmitters(country);
             var sites = new List<string>(xmitters.Keys);
             foreach (var site in sites)
             {
                 if (!xmitters.TryGetValue(site, out var lineup)) continue;
-                _headends.Add(new SdLineup()
+                _headends.Add(new SubscribedLineup()
                 {
                     Transport = "DVB-T",
                     Name = site,

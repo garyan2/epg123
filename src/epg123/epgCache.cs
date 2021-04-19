@@ -97,9 +97,12 @@ namespace epg123
         public static void AddAsset(string md5, string json)
         {
             // reduce the size of the string by removing nulls, empty strings, and false booleans
-            json = Regex.Replace(json, "\"\\w+?\":null,?", string.Empty);
-            json = Regex.Replace(json, "\"\\w+?\":\"\",?", string.Empty);
-            json = Regex.Replace(json, "\"\\w+?\":false,?", string.Empty);
+            if (json != null)
+            {
+                json = Regex.Replace(json, "\"\\w+?\":null,?", string.Empty);
+                json = Regex.Replace(json, "\"\\w+?\":\"\",?", string.Empty);
+                json = Regex.Replace(json, "\"\\w+?\":false,?", string.Empty);
+            }
 
             // store
             var epgJson = new epgJsonCache()
@@ -113,6 +116,12 @@ namespace epg123
 
         public static void UpdateAssetImages(string md5, string json)
         {
+            if (!JsonFiles.ContainsKey(md5))
+            {
+                Logger.WriteInformation($"Failed to update asset image for program with MD5 {md5}.");
+                return;
+            }
+
             // reduce the size of the string by removing nulls and empty strings
             json = Regex.Replace(json, "\"\\w+?\":null,?", string.Empty);
             json = Regex.Replace(json, "\"\\w+?\":\"\",?", string.Empty);
@@ -124,6 +133,12 @@ namespace epg123
 
         public static void UpdateAssetJsonEntry(string md5, string json)
         {
+            if (!JsonFiles.ContainsKey(md5))
+            {
+                Logger.WriteInformation($"Failed to update asset json for program with MD5 {md5}.");
+                return;
+            }
+
             // reduce the size of the string by removing nulls and empty strings
             json = Regex.Replace(json, "\"\\w+?\":null,?", string.Empty);
             json = Regex.Replace(json, "\"\\w+?\":\"\",?", string.Empty);

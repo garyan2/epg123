@@ -6,11 +6,8 @@ namespace epg123.MxfXml
     {
         private int _number;
 
-        [XmlIgnore]
-        public string LineupUid { get; set; }
-
-        [XmlIgnore]
-        public string StationId { get; set; }
+        [XmlIgnore] public MxfLineup mxfLineup;
+        [XmlIgnore] public MxfService mxfService;
 
         /// <summary>
         /// A unique ID that is consistent between loads. 
@@ -19,7 +16,7 @@ namespace epg123.MxfXml
         [XmlAttribute("uid")]
         public string Uid
         {
-            get => $"!Channel!{LineupUid}!{StationId}_{Number}_{SubNumber}";
+            get => $"!Channel!{mxfLineup?.LineupId}!{mxfService?.StationId}_{Number}_{SubNumber}";
             set { }
         }
 
@@ -28,14 +25,22 @@ namespace epg123.MxfXml
         /// This value should always be "l1".
         /// </summary>
         [XmlAttribute("lineup")]
-        public string Lineup { get; set; }
+        public string Lineup
+        {
+            get => mxfLineup?.ToString();
+            set { }
+        }
 
         /// <summary>
         /// The service to reference.
         /// This value should be the Service id attribute.
         /// </summary>
         [XmlAttribute("service")]
-        public string Service { get; set; }
+        public string Service
+        {
+            get => mxfService?.ToString();
+            set { }
+        }
 
         /// <summary>
         /// Used to automatically map this channel of listings onto the scanned channel.
@@ -71,5 +76,6 @@ namespace epg123.MxfXml
         /// </summary>
         [XmlAttribute("subNumber")]
         public int SubNumber { get; set; }
+        public bool ShouldSerializeSubNumber() { return SubNumber > 0; }
     }
 }

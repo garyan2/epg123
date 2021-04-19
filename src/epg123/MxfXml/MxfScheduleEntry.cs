@@ -31,6 +31,12 @@ namespace epg123.MxfXml
 
     public class MxfScheduleEntry
     {
+        [XmlIgnore] public MxfProgram mxfProgram;
+
+        private int _tvRating;
+
+        [XmlIgnore] public Dictionary<string, dynamic> extras = new Dictionary<string, dynamic>();
+
         // duplicate of Microsoft.MediaCenter.Guide.TVRating enum
         private enum McepgTvRating
         {
@@ -65,40 +71,15 @@ namespace epg123.MxfXml
             GbR18 = 28
         }
 
-        [XmlIgnore]
-        private Dictionary<string, string> ProgramContentRatings => sdJson2mxf.sdJson2Mxf.SdMxf.With[0].Programs[int.Parse(Program) - 1].ContentRatings;
-
-        [XmlIgnore]
-        public Dictionary<string, string> SchedTvRatings { get; set; }
-
-        [XmlIgnore]
-        public Dictionary<string, string> Ratings
-        {
-            get
-            {
-                var ret = new Dictionary<string, string>();
-                if (SchedTvRatings != null)
-                {
-                    foreach (var keyValuePair in SchedTvRatings.Where(keyValuePair => !ret.TryGetValue(keyValuePair.Key, out var dummy)))
-                    {
-                        ret.Add(keyValuePair.Key, keyValuePair.Value);
-                    }
-                }
-
-                if (ProgramContentRatings == null) return ret;
-                foreach (var keyValuePair in ProgramContentRatings.Where(keyValuePair => !ret.TryGetValue(keyValuePair.Key, out var dummy)))
-                {
-                    ret.Add(keyValuePair.Key, keyValuePair.Value);
-                }
-                return ret;
-            }
-        }
-
         /// <summary>
         /// An ID of a Program element.
         /// </summary>
         [XmlAttribute("program")]
-        public string Program { get; set; }
+        public string Program
+        {
+            get => mxfProgram?.ToString();
+            set { }
+        }
 
         /// <summary>
         /// Specifies the start time of the broadcast.
@@ -277,8 +258,33 @@ namespace epg123.MxfXml
         {
             get
             {
+                if (_tvRating > 0) return _tvRating;
+
+                var ratings = new Dictionary<string, string>();
+                if (extras.ContainsKey("ratings"))
+                {
+                    foreach (KeyValuePair<string, string> rating in extras["ratings"])
+                    {
+                        if (!ratings.TryGetValue(rating.Key, out var dummy))
+                        {
+                            ratings.Add(rating.Key, rating.Value);
+                        }
+                    }
+                }
+
+                if (mxfProgram.extras.ContainsKey("ratings"))
+                {
+                    foreach (KeyValuePair<string, string> rating in mxfProgram.extras["ratings"])
+                    {
+                        if (!ratings.TryGetValue(rating.Key, out var dummy))
+                        {
+                            ratings.Add(rating.Key, rating.Value);
+                        }
+                    }
+                }
+
                 var maxValue = 0;
-                foreach (var keyValue in Ratings)
+                foreach (var keyValue in ratings)
                 {
                     switch (keyValue.Key)
                     {
@@ -382,7 +388,7 @@ namespace epg123.MxfXml
                 }
                 return maxValue;
             }
-            set { }
+            set => _tvRating = value;
         }
         public bool ShouldSerializeTvRating() { return TvRating != 0; }
 

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using epg123.SchedulesDirectAPI;
+using epg123.SchedulesDirect;
 using Newtonsoft.Json;
 
 namespace epg123
@@ -37,16 +37,16 @@ namespace epg123
     public class ModernMediaUiPlusPrograms
     {
         [JsonProperty("eventDetails")]
-        public sdProgramEventDetails EventDetails { get; set; }
+        public ProgramEventDetails EventDetails { get; set; }
 
         [JsonProperty("keyWords")]
-        public sdProgramKeyWords KeyWords { get; set; }
+        public ProgramKeyWords KeyWords { get; set; }
 
         [JsonProperty("contentRating")]
-        public IList<sdProgramContentRating> ContentRating { get; set; }
+        public IList<ProgramContentRating> ContentRating { get; set; }
 
         [JsonProperty("movie")]
-        public sdProgramMovie Movie { get; set; }
+        public ProgramMovie Movie { get; set; }
 
         [JsonProperty("showType")]
         public string ShowType { get; set; }

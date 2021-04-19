@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using epg123.SchedulesDirectAPI;
+using epg123.SchedulesDirect;
 using epg123.TheMovieDbAPI;
 using Newtonsoft.Json;
 
@@ -13,52 +13,46 @@ namespace epg123.sdJson2mxf
     internal static partial class sdJson2Mxf
     {
         private static List<string> movieImageQueue;
-        private static ConcurrentBag<sdArtworkResponse> movieImageResponses = new ConcurrentBag<sdArtworkResponse>();
-        private static sdImage movieStaple;
+        private static ConcurrentBag<ProgramMetadata> movieImageResponses = new ConcurrentBag<ProgramMetadata>();
+        private static ProgramArtwork movieStaple;
 
         private static bool GetAllMoviePosters()
         {
-            var moviePrograms = SdMxf.With[0].Programs.Where(arg => arg.IsMovie)
+            var moviePrograms = SdMxf.With.Programs.Where(arg => arg.IsMovie)
                                                                 .Where(arg => !arg.IsAdultOnly).ToArray();
 
             // reset counters
             processedObjects = 0;
-            Logger.WriteMessage($"Entering getAllMoviePosters() for {totalObjects = moviePrograms.Count()} movies.");
+            Logger.WriteMessage($"Entering GetAllMoviePosters() for {totalObjects = moviePrograms.Count()} movies.");
             ++processStage; ReportProgress();
 
             // query all movies from Schedules Direct
             movieImageQueue = new List<string>();
             foreach (var mxfProgram in moviePrograms)
             {
-                try
+                if (epgCache.JsonFiles.ContainsKey(mxfProgram.extras["md5"]) && epgCache.JsonFiles[mxfProgram.extras["md5"]].Images != null)
                 {
-                    if (epgCache.JsonFiles[mxfProgram.Md5].Images != null)
+                    ++processedObjects; ReportProgress();
+                    if (string.IsNullOrEmpty(epgCache.JsonFiles[mxfProgram.extras["md5"]].Images)) continue;
+
+                    List<ProgramArtwork> artwork;
+                    using (var reader = new StringReader(epgCache.JsonFiles[mxfProgram.extras["md5"]].Images))
                     {
-                        ++processedObjects; ReportProgress();
-                        if (string.IsNullOrEmpty(epgCache.JsonFiles[mxfProgram.Md5].Images)) continue;
-
-                        using (var reader = new StringReader(epgCache.JsonFiles[mxfProgram.Md5].Images))
-                        {
-                            var serializer = new JsonSerializer();
-                            mxfProgram.ProgramImages = (List<sdImage>)serializer.Deserialize(reader, typeof(List<sdImage>));
-                        }
-
-                        if (mxfProgram.ProgramImages.Count > 0)
-                        {
-                            mxfProgram.GuideImage = SdMxf.With[0].GetGuideImage(mxfProgram.ProgramImages[0].Uri).Id;
-                        }
+                        var serializer = new JsonSerializer();
+                        mxfProgram.extras.Add("artwork", artwork = (List<ProgramArtwork>)serializer.Deserialize(reader, typeof(List<ProgramArtwork>)));
                     }
-                    else
+
+                    if (artwork.Count > 0)
                     {
-                        movieImageQueue.Add(mxfProgram.TmsId);
+                        mxfProgram.mxfGuideImage = SdMxf.GetGuideImage(artwork[0].Uri);
                     }
                 }
-                catch
+                else
                 {
-                    Logger.WriteInformation($"Could not find expected program with MD5 hash {mxfProgram.Md5}. Continuing.");
+                    movieImageQueue.Add(mxfProgram.ProgramId);
                 }
             }
-            Logger.WriteVerbose($"Found {processedObjects} cached movie poster links.");
+            Logger.WriteVerbose($"Found {processedObjects} cached/unavailable movie poster links.");
 
             // maximum 500 queries at a time
             if (movieImageQueue.Count > 0)
@@ -93,7 +87,7 @@ namespace epg123.sdJson2mxf
             }
 
             // request images from Schedules Direct
-            var responses = sdApi.SdGetArtwork(movies);
+            var responses = SdApi.GetArtwork(movies);
             if (responses != null)
             {
                 Parallel.ForEach(responses, (response) =>
@@ -109,64 +103,65 @@ namespace epg123.sdJson2mxf
             foreach (var response in movieImageResponses)
             {
                 ++processedObjects; ReportProgress();
+                if (response.Data == null) continue;
+
                 movieStaple = null;
 
                 // determine which program this belongs to
-                var mxfProgram = SdMxf.With[0].GetProgram(response.ProgramId);
+                var mxfProgram = SdMxf.GetProgram(response.ProgramId);
 
                 // first choice is return from Schedules Direct
-                if (response.Data != null)
-                {
-                    mxfProgram.ProgramImages = GetMovieImages(response.Data);
-                }
+                List<ProgramArtwork> artwork; 
+                artwork = GetMovieImages(response.Data);
 
                 // second choice is from TMDb if allowed and available
-                if (mxfProgram.ProgramImages.Count == 0 && config.TMDbCoverArt && tmdbApi.IsAlive)
+                if (artwork.Count == 0 && config.TMDbCoverArt && tmdbApi.IsAlive)
                 {
-                    mxfProgram.ProgramImages = GetMoviePosterId(mxfProgram.Title, mxfProgram.Year, mxfProgram.Language);
+                    artwork = GetMoviePosterId(mxfProgram.Title, mxfProgram.Year, mxfProgram.Language);
                 }
 
                 // last choice is the staple image
-                if (mxfProgram.ProgramImages.Count == 0 && movieStaple != null)
+                if (artwork.Count == 0 && movieStaple != null)
                 {
-                    mxfProgram.ProgramImages.Add(movieStaple);
+                    artwork.Add(movieStaple);
                 }
 
                 // regardless if image is found or not, store the final result in xml file
                 // this avoids hitting the tmdb server every update for every movie missing cover art
-                if (mxfProgram.ProgramImages.Count > 0)
+                mxfProgram.extras.Add("artwork", artwork);
+                if (artwork.Count > 0)
                 {
                     using (var writer = new StringWriter())
                     {
                         var serializer = new JsonSerializer();
-                        serializer.Serialize(writer, mxfProgram.ProgramImages);
-                        epgCache.UpdateAssetImages(mxfProgram.Md5, writer.ToString());
+                        serializer.Serialize(writer, artwork);
+                        epgCache.UpdateAssetImages(mxfProgram.extras["md5"], writer.ToString());
                     }
 
-                    mxfProgram.GuideImage = SdMxf.With[0].GetGuideImage(mxfProgram.ProgramImages[0].Uri).Id;
+                    mxfProgram.mxfGuideImage = SdMxf.GetGuideImage(artwork[0].Uri);
                 }
                 else if (config.TMDbCoverArt && tmdbApi.IsAlive)
                 {
-                    epgCache.UpdateAssetImages(mxfProgram.Md5, string.Empty);
+                    epgCache.UpdateAssetImages(mxfProgram.extras["md5"], string.Empty);
                 }
             }
         }
 
-        private static IList<sdImage> GetMovieImages(IList<sdImage> sdImages)
+        private static List<ProgramArtwork> GetMovieImages(List<ProgramArtwork> sdImages)
         {
-            var ret = new List<sdImage>();
+            var ret = new List<ProgramArtwork>();
             var images = sdImages.Where(arg => !string.IsNullOrEmpty(arg.Category))
                      .Where(arg => !string.IsNullOrEmpty(arg.Aspect)).Where(arg => arg.Aspect.ToLower().Equals("2x3"))
                      .Where(arg => !string.IsNullOrEmpty(arg.Size)).Where(arg => arg.Size.ToLower().Equals("md"))
                      .Where(arg => !string.IsNullOrEmpty(arg.Uri));
 
             // get the aspect ratios available and fix the URI
-            var links = new sdImage[3];
+            var links = new ProgramArtwork[4];
             foreach (var image in images)
             {
                 if (!image.Uri.ToLower().StartsWith("http"))
                 {
-                    image.Uri = $"{sdApi.JsonBaseUrl}{sdApi.JsonApi}image/{image.Uri.ToLower()}";
+                    image.Uri = $"{SdApi.JsonBaseUrl}{SdApi.JsonApi}image/{image.Uri.ToLower()}";
                 }
 
                 switch (image.Category.ToLower())
@@ -179,6 +174,9 @@ namespace epg123.sdJson2mxf
                         break;
                     case "vod art":     // undocumented, but looks like box art for video on demand
                         if (links[2] == null) links[2] = image;
+                        break;
+                    case "banner-l2":
+                        if (links[3] == null) links[3] = image;
                         break;
                     case "staple":      // the staple image is intended to cover programs which do not have a unique banner image
                         if (movieStaple == null) movieStaple = image;
@@ -195,11 +193,11 @@ namespace epg123.sdJson2mxf
             return ret;
         }
 
-        private static IList<sdImage> GetMoviePosterId(string title, int year, string language)
+        private static List<ProgramArtwork> GetMoviePosterId(string title, int year, string language)
         {
             language = !string.IsNullOrEmpty(language) ? language.Substring(0, 2) : "en";
 
-            if (!tmdbApi.IsAlive) return new List<sdImage>();
+            if (!tmdbApi.IsAlive) return new List<ProgramArtwork>();
 
             // if year is empty, use last year as starting point
             if (year == 0)
@@ -209,7 +207,7 @@ namespace epg123.sdJson2mxf
 
             // return first finding
             var years = new[] { year, year + 1, year - 1 };
-            return years.Any(y => year <= DateTime.Now.Year && tmdbApi.SearchCatalog(title, y, language) > 0) ? tmdbApi.SdImages : new List<sdImage>();
+            return years.Any(y => year <= DateTime.Now.Year && tmdbApi.SearchCatalog(title, y, language) > 0) ? tmdbApi.SdImages : new List<ProgramArtwork>();
         }
     }
 }
