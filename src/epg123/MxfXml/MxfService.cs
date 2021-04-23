@@ -27,6 +27,7 @@ namespace epg123.MxfXml
 
         [XmlIgnore] public int Index;
         [XmlIgnore] public string StationId;
+        [XmlIgnore] public string UidOverride;
         [XmlIgnore] public MxfAffiliate mxfAffiliate;
         [XmlIgnore] public MxfGuideImage mxfGuideImage;
         [XmlIgnore] public MxfScheduleEntries MxfScheduleEntries = new MxfScheduleEntries { ScheduleEntry = new List<MxfScheduleEntry>() };
@@ -51,7 +52,7 @@ namespace epg123.MxfXml
         [XmlAttribute("uid")]
         public string Uid
         {
-            get => $"!Service!EPG123_{StationId}";
+            get => string.IsNullOrEmpty(UidOverride) ? $"!Service!{StationId}" : $"!Service!{UidOverride}";
             set { }
         }
 

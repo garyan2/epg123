@@ -5,39 +5,41 @@ using System.Linq;
 
 namespace epg123.MxfXml
 {
+    public partial class Mxf
+    {
+        private readonly Dictionary<string, MxfKeywordGroup> _keywordGroups = new Dictionary<string, MxfKeywordGroup>();
+
+        public MxfKeywordGroup GetKeywordGroup(string groupName, string alpha = null)
+        {
+            if (_keywordGroups.TryGetValue(groupName, out var group)) return group;
+            With.KeywordGroups.Add(group = new MxfKeywordGroup
+            {
+                Index = _keywordGroups.Count + 1,
+                Alpha = alpha
+            });
+            _keywordGroups.Add(groupName, group);
+            return group;
+        }
+    }
+
     public class MxfKeywordGroup
     {
-        [XmlIgnore]
-        public int Index;
-
-        [XmlIgnore]
-        public string Alpha = string.Empty;
-
-        [XmlIgnore]
-        public Dictionary<string, string> Cats = new Dictionary<string, string>();
-
-        [XmlIgnore]
-        public SortedDictionary<string, string> Sorted
+        private readonly Dictionary<string, MxfKeyword> _keywords = new Dictionary<string, MxfKeyword>();
+        public MxfKeyword GetKeyword(string word)
         {
-            get
+            if (_keywords.TryGetValue(word, out var keyword)) return keyword;
+            mxfKeywords.Add(keyword = new MxfKeyword
             {
-                var ret = new SortedDictionary<string, string>();
-                for (var i = 2; i < Cats.Count; ++i)
-                {
-                    ret.Add(Cats.ElementAt(i).Key, Cats.ElementAt(i).Value);
-                }
-                return ret;
-            }
-            set { }
+                Index = Index * 1000 + mxfKeywords.Count + 1,
+                Word = word
+            });
+            _keywords.Add(word, keyword);
+            return keyword;
         }
 
-        public string GetKeywordId(string keyword)
-        {
-            if (Cats.TryGetValue(keyword, out var ret)) return ret;
-            ret = $"k{Index++}";
-            Cats.Add(keyword, ret);
-            return ret;
-        }
+        [XmlIgnore] public int Index;
+        [XmlIgnore] public string Alpha = string.Empty;
+        [XmlIgnore] public List<MxfKeyword> mxfKeywords = new List<MxfKeyword>();
 
         /// <summary>
         /// The value of a Keyword id attribute, and defines the name of the KeywordGroup.
@@ -46,7 +48,7 @@ namespace epg123.MxfXml
         [XmlAttribute("groupName")]
         public string GroupName
         {
-            get => Cats.ElementAt(0).Value;
+            get => $"k{Index}";
             set { }
         }
 
@@ -63,22 +65,14 @@ namespace epg123.MxfXml
 
         /// <summary>
         /// A comma-delimited ordered list of keyword IDs. This defines the keywords in this group.
-        /// Used in the Search By Category page to display the list of keywords in the KeywordGroup element. The first keyword in this list should always be the "All" keyword.Programs should not be tagged with this keyword because it is a special placeholder to provide the localized value of "All".
+        /// Used in the Search By Category page to display the list of keywords in the KeywordGroup element.
+        /// The first keyword in this list should always be the "All" keyword.
+        /// Programs should not be tagged with this keyword because it is a special placeholder to provide the localized value of "All".
         /// </summary>
         [XmlAttribute("keywords")]
         public string Keywords
         {
-            get
-            {
-                var ret = Cats.ElementAt(1).Value + ",";
-                for (var i = 0; i < Math.Min(Sorted.Count, 99); ++i)
-                {
-                    ret += Sorted.ElementAt(i).Value + ",";
-                }
-                ret = ret.TrimEnd(',');
-
-                return ret;
-            }
+            get => $"k{Index * 1000},{string.Join(",", mxfKeywords.OrderBy(k => k.Word).Select(k => k.Id).Take(99).ToArray())}".TrimEnd(',');
             set { }
         }
     }

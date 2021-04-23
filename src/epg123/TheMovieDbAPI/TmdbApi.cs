@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Text;
 using System.Threading;
-using epg123.SchedulesDirect;
 using Newtonsoft.Json;
 
 namespace epg123.TheMovieDbAPI
@@ -12,53 +10,16 @@ namespace epg123.TheMovieDbAPI
     public static class tmdbApi
     {
         public static bool IsAlive;
-        private const string TmdbBaseUrl = @"http://api.themoviedb.org/3/";
+        public const string TmdbBaseUrl = @"http://api.themoviedb.org/3/";
 
-        private static TmdbConfiguration config;
-        private static TmdbMovieListResponse searchResults;
+        public static TmdbConfiguration Config;
+        public static TmdbMovieListResponse SearchResults;
         private static bool incAdult;
-        private static int posterSizeIdx;
-
-        #region Public Attributes
-        public static List<ProgramArtwork> SdImages
-        {
-            get
-            {
-                var ret = new List<ProgramArtwork>();
-                if (string.IsNullOrEmpty(PosterImageUrl)) return ret;
-                var width = int.Parse(config.Images.PosterSizes[posterSizeIdx].Substring(1));
-                var height = (int)(width * 1.5);
-                ret.Add(new ProgramArtwork()
-                {
-                    Aspect = "2x3",
-                    Category = "Poster Art",
-                    Height = height,
-                    Size = "Md",
-                    Uri = PosterImageUrl,
-                    Width = width
-                });
-                return ret;
-            }
-        }
-
-        public static string PosterImageUrl => searchResults.Results[0]?.PosterPath != null
-            ? $"{config.Images.BaseUrl}{config.Images.PosterSizes[posterSizeIdx]}{searchResults.Results[0].PosterPath}"
-            : null;
-
-        #endregion
 
         public static void Initialize(bool includeAdult)
         {
-            IsAlive = ((config = GetTmdbConfiguration()) != null);
+            IsAlive = (Config = GetTmdbConfiguration()) != null;
             incAdult = includeAdult;
-
-            if (!IsAlive || config == null) return;
-            for (var i = 0; i < config.Images.PosterSizes.Count; ++i)
-            {
-                if (int.Parse(config.Images.PosterSizes[i].Substring(1)) < 300) continue;
-                posterSizeIdx = i;
-                break;
-            }
         }
 
         private static StreamReader TmdbGetRequestResponse(string uri)
@@ -87,12 +48,14 @@ namespace epg123.TheMovieDbAPI
                         Thread.Sleep(delay * 1000);
                         continue;
                     }
-                    Logger.WriteError($"TMDb API WebException thrown. Message: {wex.Message} , Status: {wex.Status}");
+                    Logger.WriteInformation($"TMDb API WebException thrown. Message: {wex.Message} , Status: {wex.Status}");
+                    IsAlive = false;
                     break;
                 }
                 catch (Exception ex)
                 {
-                    Logger.WriteError($"TMDb API Unknown exception thrown. Message: {ex.Message}");
+                    Logger.WriteInformation($"TMDb API Unknown exception thrown. Message: {ex.Message}");
+                    IsAlive = false;
                     break;
                 }
             }
@@ -127,15 +90,15 @@ namespace epg123.TheMovieDbAPI
                 var sr = TmdbGetRequestResponse(uri);
                 if (sr != null)
                 {
-                    searchResults = JsonConvert.DeserializeObject<TmdbMovieListResponse>(sr.ReadToEnd());
-                    var count = searchResults?.Results.Count ?? 0;
+                    SearchResults = JsonConvert.DeserializeObject<TmdbMovieListResponse>(sr.ReadToEnd());
+                    var count = SearchResults?.Results.Count ?? 0;
                     if (count > 0) Logger.WriteVerbose($"TMDb catalog search for \"{title}\" from {year} found {count} results.");
                     return count;
                 }
             }
             catch (Exception ex)
             {
-                searchResults = new TmdbMovieListResponse();
+                SearchResults = new TmdbMovieListResponse();
                 Logger.WriteError(ex.Message);
             }
             return -1;

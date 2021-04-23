@@ -10,7 +10,7 @@ namespace epg123.SchedulesDirect
             var sr = GetRequestResponse(methods.GET, $"version/{userAgent}", null, false);
             if (sr == null)
             {
-                Logger.WriteError("Did not receive a response from Schedules Direct for a version check.");
+                Logger.WriteInformation("Did not receive a response from Schedules Direct for a version check.");
                 return null;
             }
 

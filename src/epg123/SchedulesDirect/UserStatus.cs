@@ -35,7 +35,7 @@ namespace epg123.SchedulesDirect
             }
             catch (Exception ex)
             {
-                Logger.WriteError($"SdUserStatusResponse() Unknown exception thrown. Message: {ex.Message}");
+                Logger.WriteError($"GetUserStatus() Unknown exception thrown. Message: {ex.Message}");
             }
             return null;
         }
@@ -47,7 +47,7 @@ namespace epg123.SchedulesDirect
         public StatusAccount Account { get; set; }
 
         [JsonProperty("lineups")]
-        public IList<StatusLineup> Lineups { get; set; }
+        public List<StatusLineup> Lineups { get; set; }
 
         [JsonProperty("lastDataUpdate")]
         public DateTime LastDataUpdate { get; set; }

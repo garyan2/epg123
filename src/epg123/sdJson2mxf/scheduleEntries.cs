@@ -17,7 +17,7 @@ namespace epg123.sdJson2mxf
 
         private static bool GetAllScheduleEntryMd5S(int days = 1)
         {
-            Logger.WriteMessage($"Entering getAllScheduleEntryMd5s() for {days} days on {SdMxf.With.Services.Count} stations.");
+            Logger.WriteMessage($"Entering GetAllScheduleEntryMd5s() for {days} days on {SdMxf.With.Services.Count} stations.");
             if (days <= 0)
             {
                 Logger.WriteError("Invalid number of days to download. Exiting.");
@@ -52,7 +52,7 @@ namespace epg123.sdJson2mxf
             for (var i = 0; i < SdMxf.With.Services.Count; i += MaxQueries / dates.Length)
             {
                 if (GetMd5ScheduleEntries(dates, i)) continue;
-                Logger.WriteError("Problem occurred during getMd5ScheduleEntries(). Exiting.");
+                Logger.WriteError("Problem occurred during GetMd5ScheduleEntries(). Exiting.");
                 return false;
             }
             Logger.WriteVerbose($"Found {cachedSchedules} cached daily schedules.");
@@ -70,7 +70,7 @@ namespace epg123.sdJson2mxf
                 ProcessMd5ScheduleEntry(md5);
             }
             Logger.WriteInformation($"Processed {totalObjects} daily schedules for {SdMxf.With.Services.Count} stations.");
-            Logger.WriteMessage("Exiting getAllScheduleEntryMd5s(). SUCCESS.");
+            Logger.WriteMessage("Exiting GetAllScheduleEntryMd5s(). SUCCESS.");
             GC.Collect();
             return true;
         }
@@ -96,7 +96,7 @@ namespace epg123.sdJson2mxf
             if (stationResponses == null) return false;
 
             // build request of daily schedules not downloaded yet
-            IList<ScheduleRequest> newRequests = new List<ScheduleRequest>();
+            var newRequests = new List<ScheduleRequest>();
             foreach (var request in requests)
             {
                 var requestErrors = new Dictionary<int, string>();
@@ -120,8 +120,8 @@ namespace epg123.sdJson2mxf
                     }
 
                     // scan through all the dates returned for the station and request dates that are not cached
-                    IList<string> newDateRequests = new List<string>();
-                    HashSet<string> dupeMd5s = new HashSet<string>();
+                    var newDateRequests = new List<string>();
+                    var dupeMd5s = new HashSet<string>();
                     foreach (var day in dates)
                     {
                         if (stationResponse.TryGetValue(day, out var dayResponse) && (dayResponse.Code == 0) && !string.IsNullOrEmpty(dayResponse.Md5))
@@ -286,48 +286,14 @@ namespace epg123.sdJson2mxf
             var mxfService = SdMxf.GetService(schedule.StationId);
 
             // process each program schedule entry
-            var firstProgram = true;
-            var discontinuity = false;
-            var lastProgramId = string.Empty;
             foreach (var scheduleProgram in schedule.Programs)
             {
-                // determine whether to populate StartTime attribute
-                var dtStart = scheduleProgram.AirDateTime;
-                var startTime = dtStart.ToString("s");
-                if (dtStart == mxfService.MxfScheduleEntries.EndTime)
-                {
-                    startTime = null;
-                }
-                else if (!firstProgram && !discontinuity)
-                {
-                    var msg = string.Format("Time discontinuity detected. Service {0} ({1}) {2} (entry {3}) ends at {4:u}, {5} (entry {6}) starts at {7:u}. " +
-                                            "No further discontinuities on {1} will be reported for the date {8:yyyy-MM-dd}.",
-                        schedule.StationId,
-                        mxfService.CallSign,
-                        lastProgramId,
-                        mxfService.MxfScheduleEntries.ScheduleEntry.Count,
-                        mxfService.MxfScheduleEntries.EndTime,
-                        scheduleProgram.ProgramId,
-                        mxfService.MxfScheduleEntries.ScheduleEntry.Count + 1,
-                        dtStart, mxfService.MxfScheduleEntries.EndTime);
-                    if (dtStart < DateTime.UtcNow + TimeSpan.FromDays(2))
-                    {
-                        Logger.WriteWarning(msg);
-                    }
-                    else
-                    {
-                        Logger.WriteInformation(msg);
-                    }
-                    discontinuity = true;
-                }
-                firstProgram = false;
-                lastProgramId = scheduleProgram.ProgramId;
-
                 // prepopulate some of the program
                 var mxfProgram = SdMxf.GetProgram(scheduleProgram.ProgramId);
                 if (mxfProgram.extras.Count == 0)
                 {
                     mxfProgram.ProgramId = scheduleProgram.ProgramId;
+                    mxfProgram.UidOverride = $"{scheduleProgram.ProgramId.Substring(0, 10)}_{scheduleProgram.ProgramId.Substring(10)}";
                     mxfProgram.extras.Add("md5", scheduleProgram.Md5);
                     if (scheduleProgram.Multipart?.PartNumber > 0)
                     {
@@ -335,7 +301,7 @@ namespace epg123.sdJson2mxf
                     }
                     if (config.OadOverride && scheduleProgram.New)
                     {
-                        mxfProgram.extras.Add("newAirDate", dtStart.ToLocalTime());
+                        mxfProgram.extras.Add("newAirDate", scheduleProgram.AirDateTime.ToLocalTime());
                     }
                 }
                 mxfProgram.IsSeasonFinale |= Helper.StringContains(scheduleProgram.IsPremiereOrFinale, "Season Finale");
@@ -350,12 +316,9 @@ namespace epg123.sdJson2mxf
                 if (scheduleProgram.Ratings != null)
                 {
                     var ratings = config.RatingsOrigin.Split(',');
-                    foreach (var rating in scheduleProgram.Ratings)
+                    foreach (var rating in scheduleProgram.Ratings.Where(rating => string.IsNullOrEmpty(rating.Country) || Helper.TableContains(ratings, "ALL") || Helper.TableContains(ratings, rating.Country)))
                     {
-                        if (string.IsNullOrEmpty(rating.Country) || Helper.TableContains(ratings, "ALL") || Helper.TableContains(ratings, rating.Country))
-                        {
-                            scheduleTvRatings.Add(rating.Body, rating.Code);
-                        }
+                        scheduleTvRatings.Add(rating.Body, rating.Code);
                     }
                 }
 
@@ -385,7 +348,7 @@ namespace epg123.sdJson2mxf
                     Part = scheduleProgram.Multipart?.PartNumber ?? 0,
                     Parts = scheduleProgram.Multipart?.TotalParts ?? 0,
                     mxfProgram = mxfProgram,
-                    StartTime = startTime == null ? DateTime.MinValue : DateTime.Parse(startTime),
+                    StartTime = scheduleProgram.AirDateTime,
                     //TvRating is determined in the class itself to combine with the program content ratings
                     IsSigned = scheduleProgram.Signed
                 });
@@ -421,10 +384,12 @@ namespace epg123.sdJson2mxf
         {
             return (from station in config.StationId ?? new List<SdChannelDownload>() where station.StationId == stationId select station.HdOverride).FirstOrDefault();
         }
+
         private static bool CheckSdOverride(string stationId)
         {
             return (from station in config.StationId ?? new List<SdChannelDownload>() where station.StationId == stationId select station.SdOverride).FirstOrDefault();
         }
+
         private static bool CheckSuppressWarnings(string callsign)
         {
             if (suppressedPrefixes.Contains("*")) return true;

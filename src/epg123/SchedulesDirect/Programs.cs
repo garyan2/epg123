@@ -51,7 +51,7 @@ namespace epg123.SchedulesDirect
         public ProgramEventDetails EventDetails { get; set; }
 
         [JsonProperty("metadata")]
-        public List<Dictionary<string, ProgramMetadataProvider>> Metadata { get; set; }
+        public Dictionary<string, ProgramMetadataProvider>[] Metadata { get; set; }
 
         [JsonProperty("originalAirDate")]
         public DateTime OriginalAirDate { get; set; } = DateTime.MinValue;

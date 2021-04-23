@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Windows.Forms;
 using epg123.MxfXml;
 
 namespace epg123.sdJson2mxf
@@ -12,52 +13,38 @@ namespace epg123.sdJson2mxf
 
         private static void InitializeKeywordGroups()
         {
-            for (var i = 0; i < Groups.Length; ++i)
+            foreach (var group in Groups)
             {
-                SdMxf.With.KeywordGroups.Add(new MxfKeywordGroup() { Index = i + 1, Alpha = "m1" });
-                SdMxf.With.KeywordGroups[i].GetKeywordId(Groups[i]);
-                SdMxf.With.KeywordGroups[i].Index = (i + 1) * 1000;
-                SdMxf.With.KeywordGroups[i].GetKeywordId("All");
+                SdMxf.GetKeywordGroup(group, "m1");
             }
         }
 
         private static bool BuildKeywords()
         {
-            for (var groupIdx = 0; groupIdx < Groups.Length; ++groupIdx)
+            foreach (var group in SdMxf.With.KeywordGroups.ToList())
             {
-                // build keywords from keywordgroups
-                foreach (var category in SdMxf.With.KeywordGroups[groupIdx].Cats)
+                // create initial keywords for keyword group
+                SdMxf.With.Keywords.AddRange(new List<MxfKeyword>
                 {
-                    SdMxf.With.Keywords.Add(new MxfKeyword()
-                    {
-                        Word = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(category.Key.ToLower()),
-                        Id = category.Value
-                    });
+                    new MxfKeyword { Index = group.Index, Word = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(Groups[group.Index - 1]) },
+                    new MxfKeyword { Index = group.Index * 1000, Word = "All" }
+                });
+
+                // add the keywords
+                foreach (var keyword in group.mxfKeywords)
+                {
+                    SdMxf.With.Keywords.Add(keyword);
                 }
 
-                // create an overflow group to give us a possible 200 categories per group
-                var overflow = groupIdx + Groups.Length;
-                SdMxf.With.KeywordGroups.Add(new MxfKeywordGroup() { Index = groupIdx + 1, Alpha = string.Empty });
-                SdMxf.With.KeywordGroups[overflow].GetKeywordId(Groups[groupIdx]);
-                SdMxf.With.KeywordGroups[overflow].Index = (groupIdx + 1) * 1000;
-                SdMxf.With.KeywordGroups[overflow].GetKeywordId("All");
-
-                // populate the overflow group starting with the 100th category
-                for (var i = 99; i < SdMxf.With.KeywordGroups[groupIdx].Sorted.Count; ++i)
-                {
-                    SdMxf.With.KeywordGroups[overflow].Cats.Add(SdMxf.With.KeywordGroups[groupIdx].Sorted.ElementAt(i).Key,
-                                                                   SdMxf.With.KeywordGroups[groupIdx].Sorted.ElementAt(i).Value);
-                }
+                // create and populate an overflow for this group
+                SdMxf.With.KeywordGroups.Add(new MxfKeywordGroup { Index = group.Index });
+                if (group.mxfKeywords.Count <= 99) continue;
+                var overflow = SdMxf.With.KeywordGroups.Last();
+                overflow.mxfKeywords = group.mxfKeywords.OrderBy(k => k.Word).Skip(99).Take(99).ToList();
             }
 
-            // now reverse order all keywordgroups in order to display properly in WMC
-            var newGroups = new List<MxfKeywordGroup>();
-            for (var i = 0; i < Groups.Length; ++i)
-            {
-                newGroups.Add(SdMxf.With.KeywordGroups[Groups.Length + i]);
-                newGroups.Add(SdMxf.With.KeywordGroups[i]);
-            }
-            SdMxf.With.KeywordGroups = newGroups;
+            // now sort all keyword groups in order to display properly in WMC
+            SdMxf.With.KeywordGroups = SdMxf.With.KeywordGroups.OrderBy(g => g.Index).ThenBy(g => g.Alpha).ToList();
             Logger.WriteVerbose("Completed compiling keywords and keyword groups.");
             return true;
         }

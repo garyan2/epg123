@@ -30,6 +30,7 @@ namespace epg123.MxfXml
 
         [XmlIgnore] public int Index;
         [XmlIgnore] public string SeriesId;
+        [XmlIgnore] public string UidOverride;
         [XmlIgnore] public string ProtoTypicalProgram;
         [XmlIgnore] public MxfGuideImage mxfGuideImage;
 
@@ -53,7 +54,7 @@ namespace epg123.MxfXml
         [XmlAttribute("uid")]
         public string Uid
         {
-            get => $"!Series!{SeriesId}";
+            get => string.IsNullOrEmpty(UidOverride) ? $"!Series!{SeriesId}" : $"!Series!{UidOverride}";
             set { }
         }
 
@@ -113,7 +114,7 @@ namespace epg123.MxfXml
         [XmlAttribute("guideImage")]
         public string GuideImage
         {
-            get => mxfGuideImage?.ToString();
+            get => mxfGuideImage?.ToString() ?? "";
             set { }
         }
 

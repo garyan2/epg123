@@ -1376,14 +1376,14 @@ namespace epg123
                 if (!cbXmltv.Checked)
                 {
                     ckUrlLogos.Enabled = ckLocalLogos.Enabled = ckSubstitutePath.Enabled = txtSubstitutePath.Enabled = false;
-                    numFillerDuration.Enabled = lblFillerDuration.Enabled = lblFillerDescription.Enabled = rtbFillerDescription.Enabled = false;
+                    numFillerDuration.Enabled = lblFillerDuration.Enabled = rtbFillerDescription.Enabled = false;
                 }
                 else
                 {
                     ckUrlLogos.Enabled = ckLocalLogos.Enabled = ckChannelLogos.Checked;
                     ckSubstitutePath.Enabled = (ckLocalLogos.Checked && ckChannelLogos.Checked);
                     txtSubstitutePath.Enabled = (ckSubstitutePath.Checked && ckLocalLogos.Checked && ckChannelLogos.Checked);
-                    numFillerDuration.Enabled = lblFillerDuration.Enabled = lblFillerDescription.Enabled = rtbFillerDescription.Enabled = ckXmltvFillerData.Checked;
+                    numFillerDuration.Enabled = lblFillerDuration.Enabled = rtbFillerDescription.Enabled = ckXmltvFillerData.Checked;
                 }
             }
             else if (sender.Equals(ckChannelNumbers))
@@ -1429,7 +1429,7 @@ namespace epg123
             }
             else if (sender.Equals(ckXmltvFillerData))
             {
-                numFillerDuration.Enabled = lblFillerDuration.Enabled = lblFillerDescription.Enabled = rtbFillerDescription.Enabled = ckXmltvFillerData.Checked && cbXmltv.Checked;
+                numFillerDuration.Enabled = lblFillerDuration.Enabled = rtbFillerDescription.Enabled = ckXmltvFillerData.Checked && cbXmltv.Checked;
                 Config.XmltvAddFillerData = ckXmltvFillerData.Checked;
             }
             else if (sender.Equals(numFillerDuration))

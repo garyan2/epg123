@@ -24,6 +24,7 @@ namespace epg123.MxfXml
         public override string ToString() { return Id; }
 
         [XmlIgnore] public int Index;
+        [XmlIgnore] public string UidOverride;
 
         /// <summary>
         /// An ID that is unique to the document and defines this element.
@@ -50,7 +51,7 @@ namespace epg123.MxfXml
         [XmlAttribute("uid")]
         public string Uid
         {
-            get => ("!Person!" + Name);
+            get => string.IsNullOrEmpty(UidOverride) ? $"!Person!{Name}" : $"!Person!{UidOverride}";
             set { }
         }
     }

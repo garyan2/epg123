@@ -24,7 +24,6 @@ namespace epg123.SchedulesDirect
         private static long totalBytes;
 
         public static string JsonBaseUrl = @"https://json.schedulesdirect.org";
-        //public static string JsonBaseUrl = @"http://54.172.30.163";
         public static string JsonApi = @"/20141201/";
 
         public static string ErrorString { get; set; }

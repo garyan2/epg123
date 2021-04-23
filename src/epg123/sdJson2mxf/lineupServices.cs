@@ -71,7 +71,7 @@ namespace epg123.sdJson2mxf
             ReportProgress();
 
             // process lineups
-            Logger.WriteMessage($"Entering buildLineupServices() for {clientLineups.Lineups.Count} lineups.");
+            Logger.WriteMessage($"Entering BuildLineupServices() for {clientLineups.Lineups.Count} lineups.");
             foreach (var clientLineup in clientLineups.Lineups)
             {
                 var flagCustom = (!string.IsNullOrEmpty(clientLineup.Uri) && clientLineup.Uri.Equals("CUSTOM"));
@@ -84,12 +84,9 @@ namespace epg123.sdJson2mxf
                     lineupMap = SdApi.GetStationChannelMap(clientLineup.Lineup);
                     if (lineupMap == null) continue;
 
-                    foreach (var station in lineupMap.Stations)
+                    foreach (var station in lineupMap.Stations.Where(station => !AllStations.ContainsKey(station.StationId)))
                     {
-                        if (!AllStations.ContainsKey(station.StationId))
-                        {
-                            AllStations.Add(station.StationId, station);
-                        }
+                        AllStations.Add(station.StationId, station);
                     }
                 }
 
@@ -140,7 +137,7 @@ namespace epg123.sdJson2mxf
                 {
                     Index = lineupIndex + 1,
                     LineupId = clientLineup.Lineup,
-                    Name = "EPG123 " + clientLineup.Name + " (" + clientLineup.Location + ")"
+                    Name = $"EPG123 {clientLineup.Name} ({clientLineup.Location})"
                 });
 
                 // build the services and lineup
@@ -161,8 +158,9 @@ namespace epg123.sdJson2mxf
                     var mxfService = SdMxf.GetService(station.StationId);
                     if (string.IsNullOrEmpty(mxfService.CallSign))
                     {
-                        // instantiate stationLogo
+                        // instantiate stationLogo and override uid
                         StationImage stationLogo = null;
+                        mxfService.UidOverride = $"EPG123_{station.StationId}";
 
                         // determine station name for ATSC stations
                         var atsc = false;
@@ -401,7 +399,7 @@ namespace epg123.sdJson2mxf
 
             if (SdMxf.With.Services.Count > 0)
             {
-                Logger.WriteMessage("Exiting buildLineupServices(). SUCCESS.");
+                Logger.WriteMessage("Exiting BuildLineupServices(). SUCCESS.");
                 return true;
             }
             else

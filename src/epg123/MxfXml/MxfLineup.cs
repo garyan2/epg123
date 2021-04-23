@@ -9,6 +9,7 @@ namespace epg123.MxfXml
 
         [XmlIgnore] public int Index;
         [XmlIgnore] public string LineupId;
+        [XmlIgnore] public string UidOverride;
 
         /// <summary>
         /// An ID that is unique to the document and defines this element.
@@ -29,7 +30,7 @@ namespace epg123.MxfXml
         [XmlAttribute("uid")]
         public string Uid
         {
-            get => $"!MCLineup!{LineupId}";
+            get => string.IsNullOrEmpty(UidOverride) ? $"!MCLineup!{LineupId}" : $"!MCLineup!{UidOverride}";
             set { }
         }
 
@@ -46,7 +47,7 @@ namespace epg123.MxfXml
         [XmlAttribute("primaryProvider")]
         public string PrimaryProvider
         {
-            get => Index == 1 ? "!MCLineup!MainLineup" : null;
+            get => Index <= 1 ? "!MCLineup!MainLineup" : null;
             set { }
         }
 

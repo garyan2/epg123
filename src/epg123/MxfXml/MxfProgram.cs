@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Serialization;
 
 namespace epg123.MxfXml
@@ -28,9 +29,11 @@ namespace epg123.MxfXml
 
         [XmlIgnore] public int Index;
         [XmlIgnore] public string ProgramId;
+        [XmlIgnore] public string UidOverride;
         [XmlIgnore] public MxfSeriesInfo mxfSeriesInfo;
         [XmlIgnore] public MxfSeason mxfSeason;
         [XmlIgnore] public MxfGuideImage mxfGuideImage;
+        [XmlIgnore] public List<MxfKeyword> mxfKeywords = new List<MxfKeyword>();
         [XmlIgnore] public bool IsAdultOnly;
 
         [XmlIgnore] public Dictionary<string, dynamic> extras = new Dictionary<string, dynamic>();
@@ -54,7 +57,7 @@ namespace epg123.MxfXml
         [XmlAttribute("uid")]
         public string Uid
         {
-            get => $"!Program!{ProgramId.Substring(0, 10)}_{ProgramId.Substring(10)}";
+            get => string.IsNullOrEmpty(UidOverride) ? $"!Program!{ProgramId}" : $"!Program!{UidOverride}";
             set { }
         }
 
@@ -138,7 +141,11 @@ namespace epg123.MxfXml
         /// A comma-delimited list of keyword IDs. This value specifies the Keyword attributes that this program has.
         /// </summary>
         [XmlAttribute("keywords")]
-        public string Keywords { get; set; }
+        public string Keywords
+        {
+            get => string.Join(",", mxfKeywords.Select(k => k.Id).ToArray());
+            set { }
+        }
 
         /// <summary>
         /// The ID of the season that this program belongs to, if any.
@@ -480,7 +487,7 @@ namespace epg123.MxfXml
         [XmlAttribute("guideImage")]
         public string GuideImage
         {
-            get => mxfGuideImage?.ToString();
+            get => mxfGuideImage?.ToString() ?? "";
             set { }
         }
 

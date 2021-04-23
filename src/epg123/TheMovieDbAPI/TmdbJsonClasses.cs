@@ -3,13 +3,13 @@ using Newtonsoft.Json;
 
 namespace epg123.TheMovieDbAPI
 {
-    internal class TmdbMovieListResponse
+    public class TmdbMovieListResponse
     {
         [JsonProperty("page")]
         public int Page { get; set; }
 
         [JsonProperty("results")]
-        public IList<TmdbMovieResults> Results { get; set; }
+        public List<TmdbMovieResults> Results { get; set; }
 
         [JsonProperty("total_pages")]
         public int TotalPages { get; set; }
@@ -18,7 +18,7 @@ namespace epg123.TheMovieDbAPI
         public int TotalResults { get; set; }
     }
 
-    internal class TmdbMovieResults
+    public class TmdbMovieResults
     {
         [JsonProperty("adult")]
         public bool Adult { get; set; }
@@ -51,16 +51,16 @@ namespace epg123.TheMovieDbAPI
         public int VoteCount { get; set; }
     }
 
-    internal class TmdbConfiguration
+    public class TmdbConfiguration
     {
         [JsonProperty("images")]
         public TmdbImagesConfiguration Images { get; set; }
 
         [JsonProperty("change_keys")]
-        public IList<string> ChangeKeys { get; set; }
+        public List<string> ChangeKeys { get; set; }
     }
 
-    internal class TmdbImagesConfiguration
+    public class TmdbImagesConfiguration
     {
         [JsonProperty("base_url")]
         public string BaseUrl { get; set; }
@@ -69,18 +69,18 @@ namespace epg123.TheMovieDbAPI
         public string SecureBaseUrl { get; set; }
 
         [JsonProperty("backdrop_sizes")]
-        public IList<string> BackdropSizes { get; set; }
+        public List<string> BackdropSizes { get; set; }
 
         [JsonProperty("logo_sizes")]
-        public IList<string> LogoSizes { get; set; }
+        public List<string> LogoSizes { get; set; }
 
         [JsonProperty("poster_sizes")]
-        public IList<string> PosterSizes { get; set; }
+        public List<string> PosterSizes { get; set; }
 
         [JsonProperty("profile_sizes")]
-        public IList<string> ProfileSizes { get; set; }
+        public List<string> ProfileSizes { get; set; }
 
         [JsonProperty("still_sizes")]
-        public IList<string> StillSizes { get; set; }
+        public List<string> StillSizes { get; set; }
     }
 }

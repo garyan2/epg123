@@ -6,7 +6,7 @@ namespace epg123.MxfXml
     public partial class Mxf
     {
         private readonly Dictionary<string, MxfSeason> _seasons = new Dictionary<string, MxfSeason>();
-        public MxfSeason GetSeasonId(string seriesId, int seasonNumber, string protoTypicalProgram)
+        public MxfSeason GetSeason(string seriesId, int seasonNumber, string protoTypicalProgram)
         {
             if (_seasons.TryGetValue($"{seriesId}_{seasonNumber}", out var season)) return season;
             With.Seasons.Add(season = new MxfSeason
@@ -27,6 +27,7 @@ namespace epg123.MxfXml
 
         [XmlIgnore] public int Index;
         [XmlIgnore] public string ProtoTypicalProgram;
+        [XmlIgnore] public string UidOverride;
         [XmlIgnore] public MxfGuideImage mxfGuideImage;
         [XmlIgnore] public MxfSeriesInfo mxfSeriesInfo;
 
@@ -50,7 +51,7 @@ namespace epg123.MxfXml
         [XmlAttribute("uid")]
         public string Uid
         {
-            get => $"!Season!{mxfSeriesInfo.SeriesId}_{SeasonNumber}";
+            get => string.IsNullOrEmpty(UidOverride) ? $"!Season!{mxfSeriesInfo.SeriesId}_{SeasonNumber}" : $"!Season!{UidOverride}";
             set { }
         }
 
@@ -67,7 +68,7 @@ namespace epg123.MxfXml
         [XmlAttribute("guideImage")]
         public string GuideImage
         {
-            get => mxfGuideImage?.ToString();
+            get => mxfGuideImage?.ToString() ?? "";
             set { }
         }
 

@@ -1,37 +1,32 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Xml.Serialization;
 
 namespace epg123.MxfXml
 {
     public class MxfScheduleEntries
     {
-        public DateTime EndTime
-        {
-            get
-            {
-                if (ScheduleEntry.Count <= 0) return DateTime.MinValue;
-                var s = ScheduleEntry.Count;
-                var totalSeconds = 0;
-                do
-                {
-                    totalSeconds += ScheduleEntry[--s].Duration;
-                } while (ScheduleEntry[s].StartTime == DateTime.MinValue);
-                return ScheduleEntry[s].StartTime + TimeSpan.FromSeconds(totalSeconds);
-            }
-        }
-
         [XmlAttribute("service")]
         public string Service { get; set; }
 
         [XmlElement("ScheduleEntry")]
         public List<MxfScheduleEntry> ScheduleEntry { get; set; }
+        public bool ShouldSerializeScheduleEntry()
+        {
+            var endTime = DateTime.MinValue;
+            foreach (var entry in ScheduleEntry)
+            {
+                if (entry.StartTime != endTime) entry.IncludeStartTime = true;
+                endTime = entry.StartTime + TimeSpan.FromSeconds(entry.Duration);
+            }
+            return true;
+        }
     }
 
     public class MxfScheduleEntry
     {
         [XmlIgnore] public MxfProgram mxfProgram;
+        [XmlIgnore] public bool IncludeStartTime;
 
         private int _tvRating;
 
@@ -87,7 +82,7 @@ namespace epg123.MxfXml
         /// </summary>
         [XmlAttribute("startTime")]
         public DateTime StartTime { get; set; }
-        public bool ShouldSerializeStartTime() { return StartTime != DateTime.MinValue; }
+        public bool ShouldSerializeStartTime() { return IncludeStartTime; }
 
         /// <summary>
         /// The duration of the broadcast, in seconds.

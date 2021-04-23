@@ -88,11 +88,11 @@ namespace epg123.sdJson2mxf
                 ProcessSeriesDescriptionsResponses();
                 if (processedObjects != totalObjects)
                 {
-                    Logger.WriteInformation("Problem occurred during buildGenericSeriesInfoDescriptions(). Did not process all series descriptions.");
+                    Logger.WriteInformation("Problem occurred during BuildGenericSeriesInfoDescriptions(). Did not process all series descriptions.");
                 }
             }
             Logger.WriteInformation($"Processed {processedObjects} series descriptions.");
-            Logger.WriteMessage("Exiting buildAllGenericSeriesInfoDescriptions(). SUCCESS.");
+            Logger.WriteMessage("Exiting BuildAllGenericSeriesInfoDescriptions(). SUCCESS.");
             seriesDescriptionQueue = null; seriesDescriptionResponses = null;
             return true;
         }
@@ -162,7 +162,7 @@ namespace epg123.sdJson2mxf
             seriesDescriptionQueue = new List<string>();
 
             if (!config.ModernMediaUiPlusSupport) return true;
-            Logger.WriteMessage($"Entering buildAllExtendedSeriesDataForUiPlus() for {totalObjects = SdMxf.With.SeriesInfos.Count} series.");
+            Logger.WriteMessage($"Entering BuildAllExtendedSeriesDataForUiPlus() for {totalObjects = SdMxf.With.SeriesInfos.Count} series.");
 
             // read in cached ui+ extended information
             var oldPrograms = new Dictionary<string, ModernMediaUiPlusPrograms>();
@@ -220,12 +220,12 @@ namespace epg123.sdJson2mxf
                 for (var i = 0; i < seriesDescriptionQueue.Count; i += MaxQueries)
                 {
                     if (GetExtendedSeriesDataForUiPlus(i)) continue;
-                    Logger.WriteInformation("Problem occurred during buildAllExtendedSeriesDataForUiPlus(). Exiting.");
+                    Logger.WriteInformation("Problem occurred during BuildAllExtendedSeriesDataForUiPlus(). Exiting.");
                     return true;
                 }
             }
             Logger.WriteInformation($"Processed {processedObjects} extended series descriptions.");
-            Logger.WriteMessage("Exiting buildAllExtendedSeriesDataForUiPlus(). SUCCESS.");
+            Logger.WriteMessage("Exiting BuildAllExtendedSeriesDataForUiPlus(). SUCCESS.");
             return true;
         }
         private static bool GetExtendedSeriesDataForUiPlus(int start = 0)
