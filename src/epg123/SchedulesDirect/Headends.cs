@@ -18,7 +18,7 @@ namespace epg123.SchedulesDirect
             try
             {
                 Logger.WriteVerbose($"Successfully retrieved the headends for {country} and postal code {postalcode}.");
-                return JsonConvert.DeserializeObject<List<Headend>>(sr);
+                return JsonConvert.DeserializeObject<List<Headend>>(sr, jSettings);
             }
             catch (Exception ex)
             {

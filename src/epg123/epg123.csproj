@@ -97,6 +97,12 @@
     <Compile Include="CompressXmlFiles.cs" />
     <Compile Include="CustomLineups.cs" />
     <Compile Include="epgCache.cs" />
+    <Compile Include="frmCustomLineup.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmCustomLineup.Designer.cs">
+      <DependentUpon>frmCustomLineup.cs</DependentUpon>
+    </Compile>
     <Compile Include="frmLogos.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -229,6 +235,9 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="frmCustomLineup.resx">
+      <DependentUpon>frmCustomLineup.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="frmLogos.resx">
       <DependentUpon>frmLogos.cs</DependentUpon>
     </EmbeddedResource>

@@ -16,7 +16,7 @@ namespace epg123.SchedulesDirect
 
             try
             {
-                var resp = JsonConvert.DeserializeObject<AddRemoveLineupResponse>(sr);
+                var resp = JsonConvert.DeserializeObject<AddRemoveLineupResponse>(sr, jSettings);
                 switch (resp.Code)
                 {
                     case 0:

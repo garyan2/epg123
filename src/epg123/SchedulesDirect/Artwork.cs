@@ -20,7 +20,7 @@ namespace epg123.SchedulesDirect
             try
             {
                 Logger.WriteVerbose($"Successfully retrieved artwork info for {request.Length,3} programs. ({GetStringTimeAndByteLength(DateTime.Now - dtStart, sr.Length)})");
-                return JsonConvert.DeserializeObject<List<ProgramMetadata>>(sr);
+                return JsonConvert.DeserializeObject<List<ProgramMetadata>>(sr, jSettings);
             }
             catch (Exception ex)
             {
@@ -60,11 +60,11 @@ namespace epg123.SchedulesDirect
         [JsonProperty("category")]
         public string Category { get; set; }
 
-        //[JsonProperty("text")]
-        //public string Text { get; set; }
+        [JsonProperty("text")]
+        public string Text { get; set; }
 
-        //[JsonProperty("primary")]
-        //public string Primary { get; set; }
+        [JsonProperty("primary")]
+        public string Primary { get; set; }
 
         [JsonProperty("tier")]
         public string Tier { get; set; }

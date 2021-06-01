@@ -17,7 +17,7 @@ namespace epg123.SchedulesDirect
 
             try
             {
-                var ret = JsonConvert.DeserializeObject<LineupResponse>(sr);
+                var ret = JsonConvert.DeserializeObject<LineupResponse>(sr, jSettings);
                 if (ret.Code == 0)
                 {
                     Logger.WriteVerbose("Successfully requested listing of subscribed lineups from Schedules Direct.");

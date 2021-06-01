@@ -1,5 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Globalization;
 using System.Xml.Serialization;
 using System.Linq;
 
@@ -27,6 +27,7 @@ namespace epg123.MxfXml
         private readonly Dictionary<string, MxfKeyword> _keywords = new Dictionary<string, MxfKeyword>();
         public MxfKeyword GetKeyword(string word)
         {
+            word = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(word);
             if (_keywords.TryGetValue(word, out var keyword)) return keyword;
             mxfKeywords.Add(keyword = new MxfKeyword
             {

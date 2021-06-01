@@ -18,7 +18,7 @@ namespace epg123.SchedulesDirect
             try
             {
                 Logger.WriteVerbose($"Successfully retrieved list of available transmitters from Schedules Direct for country {country}.");
-                return JsonConvert.DeserializeObject<Dictionary<string, string>>(sr);
+                return JsonConvert.DeserializeObject<Dictionary<string, string>>(sr, jSettings);
             }
             catch (Exception ex)
             {

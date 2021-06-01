@@ -342,7 +342,6 @@ namespace epg123.sdJson2mxf
                 mxfProgram.mxfKeywords.Add(new MxfKeyword { Index = premiere.Index, Word = "Premieres"} );
                 if (mxfProgram.IsSeasonPremiere) mxfProgram.mxfKeywords.Add(premiere.GetKeyword("Season Premiere"));
                 if (mxfProgram.IsSeriesPremiere) mxfProgram.mxfKeywords.Add(premiere.GetKeyword("Series Premiere"));
-                if (mxfProgram.IsSeasonPremiere) mxfProgram.Keywords += $",{premiere.GetKeyword("Season Premiere")}";
             }
             else if (mxfProgram.extras["premiere"])
             {
@@ -483,6 +482,7 @@ namespace epg123.sdJson2mxf
                     {
                         if (providers.TryGetValue("TheTVDB", out provider) || providers.TryGetValue("TVmaze", out provider))
                         {
+                            if (provider.SeasonNumber == 0 && provider.EpisodeNumber == 0) continue;
                         }
                     }
                     if (provider == null && !providers.TryGetValue("Gracenote", out provider)) continue;

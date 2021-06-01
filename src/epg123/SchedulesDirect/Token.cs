@@ -22,7 +22,7 @@ namespace epg123.SchedulesDirect
 
             try
             {
-                var ret = JsonConvert.DeserializeObject<TokenResponse>(sr);
+                var ret = JsonConvert.DeserializeObject<TokenResponse>(sr, jSettings);
                 if (ret.Code == 0)
                 {
                     Logger.WriteVerbose($"Token request successful. serverID: {ret.ServerId} , datetime: {ret.Datetime:s}Z");

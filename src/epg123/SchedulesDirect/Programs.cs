@@ -19,7 +19,7 @@ namespace epg123.SchedulesDirect
             try
             {
                 Logger.WriteVerbose($"Successfully retrieved {request.Length,4} program descriptions. ({GetStringTimeAndByteLength(DateTime.Now - dtStart, sr.Length)})");
-                return JsonConvert.DeserializeObject<List<Program>>(sr);
+                return JsonConvert.DeserializeObject<List<Program>>(sr, jSettings);
             }
             catch (Exception ex)
             {

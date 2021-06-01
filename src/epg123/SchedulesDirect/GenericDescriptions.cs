@@ -19,7 +19,7 @@ namespace epg123.SchedulesDirect
             try
             {
                 Logger.WriteVerbose($"Successfully retrieved {request.Length,3} generic program descriptions. ({GetStringTimeAndByteLength(DateTime.Now - dtStart, sr.Length)})");
-                return JsonConvert.DeserializeObject<Dictionary<string, GenericDescription>>(sr);
+                return JsonConvert.DeserializeObject<Dictionary<string, GenericDescription>>(sr, jSettings);
             }
             catch (Exception ex)
             {

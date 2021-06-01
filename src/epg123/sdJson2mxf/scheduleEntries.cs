@@ -309,7 +309,7 @@ namespace epg123.sdJson2mxf
                 mxfProgram.IsSeriesFinale |= Helper.StringContains(scheduleProgram.IsPremiereOrFinale, "Series Finale");
                 mxfProgram.IsSeriesPremiere |= Helper.StringContains(scheduleProgram.IsPremiereOrFinale, "Series Premiere");
                 if (!mxfProgram.extras.ContainsKey("premiere")) mxfProgram.extras.Add("premiere", false);
-                else mxfProgram.extras["premiere"] |= scheduleProgram.Premiere;
+                if (scheduleProgram.Premiere) mxfProgram.extras["premiere"] = true; // used only for movie and miniseries premieres
 
                 // grab any tvratings from desired countries
                 var scheduleTvRatings = new Dictionary<string, string>();
@@ -341,6 +341,7 @@ namespace epg123.sdJson2mxf
                     IsLetterbox = Helper.TableContains(scheduleProgram.VideoProperties, "letterbox"),
                     IsLive = Helper.StringContains(scheduleProgram.LiveTapeDelay, "live"),
                     //IsLiveSports = null,
+                    IsPremiere = scheduleProgram.Premiere || Helper.StringContains(scheduleProgram.IsPremiereOrFinale, "premiere"),
                     IsRepeat = !scheduleProgram.New,
                     IsSap = Helper.TableContains(scheduleProgram.AudioProperties, "sap"),
                     IsSubtitled = Helper.TableContains(scheduleProgram.AudioProperties, "subtitled"),

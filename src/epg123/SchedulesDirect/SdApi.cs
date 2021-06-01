@@ -23,6 +23,9 @@ namespace epg123.SchedulesDirect
         private static string myToken;
         private static long totalBytes;
 
+        private static readonly JsonSerializerSettings jSettings = new JsonSerializerSettings
+            {NullValueHandling = NullValueHandling.Ignore};
+
         public static string JsonBaseUrl = @"https://json.schedulesdirect.org";
         public static string JsonApi = @"/20141201/";
 

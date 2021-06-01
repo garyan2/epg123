@@ -18,7 +18,7 @@ namespace epg123.SchedulesDirect
             try
             {
                 Logger.WriteVerbose($"Successfully retrieved the channels in lineup {lineup} for preview.");
-                return JsonConvert.DeserializeObject<List<LineupPreviewChannel>>(sr.Replace("[],", string.Empty));
+                return JsonConvert.DeserializeObject<List<LineupPreviewChannel>>(sr, jSettings);
             }
             catch (Exception ex)
             {

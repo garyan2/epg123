@@ -17,7 +17,7 @@ namespace epg123.SchedulesDirect
 
             try
             {
-                var ret = JsonConvert.DeserializeObject<UserStatus>(sr);
+                var ret = JsonConvert.DeserializeObject<UserStatus>(sr, jSettings);
                 if (ret.Code == 0)
                 {
                     Logger.WriteVerbose($"Status request successful. account expires: {ret.Account.Expires:s}Z , lineups: {ret.Lineups.Count}/{ret.Account.MaxLineups} , lastDataUpdate: {ret.LastDataUpdate:s}Z");

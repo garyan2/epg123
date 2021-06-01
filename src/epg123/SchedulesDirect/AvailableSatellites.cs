@@ -17,7 +17,7 @@ namespace epg123.SchedulesDirect
             try
             {
                 Logger.WriteVerbose("Successfully retrieved list of available satellites from Schedules Direct.");
-                return JsonConvert.DeserializeObject<dynamic>(sr);
+                return JsonConvert.DeserializeObject<dynamic>(sr, jSettings);
             }
             catch (Exception ex)
             {

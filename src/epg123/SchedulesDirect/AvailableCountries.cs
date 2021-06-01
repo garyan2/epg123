@@ -18,7 +18,7 @@ namespace epg123.SchedulesDirect
             try
             {
                 Logger.WriteVerbose("Successfully retrieved list of available countries from Schedules Direct.");
-                return JsonConvert.DeserializeObject<Dictionary<string, List<Country>>>(sr);
+                return JsonConvert.DeserializeObject<Dictionary<string, List<Country>>>(sr, jSettings);
             }
             catch (Exception ex)
             {

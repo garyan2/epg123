@@ -12,6 +12,11 @@ namespace epg123
 
     public class CustomLineup
     {
+        public override string ToString()
+        {
+            return $"{Name} ({Location})";
+        }
+
         [XmlAttribute("name")]
         public string Name { get; set; }
 

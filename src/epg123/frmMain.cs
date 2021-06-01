@@ -1134,7 +1134,7 @@ namespace epg123
             }
             else if (Config.PreferredLogoStyle.Equals("NONE", StringComparison.OrdinalIgnoreCase))
             {
-                // prevent remaining logos from possibly being used
+                if (File.Exists($"{path}.png")) path += ".png";
             }
             else if (File.Exists($"{path}_{Config.PreferredLogoStyle.Substring(0, 1)}.png"))
             {
@@ -1348,6 +1348,9 @@ namespace epg123
 
         private void btnCustomLineup_ButtonClick(object sender, EventArgs e)
         {
+            //var frm = new frmCustomLineup(_allAvailableStations.Select(station => _allStations[station]).ToList());
+            //frm.ShowDialog();
+
             MessageBox.Show($"This feature is not yet implemented. You can manually edit the custom lineup file \"{Helper.Epg123CustomLineupsXmlPath}\".",
                 "Not Implemented", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
