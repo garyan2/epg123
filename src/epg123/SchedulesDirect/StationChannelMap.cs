@@ -18,7 +18,7 @@ namespace epg123.SchedulesDirect
             try
             {
                 Logger.WriteVerbose($"Successfully retrieved the station mapping for lineup {lineup}.");
-                return JsonConvert.DeserializeObject<StationChannelMap>(sr, jSettings);
+                return JsonConvert.DeserializeObject<StationChannelMap>(sr.Replace("[],", string.Empty), jSettings);
             }
             catch (Exception ex)
             {

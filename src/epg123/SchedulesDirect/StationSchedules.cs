@@ -19,7 +19,7 @@ namespace epg123.SchedulesDirect
             try
             {
                 Logger.WriteVerbose($"Successfully retrieved Md5s for {request.Length,3} station's daily schedules. ({GetStringTimeAndByteLength(DateTime.Now - dtStart, sr.Length)})");
-                return JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, ScheduleMd5Response>>>(sr, jSettings);
+                return JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, ScheduleMd5Response>>>(sr.Replace("[]", "{}"), jSettings);
             }
             catch (Exception ex)
             {
