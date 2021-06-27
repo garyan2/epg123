@@ -19,7 +19,6 @@ namespace epg123.SchedulesDirect
         };
 
         private static string userAgent;
-        private static string grabberVersion;
         private static string myToken;
         private static long totalBytes;
 
@@ -33,10 +32,9 @@ namespace epg123.SchedulesDirect
         public static int MaxLineups { get; set; }
         public static string TotalDownloadBytes => GetStringByteLength(totalBytes);
 
-        public static void Initialize(string agent, string version)
+        public static void Initialize(string agent)
         {
             userAgent = agent;
-            grabberVersion = version;
         }
 
         private static string GetRequestResponse(methods method, string uri, object jsonRequest = null, bool tkRequired = true)

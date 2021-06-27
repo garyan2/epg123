@@ -53,7 +53,7 @@ namespace epg123.sdJson2mxf
                     seriesId = series.SeriesId;
                 }
 
-                if (!refresh && epgCache.JsonFiles.ContainsKey(seriesId) && epgCache.JsonFiles[seriesId]?.Images != null)
+                if (!refresh && epgCache.JsonFiles.ContainsKey(seriesId) && !string.IsNullOrEmpty(epgCache.JsonFiles[seriesId].Images))
                 {
                     ++processedObjects; ReportProgress();
                     if (epgCache.JsonFiles[seriesId].Images == string.Empty) continue;
@@ -189,7 +189,7 @@ namespace epg123.sdJson2mxf
             {
                 var imgAspects = images.Where(arg => arg.Aspect.Equals(aspect));
 
-                var links = new ProgramArtwork[10];
+                var links = new ProgramArtwork[11];
                 foreach (var image in imgAspects)
                 {
                     switch (image.Category.ToLower())
@@ -221,12 +221,14 @@ namespace epg123.sdJson2mxf
                         case "banner-l3":   // stock photo image with plain text
                             if (links[8] == null) links[8] = image;
                             break;
+                        case "iconic":      // representative series/season/episode image, no text
+                            if (tiers.Contains("series") && links[9] == null) links[9] = image;
+                            break;
                         case "staple":      // the staple image is intended to cover programs which do not have a unique banner image
-                            if (links[9] == null) links[9] = image;
+                            if (links[10] == null) links[10] = image;
                             break;
                         case "banner-l1t":
-                        case "banner-lot":
-                        case "iconic":
+                        case "banner-lot":  // banner with Logo Only + Text indicating season number
                             break;
                     }
                 }

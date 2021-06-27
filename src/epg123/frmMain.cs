@@ -86,7 +86,7 @@ namespace epg123
             }
 
             // initialize the schedules direct api
-            SdApi.Initialize("EPG123", Helper.SdGrabberVersion);
+            SdApi.Initialize("EPG123");
 
             // complete the title bar label with version number
             Text += $" v{Helper.Epg123Version}";

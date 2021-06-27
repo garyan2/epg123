@@ -131,6 +131,7 @@
     <Compile Include="frmProgress.Designer.cs">
       <DependentUpon>frmProgress.cs</DependentUpon>
     </Compile>
+    <Compile Include="Github\GithubApi.cs" />
     <Compile Include="Helper.cs" />
     <Compile Include="ListViewSorter.cs" />
     <Compile Include="Logger.cs" />
@@ -298,6 +299,7 @@
   <ItemGroup>
     <None Include="Resources\EPG123_download.ico" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>

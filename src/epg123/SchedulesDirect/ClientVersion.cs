@@ -1,8 +1,5 @@
 ﻿using System;
-using System.IO;
-using System.Net;
-using System.Text;
-using System.Text.RegularExpressions;
+using epg123.Github;
 using Newtonsoft.Json;
 
 namespace epg123.SchedulesDirect
@@ -13,25 +10,20 @@ namespace epg123.SchedulesDirect
         {
             try
             {
-                ServicePointManager.SecurityProtocol |= (SecurityProtocolType)3072;
-                const string url = @"https://raw.github.com/garyan2/epg123/master/src/epg123/Properties/AssemblyInfo.cs";
-                var req = (HttpWebRequest)WebRequest.Create(url);
-                req.Timeout = 1000;
-                req.Method = "GET";
-                var sr = new StreamReader(req.GetResponse().GetResponseStream(), Encoding.UTF8).ReadToEnd();
-
-                var m = Regex.Match(sr, @"AssemblyVersion\(""(?<version>[0-9]{1,}.[0-9]{1,}.[0-9]{1,}.[0-9]{1,})""\)");
-                if (m.Success)
+                var github = new GithubApi();
+                var release = github.GetLatestReleaseInfo();
+                if (release != null)
                 {
-                    if (Helper.Epg123Version != m.Groups["version"].Value)
+                    if (Helper.Epg123Version != release.TagName.Replace("v", ""))
                     {
-                        Logger.WriteInformation($"epg123 is not up to date. Latest version is {m.Groups["version"].Value} and can be downloaded from http://epg123.garyan2.net/download.");
+                        Logger.WriteInformation($"epg123 is not up to date. Latest version is {release.TagName} and can be downloaded from {release.HtmlUrl}");
                     }
-
-                    if (!m.Groups["version"].Value.Contains(grabberVersion))
+                    return new ClientVersion
                     {
-                        return new ClientVersion { Version = m.Groups["version"].Value };
-                    }
+                        Client = "EPG123",
+                        Datetime = release.PublishedAt.ToLocalTime(),
+                        Version = release.TagName.Replace("v", "")
+                    };
                 }
             }
             catch (Exception ex)

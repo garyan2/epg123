@@ -21,7 +21,7 @@ namespace epg123.sdJson2mxf
         public static Mxf SdMxf = new Mxf
         {
             generatorName = "EPG123",
-            generatorDescription = "Electronic Program Guide in 1-2-3",
+            generatorDescription = $"Electronic Program Guide in 1-2-3 v{Helper.Epg123Version}",
             author = "GaRyan2",
             dataSource = "Schedules Direct"
         };
@@ -31,7 +31,7 @@ namespace epg123.sdJson2mxf
             var errString = string.Empty;
 
             // initialize schedules direct API
-            SdApi.Initialize("EPG123", Helper.SdGrabberVersion);
+            SdApi.Initialize("EPG123");
             SdMxf.InitializeMxf();
 
             // copy configuration to local variable
@@ -58,14 +58,10 @@ namespace epg123.sdJson2mxf
 
                 // check for latest version and update the display name that shows in About Guide
                 var scvr = SdApi.GetClientVersion();
-                if (scvr != null && !string.IsNullOrEmpty(scvr.Version))
+                if (scvr != null && scvr.Version != Helper.SdGrabberVersion)
                 {
-                    SdMxf.Providers[0].DisplayName += " v" + Helper.Epg123Version;
-                    if (Helper.SdGrabberVersion != scvr.Version)
-                    {
-                        SdMxf.Providers[0].DisplayName += $" (v{scvr.Version} Available)";
-                        BrandLogo.UpdateAvailable = true;
-                    }
+                    SdMxf.Providers[0].DisplayName += $" (v{scvr.Version} Available)";
+                    BrandLogo.UpdateAvailable = true;
                 }
 
                 // make sure cache directory exists
