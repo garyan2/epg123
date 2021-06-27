@@ -58,7 +58,7 @@ namespace epg123.sdJson2mxf
 
                 // check for latest version and update the display name that shows in About Guide
                 var scvr = SdApi.GetClientVersion();
-                if (scvr != null && scvr.Version != Helper.SdGrabberVersion)
+                if (scvr != null && scvr.Version != Helper.Epg123Version)
                 {
                     SdMxf.Providers[0].DisplayName += $" (v{scvr.Version} Available)";
                     BrandLogo.UpdateAvailable = true;

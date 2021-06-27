@@ -23,15 +23,6 @@ namespace epg123
 
         public static string Epg123Version => Assembly.GetEntryAssembly()?.GetName().Version.ToString();
 
-        public static string SdGrabberVersion
-        {
-            get
-            {
-                var version = Epg123Version.Split('.');
-                return $"{version[0]}.{version[1]}.{version[2]}";
-            }
-        }
-
         public static string BackupZipFile { get; set; }
         public static string OutputPathOverride { get; set; }
 

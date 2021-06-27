@@ -93,7 +93,7 @@ namespace epg123
 
             // check for updates
             var veresp = SdApi.GetClientVersion();
-            if (veresp != null && veresp.Version != Helper.SdGrabberVersion)
+            if (veresp != null && veresp.Version != Helper.Epg123Version)
             {
                 lblUpdate.Text = $"UPDATE AVAILABLE (v{veresp.Version})";
             }
