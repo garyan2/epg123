@@ -26,7 +26,7 @@ namespace epg123.sdJson2mxf
             foreach (var season in SdMxf.With.Seasons)
             {
                 var uid = $"{season.mxfSeriesInfo.SeriesId}_{season.SeasonNumber}";
-                if (epgCache.JsonFiles.ContainsKey(uid))
+                if (epgCache.JsonFiles.ContainsKey(uid) && !string.IsNullOrEmpty(epgCache.JsonFiles[uid].Images))
                 {
                     epgCache.JsonFiles[uid].Current = true;
                     ++processedObjects; ReportProgress();
@@ -91,7 +91,10 @@ namespace epg123.sdJson2mxf
 
                 // create a season entry in cache
                 var uid = $"{season.mxfSeriesInfo.SeriesId}_{season.SeasonNumber}";
-                epgCache.AddAsset(uid, null);
+                if (!epgCache.JsonFiles.ContainsKey(uid))
+                {
+                    epgCache.AddAsset(uid, null);
+                }
 
                 season.mxfGuideImage = GetGuideImageAndUpdateCache(artwork, ImageType.Season, uid);
             }

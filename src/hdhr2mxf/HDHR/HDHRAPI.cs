@@ -4,6 +4,7 @@ using System.IO;
 using System.Net;
 using System.Text;
 using System.Xml.Serialization;
+using epg123;
 using hdhr2mxf.XMLTV;
 using Newtonsoft.Json;
 
@@ -46,7 +47,7 @@ namespace hdhr2mxf.HDHR
             }
             catch (WebException wex)
             {
-                Console.WriteLine("DiscoverDevices(): " + wex.Message);
+                Logger.WriteError("DiscoverDevices(): " + wex.Message);
                 if (wex.Response == null) return null;
                 using (var sr = new StreamReader(wex.Response.GetResponseStream(), Encoding.UTF8))
                 {
@@ -55,7 +56,7 @@ namespace hdhr2mxf.HDHR
             }
             catch (Exception e)
             {
-                Console.WriteLine("DiscoverDevices(): " + e.Message);
+                Logger.WriteError("DiscoverDevices(): " + e.Message);
             }
             return null;
         }
@@ -71,16 +72,16 @@ namespace hdhr2mxf.HDHR
             }
             catch (WebException wex)
             {
-                Console.WriteLine("ConnectDevice(): " + wex.Message);
+                Logger.WriteError("ConnectDevice(): " + wex.Message);
                 if (wex.Response == null) return null;
                 using (var sr = new StreamReader(wex.Response.GetResponseStream(), Encoding.UTF8))
                 {
-                    Console.WriteLine(sr.ReadToEnd());
+                    Logger.WriteError(sr.ReadToEnd());
                 }
             }
             catch (Exception e)
             {
-                Console.WriteLine("ConnectDevice(): " + e.Message);
+                Logger.WriteError("ConnectDevice(): " + e.Message);
             }
             return null;
         }
@@ -96,16 +97,16 @@ namespace hdhr2mxf.HDHR
             }
             catch (WebException wex)
             {
-                Console.WriteLine("GetDeviceChannels(): " + wex.Message);
+                Logger.WriteError("GetDeviceChannels(): " + wex.Message);
                 if (wex.Response == null) return null;
                 using (var sr = new StreamReader(wex.Response.GetResponseStream(), Encoding.UTF8))
                 {
-                    Console.WriteLine(sr.ReadToEnd());
+                    Logger.WriteError(sr.ReadToEnd());
                 }
             }
             catch (Exception e)
             {
-                Console.WriteLine("GetDeviceChannels(): " + e.Message);
+                Logger.WriteError("GetDeviceChannels(): " + e.Message);
             }
             return null;
         }
@@ -124,7 +125,7 @@ namespace hdhr2mxf.HDHR
             }
             catch (WebException wex)
             {
-                Console.WriteLine("GetChannelGuide(): " + wex.Message);
+                Logger.WriteError("GetChannelGuide(): " + wex.Message);
                 if (wex.Response == null) return null;
                 using (var sr = new StreamReader(wex.Response.GetResponseStream(), Encoding.UTF8))
                 {
@@ -133,7 +134,7 @@ namespace hdhr2mxf.HDHR
             }
             catch (Exception e)
             {
-                Console.WriteLine("GetChannelGuide(): " + e.Message);
+                Logger.WriteError("GetChannelGuide(): " + e.Message);
             }
             return null;
         }
@@ -162,16 +163,16 @@ namespace hdhr2mxf.HDHR
             }
             catch (WebException wex)
             {
-                Console.WriteLine("GetHdhrXmltvGuide(): " + wex.Message);
+                Logger.WriteError("GetHdhrXmltvGuide(): " + wex.Message);
                 if (wex.Response == null) return null;
                 using (var sr = new StreamReader(wex.Response.GetResponseStream(), Encoding.UTF8))
                 {
-                    Console.WriteLine(sr.ReadToEnd());
+                    Logger.WriteError(sr.ReadToEnd());
                 }
             }
             catch (Exception e)
             {
-                Console.WriteLine("GetHdhrXmltvGuide(): " + e.Message);
+                Logger.WriteError("GetHdhrXmltvGuide(): " + e.Message);
             }
             return null;
         }
@@ -189,7 +190,7 @@ namespace hdhr2mxf.HDHR
             }
             catch (WebException wex)
             {
-                Console.WriteLine("IsDvrActive(): " + wex.Message);
+                Logger.WriteError("IsDvrActive(): " + wex.Message);
                 if (wex.Response == null) return false;
                 using (var sr = new StreamReader(wex.Response.GetResponseStream(), Encoding.UTF8))
                 {
@@ -198,7 +199,7 @@ namespace hdhr2mxf.HDHR
             }
             catch (Exception e)
             {
-                Console.WriteLine("IsDvrActive(): " + e.Message);
+                Logger.WriteError("IsDvrActive(): " + e.Message);
             }
             return false;
         }

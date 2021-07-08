@@ -39,6 +39,7 @@ namespace epg123Transfer
             {
                 btnTransfer_Click(btnAddRecordings, null);
             }
+            this.Close();
         }
 
         private void BuildListViews()
@@ -99,12 +100,13 @@ namespace epg123Transfer
         readonly Dictionary<string, string> _idTable = new Dictionary<string, string>();
         private void ImportBinFile()
         {
-            const string url = @"http://epg123.garyan2.net/downloads/seriesXfer.bin";
+            const string url = @"http://garyan2.github.io/downloads/seriesXfer.bin";
 
             try
             {
                 using (var memoryStream = new MemoryStream())
                 {
+                    ServicePointManager.SecurityProtocol |= (SecurityProtocolType)3072;
                     CopyStream(WebRequest.Create(url).GetResponse().GetResponseStream(), memoryStream);
                     memoryStream.Position = 0;
 
@@ -277,7 +279,7 @@ namespace epg123Transfer
                     })
                 {
                     BackColor = epg123 ? background : Color.LightPink,
-                    Checked = false,
+                    Checked = epg123,
                     Tag = request
                 });
             }
@@ -327,7 +329,7 @@ namespace epg123Transfer
                     })
                 {
                     BackColor = Color.LightGreen,
-                    Checked = request.IsRecurring.Equals("true"),
+                    Checked = true,
                     Tag = request
                 });
             }
@@ -386,11 +388,11 @@ namespace epg123Transfer
 
             foreach (ManualRequest request in new ManualRequests(WmcStore.WmcObjectStore))
             {
-                // add the manual recording title, starttime, and channel number
-                _wmcRecording.Add(request.Title + " " + request.StartTime + " " + request.Channel?.ChannelNumber?.Number + "." + request.Channel?.ChannelNumber?.SubNumber);
-
                 // do not display archived/completed entries
                 if (request.Complete || (!request.IsRecurring && (request.RequestedProgram?.IsRequestFilled ?? false))) continue;
+
+                // add the manual recording title, starttime, and channel number
+                _wmcRecording.Add(request.Title + " " + request.StartTime + " " + request.Channel?.ChannelNumber?.Number + "." + request.Channel?.ChannelNumber?.SubNumber);
 
                 // what to display?
                 var title = request.PrototypicalProgram.ToString().StartsWith("Manual Recording") ? request.Title : request.PrototypicalProgram.Title;
@@ -463,11 +465,11 @@ namespace epg123Transfer
 
             foreach (OneTimeRequest request in new OneTimeRequests(WmcStore.WmcObjectStore))
             {
-                // add the manual recording title, starttime, and channel number
-                _wmcRecording.Add($"{request.Title} {request.StartTime}");
-
                 // do not display archived/completed entries
                 if (request.Complete || (request.RequestedProgram?.IsRequestFilled ?? false)) continue;
+
+                // add the manual recording title, starttime, and channel number
+                _wmcRecording.Add($"{request.Title} {request.StartTime}");
 
                 // create ListViewItem
                 listViewItems.Add(new ListViewItem(
@@ -486,6 +488,8 @@ namespace epg123Transfer
             {
                 lvWmcRecordings.Items.AddRange(listViewItems.ToArray());
             }
+
+            if (WmcStore.WmcMergedLineup?.UncachedChannels?.Empty ?? true) btnAddRecordings.Enabled = false;
         }
 
         private void toolStripMenuItemCancel_Click(object sender, EventArgs e)

@@ -24,7 +24,7 @@ namespace epg123.sdJson2mxf
                                                    "TASK: Build series images ...",
                                                    "TASK: Build season images ...",
                                                    "TASK: Build sport event images ...",
-                                                   "TASK: Waiting for download of channel logos to complete ...",
+                                                   "TASK: Waiting for download of station logos to complete ...",
                                                    "TASK: Saving files ...",
                                                    "TASK: Clean and save cache file ..." };
 

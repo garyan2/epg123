@@ -144,7 +144,7 @@ namespace epg123.sdJson2mxf
 
         private static bool ServiceCountSafetyCheck()
         {
-            if (!(SdMxf.With.Services.Count < config.ExpectedServicecount * 0.95)) return true;
+            if (!(config.ExpectedServicecount - MissingStations < config.ExpectedServicecount * 0.95)) return true;
             Logger.WriteError($"The expected number of stations to download is {config.ExpectedServicecount} but there are only {SdMxf.With.Services.Count} stations available from Schedules Direct. Aborting update for review by user.");
             return false;
         }
@@ -159,7 +159,7 @@ namespace epg123.sdJson2mxf
             SdMxf.With.Lineups.Add(new MxfLineup
             {
                 Index = SdMxf.With.Lineups.Count + 1,
-                Uid = "ZZZ-DUMMY-EPG123",
+                LineupId = "ZZZ-DUMMY-EPG123",
                 Name = "ZZZ123 Dummy Lineup",
                 channels = new List<MxfChannel>()
             });

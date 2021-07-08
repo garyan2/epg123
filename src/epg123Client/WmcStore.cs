@@ -734,7 +734,8 @@ namespace epg123Client
                              !lineup.Name.StartsWith("DefaultLineup") &&
                              !lineup.Name.StartsWith("Deleted") &&
                              !lineup.Name.Equals(legacyName) &&
-                             !lineup.UncachedChannels.Empty)
+                             !lineup.UncachedChannels.Empty &&
+                             !lineup.UIds.Empty)
                     {
                         ret.Add(new myLineup()
                         {

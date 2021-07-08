@@ -66,9 +66,8 @@ Name: "custom"; Description: "Custom Install"; Flags: IsCustom
 
 [Components]
 Name: "main1"; Description: "Server Files"; Types: full server; Flags: disablenouninstallwarning
-Name: "main2"; Description: "Client Files"; Types: full client; MinVersion: 6.1; Flags: disablenouninstallwarning
 Name: "hdhr"; Description: "HDHR2MXF for SiliconDust HDHR DVR Service"; Types: custom; Flags: disablenouninstallwarning
-Name: "help"; Description: "Help File"; Types: full server client; Flags: disablenouninstallwarning
+Name: "main2"; Description: "Client Files"; Types: full client; MinVersion: 6.1; Flags: disablenouninstallwarning
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -88,7 +87,6 @@ Source: "..\..\bin\Release\epg123Transfer.exe"; DestDir: "{app}"; Flags: ignorev
 Source: "..\..\bin\Release\epg123Transfer.exe.config"; DestDir: "{app}"; Flags: ignoreversion; Attribs: hidden; MinVersion: 6.1; OnlyBelowVersion: 6.2; Components: main2
 Source: "..\..\bin\Release\epgTray.exe"; DestDir: "{app}"; BeforeInstall: TaskKill('epgTray.exe'); Flags: ignoreversion signonce; Components: main2
 Source: "..\..\bin\Release\epgTray.exe.config"; DestDir: "{app}"; Flags: ignoreversion; Attribs: hidden; Components: main2
-Source: "docs\epg123_Guide.pdf"; DestDir: "{app}"; Flags: ignoreversion; Components: help
 Source: "docs\license.rtf"; DestDir: "{app}"; Flags: ignoreversion
 Source: "docs\customLineup.xml.example"; DestDir: "{app}"; Flags: ignoreversion; Components: main1
 Source: "links\EPG123 Online.url"; DestDir: "{commonprograms}\{#MyAppName}"; Flags: ignoreversion
@@ -97,7 +95,6 @@ Source: "links\EPG123 Online.url"; DestDir: "{commonprograms}\{#MyAppName}"; Fla
 Name: "{commonprograms}\{#MyAppName}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Components: main1
 Name: "{commonprograms}\{#MyAppName}\{#MyClientName}"; Filename: "{app}\{#MyClientExeName}"; Components: main2
 Name: "{commonprograms}\{#MyAppName}\EPG123 Transfer Tool"; Filename: "{app}\epg123Transfer.exe"; Components: main2
-Name: "{commonprograms}\{#MyAppName}\EPG123 Guide"; Filename: "{app}\epg123_Guide.pdf"; Components: help
 Name: "{commonprograms}\{#MyAppName}\HDHR2MXF Update"; Filename: "{app}\hdhr2mxf.exe"; Parameters: "-update -import"; Components: hdhr
 Name: "{commonprograms}\{#MyAppName}\EPG123 Tray"; Filename: "{app}\epgTray.exe"; Components: main2
 Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon; Components: main1
@@ -118,11 +115,11 @@ Filename: "{app}\epgTray.exe"; Flags: nowait runasoriginaluser; Components: main
 Name: {code:GetRootDataFolder}; Permissions: everyone-full
 
 [InstallDelete]
-Type: files; Name: "{app}\Newtonsoft.json.dll"; Components: main1 main2 hdhr help
-Type: files; Name: "{app}\tweakmediacenter.mxf"; Components: main1 main2 help
-Type: files; Name: "{app}\tweakmediacenter.reg"; Components: main1 main2 help
-Type: files; Name: "{app}\epg123utility.exe"; Components: main1 main2 help
-Type: files; Name: "{app}\epg123UtilityReadme.pdf"; Components: main1 main2 help
+Type: files; Name: "{app}\Newtonsoft.json.dll"; Components: main1 main2 hdhr
+Type: files; Name: "{app}\tweakmediacenter.mxf"; Components: main1 main2
+Type: files; Name: "{app}\tweakmediacenter.reg"; Components: main1 main2
+Type: files; Name: "{app}\epg123utility.exe"; Components: main1 main2
+Type: files; Name: "{app}\epg123UtilityReadme.pdf"; Components: main1 main2
 Type: files; Name: "{app}\epg123.exe"; Components: not main1
 Type: files; Name: "{app}\epg123.exe.config"; Components: not main1
 Type: files; Name: "{app}\hdhr2mxf.exe"; Components: not hdhr
@@ -130,7 +127,6 @@ Type: files; Name: "{app}\epg123Client.exe"; Components: not main2
 Type: files; Name: "{app}\epg123Client.exe.config"; Components: not main2
 Type: files; Name: "{app}\epg123Transfer.exe"; Components: not main2
 Type: files; Name: "{app}\epg123Transfer.exe.config"; Components: not main2
-Type: files; Name: "{app}\epg123_Guide.pdf"; Components: not help
 Type: files; Name: "{app}\customLineup.xml.example"; Components: not main1
 Type: files; Name: "{app}\epgTray.exe"; BeforeInstall: TaskKill('epgTray.exe'); Components: not main2
 Type: files; Name: "{app}\epgTray.exe.config"; Components: not main2
@@ -139,7 +135,6 @@ Type: files; Name: "{commondesktop}\{#MyClientName}.lnk"; Components: not main2
 Type: files; Name: "{commonprograms}\{#MyAppName}\{#MyAppName}.lnk"; Components: not main1
 Type: files; Name: "{commonprograms}\{#MyAppName}\{#MyClientName}.lnk"; Components: not main2
 Type: files; Name: "{commonprograms}\{#MyAppName}\EPG123 Transfer Tool.lnk"; Components: not main2
-Type: files; Name: "{commonprograms}\{#MyAppName}\EPG123 Guide.lnk"; Components: not help
 Type: files; Name: "{commonprograms}\{#MyAppName}\HDHR2MXF Update.lnk"; Components: not hdhr
 Type: files; Name: "{commonstartup}\EPG123 Tray.lnk"; Components: not main2
 

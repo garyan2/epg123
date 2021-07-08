@@ -3,7 +3,6 @@ using System.Drawing;
 using System.Net;
 using System.Windows.Forms;
 using epg123Transfer.SchedulesDirectAPI;
-using epg123Transfer.tvdbAPI;
 
 namespace epg123Transfer
 {
@@ -33,58 +32,13 @@ namespace epg123Transfer
             if (string.IsNullOrEmpty(IdIs))
             {
                 IdWas = _request.SeriesAttribute ?? _request.SeriesElement?.Uid;
-                var search = tvdbApi.TvdbSearchSeriesTitle(txtRoviTitle.Text);
-                if (search == null) return;
-
-                foreach (var data in search)
-                {
-                    try
-                    {
-                        cmbTvdbTitles.Items.Add(tvdbApi.TvdbGetSeriesData(data.Id));
-                        if (cmbTvdbTitles.Items.Count == 7) break;
-                    }
-                    catch
-                    {
-                        // ignored
-                    }
-                }
-                cmbTvdbTitles.SelectedIndex = 0;
             }
             else
             {
-                grpTvdb.Enabled = btnApply.Visible = false;
                 btnCancel.Text = "Exit";
                 LoadGracenotePanel(IdIs.Replace("!Series!", ""));
             }
             Cursor.Current = Cursors.Default;
-        }
-
-        private void cmbTvdbTitles_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            var series = (tvdbSeries)cmbTvdbTitles.SelectedItem;
-            tbTvdbDescription.Text = series.Overview;
-
-            if ((picTvdb.Image = series.SeriesImage) == null)
-            {
-                Cursor.Current = Cursors.WaitCursor;
-                var link = tvdbApi.TvdbGetSeriesImageUrl(((tvdbSeries)cmbTvdbTitles.SelectedItem).Id);
-                if (!string.IsNullOrEmpty(link))
-                {
-                    try
-                    {
-                        var req = WebRequest.Create(link);
-                        picTvdb.Image = Image.FromStream(req.GetResponse().GetResponseStream());
-                        series.SeriesImage = picTvdb.Image;
-                    }
-                    catch
-                    {
-                        // ignored
-                    }
-                }
-                Cursor.Current = Cursors.Default;
-            }
-
-            LoadGracenotePanel(string.IsNullOrEmpty(series.Zap2ItId) ? null : series.Zap2ItId.Substring(2));
         }
 
         private void LoadGracenotePanel(string seriesId)
@@ -134,16 +88,6 @@ namespace epg123Transfer
 
                 Cursor.Current = Cursors.Default;
             }
-            btnApply.Enabled = !string.IsNullOrEmpty(txtGracenoteTitle.Text);
-        }
-
-        private void btnApply_Click(object sender, EventArgs e)
-        {
-            if (string.IsNullOrEmpty(IdIs))
-            {
-                IdIs = "!Series!" + ((tvdbSeries)cmbTvdbTitles.SelectedItem).Zap2ItId.Substring(2);
-            }
-            Close();
         }
 
         private void btnCancel_Click(object sender, EventArgs e)

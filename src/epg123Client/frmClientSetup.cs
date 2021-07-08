@@ -42,6 +42,7 @@ namespace epg123Client
         private bool TimeoutMcupdate => DateTime.Now > _procMcupdate.StartTime + TimeSpan.FromSeconds(90);
         public bool ShouldBackup;
         public bool Hdhr2MxfSrv;
+        public string mxfImport;
 
         public frmClientSetup()
         {
@@ -50,7 +51,13 @@ namespace epg123Client
             _colossusInstalled = IsColossusInstalled();
             if (!(_epg123Installed = File.Exists(Helper.Epg123ExePath) || File.Exists(Helper.Hdhr2MxfExePath)))
             {
-                lblConfig.Text = "Not Installed";
+                btnConfig.Text = "Step 3:\nImport MXF";
+                lblConfig.Text = "Import remote MXF file";
+            }
+            else if (File.Exists(Helper.Hdhr2MxfExePath))
+            {
+                btnConfig.Text = "Step 3:\nHDHR2MXF";
+                lblConfig.Text = "Run HDHR2MXF";
             }
 
             UpdateStatusText("Click the 'Step 1' button to begin.");
@@ -101,13 +108,14 @@ namespace epg123Client
                     btnTvSetup.BackColor = System.Drawing.Color.LightGreen;
 
                     // enable config button if epg123.exe is present
-                    btnConfig.Enabled = lblConfig.Enabled = _epg123Installed;
-                    UpdateStatusText(_epg123Installed ? "Click the 'Step 3' button to continue." : string.Empty);
+                    btnConfig.Enabled = lblConfig.Enabled = true;
+                    UpdateStatusText("Click the 'Step 3' button to continue.");
                 }
             }
 
             // STEP 3: Configure EPG123
-            else if (sender.Equals(btnConfig) && OpenEpg123Configuration())
+            else if (sender.Equals(btnConfig) && _epg123Installed && OpenEpg123Configuration() ||
+                     sender.Equals(btnConfig) && ImportMxfFile())
             {
                 // disable config button
                 btnConfig.Enabled = lblConfig.Enabled = false;
@@ -125,7 +133,7 @@ namespace epg123Client
                 // restore recording requests if the tool is available
                 if (File.Exists("epg123Transfer.exe"))
                 {
-                    UpdateStatusText("Waiting for user to close the Transfer Tool...");
+                    UpdateStatusText("Transferring recording requests...");
                     Logger.WriteVerbose("Opening recording request transfer tool and waiting for it to close ...");
                     var startInfo = new ProcessStartInfo()
                     {
@@ -136,7 +144,7 @@ namespace epg123Client
                     UpdateStatusText(string.Empty);
                 }
 
-                MessageBox.Show("Setup is complete. Be sure to create a Scheduled Task to perform daily updates and keep your guide up to date!", "Setup Complete", MessageBoxButtons.OK);
+                MessageBox.Show("Setup is complete.", "Setup Complete", MessageBoxButtons.OK);
                 Logger.WriteVerbose("Setup is complete.  Be sure to create a Scheduled Task to perform daily updates and keep your guide up to date!");
                 btnCleanStart.Enabled = true;
                 Close();
@@ -732,6 +740,8 @@ namespace epg123Client
                 var hdhr2Mxf = Process.Start(startInfo);
                 hdhr2Mxf.WaitForExit();
 
+                Logger.EventId = 0;
+                statusLogo.MxfFile = Helper.Epg123MxfPath;
                 if (hdhr2Mxf.ExitCode == 0)
                 {
                     // use the client to import the mxf file
@@ -741,6 +751,9 @@ namespace epg123Client
                     // kick off the reindex
                     if (importForm.Success)
                     {
+                        WmcStore.ActivateEpg123LineupsInStore();
+                        WmcRegistries.ActivateGuide();
+                        WmcStore.AutoMapChannels();
                         WmcUtilities.ReindexDatabase();
                     }
                     else
@@ -756,6 +769,8 @@ namespace epg123Client
                     UpdateStatusText("Click the 'Step 3' button to try again.");
                     return cbAutostep.Checked = false;
                 }
+                statusLogo.StatusImage();
+                Helper.SendPipeMessage("Import Complete");
 
                 return true;
             }
@@ -797,6 +812,49 @@ namespace epg123Client
         {
             return (Process.GetProcessesByName("epg123").Length > 0);
         }
+        #endregion
+
+        #region ========== Import MXF file ==========
+
+        private bool ImportMxfFile()
+        {
+            var ret = true;
+            UpdateStatusText("Importing remote MXF file");
+            openFileDialog1 = new OpenFileDialog
+            {
+                FileName = string.Empty,
+                Filter = "MXF File|*.mxf",
+                Title = "Select a MXF File",
+                Multiselect = false,
+                InitialDirectory = Helper.Epg123OutputFolder
+            };
+            if (openFileDialog1.ShowDialog() != DialogResult.OK) return false;
+
+            Logger.EventId = 0;
+            mxfImport = statusLogo.MxfFile = openFileDialog1.FileName;
+            var importForm = new frmImport(openFileDialog1.FileName);
+            importForm.ShowDialog();
+
+            if (importForm.Success)
+            {
+                WmcStore.ActivateEpg123LineupsInStore();
+                WmcRegistries.ActivateGuide();
+                WmcStore.AutoMapChannels();
+                WmcUtilities.ReindexDatabase();
+            }
+            else
+            {
+                MessageBox.Show("There was an error importing the MXF file.", "Import Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                UpdateStatusText("Click the 'Step 3' button to try again.");
+                ret = cbAutostep.Checked = false;
+            }
+            statusLogo.StatusImage();
+            Helper.SendPipeMessage("Import Complete");
+
+            return ret;
+        }
+        
+
         #endregion
     }
 }

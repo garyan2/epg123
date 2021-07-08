@@ -81,7 +81,7 @@ namespace hdhr2mxf.MXF
                     Index = 1,
                     Name = _progName,
                     DisplayName = _progDesc,
-                    Copyright = $"© {DateTime.Now.Year} GaRyan2. Portions of content provided by SiliconDust."
+                    Copyright = $"© {DateTime.Now.Year} GaRyan2. Powered by SiliconDust."
                 }
             };
 

@@ -20,6 +20,10 @@ namespace hdhr2mxf
             Helper.ExecutablePath = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
             if (!string.IsNullOrEmpty(Helper.ExecutablePath)) Directory.SetCurrentDirectory(Helper.ExecutablePath);
 
+            Logger.WriteMessage("===============================================================================");
+            Logger.WriteMessage($" Beginning hdhr2mxf update execution. version {Helper.Epg123Version}");
+            Logger.WriteMessage("===============================================================================");
+
             var starttime = DateTime.UtcNow;
             if (args != null)
             {
@@ -40,7 +44,7 @@ namespace hdhr2mxf
                             }
                             else if ((i + 1) >= args.Length)
                             {
-                                Console.WriteLine("Missing output filename and path.");
+                                Logger.WriteError("Missing output filename and path.");
                                 return -1;
                             }
                             break;
@@ -90,13 +94,13 @@ namespace hdhr2mxf
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Exception Thrown:");
-                Console.WriteLine(ex.Message);
-                Console.WriteLine(ex.StackTrace);
+                Logger.WriteError("Exception Thrown:");
+                Logger.WriteError(ex.Message);
+                Logger.WriteError(ex.StackTrace);
             }
 
-            Console.WriteLine("\nGenerated .mxf file contains {5} lineups, {0} services, {1} series, {2} programs, and {3} people with {4} image links.", Common.Mxf.With[0].Services.Count, Common.Mxf.With[0].SeriesInfos.Count, Common.Mxf.With[0].Programs.Count, Common.Mxf.With[0].People.Count, Common.Mxf.With[0].GuideImages.Count, Common.Mxf.With[0].Lineups.Count);
-            Console.WriteLine($"Execution time was {DateTime.UtcNow - starttime}");
+            Logger.WriteInformation(string.Format("Generated .mxf file contains {5} lineups, {0} services, {1} series, {2} programs, and {3} people with {4} image links.", Common.Mxf.With[0].Services.Count, Common.Mxf.With[0].SeriesInfos.Count, Common.Mxf.With[0].Programs.Count, Common.Mxf.With[0].People.Count, Common.Mxf.With[0].GuideImages.Count, Common.Mxf.With[0].Lineups.Count));
+            Logger.WriteInformation($"Execution time was {DateTime.UtcNow - starttime}");
 
             return 0;
         }
@@ -124,7 +128,7 @@ namespace hdhr2mxf
             var homeruns = Common.Api.DiscoverDevices();
             if (homeruns == null || !homeruns.Any())
             {
-                Console.WriteLine("No HDHomeRun devices were found.");
+                Logger.WriteError("No HDHomeRun devices were found.");
                 return false;
             }
 
@@ -133,15 +137,15 @@ namespace hdhr2mxf
             foreach (var device in homeruns.Select(homerun => Common.Api.ConnectDevice(homerun.DiscoverUrl)))
             {
                 if (device == null) continue;
-                Console.WriteLine($"Found {device.FriendlyName} {device.ModelNumber} ({device.DeviceId}) with firmware {device.FirmwareVersion}.");
+                Logger.WriteInformation($"Found {device.FriendlyName} {device.ModelNumber} ({device.DeviceId}) with firmware {device.FirmwareVersion}.");
                 dvrActive |= Common.Api.IsDvrActive(device.DeviceAuth);
             }
-            Console.WriteLine($"HDHomeRun DVR Service is {(dvrActive ? string.Empty : "not ")}active.");
+            Logger.WriteInformation($"HDHomeRun DVR Service is {(dvrActive ? string.Empty : "not ")}active.");
 
             // if DVR Service is active, use XMLTV; otherwise use iterative load from slice guide
             if (dvrActive)
             {
-                Console.WriteLine("Using available 14-day XMLTV file from SiliconDust.");
+                Logger.WriteInformation("Downloading available 14-day XMLTV file from SiliconDust.");
                 Helper.SendPipeMessage("Downloading|Building and saving MXF file...");
                 return XmltvMxf.BuildMxfFromXmltvGuide(homeruns.ToList());
             }
@@ -151,13 +155,13 @@ namespace hdhr2mxf
             //    return SliceMxf.BuildMxfFromSliceGuide(homeruns.ToList());
             //}
 
-            Console.WriteLine("HDHR2MXF is not configured to download guide data using JSON from SiliconDust.");
+            Logger.WriteError("HDHR2MXF is not configured to download guide data using JSON from SiliconDust.");
             return false;
         }
 
         private static void WriteMxf()
         {
-            Console.WriteLine($"Writing the MXF file to \"{outputFile}\"");
+            Logger.WriteInformation($"Writing the MXF file to \"{outputFile}\"");
             try
             {
                 using (var stream = new StreamWriter(outputFile, false, Encoding.UTF8))
@@ -171,7 +175,7 @@ namespace hdhr2mxf
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Failed to save the MXF file to \"{outputFile}\". Message: {ex.Message}");
+                Logger.WriteError($"Failed to save the MXF file to \"{outputFile}\". Message: {ex.Message}");
             }
         }
     }

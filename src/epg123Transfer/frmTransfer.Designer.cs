@@ -46,8 +46,8 @@
             this.label1 = new System.Windows.Forms.Label();
             this.btnOpenBackup = new System.Windows.Forms.Button();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
-            this.label2 = new System.Windows.Forms.Label();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.label2 = new System.Windows.Forms.Label();
             this.contextMenuStrip1.SuspendLayout();
             this.contextMenuStrip2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -159,9 +159,9 @@
             this.lblDateTime.AutoSize = true;
             this.lblDateTime.Location = new System.Drawing.Point(12, 522);
             this.lblDateTime.Name = "lblDateTime";
-            this.lblDateTime.Size = new System.Drawing.Size(141, 13);
+            this.lblDateTime.Size = new System.Drawing.Size(208, 13);
             this.lblDateTime.TabIndex = 3;
-            this.lblDateTime.Text = "Database Last Updated on: ";
+            this.lblDateTime.Text = "Rovi Transfer Database Last Updated on: ";
             // 
             // btnExit
             // 
@@ -200,16 +200,6 @@
             this.openFileDialog1.Filter = "All files|*.*";
             this.openFileDialog1.Title = "Open Backup Recordings File";
             // 
-            // label2
-            // 
-            this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(12, 539);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(292, 13);
-            this.label2.TabIndex = 7;
-            this.label2.Text = "* Right-click items to manually match or verify series requests";
-            // 
             // splitContainer1
             // 
             this.splitContainer1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
@@ -231,6 +221,16 @@
             this.splitContainer1.Size = new System.Drawing.Size(860, 472);
             this.splitContainer1.SplitterDistance = 462;
             this.splitContainer1.TabIndex = 9;
+            // 
+            // label2
+            // 
+            this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(12, 539);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(204, 13);
+            this.label2.TabIndex = 7;
+            this.label2.Text = "* Right-click items to verify series requests";
             // 
             // frmTransfer
             // 
@@ -280,8 +280,8 @@
         private System.Windows.Forms.OpenFileDialog openFileDialog1;
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip2;
         private System.Windows.Forms.ToolStripMenuItem matchVerifyToolStripMenuItem;
-        private System.Windows.Forms.Label label2;
         private System.Windows.Forms.SplitContainer splitContainer1;
+        private System.Windows.Forms.Label label2;
     }
 }
 

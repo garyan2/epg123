@@ -457,7 +457,7 @@ namespace epg123Client
             if (rdoFullMode.Checked) return;
             if (DialogResult.Yes == MessageBox.Show("Do you wish to import the guide listings now? If not, you can click the [Manual Import] button later or allow the scheduled task to perform the import.", "Import MXF File", MessageBoxButtons.YesNo, MessageBoxIcon.Question))
             {
-                btnImport_Click(null, null);
+                btnImport_Click(tbTaskInfo, null);
             }
         }
         #endregion
@@ -1353,7 +1353,11 @@ namespace epg123Client
 
             // open the form
             frm.ShowDialog();
-            tbTaskInfo.Text = frm.Hdhr2MxfSrv ? Helper.Hdhr2MxfExePath : Helper.Epg123ExePath;
+            if (!_task.Exist && !_task.ExistNoAccess)
+            {
+                if (rdoFullMode.Checked) tbTaskInfo.Text = frm.Hdhr2MxfSrv ? Helper.Hdhr2MxfExePath : Helper.Epg123ExePath;
+                else tbTaskInfo.Text = frm.mxfImport ?? "*** Click here to set MXF file path. ***";
+            }
             frm.Dispose();
 
             // restore mcupdate task pointed to client if epg123_update task already exists
@@ -1466,7 +1470,8 @@ namespace epg123Client
             }
 
             // open the dialog
-            if (openFileDialog1.ShowDialog() != DialogResult.OK) return;
+            if (sender.Equals(tbTaskInfo)) openFileDialog1.FileName = tbTaskInfo.Text;
+            else if (openFileDialog1.ShowDialog() != DialogResult.OK) return;
 
             // perform the file import with progress form
             Logger.EventId = 0;
@@ -1477,6 +1482,8 @@ namespace epg123Client
             // kick off the reindex
             if (importForm.Success)
             {
+                BuildLineupChannelListView();
+                if (cbAutomatch.Checked) WmcStore.AutoMapChannels();
                 WmcStore.CleanUpMergedChannelTuningInfos();
                 WmcUtilities.ReindexDatabase();
             }
@@ -1491,7 +1498,7 @@ namespace epg123Client
             WmcRegistries.ActivateGuide();
 
             // open object store and repopulate the GUI
-            btnRefreshLineups_Click(null, null);
+            if (!sender.Equals(tbTaskInfo)) btnRefreshLineups_Click(null, null);
         }
         #endregion
 

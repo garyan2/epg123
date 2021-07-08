@@ -26,7 +26,7 @@ namespace epg123.sdJson2mxf
             foreach (var sportEvent in sportEvents)
             {
                 string md5 = sportEvent.extras["md5"];
-                if (epgCache.JsonFiles.ContainsKey(md5) && epgCache.JsonFiles[md5].Images != null)
+                if (epgCache.JsonFiles.ContainsKey(md5) && !string.IsNullOrEmpty(epgCache.JsonFiles[md5].Images))
                 {
                     ++processedObjects; ReportProgress();
                     if (string.IsNullOrEmpty(epgCache.JsonFiles[md5].Images)) continue;

@@ -15,6 +15,7 @@ namespace epg123.sdJson2mxf
     {
         private static readonly HashSet<string> IncludedStations = new HashSet<string>();
         private static readonly HashSet<string> ExcludedStations = new HashSet<string>();
+        public static int MissingStations;
         private static StationChannelMap customMap;
 
         private static CustomLineup customLineup;
@@ -399,6 +400,14 @@ namespace epg123.sdJson2mxf
 
             if (SdMxf.With.Services.Count > 0)
             {
+                // report specific stations that are no longer available
+                var missing = (from station in IncludedStations where SdMxf.With.Services.FirstOrDefault(arg => arg.StationId.Equals(station)) == null select config.StationId.Single(arg => arg.StationId.Equals(station)).CallSign).ToList();
+                if (missing.Count > 0)
+                {
+                    MissingStations = missing.Count;
+                    Logger.WriteInformation($"Stations no longer available since last configuration save are: {string.Join(", ", missing)}");
+                }
+
                 Logger.WriteMessage("Exiting BuildLineupServices(). SUCCESS.");
                 return true;
             }
@@ -418,7 +427,7 @@ namespace epg123.sdJson2mxf
             }
             else if (e.Error != null)
             {
-                Logger.WriteError($"The background worker to download station logos threw an exception. Message: {e.Error.Message}");
+                Logger.WriteInformation($"The background worker to download station logos threw an exception. Message: {e.Error.Message}");
             }
             StationLogosDownloadComplete = true;
         }
@@ -430,7 +439,7 @@ namespace epg123.sdJson2mxf
                 var logoPath = serviceLogo.Value[0];
                 if (DownloadSdLogo(serviceLogo.Value[1], logoPath) && string.IsNullOrEmpty(serviceLogo.Key.LogoImage))
                 {
-                    serviceLogo.Key.LogoImage = SdMxf.GetGuideImage("file://" + logoPath, GetStringEncodedImage(logoPath)).Id;
+                    serviceLogo.Key.mxfGuideImage = SdMxf.GetGuideImage("file://" + logoPath, GetStringEncodedImage(logoPath));
 
                     if (File.Exists(logoPath))
                     {

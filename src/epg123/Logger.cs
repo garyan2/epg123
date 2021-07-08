@@ -143,6 +143,7 @@ namespace epg123
 
             try
             {
+                if (eventLog == null) Console.WriteLine(message);
                 if (firstEntry) CheckFileLength();
                 using (var stream = new StreamWriter(Helper.Epg123TraceLogPath, true))
                 {

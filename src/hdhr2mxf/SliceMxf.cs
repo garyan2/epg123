@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using epg123;
 using hdhr2mxf.HDHR;
 using hdhr2mxf.MXF;
 
@@ -15,7 +16,7 @@ namespace hdhr2mxf
             foreach (var device in homeruns.Select(homerun => Common.Api.ConnectDevice(homerun.DiscoverUrl)))
             {
                 if (device == null || string.IsNullOrEmpty(device.LineupUrl)) continue;
-                Console.WriteLine($"Processing {device.FriendlyName} {device.ModelNumber} ({device.DeviceId}) with firmware {device.FirmwareVersion}.");
+                Logger.WriteInformation($"Processing {device.FriendlyName} {device.ModelNumber} ({device.DeviceId}) with firmware {device.FirmwareVersion}.");
 
                 // get channels
                 var channels = Common.Api.GetDeviceChannels(device.LineupUrl);
@@ -91,7 +92,7 @@ namespace hdhr2mxf
                                 SubNumber = subnumber,
                                 MatchName = matchname
                             });
-                            Console.WriteLine($"--Processing station {mxfService.CallSign} on channel {number}{((subnumber > 0) ? "." + subnumber : string.Empty)}.");
+                            Logger.WriteInformation($"--Processing station {mxfService.CallSign} on channel {number}{((subnumber > 0) ? "." + subnumber : string.Empty)}.");
                         }
                     }
 
