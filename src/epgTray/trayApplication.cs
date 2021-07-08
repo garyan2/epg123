@@ -296,7 +296,7 @@ namespace epgTray
                                 break;
                             case 1:
                                 _trayIcon.BalloonTipIcon = ToolTipIcon.Info;
-                                _trayIcon.BalloonTipText = "Your WMC program guide has successfully been updated. An update is available from http://epg123.garyan2.net/download.";
+                                _trayIcon.BalloonTipText = "Your WMC program guide has successfully been updated. An update is available from http://garyan2.github.io/download.html.";
                                 break;
                             default:
                                 _trayIcon.BalloonTipIcon = ToolTipIcon.None;
@@ -342,7 +342,7 @@ namespace epgTray
                     filePath = Helper.Epg123TraceLogPath;
                     break;
                 case "_gotoDownloadMenuItem":
-                    filePath = "https://epg123.garyan2.net/download";
+                    filePath = "https://garyan2.github.io/download.html";
                     break;
                 default:
                     return;
