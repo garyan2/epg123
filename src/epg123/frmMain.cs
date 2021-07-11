@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -193,6 +194,18 @@ namespace epg123
                 Settings.Default.WindowSize = RestoreBounds.Size;
             }
             Settings.Default.WindowMaximized = (WindowState == FormWindowState.Maximized);
+
+            // save sorting preference
+            if (lvLineupChannels.Items.Count > 0)
+            {
+                var lvcs = (ListViewColumnSorter) lvLineupChannels.ListViewItemSorter;
+                Settings.Default.LineupTableSort = lvcs.SortColumn * 10 + (lvcs.GroupOrder ? 3 : (int) lvcs.Order);
+            }
+            if (lvL5Lineup.Items.Count > 0)
+            {
+                var lvcs = (ListViewColumnSorter) lvL5Lineup.ListViewItemSorter;
+                Settings.Default.CustomTableSort = lvcs.SortColumn * 10 + (lvcs.GroupOrder ? 3 : (int) lvcs.Order);
+            }
             Settings.Default.Save();
 
             // end the thread if still running
@@ -527,12 +540,12 @@ namespace epg123
                 t.ListViewItemSorter = null;
             }
 
+            // assign a listviewcolumnsorter to a listview
+            AssignColumnSorters();
+
             // populate the listviews with channels/services
             BuildLineupsAndStations();
             BuildCustomListViewChannels();
-
-            // assign a listviewcolumnsorter to a listview
-            AssignColumnSorters();
         }
         public void BuildLineupsAndStations()
         {
@@ -938,7 +951,10 @@ namespace epg123
             var gui = new frmLineups();
             gui.ShowDialog();
             if (gui.Cancel) return;
+
+            Config.AutoAddNew = false;
             BuildLineupTabs();
+            Config.AutoAddNew = _oldConfig.AutoAddNew;
 
             foreach (var lineup in gui.NewLineups)
             {
@@ -975,54 +991,46 @@ namespace epg123
         private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
             linkLabel1.LinkVisited = true;
-            Process.Start("http://epg123.garyan2.net");
+            Process.Start("http://garyan2.github.io/");
         }
         #endregion
 
         #region ========== Column Sorters ==========
         private void AssignColumnSorters()
         {
-            ListView[] listviews = { lvL5Lineup, lvLineupChannels };
-            foreach (var listview in listviews)
+            ListView[] listviews = {lvL5Lineup, lvLineupChannels};
+            int[] sortSettings = {Settings.Default.CustomTableSort, Settings.Default.LineupTableSort};
+
+            for (var i = 0; i < listviews.Length; ++i)
             {
-                // create and assign listview item sorter
-                listview.ListViewItemSorter = new ListViewColumnSorter
+                var colSort = sortSettings[i] / 10;
+                var order = sortSettings[i] % 10;
+                listviews[i].ListViewItemSorter = new ListViewColumnSorter
                 {
-                    SortColumn = (int)LineupColumn.CallSign,
-                    Order = SortOrder.Ascending
+                    SortColumn = colSort,
+                    Order = order > 2 ? SortOrder.Ascending : (SortOrder) order,
+                    GroupOrder = (order > 2)
                 };
-                foreach (ColumnHeader head in listview.Columns)
+                foreach (ColumnHeader head in listviews[i].Columns)
                 {
                     SetSortArrow(head, SortOrder.None);
                 }
-                listview.Sort();
-                SetSortArrow(listview.Columns[(int)LineupColumn.CallSign], SortOrder.Ascending);
-                listview.Refresh();
+                SetSortArrow(listviews[i].Columns[colSort], (SortOrder) (order > 2 ? 1 : order));
             }
         }
         private void LvLineupSort(object sender, ColumnClickEventArgs e)
         {
             // Determine which column sorter this click applies to
-            var lvcs = (ListViewColumnSorter)((ListView)sender).ListViewItemSorter;
-            lvcs.ClickHeader();
+            var listview = (ListView) sender;
+            var sorter = (ListViewColumnSorter) listview.ListViewItemSorter;
 
-            // Determine if clicked column is already the column that is being sorted
-            if (e.Column == lvcs.SortColumn)
-            {
-                // Reverse the current sort direction for this column
-                lvcs.Order = (lvcs.Order == SortOrder.Ascending) ? SortOrder.Descending : SortOrder.Ascending;
-            }
-            else
-            {
-                // Set the column number that is to be sorted; default to ascending.
-                SetSortArrow(((ListView)sender).Columns[lvcs.SortColumn], SortOrder.None);
-                lvcs.SortColumn = e.Column;
-                lvcs.Order = SortOrder.Ascending;
-            }
+            // remove sort indicator from column if new
+            if (e.Column != sorter.SortColumn) SetSortArrow(listview.Columns[sorter.SortColumn], SortOrder.None);
 
             // Perform the sort with these new sort options.
-            ((ListView)sender).Sort();
-            SetSortArrow(((ListView)sender).Columns[e.Column], lvcs.Order);
+            sorter.ClickHeader(e.Column);
+            listview.Sort();
+            SetSortArrow(listview.Columns[e.Column], sorter.Order);
 
             if (lvLineupChannels.Items.Count > 0)
                 lvLineupChannels.EnsureVisible(0);

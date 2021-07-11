@@ -11,21 +11,22 @@ public class ListViewColumnSorter : IComparer
     /// <summary>
     /// Specifies the column to be sorted
     /// </summary>
-    private int _columnToSort;
+    public int SortColumn { get; set; }
+    
     /// <summary>
     /// Specifies the order in which to sort (i.e. 'Ascending').
     /// </summary>
-    private SortOrder _orderOfSort;
+    public SortOrder Order { get; set; }
+
+    /// <summary>
+    /// Specifies whether selected items should be grouped together
+    /// </summary>
+    public bool GroupOrder { get; set; }
+    
     /// <summary>
     /// Case insensitive comparer object
     /// </summary>
     private readonly CaseInsensitiveComparer _objectCompare;
-
-    private DateTime _lastSort;
-
-    private int _clickCount;
-
-    private int _lastColumn;
 
     /// <summary>
     /// Class constructor.  Initializes various elements
@@ -33,10 +34,10 @@ public class ListViewColumnSorter : IComparer
     public ListViewColumnSorter()
     {
         // Initialize the column to '0'
-        _columnToSort = 0;
+        SortColumn = 0;
 
         // Initialize the sort order to 'none'
-        _orderOfSort = SortOrder.Ascending;
+        Order = SortOrder.Ascending;
 
         // Initialize the CaseInsensitiveComparer object
         _objectCompare = new CaseInsensitiveComparer();
@@ -53,8 +54,8 @@ public class ListViewColumnSorter : IComparer
         int compareResult;
 
         // Cast the objects to be compared to ListViewItem objects
-        var stringX = ((ListViewItem)x)?.SubItems[_columnToSort].Text.Replace("-", "");
-        var stringY = ((ListViewItem)y)?.SubItems[_columnToSort].Text.Replace("-", "");
+        var stringX = ((ListViewItem)x)?.SubItems[SortColumn].Text.Replace("-", "");
+        var stringY = ((ListViewItem)y)?.SubItems[SortColumn].Text.Replace("-", "");
 
         // Compare the two items either by number or text
         if (stringY != null && stringX != null && stringX.Replace(".", "").All(char.IsDigit) && stringY.Replace(".", "").All(char.IsDigit))
@@ -62,9 +63,8 @@ public class ListViewColumnSorter : IComparer
             var doubleX = double.Parse(ExtendChannelSubchannel(stringX));
             var doubleY = double.Parse(ExtendChannelSubchannel(stringY));
 
-            if (_clickCount >= 2)
+            if (GroupOrder)
             {
-                _orderOfSort = SortOrder.Ascending;
                 if (((ListViewItem)x)?.Checked ?? false) doubleX -= 1000000;
                 else doubleX += 1000000;
 
@@ -75,9 +75,8 @@ public class ListViewColumnSorter : IComparer
         }
         else
         {
-            if (_clickCount >= 2)
+            if (GroupOrder)
             {
-                _orderOfSort = SortOrder.Ascending;
                 if (((ListViewItem) x)?.Checked ?? false) stringX = $"00000{stringX}";
                 else stringX = $"zzzzz{stringX}";
 
@@ -87,9 +86,7 @@ public class ListViewColumnSorter : IComparer
             compareResult = _objectCompare.Compare(stringX, stringY);
         }
 
-        _lastSort = DateTime.Now;
-
-        switch (_orderOfSort)
+        switch (Order)
         {
             // Calculate correct return value based on object comparison
             case SortOrder.Ascending:
@@ -122,29 +119,35 @@ public class ListViewColumnSorter : IComparer
         }
     }
 
-    /// <summary>
-    /// Gets or sets the number of the column to which to apply the sorting operation (Defaults to '0').
-    /// </summary>
-    public int SortColumn
+    public void ClickHeader(int column)
     {
-        set => _columnToSort = value;
-        get => _columnToSort;
-    }
+        if (column != SortColumn)
+        {
+            Order = SortOrder.None;
+        }
 
-    /// <summary>
-    /// Gets or sets the order of sorting to apply (for example, 'Ascending' or 'Descending').
-    /// </summary>
-    public SortOrder Order
-    {
-        set => _orderOfSort = value;
-        get => _orderOfSort;
-    }
-
-    public void ClickHeader()
-    {
-        if (DateTime.Now - _lastSort > TimeSpan.FromMilliseconds(1000)) _clickCount = 0;
-        else if (_lastColumn != _columnToSort) _clickCount = 1;
-        else ++_clickCount;
-        _lastColumn = _columnToSort;
+        switch (Order)
+        {
+            case SortOrder.None:
+                SortColumn = column;
+                GroupOrder = false;
+                Order = SortOrder.Ascending;
+                break;
+            case SortOrder.Ascending:
+                if (GroupOrder)
+                {
+                    GroupOrder = false;
+                    Order = SortOrder.Ascending;
+                }
+                else
+                {
+                    Order = SortOrder.Descending;
+                }
+                break;
+            case SortOrder.Descending:
+                Order = SortOrder.Ascending;
+                GroupOrder = true;
+                break;
+        }
     }
 }

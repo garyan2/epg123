@@ -1470,7 +1470,7 @@ namespace epg123Client
             }
 
             // open the dialog
-            if (sender.Equals(tbTaskInfo)) openFileDialog1.FileName = tbTaskInfo.Text;
+            if (sender?.Equals(tbTaskInfo) ?? false) openFileDialog1.FileName = tbTaskInfo.Text;
             else if (openFileDialog1.ShowDialog() != DialogResult.OK) return;
 
             // perform the file import with progress form
@@ -1498,7 +1498,7 @@ namespace epg123Client
             WmcRegistries.ActivateGuide();
 
             // open object store and repopulate the GUI
-            if (!sender.Equals(tbTaskInfo)) btnRefreshLineups_Click(null, null);
+            if (!sender?.Equals(tbTaskInfo) ?? true) btnRefreshLineups_Click(null, null);
         }
         #endregion
 

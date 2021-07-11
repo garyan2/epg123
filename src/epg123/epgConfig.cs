@@ -90,7 +90,7 @@ namespace epg123
             if (other == null) return false;
             if (ReferenceEquals(this, other)) return true;
 
-            if (!Version.Equals(other.Version)) return false;
+            //if (!Version.Equals(other.Version)) return false;
             if (!UserAccount.LoginName.Equals(other.UserAccount?.LoginName)) return false;
             if (!UserAccount.PasswordHash.Equals(other.UserAccount?.PasswordHash)) return false;
             if (!RatingsOrigin.Equals(other.RatingsOrigin)) return false;

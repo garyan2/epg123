@@ -116,10 +116,6 @@ Name: {code:GetRootDataFolder}; Permissions: everyone-full
 
 [InstallDelete]
 Type: files; Name: "{app}\Newtonsoft.json.dll"; Components: main1 main2 hdhr
-Type: files; Name: "{app}\tweakmediacenter.mxf"; Components: main1 main2
-Type: files; Name: "{app}\tweakmediacenter.reg"; Components: main1 main2
-Type: files; Name: "{app}\epg123utility.exe"; Components: main1 main2
-Type: files; Name: "{app}\epg123UtilityReadme.pdf"; Components: main1 main2
 Type: files; Name: "{app}\epg123.exe"; Components: not main1
 Type: files; Name: "{app}\epg123.exe.config"; Components: not main1
 Type: files; Name: "{app}\hdhr2mxf.exe"; Components: not hdhr
