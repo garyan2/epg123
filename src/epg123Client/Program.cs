@@ -300,7 +300,7 @@ namespace epg123
             }
 
             // create a mutex and keep alive until program exits
-            using (var mutex = Helper.GetProgramMutex($"Global\\{AppGuid}", !(showGui ^ showProgress)))
+            using (var mutex = !showGui && showProgress ? new Mutex(false, $"Global\\{AppGuid}") : Helper.GetProgramMutex($"Global\\{AppGuid}", !showGui))
             {
                 // check for an instance already running
                 if (mutex == null) return -1;
