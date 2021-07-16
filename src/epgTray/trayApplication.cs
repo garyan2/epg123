@@ -33,6 +33,7 @@ namespace epgTray
         private readonly Thread _serverThread;
         private int _lastStatus;
         private DateTime _nextUpdate = DateTime.MinValue;
+        private string _version = $"EPG123 v{Helper.Epg123Version}";
 
         public trayApplication()
         {
@@ -63,7 +64,7 @@ namespace epgTray
 
             if (_lastStatus != 0xDEAD) return;
             _trayIcon.BalloonTipIcon = ToolTipIcon.Error;
-            _trayIcon.BalloonTipTitle = "EPG123";
+            _trayIcon.BalloonTipTitle = _version;
             _trayIcon.BalloonTipText = "There was a problem updating your WMC program guide. View the log file for details.";
             _trayIcon.ShowBalloonTip(10000);
         }
@@ -191,12 +192,12 @@ namespace epgTray
             // establish current status icon
             if (lastTime == unknown)
             {
-                SetNotifyIconText($"EPG123\nLast guide update status is unknown.\n{DateTime.Now}");
+                SetNotifyIconText($"{_version}\nLast guide update status is unknown.\n{DateTime.Now}");
                 return Resources.statusUnknown;
             }
             if (DateTime.Now - lastTime > TimeSpan.FromHours(24.0))
             {
-                SetNotifyIconText($"EPG123\nLast update was more than 24 hrs ago.\n{lastTime}");
+                SetNotifyIconText($"{_version}\nLast update was more than 24 hrs ago.\n{lastTime}");
                 return Resources.statusError;
             }
 
@@ -205,17 +206,17 @@ namespace epgTray
             {
                 case 0xDEAD:
                     statusIcon = Resources.statusError;
-                    SetNotifyIconText($"EPG123\nThere was an error during last update.\n{lastTime}");
+                    SetNotifyIconText($"{_version}\nThere was an error during last update.\n{lastTime}");
                     break;
                 case 0xBAD1:
                     statusIcon = Resources.statusWarning;
-                    SetNotifyIconText($"EPG123\nThere was a warning during last update.\n{lastTime}");
+                    SetNotifyIconText($"{_version}\nThere was a warning during last update.\n{lastTime}");
                     break;
                 case 0x0001:
-                    SetNotifyIconText($"EPG123\nThere is an update available.\n{lastTime}");
+                    SetNotifyIconText($"{_version}\nThere is an update available.\n{lastTime}");
                     break;
                 default:
-                    SetNotifyIconText($"EPG123\nLast update was successful.\n{lastTime}");
+                    SetNotifyIconText($"{_version}\nLast update was successful.\n{lastTime}");
                     break;
             }
 
@@ -283,7 +284,7 @@ namespace epgTray
                     else if (line.StartsWith("Import Complete"))
                     {
                         _trayIcon.Icon = CurrentStatusImage();
-                        _trayIcon.BalloonTipTitle = "EPG123";
+                        _trayIcon.BalloonTipTitle = $"{_version}";
                         switch (_lastStatus)
                         {
                             case 0xDEAD:

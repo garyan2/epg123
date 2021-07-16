@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.IO.Pipes;
@@ -6,6 +7,7 @@ using System.Linq;
 using System.Reflection;
 using System.Security.AccessControl;
 using System.Security.Principal;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace epg123
@@ -126,6 +128,60 @@ namespace epg123
             }
 
             return true;
+        }
+
+        public static Mutex GetProgramMutex(string uid, bool take)
+        {
+            var mutex = new Mutex(false, uid);
+            try
+            {
+                var tryAgain = true;
+                while (tryAgain)
+                {
+                    bool result;
+                    try
+                    {
+                        result = mutex.WaitOne(0, false);
+                    }
+                    catch (AbandonedMutexException e)
+                    {
+                        result = true;
+                    }
+
+                    if (result)
+                    {
+                        tryAgain = false;
+                    }
+                    else if (take)
+                    {
+                        foreach (var proc in Process.GetProcesses())
+                        {
+                            if (!proc.ProcessName.Equals(Process.GetCurrentProcess().ProcessName) ||
+                                proc.Id == Process.GetCurrentProcess().Id) continue;
+                            Logger.WriteInformation($"Killing process {proc.ProcessName}[{proc.Id}] to continue execution of new instance.");
+                            proc.Kill();
+                            proc.WaitForExit(2000);
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        Logger.WriteMessage("===============================================================================");
+                        Logger.WriteError($"An instance of {Process.GetCurrentProcess().ProcessName} is already running. Aborting.");
+                        Logger.WriteMessage("===============================================================================");
+                        Logger.Close();
+
+                        mutex.Close();
+                        return null;
+                    }
+                }
+            }
+            finally
+            {
+                // do nothing
+            }
+
+            return mutex;
         }
 
         public static bool DeleteFile(string filepath)

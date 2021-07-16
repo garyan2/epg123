@@ -152,8 +152,6 @@ namespace epg123
         }
 
         private const string AppGuid = "{CD7E6857-7D92-4A2F-B3AB-ED8CB42C6F65}";
-        private const string GuiGuid = "{0BA29D22-8BB1-4C33-919A-330D5DBA1FF0}";
-        private const string ImpGuid = "{B7CEFF32-CD68-4094-BD1B-A541D246372E}";
         private static string filename = string.Empty;
         private static bool showProgress;
         private const int MaximumRecordingWaitHours = 23;
@@ -200,7 +198,7 @@ namespace epg123
                     var ts = new epgTaskScheduler();
                     while (true)
                     {
-                        // looks like WMC may have a 300000 ms timeout for the update action
+                        // looks like WMC may have a 30000 ms timeout for the update action
                         // no reason to continue with the mcupdate run if it is going to be ignored
                         if (DateTime.Now - startTime > TimeSpan.FromMinutes(5.0)) return 0;
 
@@ -223,254 +221,227 @@ namespace epg123
                     return 0;
             }
 
-            // create a mutex and keep alive until program exits
-            using (var mutex = new Mutex(false, "Global\\" + AppGuid))
+            // evaluate arguments
+            bool nologo, import, force, showGui, advanced, nogc, verbose, noverify;
+            var match = nologo = import = force = showGui = advanced = nogc = verbose = noverify = false;
+
+            if (File.Exists($"{Helper.Epg123ProgramDataFolder}\\nogc.txt"))
             {
-                bool nologo, import, force, showGui, advanced, nogc, verbose, noverify;
-                var match = nologo = import = force = showGui = advanced = nogc = verbose = noverify = false;
-
-                if (File.Exists($"{Helper.Epg123ProgramDataFolder}\\nogc.txt"))
+                File.Delete($"{Helper.Epg123ProgramDataFolder}\\nogc.txt");
+                nogc = true;
+            }
+            if (args.Length > 0)
+            {
+                for (var i = 0; i < args.Length; ++i)
                 {
-                    File.Delete($"{Helper.Epg123ProgramDataFolder}\\nogc.txt");
-                    nogc = true;
-                }
-                if (args.Length > 0)
-                {
-                    for (var i = 0; i < args.Length; ++i)
+                    switch (args[i].ToLower())
                     {
-                        switch (args[i].ToLower())
-                        {
-                            case "-match":
-                                match = true;
-                                break;
-                            case "-nologo":
-                                nologo = true;
-                                break;
-                            case "-i":
-                                if ((i + 1) < args.Length)
+                        case "-match":
+                            match = true;
+                            break;
+                        case "-nologo":
+                            nologo = true;
+                            break;
+                        case "-i":
+                            if (i + 1 < args.Length)
+                            {
+                                if (!File.Exists(filename = args[++i]))
                                 {
-                                    if (!File.Exists(filename = args[++i]))
-                                    {
-                                        var err = $"File \"{filename}\" does not exist.";
-                                        Logger.WriteError(err);
-                                        return -1;
-                                    }
-                                    filename = new FileInfo(filename).FullName.ToLower();
-
-                                    var testNewFile = filename.Replace("\\epg123.mxf", "\\output\\epg123.mxf");
-                                    if (File.Exists(testNewFile))
-                                    {
-                                        Logger.WriteWarning($"It appears the MXF file to import is incorrect. Changing the import file from \"{filename}\" to \"{testNewFile}\".");
-                                        filename = testNewFile;
-                                    }
-                                    statusLogo.MxfFile = filename;
-                                }
-                                else
-                                {
-                                    Logger.WriteError("Missing input filename and path.");
+                                    var err = $"File \"{filename}\" does not exist.";
+                                    Logger.WriteError(err);
                                     return -1;
                                 }
-                                import = true;
-                                break;
-                            case "-f":
-                                force = true;
-                                break;
-                            case "-p":
-                                showProgress = true;
-                                break;
-                            case "-x":
-                                advanced = true;
-                                showGui = true;
-                                break;
-                            case "-nogc":
-                                nogc = true;
-                                break;
-                            case "-verbose":
-                                verbose = true;
-                                break;
-                            case "-noverify":
-                                noverify = true;
-                                break;
-                            default:
-                                Logger.WriteVerbose($"**** Invalid arguments for epg123Client.exe; \"{arguments}\" ****");
-                                Logger.Close();
+                                filename = new FileInfo(filename).FullName.ToLower();
+
+                                var testNewFile = filename.Replace("\\epg123.mxf", "\\output\\epg123.mxf");
+                                if (File.Exists(testNewFile))
+                                {
+                                    Logger.WriteWarning($"It appears the MXF file to import is incorrect. Changing the import file from \"{filename}\" to \"{testNewFile}\".");
+                                    filename = testNewFile;
+                                }
+                                statusLogo.MxfFile = filename;
+                            }
+                            else
+                            {
+                                Logger.WriteError("Missing input filename and path.");
                                 return -1;
-                        }
+                            }
+                            import = true;
+                            break;
+                        case "-f":
+                            force = true;
+                            break;
+                        case "-p":
+                            showProgress = true;
+                            break;
+                        case "-x":
+                            advanced = true;
+                            showGui = true;
+                            break;
+                        case "-nogc":
+                            nogc = true;
+                            break;
+                        case "-verbose":
+                            verbose = true;
+                            break;
+                        case "-noverify":
+                            noverify = true;
+                            break;
+                        default:
+                            Logger.WriteVerbose($"**** Invalid arguments for epg123Client.exe; \"{arguments}\" ****");
+                            Logger.Close();
+                            return -1;
                     }
+                }
+            }
+            else
+            {
+                showGui = true;
+            }
+
+            // create a mutex and keep alive until program exits
+            using (var mutex = Helper.GetProgramMutex($"Global\\{AppGuid}", !(showGui ^ showProgress)))
+            {
+                // check for an instance already running
+                if (mutex == null) return -1;
+
+                // show gui if needed
+                if (showGui)
+                {
+                    Logger.WriteMessage("===============================================================================");
+                    Logger.WriteMessage($" Activating the epg123 client GUI. version {Helper.Epg123Version}");
+                    Logger.WriteMessage("===============================================================================");
+                    var client = new clientForm(advanced);
+                    client.ShowDialog();
+                    GC.Collect();
+
+                    if (client.RestartClientForm)
+                    {
+                        // start a new process
+                        var startInfo = new ProcessStartInfo()
+                        {
+                            FileName = Helper.Epg123ClientExePath,
+                            WorkingDirectory = Helper.ExecutablePath,
+                            UseShellExecute = true,
+                            Verb = client.RestartAsAdmin ? "runas" : null
+                        };
+                        Process.Start(startInfo);
+                    }
+                    client.Dispose();
                 }
                 else
                 {
-                    showGui = true;
-                }
+                    // prevent machine from entering sleep mode
+                    var prevThreadState = NativeMethods.SetThreadExecutionState(
+                        (uint)ExecutionFlags.ES_CONTINUOUS |
+                        (uint)ExecutionFlags.ES_SYSTEM_REQUIRED |
+                        (uint)ExecutionFlags.ES_AWAYMODE_REQUIRED);
 
-                // use another mutex if the GUI is open
-                using (var mutex2 = new Mutex(false, "Global\\" + GuiGuid))
-                {
-                    // check for a gui instance already running
-                    if (!mutex2.WaitOne(2000, false) && (showGui || !showProgress))
+                    Logger.WriteMessage("===============================================================================");
+                    Logger.WriteMessage($" Beginning epg123 client execution. version {Helper.Epg123Version}");
+                    Logger.WriteMessage("===============================================================================");
+                    Logger.WriteInformation($"Beginning epg123 client execution. {DateTime.Now.ToUniversalTime():u}");
+                    Logger.WriteVerbose($"Import: {import} , Match: {match} , NoLogo: {nologo} , Force: {force} , ShowProgress: {showProgress} , NoGC: {force || nogc} , NoVerify: {noverify} , Verbose: {verbose}");
+                    var startTime = DateTime.UtcNow;
+
+                    if (import)
                     {
-                        if (showGui)
+                        // check if garbage cleanup is needed
+                        if (!nogc && !force && WmcRegistries.IsGarbageCleanupDue() && !ProgramRecording(60))
                         {
-                            MessageBox.Show("An instance of EPG123 Client GUI is already running.", "Initialization Aborted");
-                        }
-                        else
-                        {
-                            Logger.WriteError("An instance of EPG123 Client GUI is already running. Initialization Aborted.");
-                            Logger.Close();
-                        }
-                        return -1;
-                    }
-
-                    if (showGui)
-                    {
-                        Logger.WriteMessage("===============================================================================");
-                        Logger.WriteMessage($" Activating the epg123 client GUI. version {Helper.Epg123Version}");
-                        Logger.WriteMessage("===============================================================================");
-                        var client = new clientForm(advanced);
-                        client.ShowDialog();
-
-                        mutex2.ReleaseMutex();
-                        GC.Collect();
-                        if (client.RestartClientForm)
-                        {
-                            // start a new process
-                            var startInfo = new ProcessStartInfo()
-                            {
-                                FileName = Helper.Epg123ClientExePath,
-                                WorkingDirectory = Helper.ExecutablePath,
-                                UseShellExecute = true,
-                                Verb = client.RestartAsAdmin ? "runas" : null
-                            };
-                            Process.Start(startInfo);
-                        }
-                        client.Dispose();
-                    }
-                    else
-                    {
-                        // and yet another mutex for the import action
-                        using (var mutex3 = new Mutex(false, "Global\\" + ImpGuid))
-                        {
-                            // check for an import instance is already running
-                            if (!mutex3.WaitOne(0, false))
-                            {
-                                Logger.WriteError("An instance of EPG123 Client import is already running. Aborting this instance.");
-                                Logger.Close();
-                                return -1;
-                            }
-
-                            // prevent machine from entering sleep mode
-                            var prevThreadState = NativeMethods.SetThreadExecutionState(
-                                (uint) ExecutionFlags.ES_CONTINUOUS |
-                                (uint) ExecutionFlags.ES_SYSTEM_REQUIRED |
-                                (uint) ExecutionFlags.ES_AWAYMODE_REQUIRED);
-
-                            Logger.WriteMessage("===============================================================================");
-                            Logger.WriteMessage($" Beginning epg123 client execution. version {Helper.Epg123Version}");
-                            Logger.WriteMessage("===============================================================================");
-                            Logger.WriteInformation($"Beginning epg123 client execution. {DateTime.Now.ToUniversalTime():u}");
-                            Logger.WriteVerbose($"Import: {import} , Match: {match} , NoLogo: {nologo} , Force: {force} , ShowProgress: {showProgress} , NoGC: {force || nogc} , NoVerify: {noverify} , Verbose: {verbose}");
-                            var startTime = DateTime.UtcNow;
-
-                            if (import)
-                            {
-                                // check if garbage cleanup is needed
-                                if (!nogc && !force && WmcRegistries.IsGarbageCleanupDue() && !ProgramRecording(60))
-                                {
-                                    WmcStore.Close();
-                                    WmcUtilities.PerformGarbageCleanup();
-                                }
-
-                                // ensure no recordings are active if importing
-                                if (!force && ProgramRecording(10))
-                                {
-                                    Logger.WriteError($"A program recording is still in progress after {MaximumRecordingWaitHours} hours. Aborting the mxf file import.");
-                                    goto CompleteImport;
-                                }
-                                WmcStore.Close();
-
-                                // import mxf file
-                                if (!ImportMxfFile(filename))
-                                {
-                                    Logger.WriteError("Failed to import .mxf file. Exiting.");
-                                    goto CompleteImport;
-                                }
-
-                                // perform verification
-                                if (!noverify)
-                                {
-                                    _ = new VerifyLoad(filename, verbose);
-                                }
-
-                                // get lineup and configure lineup type and devices 
-                                if (!WmcStore.ActivateEpg123LineupsInStore() || !WmcRegistries.ActivateGuide())
-                                {
-                                    Logger.WriteError("Failed to locate any lineups from EPG123.");
-                                    goto CompleteImport;
-                                }
-                            }
-
-                            // remove all channel logos
-                            if (nologo)
-                            {
-                                WmcStore.ClearLineupChannelLogos();
-                            }
-
-                            // perform automatch
-                            if (match)
-                            {
-                                try
-                                {
-                                    WmcStore.AutoMapChannels();
-                                    Logger.WriteInformation("Completed the automatch of lineup stations to tuner channels.");
-                                }
-                                catch (Exception ex)
-                                {
-                                    Logger.WriteError($"{ex.Message}");
-                                    Logger.WriteError("Failed to perform the automatch of lineup stations to tuner channels task.");
-                                }
-                            }
-
-                            // import success
-                            if (import)
-                            {
-                                // fix merged channels that no longer have tuninginfos
-                                WmcStore.CleanUpMergedChannelTuningInfos();
-
-                                // refresh the lineups after import
-                                using (var mergedLineups = new MergedLineups(WmcStore.WmcObjectStore))
-                                {
-                                    foreach (MergedLineup mergedLineup in mergedLineups)
-                                    {
-                                        mergedLineup.Refresh();
-                                    }
-                                }
-                                Logger.WriteInformation("Completed lineup refresh.");
-
-                                // reindex database
-                                WmcUtilities.ReindexPvrSchedule();
-                                WmcUtilities.ReindexDatabase();
-                            }
-
-                            // import complete
-                            CompleteImport:
-                            if (import)
-                            {
-                                // update status logo
-                                statusLogo.StatusImage();
-
-                                // signal the notification tray to update the icon
-                                Helper.SendPipeMessage("Import Complete");
-                            }
-
                             WmcStore.Close();
+                            WmcUtilities.PerformGarbageCleanup();
+                        }
 
-                            // all done
-                            Logger.WriteInformation("Completed EPG123 client execution.");
-                            Logger.WriteVerbose($"EPG123 client execution time was {DateTime.UtcNow - startTime}.");
-                            Logger.Close();
-                            NativeMethods.SetThreadExecutionState(prevThreadState | (uint)ExecutionFlags.ES_CONTINUOUS);
+                        // ensure no recordings are active if importing
+                        if (!force && ProgramRecording(10))
+                        {
+                            Logger.WriteError($"A program recording is still in progress after {MaximumRecordingWaitHours} hours. Aborting the mxf file import.");
+                            goto CompleteImport;
+                        }
+                        WmcStore.Close();
+
+                        // import mxf file
+                        if (!ImportMxfFile(filename))
+                        {
+                            Logger.WriteError("Failed to import .mxf file. Exiting.");
+                            goto CompleteImport;
+                        }
+
+                        // perform verification
+                        if (!noverify)
+                        {
+                            _ = new VerifyLoad(filename, verbose);
+                        }
+
+                        // get lineup and configure lineup type and devices 
+                        if (!WmcStore.ActivateEpg123LineupsInStore() || !WmcRegistries.ActivateGuide())
+                        {
+                            Logger.WriteError("Failed to locate any lineups from EPG123.");
+                            goto CompleteImport;
                         }
                     }
+
+                    // remove all channel logos
+                    if (nologo)
+                    {
+                        WmcStore.ClearLineupChannelLogos();
+                    }
+
+                    // perform automatch
+                    if (match)
+                    {
+                        try
+                        {
+                            WmcStore.AutoMapChannels();
+                            Logger.WriteInformation("Completed the automatch of lineup stations to tuner channels.");
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.WriteError($"{ex.Message}");
+                            Logger.WriteError("Failed to perform the automatch of lineup stations to tuner channels task.");
+                        }
+                    }
+
+                    // import success
+                    if (import)
+                    {
+                        // fix merged channels that no longer have tuninginfos
+                        WmcStore.CleanUpMergedChannelTuningInfos();
+
+                        // refresh the lineups after import
+                        using (var mergedLineups = new MergedLineups(WmcStore.WmcObjectStore))
+                        {
+                            foreach (MergedLineup mergedLineup in mergedLineups)
+                            {
+                                mergedLineup.Refresh();
+                            }
+                        }
+                        Logger.WriteInformation("Completed lineup refresh.");
+
+                        // reindex database
+                        WmcUtilities.ReindexPvrSchedule();
+                        WmcUtilities.ReindexDatabase();
+                    }
+
+                    // import complete
+                    CompleteImport:
+                    if (import)
+                    {
+                        // update status logo
+                        statusLogo.StatusImage();
+
+                        // signal the notification tray to update the icon
+                        Helper.SendPipeMessage("Import Complete");
+                    }
+
+                    WmcStore.Close();
+
+                    // all done
+                    Logger.WriteInformation("Completed EPG123 client execution.");
+                    Logger.WriteVerbose($"EPG123 client execution time was {DateTime.UtcNow - startTime}.");
+                    Logger.Close();
+                    NativeMethods.SetThreadExecutionState(prevThreadState | (uint)ExecutionFlags.ES_CONTINUOUS);
                 }
             }
             Environment.Exit(0);

@@ -42,52 +42,35 @@ namespace epg123
             Logger.Initialize("Media Center", "EPG123");
             Helper.EstablishFileFolderPaths();
 
-            // create a mutex and keep alive until program exits
-            using (var mutex = new Mutex(true, "Global\\" + AppGuid))
+            bool import, match, showProgress;
+            import = match = showProgress = false;
+            var showGui = true;
+            epgConfig config = null;
+
+            // only evaluate arguments if a configuration file exists, otherwise open the gui
+            if (File.Exists(Helper.Epg123CfgPath) && args != null)
             {
-                var showGui = true;
-                var import = false;
-                var match = false;
-                var showProgress = false;
-                epgConfig config = null;
-
-                // only evaluate arguments if a configuration file exists, otherwise open the gui
-                if (File.Exists(Helper.Epg123CfgPath) && (args != null))
+                foreach (var t in args)
                 {
-                    foreach (var t in args)
+                    switch (t.ToLower())
                     {
-                        switch (t.ToLower())
-                        {
-                            case "-update":
-                                showGui = false;
-                                break;
-                            case "-p":
-                                showProgress = true;
-                                break;
-                            default:
-                                return -1;
-                        }
+                        case "-update":
+                            showGui = false;
+                            break;
+                        case "-p":
+                            showProgress = true;
+                            break;
+                        default:
+                            return -1;
                     }
                 }
+            }
 
+            // create a mutex and keep alive until program exits
+            using (var mutex = Helper.GetProgramMutex($"Global\\{AppGuid}", !showGui))
+            {
                 // check for an instance already running
-                if (!mutex.WaitOne(3000, false))
-                {
-                    if (!showGui)
-                    {
-                        Logger.WriteMessage("===============================================================================");
-                        Logger.WriteError("An instance of EPG123 is already running. Aborting update.");
-                        Logger.WriteMessage("===============================================================================");
-                        Logger.Close();
-                        return -1;
-                    }
-                    else
-                    {
-                        MessageBox.Show("An instance of EPG123 is already running.", "Initialization Aborted");
-                        Logger.Close();
-                        return 0;
-                    }
-                }
+                if (mutex == null) return -1;
 
                 // open the configuration GUI if needed
                 if (showGui)
@@ -102,7 +85,7 @@ namespace epg123
                     {
                         mutex.ReleaseMutex(); GC.Collect();
                         if (!cfgForm.RestartAsAdmin) return 0;
-                        var startInfo = new ProcessStartInfo()
+                        var startInfo = new ProcessStartInfo
                         {
                             FileName = Helper.Epg123ExePath,
                             WorkingDirectory = Helper.ExecutablePath,
@@ -114,8 +97,8 @@ namespace epg123
                     }
                     Logger.Initialize("Media Center", "EPG123");
                     config = cfgForm.Config;
-                    import = cfgForm.Import;
-                    match = cfgForm.Match;
+                    import = config.AutoImport;
+                    match = config.Automatch;
                 }
 
                 // prevent machine from entering sleep mode
