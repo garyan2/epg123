@@ -397,7 +397,7 @@ namespace epg123.sdJson2mxf
             {
                 var name = mxfProgram.Title.Replace(' ', '_');
                 mxfSeriesInfo = SdMxf.GetSeriesInfo(name);
-                sportsSeries.Add(name, mxfProgram.ProgramId.Substring(0, 10));
+                sportsSeries.Add(name, mxfProgram.ProgramId);
             }
             else
             {

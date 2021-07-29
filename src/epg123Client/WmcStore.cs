@@ -422,10 +422,20 @@ namespace epg123Client
                             switch (dvbTuningInfo.TuningSpace)
                             {
                                 case "DVB-T":
-                                    // formula to convert channel (n) to frequency (fc) is fc = 8n + 306 (in MHz)
-                                    // offset is -167KHz, 0Hz, +167KHz => int offset = ti.Frequency - (channel * 8000) - 306000;
-                                    var channel = (ti.Frequency - 305833) / 8000;
-                                    tuningInfos.Add($"{(ti.IsEncrypted ? lockSymbol : string.Empty)}UHF C{channel}");
+                                    // formula to convert channel (n) to frequency (fc) is fc = 8n + 306 (in MHz) for UHF
+                                    // formula to convert channel (n) to frequency (fc) is fc = 7n + 142.5 (in MHz) for VHF
+                                    int channel;
+                                    var band = "UHF";
+                                    if (ti.Frequency < 230000)
+                                    {
+                                        channel = (ti.Frequency - 142300) / 7000;
+                                        band = "VHF";
+                                    }
+                                    else
+                                    {
+                                        channel = (ti.Frequency - 305800) / 8000;
+                                    }
+                                    tuningInfos.Add($"{(ti.IsEncrypted ? lockSymbol : string.Empty)}{band} {channel}");
                                     break;
                                 case "DVB-S":
                                     var locator = ti.TuneRequest.Locator as DVBSLocator;
@@ -463,12 +473,12 @@ namespace epg123Client
                             switch (channelTuningInfo.TuningSpace)
                             {
                                 case "ATSC":
-                                    tuningInfos.Add($"{((ti.PhysicalNumber < 14) ? "VHF" : "UHF")} {ti.PhysicalNumber}{((ti.SubNumber > 0) ? "." + ti.SubNumber : null)}");
+                                    tuningInfos.Add($"{(ti.PhysicalNumber < 14 ? "VHF" : "UHF")} {ti.PhysicalNumber}");
                                     break;
                                 case "Cable":
                                 case "ClearQAM":
                                 case "Digital Cable":
-                                    tuningInfos.Add($"{(ti.IsEncrypted ? lockSymbol : string.Empty)}C{ti.PhysicalNumber}{((ti.SubNumber > 0) ? "." + ti.SubNumber : null)}");
+                                    tuningInfos.Add($"{(ti.IsEncrypted ? lockSymbol : string.Empty)}C{ti.PhysicalNumber}");
                                     break;
                                 case "{adb10da8-5286-4318-9ccb-cbedc854f0dc}":
                                     tuningInfos.Add($"IR {ti.PhysicalNumber}{((ti.SubNumber > 0) ? "." + ti.SubNumber : null)}");

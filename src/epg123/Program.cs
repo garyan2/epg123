@@ -164,7 +164,8 @@ namespace epg123
                 NativeMethods.SetThreadExecutionState(prevThreadState | (uint)ExecutionFlags.ES_CONTINUOUS);
 
                 // did a Save&Execute from GUI ... perform import and automatch as well if requested
-                if (!sdJson2mxf.sdJson2Mxf.Success || !import) return 0;
+                if (!sdJson2mxf.sdJson2Mxf.Success) return -1;
+                if (import)
                 {
                     // verify output file exists
                     if (!File.Exists(Helper.Epg123MxfPath) || !File.Exists(Helper.Epg123ClientExePath))

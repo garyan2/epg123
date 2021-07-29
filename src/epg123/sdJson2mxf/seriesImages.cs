@@ -145,7 +145,7 @@ namespace epg123.sdJson2mxf
                 {
                     foreach (var key in sportsSeries.AllKeys)
                     {
-                        if (!sportsSeries.Get(key).Contains(response.ProgramId.Substring(0, 10))) continue;
+                        if (!sportsSeries.Get(key).Contains(response.ProgramId)) continue;
                         series = SdMxf.GetSeriesInfo(key);
                         uid = key;
                     }
@@ -154,11 +154,12 @@ namespace epg123.sdJson2mxf
                 {
                     series = SdMxf.GetSeriesInfo(response.ProgramId.Substring(2, 8));
                 }
-                if (series == null || !string.IsNullOrEmpty(series.GuideImage)) continue;
+                if (series == null || !string.IsNullOrEmpty(series.GuideImage) || series.extras.ContainsKey("artwork")) continue;
 
                 // get series images
-                List<ProgramArtwork> artwork;
-                series.extras.Add("artwork", artwork = GetTieredImages(response.Data, new List<string> { "series", "sport", "episode" }));
+                var artwork = GetTieredImages(response.Data, new List<string> { "series", "sport", "episode" });
+                if (response.ProgramId.StartsWith("SP") && artwork.Count <= 0) continue;
+                series.extras.Add("artwork", artwork);
                 series.mxfGuideImage = GetGuideImageAndUpdateCache(artwork, ImageType.Series, uid);
             }
         }

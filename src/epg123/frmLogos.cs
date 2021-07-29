@@ -119,21 +119,25 @@ namespace epg123
                 switch (image.Category)
                 {
                     case "dark":
+                        if (pbDarkRemote.Image != null) break;
                         pbDarkRemote.BackColor = Color.FromArgb(255, 6, 15, 30); ;
                         pbDarkRemote.Load(image.Url);
                         pbDarkRemote.Refresh();
                         break;
                     case "white":
+                        if (pbWhiteRemote.Image != null) break;
                         pbWhiteRemote.BackColor = Color.FromArgb(255, 6, 15, 30); ;
                         pbWhiteRemote.Load(image.Url);
                         pbWhiteRemote.Refresh();
                         break;
                     case "light":
+                        if (pbLightRemote.Image != null) break;
                         pbLightRemote.BackColor = Color.White;
                         pbLightRemote.Load(image.Url);
                         pbLightRemote.Refresh();
                         break;
                     case "gray":
+                        if (pbGrayRemote.Image != null) break;
                         pbGrayRemote.BackColor = Color.White;
                         pbGrayRemote.Load(image.Url);
                         pbGrayRemote.Refresh();
