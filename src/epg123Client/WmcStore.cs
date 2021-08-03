@@ -496,10 +496,18 @@ namespace epg123Client
                             var ti = stringTuningInfo;
                             switch (stringTuningInfo.TuningSpace)
                             {
-                                case "dc65aa02-5cb0-4d6d-a020-68702a5b34b8":
+                                case "dc65aa02-5cb0-4d6d-a020-68702a5b34b8": // Hauppauge HD PVR
                                     foreach (Channel channel in ti.Channels)
                                     {
                                         tuningInfos.Add("C" + channel.OriginalNumber);
+                                    }
+                                    break;
+                                case "DVB-T": // DVBLink
+                                case "DVB-S":
+                                case "DVB-C":
+                                    foreach (Channel channel in ti.Channels)
+                                    {
+                                        tuningInfos.Add($"C{channel.OriginalNumber}{(channel.SubNumber > 0 ? $".{channel.SubNumber}" : string.Empty)}");
                                     }
                                     break;
                                 default:

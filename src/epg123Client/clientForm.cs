@@ -10,8 +10,10 @@ using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using System.Xml;
+using System.Xml.Linq;
 using epg123;
 using epg123.Task;
+using Microsoft.Win32;
 using Microsoft.MediaCenter.Guide;
 using Microsoft.MediaCenter.Store;
 using Microsoft.MediaCenter.Store.MXF;
@@ -323,7 +325,7 @@ namespace epg123Client
             else if (_task.Exist && (clientIndex >= 0))
             {
                 var arg = _task.Actions[clientIndex].Arguments;
-                tbTaskInfo.Text = arg.Substring(arg.ToLower().IndexOf("-i", StringComparison.Ordinal) + 3, 
+                tbTaskInfo.Text = arg.Substring(arg.ToLower().IndexOf("-i", StringComparison.Ordinal) + 3,
                     arg.ToLower().IndexOf(".mxf", StringComparison.Ordinal) - arg.ToLower().IndexOf("-i", StringComparison.Ordinal) + 1).TrimStart('\"');
             }
             else if (_task.Exist)
@@ -766,7 +768,7 @@ namespace epg123Client
                 MessageBox.Show("Sorry, EPG123 limits the merging of channels to 5 at a time.", "Sanity Check",
                     MessageBoxButtons.OK, MessageBoxIcon.Stop);
             }
-            
+
             mergedChannelListView.BeginUpdate();
 
             var channelIds = new List<long>();
@@ -1483,7 +1485,6 @@ namespace epg123Client
             if (importForm.Success)
             {
                 BuildLineupChannelListView();
-                if (cbAutomatch.Checked) WmcStore.AutoMapChannels();
                 WmcStore.CleanUpMergedChannelTuningInfos();
                 WmcUtilities.ReindexDatabase();
             }
@@ -1554,9 +1555,35 @@ namespace epg123Client
                 }
             }
 
+            // include registry keys for the tuners and recordes
+            string[] regFiles = {$"{Helper.Epg123BackupFolder}\\tuners.reg", $"{Helper.Epg123BackupFolder}\\recorders.reg"};
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = "reg.exe",
+                Arguments = $"export \"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Media Center\\Service\\Video\\Tuners\" \"{regFiles[0]}\" /y",
+                CreateNoWindow = true,
+                UseShellExecute = false
+            })?.WaitForExit();
+            backups.Add($"{regFiles[0]}", "tuners.reg");
+
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = "reg.exe",
+                Arguments = $"export \"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Media Center\\Settings\" \"{regFiles[1]}\" /y",
+                CreateNoWindow = true,
+                UseShellExecute = false
+            })?.WaitForExit();
+            backups.Add($"{regFiles[1]}", "recorders.reg");
+
             Helper.BackupZipFile = backups.Count > 0 
-                ? CompressXmlFiles.CreatePackage(backups, "backups")
+                ? new CompressXmlFiles().CreatePackage(backups, "backups")
                 : string.Empty;
+
+            // remove temporary registry files
+            foreach (var file in regFiles)
+            {
+                if (File.Exists(file)) File.Delete(file);
+            }
         }
 
         private static string GetBackupFilename(string backup)
@@ -1626,16 +1653,224 @@ namespace epg123Client
         {
             foreach (var backup in BackupFolders)
             {
-                using (var stream = CompressXmlFiles.GetBackupFileStream(backup + ".mxf", Helper.BackupZipFile))
+                using (var stream = new CompressXmlFiles().GetBackupFileStream(backup + ".mxf", Helper.BackupZipFile))
                 {
                     if (stream == null) continue;
-                    if (backup == "lineup")
+                    if (rebuild && backup == "lineup")
                     {
                         if (DeleteActiveDatabaseFile() == null) return;
+                    }
+                    else if (backup == "lineup")
+                    { 
+                        var lineup = InspectLineupFile(stream);
+                        if (lineup == null || DeleteActiveDatabaseFile() == null) return;
+                        using (var mem = new MemoryStream())
+                        {
+                            lineup.Save(mem);
+                            mem.Seek(0, SeekOrigin.Begin);
+                            MxfImporter.Import(mem, WmcStore.WmcObjectStore);
+                            continue;
+                        }
                     }
                     MxfImporter.Import(stream, WmcStore.WmcObjectStore);
                 }
             }
+        }
+
+        class tunerRecorders
+        {
+            public override string ToString()
+            {
+                return $"{recorderId} {devName}";
+            }
+
+            public bool matched;
+            public string recorderId;
+            public string devName;
+        }
+
+        private XDocument InspectLineupFile(Stream stream)
+        {
+            // read the backup lineup file
+            XDocument doc;
+            using (var reader = new StreamReader(stream))
+            {
+                doc = XDocument.Parse(reader.ReadToEnd());
+            }
+
+            // collect all the devices that exist in the backup file
+            var devices = doc.Descendants().Where(arg => (arg.Name.LocalName == "Device" && arg.HasElements) || arg.Name.LocalName == "device").ToList();
+            if (devices.Count == 0)
+            {
+                MessageBox.Show(
+                    "There are no tuners present in the backup file to restore.\n\nRestore function is aborted.",
+                    "Restore Aborted", MessageBoxButtons.OK, MessageBoxIcon.Hand);
+                return null;
+            }
+
+            // if backup contained registries, import them and return the xdocument as-is
+            if (RestoredRegistries()) return doc;
+
+            // collect all the tuners that exist in the registry
+            var registryTuners = new List<tunerRecorders>();
+            using (var tunersKey = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Media Center\Service\Video\Tuners", false))
+            {
+                if (tunersKey != null)
+                {
+                    foreach (var tunerGroupName in tunersKey.GetSubKeyNames().Where(arg => !arg.Equals("DVR")))
+                    {
+                        using (var tunerGroup = tunersKey.OpenSubKey(tunerGroupName))
+                        {
+                            foreach (var tunerName in tunerGroup.GetSubKeyNames())
+                            {
+                                using (var tuner = tunerGroup.OpenSubKey(tunerName))
+                                {
+                                    registryTuners.Add(new tunerRecorders
+                                    {
+                                        recorderId = tunerName.Substring(1, 36),
+                                        devName = (string)tuner.GetValue("DevName"),
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // check that recorder settings are setup
+            var recorders = new List<string>();
+            using (var recordingSettings = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Media Center\Settings", false))
+            {
+                recorders = recordingSettings.GetSubKeyNames().Where(arg => arg.StartsWith("RecorderSettings")).ToList();
+            }
+
+            // determine whether to abort or not
+            if (registryTuners.Count == 0 || recorders.Count == 0)
+            {
+                MessageBox.Show(
+                    "There are no tuners/recorders installed for WMC on this machine. You must complete WMC TV Setup to at least the 'Scan for channels' stage before restoring this backup.\n" + 
+                    "\nRestore function is aborted.",
+                    "Restore Aborted", MessageBoxButtons.OK, MessageBoxIcon.Hand);
+                return null;
+            }
+
+            // match backup lineup file devices with registry tuners
+            var unmatchedTuners = new List<string>();
+            foreach (var device in devices)
+            {
+                var regTuner = registryTuners.SingleOrDefault(arg => arg.devName == device.Attribute("name").Value);
+                if (regTuner != null && !regTuner.matched)
+                {
+                    device.SetAttributeValue("recorderId", regTuner.recorderId.ToLower());
+                    var contentRecorder = device.Element("contentRecorder");
+                    if (contentRecorder != null)
+                    {
+                        contentRecorder.SetAttributeValue("uid", $"!Recorders!{regTuner.recorderId.ToLower()}");
+                        contentRecorder.SetAttributeValue("instanceId", regTuner.recorderId.ToLower());
+                    }
+
+                    regTuner.matched = true;
+                }
+                else
+                {
+                    unmatchedTuners.Add(device.Attribute("name").Value);
+                }
+            }
+
+            // if any device in backup lineup file does not exist in registry, abort
+            if (unmatchedTuners.Count > 0)
+            {
+                unmatchedTuners.Sort();
+                MessageBox.Show(
+                    "The following tuners in the backup file do not exist on the host machine.\n" +
+                    $"\n{string.Join("\n", unmatchedTuners)}\n\nRestore function is aborted.",
+                    "Restore Aborted", MessageBoxButtons.OK, MessageBoxIcon.Hand);
+                return null;
+            }
+
+            var unmatchedDevices = registryTuners.Where(arg => !arg.matched).ToList();
+            if (unmatchedDevices.Count > 0)
+            {
+                var deviceNames = unmatchedDevices.Select(device => device.devName).ToList();
+                deviceNames.Sort();
+                if (DialogResult.No == MessageBox.Show(
+                    "The following tuners exist on the host machine, but are not present in the backup file and will not be configured in WMC.\n" + 
+                    $"\n{string.Join("\n", deviceNames)}\n\nDo you wish to proceed?",
+                    "Approval to Proceed", MessageBoxButtons.YesNo, MessageBoxIcon.Question)) return null;
+            }
+
+            return doc;
+        }
+
+        private bool RestoredRegistries()
+        {
+            // check if registry files exist in backup file and extract
+            string[] regFiles = { $"{Helper.Epg123BackupFolder}\\tuners.reg", $"{Helper.Epg123BackupFolder}\\recorders.reg" };
+            foreach (var file in regFiles)
+            {
+                var fInfo = new FileInfo(file);
+                if (File.Exists(file)) File.Delete(file);
+                using (var regStream = new CompressXmlFiles().GetBackupFileStream(fInfo.Name, Helper.BackupZipFile))
+                {
+                    if (regStream == null) continue;
+                    using (var fileStream = File.Create(file))
+                    {
+                        regStream.CopyTo(fileStream);
+                    }
+                }
+            }
+
+            // if we have both registry files, go for it
+            if (!File.Exists(regFiles[0]) || !File.Exists(regFiles[1])) return false;
+
+            // stop services
+            string[] services = { "ehRecvr", "ehSched", "Mcx2Svc" };
+            foreach (var service in services)
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = "net",
+                    Arguments = $"stop {service}",
+                    CreateNoWindow = true,
+                    UseShellExecute = false
+                })?.WaitForExit();
+            }
+
+            // delete and import registry keys
+            string[] regArguments =
+            {
+                "delete \"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Media Center\\Service\\Video\\Tuners\" /f",
+                "delete \"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Media Center\\Settings\" /f",
+                $"import \"{regFiles[0]}\"",
+                $"import \"{regFiles[1]}\""
+            };
+            foreach (var arg in regArguments)
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = "reg.exe",
+                    Arguments = arg,
+                    CreateNoWindow = true,
+                    UseShellExecute = false
+                })?.WaitForExit();
+            }
+
+            // delete the reg files
+            foreach (var file in regFiles)
+            {
+                if (File.Exists(file)) File.Delete(file);
+            }
+
+            // start the ehRecvr process back up
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = "sc.exe",
+                Arguments = "start ehRecvr",
+                CreateNoWindow = true,
+                UseShellExecute = false
+            });
+
+            return true;
         }
 
         private string DeleteActiveDatabaseFile()
@@ -1698,6 +1933,7 @@ namespace epg123Client
         #endregion
 
         #region ========== Rebuild Database ===========
+        bool rebuild;
         private void btnRebuild_Click(object sender, EventArgs e)
         {
             // check for elevated rights and open new process if necessary
@@ -1729,6 +1965,7 @@ namespace epg123Client
             IsolateEpgDatabase();
 
             // start the thread and wait for it to complete
+            rebuild = true;
             var restoreThread = new Thread(RestoreBackupFiles);
             restoreThread.Start();
             while (!restoreThread.IsAlive) ;
@@ -1737,6 +1974,7 @@ namespace epg123Client
                 Application.DoEvents();
                 Thread.Sleep(100);
             }
+            rebuild = false;
 
             // build the listviews
             btnRefreshLineups_Click(null, null);

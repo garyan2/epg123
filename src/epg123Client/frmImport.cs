@@ -6,12 +6,14 @@ namespace epg123Client
 {
     public partial class frmImport : Form
     {
+        private bool notify;
         public bool Success;
 
-        public frmImport(string filepath)
+        public frmImport(string filepath, bool notifyComplete = true)
         {
             Application.EnableVisualStyles();
             InitializeComponent();
+            notify = notifyComplete;
 
             WmcUtilities.BackgroundWorker = backgroundWorker1;
             backgroundWorker1.WorkerReportsProgress = true;
@@ -35,7 +37,7 @@ namespace epg123Client
 
         private void backgroundWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            Helper.SendPipeMessage("Import Complete");
+            if (notify) Helper.SendPipeMessage("Import Complete");
             Close();
         }
     }

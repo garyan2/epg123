@@ -828,7 +828,7 @@ namespace epg123Client
                 Multiselect = false,
                 InitialDirectory = Helper.Epg123OutputFolder
             };
-            if (openFileDialog1.ShowDialog() != DialogResult.OK) return false;
+            if (openFileDialog1.ShowDialog() != DialogResult.OK) return true;
 
             Logger.EventId = 0;
             mxfImport = statusLogo.MxfFile = openFileDialog1.FileName;
@@ -853,8 +853,6 @@ namespace epg123Client
 
             return ret;
         }
-        
-
         #endregion
     }
 }

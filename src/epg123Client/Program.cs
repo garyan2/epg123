@@ -500,7 +500,7 @@ namespace epg123
 
             // do the import with or without progress form
             if (!showProgress) return WmcUtilities.ImportMxfFile(file);
-            var frm = new frmImport(file);
+            var frm = new frmImport(file, false);
             frm.ShowDialog();
             return frm.Success;
         }

@@ -52,7 +52,7 @@ namespace epg123Transfer
             {
                 if (_oldWmcFile.ToLower().EndsWith(".zip"))
                 {
-                    using (var stream = epg123.CompressXmlFiles.GetBackupFileStream("recordings.mxf", _oldWmcFile))
+                    using (var stream = new epg123.CompressXmlFiles().GetBackupFileStream("recordings.mxf", _oldWmcFile))
                     {
                         try
                         {
