@@ -1543,7 +1543,7 @@ namespace epg123Client
             // going to assume backups are up-to-date if in safe mode
             if (SystemInformation.BootMode == BootMode.Normal)
             {
-                WmcUtilities.PerformWmcConfigurationsBackup();
+                _ = WmcUtilities.PerformWmcConfigurationsBackup();
             }
 
             foreach (var backupFolder in BackupFolders)
@@ -1708,8 +1708,10 @@ namespace epg123Client
                 return null;
             }
 
+            return doc;
+
             // if backup contained registries, import them and return the xdocument as-is
-            if (RestoredRegistries()) return doc;
+            // if (RestoredRegistries()) return doc;
 
             // collect all the tuners that exist in the registry
             var registryTuners = new List<tunerRecorders>();
@@ -1758,8 +1760,8 @@ namespace epg123Client
             var unmatchedTuners = new List<string>();
             foreach (var device in devices)
             {
-                var regTuner = registryTuners.SingleOrDefault(arg => arg.devName == device.Attribute("name").Value);
-                if (regTuner != null && !regTuner.matched)
+                var regTuner = registryTuners.SingleOrDefault(arg => !arg.matched && arg.devName == device.Attribute("name").Value);
+                if (regTuner != null)
                 {
                     device.SetAttributeValue("recorderId", regTuner.recorderId.ToLower());
                     var contentRecorder = device.Element("contentRecorder");

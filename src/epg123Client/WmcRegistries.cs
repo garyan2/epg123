@@ -150,5 +150,41 @@ namespace epg123Client
             }
             return ret;
         }
+
+        public static bool IsWmcBackupDue()
+        {
+            var ret = false;
+            var HKLM_EPGKEY = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Media Center\Service\EPG";
+            var NEXTDBGC_KEYVALUE = "dbgc:next run time";
+
+            try
+            {
+                // read registry to see if database garbage cleanup is needed
+                using (var key = Registry.LocalMachine.OpenSubKey(HKLM_EPGKEY, true))
+                {
+                    if (key != null)
+                    {
+                        string nextRun;
+                        if ((nextRun = (string)key.GetValue(NEXTDBGC_KEYVALUE)) != null)
+                        {
+                            var deltaTime = DateTime.Parse(nextRun) - DateTime.Now;
+                            if (deltaTime > TimeSpan.FromHours(12) && deltaTime < TimeSpan.FromHours(36))
+                            {
+                                ret = true;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Logger.WriteInformation("Could not verify when garbage cleanup was last run to determine whether to backup WMC configurations.");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.WriteInformation($"Could not verify when garbage cleanup was last run to determine whether to backup WMC configurations. {ex.Message}\n{ex.StackTrace}");
+            }
+            return ret;
+        }
     }
 }

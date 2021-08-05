@@ -318,14 +318,13 @@ namespace epg123
                     if (client.RestartClientForm)
                     {
                         // start a new process
-                        var startInfo = new ProcessStartInfo()
+                        _ = Process.Start(new ProcessStartInfo
                         {
                             FileName = Helper.Epg123ClientExePath,
                             WorkingDirectory = Helper.ExecutablePath,
                             UseShellExecute = true,
                             Verb = client.RestartAsAdmin ? "runas" : null
-                        };
-                        Process.Start(startInfo);
+                        });
                     }
                     client.Dispose();
                 }
@@ -349,8 +348,11 @@ namespace epg123
                         // check if garbage cleanup is needed
                         if (!nogc && !force && WmcRegistries.IsGarbageCleanupDue() && !ProgramRecording(60))
                         {
-                            WmcStore.Close();
-                            WmcUtilities.PerformGarbageCleanup();
+                            _ = WmcUtilities.PerformGarbageCleanup();
+                        }
+                        else if (!nogc && !force && WmcRegistries.IsWmcBackupDue() && !ProgramRecording(10))
+                        {
+                            _ = WmcUtilities.PerformWmcConfigurationsBackup();
                         }
 
                         // ensure no recordings are active if importing
@@ -414,14 +416,14 @@ namespace epg123
                         {
                             foreach (MergedLineup mergedLineup in mergedLineups)
                             {
-                                mergedLineup.Refresh();
+                                _ = mergedLineup.Refresh();
                             }
                         }
                         Logger.WriteInformation("Completed lineup refresh.");
 
                         // reindex database
-                        WmcUtilities.ReindexPvrSchedule();
-                        WmcUtilities.ReindexDatabase();
+                        _ = WmcUtilities.ReindexPvrSchedule();
+                        _ = WmcUtilities.ReindexDatabase();
                     }
 
                     // import complete
@@ -466,6 +468,7 @@ namespace epg123
 
                 if (!active || expireTime < DateTime.Now)
                 {
+                    WmcStore.Close();
                     return active;
                 }
 

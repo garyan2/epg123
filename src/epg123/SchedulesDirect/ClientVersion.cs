@@ -13,18 +13,25 @@ namespace epg123.SchedulesDirect
             {
                 var github = new GithubApi();
                 var releases = github.GetAllReleasesInfo();
-                var beta = false;
                 
-                // determine if epg123 version is beta or not
+                // find my version in list
                 var myVersion = releases.SingleOrDefault(arg => arg.TagName.Equals(Helper.Epg123Version));
-                if (myVersion == null || myVersion.Prerelease) beta = true;
-
-                var latestRelease = releases.First(arg => !arg.Prerelease);
-                var latestBeta = releases.FirstOrDefault(arg => arg.Prerelease);
-                var latestBetaDate = latestBeta?.PublishedAt ?? DateTime.UtcNow;
-                if (!beta || latestBetaDate < latestRelease.PublishedAt)
+                if (myVersion == null)
                 {
-                    if (Helper.Epg123Version != latestRelease.TagName.Replace("v", ""))
+                    return new ClientVersion
+                    {
+                        Client = "EPG123",
+                        Datetime = DateTime.UtcNow.ToLocalTime(),
+                        Version = Helper.Epg123Version
+                    };
+                }
+
+                // find latest release and any betas afterwords
+                var latestRelease = releases.First(arg => !arg.Prerelease);
+                var latestBeta = releases.FirstOrDefault(arg => arg.PublishedAt > latestRelease.PublishedAt);
+                if (myVersion.PublishedAt <= latestRelease.PublishedAt)
+                {
+                    if (myVersion.PublishedAt < latestRelease.PublishedAt)
                     {
                         Logger.WriteInformation($"epg123 is not up to date. Latest version is {latestRelease.TagName} and can be downloaded from {latestRelease.HtmlUrl}");
                     }
@@ -36,25 +43,16 @@ namespace epg123.SchedulesDirect
                     };
                 }
                 
-                if (latestBeta != null)
+                // return latest beta version
+                if (myVersion.PublishedAt < latestBeta.PublishedAt)
                 {
-                    if (Helper.Epg123Version != latestBeta.TagName.Replace("v", ""))
-                    {
-                        Logger.WriteInformation($"epg123 is not up to date. Latest version is {latestBeta.TagName} and can be downloaded from {latestBeta.HtmlUrl}");
-                    }
-                    return new ClientVersion
-                    {
-                        Client = "EPG123",
-                        Datetime = latestBeta.PublishedAt.ToLocalTime(),
-                        Version = latestBeta.TagName.Replace("v", "")
-                    };
+                    Logger.WriteInformation($"epg123 is not up to date. Latest version is {latestBeta.TagName} and can be downloaded from {latestBeta.HtmlUrl}");
                 }
-
                 return new ClientVersion
                 {
                     Client = "EPG123",
-                    Datetime = DateTime.Now,
-                    Version = Helper.Epg123Version
+                    Datetime = latestBeta.PublishedAt.ToLocalTime(),
+                    Version = latestBeta.TagName.Replace("v", "")
                 };
             }
             catch (Exception ex)
