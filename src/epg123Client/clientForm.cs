@@ -1555,35 +1555,9 @@ namespace epg123Client
                 }
             }
 
-            // include registry keys for the tuners and recordes
-            string[] regFiles = {$"{Helper.Epg123BackupFolder}\\tuners.reg", $"{Helper.Epg123BackupFolder}\\recorders.reg"};
-            Process.Start(new ProcessStartInfo
-            {
-                FileName = "reg.exe",
-                Arguments = $"export \"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Media Center\\Service\\Video\\Tuners\" \"{regFiles[0]}\" /y",
-                CreateNoWindow = true,
-                UseShellExecute = false
-            })?.WaitForExit();
-            backups.Add($"{regFiles[0]}", "tuners.reg");
-
-            Process.Start(new ProcessStartInfo
-            {
-                FileName = "reg.exe",
-                Arguments = $"export \"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Media Center\\Settings\" \"{regFiles[1]}\" /y",
-                CreateNoWindow = true,
-                UseShellExecute = false
-            })?.WaitForExit();
-            backups.Add($"{regFiles[1]}", "recorders.reg");
-
             Helper.BackupZipFile = backups.Count > 0 
                 ? new CompressXmlFiles().CreatePackage(backups, "backups")
                 : string.Empty;
-
-            // remove temporary registry files
-            foreach (var file in regFiles)
-            {
-                if (File.Exists(file)) File.Delete(file);
-            }
         }
 
         private static string GetBackupFilename(string backup)
@@ -1681,12 +1655,16 @@ namespace epg123Client
         {
             public override string ToString()
             {
-                return $"{recorderId} {devName}";
+                return $"{devName}{(hwOccurence > 0 ? $" #{hwOccurence}" : "")}";
             }
 
             public bool matched;
             public string recorderId;
             public string devName;
+            public string rootDevice;
+            public string instanceId;
+            public int devInstance;
+            public int hwOccurence;
         }
 
         private XDocument InspectLineupFile(Stream stream)
@@ -1708,32 +1686,28 @@ namespace epg123Client
                 return null;
             }
 
-            return doc;
-
-            // if backup contained registries, import them and return the xdocument as-is
-            // if (RestoredRegistries()) return doc;
-
-            // collect all the tuners that exist in the registry
+            // collect all the enabled tuners that exist in the registry
             var registryTuners = new List<tunerRecorders>();
-            using (var tunersKey = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Media Center\Service\Video\Tuners", false))
+            using (var tunerGroupKey = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Media Center\Service\Video\Tuners\{71985F48-1CA1-11D3-9CC8-00C04F7971E0}", false))
             {
-                if (tunersKey != null)
+                if (tunerGroupKey != null)
                 {
-                    foreach (var tunerGroupName in tunersKey.GetSubKeyNames().Where(arg => !arg.Equals("DVR")))
+                    foreach (var tunerKey in tunerGroupKey.GetSubKeyNames())
                     {
-                        using (var tunerGroup = tunersKey.OpenSubKey(tunerGroupName))
+                        using (var tuner = tunerGroupKey.OpenSubKey(tunerKey))
                         {
-                            foreach (var tunerName in tunerGroup.GetSubKeyNames())
+                            using (var usrSetting = tuner.OpenSubKey("UserSettings"))
                             {
-                                using (var tuner = tunerGroup.OpenSubKey(tunerName))
-                                {
-                                    registryTuners.Add(new tunerRecorders
-                                    {
-                                        recorderId = tunerName.Substring(1, 36),
-                                        devName = (string)tuner.GetValue("DevName"),
-                                    });
-                                }
+                                if (usrSetting == null || (int)usrSetting.GetValue("EnabledForMCE", 0) == 0) continue;
                             }
+                            registryTuners.Add(new tunerRecorders
+                            {
+                                recorderId = tunerKey.Substring(1, 36).ToLower(),
+                                devName = (string)tuner.GetValue("DevName"),
+                                rootDevice = (string)tuner.GetValue("RootDevice"),
+                                instanceId = (string)tuner.GetValue("TunerInstanceId"),
+                                devInstance = (int)tuner.GetValue("DevInstance")
+                            });
                         }
                     }
                 }
@@ -1750,28 +1724,48 @@ namespace epg123Client
             if (registryTuners.Count == 0 || recorders.Count == 0)
             {
                 MessageBox.Show(
-                    "There are no tuners/recorders installed for WMC on this machine. You must complete WMC TV Setup to at least the 'Scan for channels' stage before restoring this backup.\n" + 
+                    "There are no tuners/recorders initialized for WMC on this machine. You must complete WMC TV Setup to at least the 'Scan for channels' stage before restoring this backup.\n" + 
                     "\nRestore function is aborted.",
                     "Restore Aborted", MessageBoxButtons.OK, MessageBoxIcon.Hand);
                 return null;
+            }
+
+            // assign hardware count suffix to devname if needed to match mxf device names
+            registryTuners = registryTuners.OrderBy(arg => arg.devInstance).ToList();
+            foreach (var tuner in registryTuners)
+            {
+                if (tuner.hwOccurence != 0) continue;
+
+                var matches = registryTuners.Where(arg => arg.devName == tuner.devName).ToList();
+                if (matches.Count > 1)
+                {
+                    int i = 1;
+                    foreach (var match in matches)
+                    {
+                        match.hwOccurence = i++;
+                    }
+                }
             }
 
             // match backup lineup file devices with registry tuners
             var unmatchedTuners = new List<string>();
             foreach (var device in devices)
             {
-                var regTuner = registryTuners.SingleOrDefault(arg => !arg.matched && arg.devName == device.Attribute("name").Value);
+                var regTuner = registryTuners.FirstOrDefault(arg => !arg.matched && device.Attribute("name").Value.Equals(arg.ToString()));
                 if (regTuner != null)
                 {
+                    regTuner.matched = true;
+                    if (regTuner.recorderId.Equals(device.Attribute("recorderId").Value)) continue;
+
                     device.SetAttributeValue("recorderId", regTuner.recorderId.ToLower());
                     var contentRecorder = device.Element("contentRecorder");
                     if (contentRecorder != null)
                     {
-                        contentRecorder.SetAttributeValue("uid", $"!Recorders!{regTuner.recorderId.ToLower()}");
-                        contentRecorder.SetAttributeValue("instanceId", regTuner.recorderId.ToLower());
+                        contentRecorder.SetAttributeValue("uid", $"!Recorders!{regTuner.rootDevice ?? regTuner.recorderId}{regTuner.instanceId ?? ""}");
+                        contentRecorder.SetAttributeValue("instanceId", $"{regTuner.rootDevice ?? regTuner.recorderId}{regTuner.instanceId ?? ""}");
+                        contentRecorder.SetAttributeValue("hardwareBaseId", $"{regTuner.rootDevice ?? ""}");
                     }
 
-                    regTuner.matched = true;
                 }
                 else
                 {
@@ -1790,6 +1784,7 @@ namespace epg123Client
                 return null;
             }
 
+            // report any unmatched tuners still in registry
             var unmatchedDevices = registryTuners.Where(arg => !arg.matched).ToList();
             if (unmatchedDevices.Count > 0)
             {
@@ -1802,77 +1797,6 @@ namespace epg123Client
             }
 
             return doc;
-        }
-
-        private bool RestoredRegistries()
-        {
-            // check if registry files exist in backup file and extract
-            string[] regFiles = { $"{Helper.Epg123BackupFolder}\\tuners.reg", $"{Helper.Epg123BackupFolder}\\recorders.reg" };
-            foreach (var file in regFiles)
-            {
-                var fInfo = new FileInfo(file);
-                if (File.Exists(file)) File.Delete(file);
-                using (var regStream = new CompressXmlFiles().GetBackupFileStream(fInfo.Name, Helper.BackupZipFile))
-                {
-                    if (regStream == null) continue;
-                    using (var fileStream = File.Create(file))
-                    {
-                        regStream.CopyTo(fileStream);
-                    }
-                }
-            }
-
-            // if we have both registry files, go for it
-            if (!File.Exists(regFiles[0]) || !File.Exists(regFiles[1])) return false;
-
-            // stop services
-            string[] services = { "ehRecvr", "ehSched", "Mcx2Svc" };
-            foreach (var service in services)
-            {
-                Process.Start(new ProcessStartInfo
-                {
-                    FileName = "net",
-                    Arguments = $"stop {service}",
-                    CreateNoWindow = true,
-                    UseShellExecute = false
-                })?.WaitForExit();
-            }
-
-            // delete and import registry keys
-            string[] regArguments =
-            {
-                "delete \"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Media Center\\Service\\Video\\Tuners\" /f",
-                "delete \"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Media Center\\Settings\" /f",
-                $"import \"{regFiles[0]}\"",
-                $"import \"{regFiles[1]}\""
-            };
-            foreach (var arg in regArguments)
-            {
-                Process.Start(new ProcessStartInfo
-                {
-                    FileName = "reg.exe",
-                    Arguments = arg,
-                    CreateNoWindow = true,
-                    UseShellExecute = false
-                })?.WaitForExit();
-            }
-
-            // delete the reg files
-            foreach (var file in regFiles)
-            {
-                if (File.Exists(file)) File.Delete(file);
-            }
-
-            // start the ehRecvr process back up
-            Process.Start(new ProcessStartInfo
-            {
-                FileName = "sc.exe",
-                Arguments = "start ehRecvr",
-                CreateNoWindow = true,
-                UseShellExecute = false
-            });
-
-            return true;
         }
 
         private string DeleteActiveDatabaseFile()
