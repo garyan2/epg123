@@ -15,6 +15,8 @@ namespace epg123Client
     {
         public VerifyLoad(string mxfFile, bool verbose = false)
         {
+            if (mxfFile.StartsWith("http")) mxfFile = Helper.Epg123MxfPath;
+
             mxf mxf;
             Logger.WriteMessage("Entering VerifyLoad()");
             Helper.SendPipeMessage("Importing|Verifying MXF Load...");

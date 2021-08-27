@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
 using epg123;
+using epg123Client.MxfXml;
 using Microsoft.Win32;
 
 namespace epg123Client
@@ -820,19 +821,13 @@ namespace epg123Client
         {
             var ret = true;
             UpdateStatusText("Importing remote MXF file");
-            openFileDialog1 = new OpenFileDialog
-            {
-                FileName = string.Empty,
-                Filter = "MXF File|*.mxf",
-                Title = "Select a MXF File",
-                Multiselect = false,
-                InitialDirectory = Helper.Epg123OutputFolder
-            };
-            if (openFileDialog1.ShowDialog() != DialogResult.OK) return true;
+            var frmRemote = new frmRemoteServers();
+            frmRemote.ShowDialog();
+            if (string.IsNullOrEmpty(frmRemote.mxfPath)) return ret;
 
             Logger.EventId = 0;
-            mxfImport = statusLogo.MxfFile = openFileDialog1.FileName;
-            var importForm = new frmImport(openFileDialog1.FileName);
+            mxfImport = statusLogo.MxfFile = frmRemote.mxfPath;
+            var importForm = new frmImport(mxfImport);
             importForm.ShowDialog();
 
             if (importForm.Success)

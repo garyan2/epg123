@@ -77,6 +77,11 @@
             this.cbTaskWake = new System.Windows.Forms.CheckBox();
             this.tbSchedTime = new System.Windows.Forms.MaskedTextBox();
             this.lblUpdateTime = new System.Windows.Forms.Label();
+            this.tabService = new System.Windows.Forms.TabPage();
+            this.label2 = new System.Windows.Forms.Label();
+            this.label1 = new System.Windows.Forms.Label();
+            this.cbRefreshToken = new System.Windows.Forms.CheckBox();
+            this.cbCacheImages = new System.Windows.Forms.CheckBox();
             this.grpAccount = new System.Windows.Forms.GroupBox();
             this.btnClientLineups = new System.Windows.Forms.Button();
             this.txtAcctExpires = new System.Windows.Forms.TextBox();
@@ -136,6 +141,7 @@
             this.tabXmltv.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numFillerDuration)).BeginInit();
             this.tabTask.SuspendLayout();
+            this.tabService.SuspendLayout();
             this.grpAccount.SuspendLayout();
             this.tabLineups.SuspendLayout();
             this.tabLineup.SuspendLayout();
@@ -175,6 +181,7 @@
             this.tabConfigs.Controls.Add(this.tabConfig);
             this.tabConfigs.Controls.Add(this.tabXmltv);
             this.tabConfigs.Controls.Add(this.tabTask);
+            this.tabConfigs.Controls.Add(this.tabService);
             this.tabConfigs.Enabled = false;
             this.tabConfigs.HotTrack = true;
             this.tabConfigs.Location = new System.Drawing.Point(12, 105);
@@ -752,6 +759,58 @@
             this.lblUpdateTime.TabIndex = 18;
             this.lblUpdateTime.Text = "Scheduled update time:";
             // 
+            // tabService
+            // 
+            this.tabService.BackColor = System.Drawing.SystemColors.Control;
+            this.tabService.Controls.Add(this.label2);
+            this.tabService.Controls.Add(this.label1);
+            this.tabService.Controls.Add(this.cbRefreshToken);
+            this.tabService.Controls.Add(this.cbCacheImages);
+            this.tabService.Location = new System.Drawing.Point(4, 22);
+            this.tabService.Name = "tabService";
+            this.tabService.Padding = new System.Windows.Forms.Padding(3);
+            this.tabService.Size = new System.Drawing.Size(309, 395);
+            this.tabService.TabIndex = 5;
+            this.tabService.Text = "Service";
+            // 
+            // label2
+            // 
+            this.label2.Location = new System.Drawing.Point(6, 105);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(297, 93);
+            this.label2.TabIndex = 3;
+            this.label2.Text = resources.GetString("label2.Text");
+            // 
+            // label1
+            // 
+            this.label1.Location = new System.Drawing.Point(6, 3);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(297, 54);
+            this.label1.TabIndex = 2;
+            this.label1.Text = resources.GetString("label1.Text");
+            // 
+            // cbRefreshToken
+            // 
+            this.cbRefreshToken.AutoSize = true;
+            this.cbRefreshToken.Location = new System.Drawing.Point(6, 201);
+            this.cbRefreshToken.Name = "cbRefreshToken";
+            this.cbRefreshToken.Size = new System.Drawing.Size(153, 17);
+            this.cbRefreshToken.TabIndex = 1;
+            this.cbRefreshToken.Text = "Automatically refresh token";
+            this.cbRefreshToken.UseVisualStyleBackColor = true;
+            this.cbRefreshToken.CheckedChanged += new System.EventHandler(this.cbRefreshToken_CheckedChanged);
+            // 
+            // cbCacheImages
+            // 
+            this.cbCacheImages.AutoSize = true;
+            this.cbCacheImages.Location = new System.Drawing.Point(6, 60);
+            this.cbCacheImages.Name = "cbCacheImages";
+            this.cbCacheImages.Size = new System.Drawing.Size(131, 17);
+            this.cbCacheImages.TabIndex = 0;
+            this.cbCacheImages.Text = "Enable image caching";
+            this.cbCacheImages.UseVisualStyleBackColor = true;
+            this.cbCacheImages.CheckedChanged += new System.EventHandler(this.cbCacheImages_CheckedChanged);
+            // 
             // grpAccount
             // 
             this.grpAccount.Controls.Add(this.btnClientLineups);
@@ -948,7 +1007,7 @@
             this.toolStrip6.MaximumSize = new System.Drawing.Size(0, 46);
             this.toolStrip6.MinimumSize = new System.Drawing.Size(0, 46);
             this.toolStrip6.Name = "toolStrip6";
-            this.toolStrip6.Size = new System.Drawing.Size(432, 46);
+            this.toolStrip6.Size = new System.Drawing.Size(0, 46);
             this.toolStrip6.Stretch = true;
             this.toolStrip6.TabIndex = 2;
             this.toolStrip6.Text = "toolStrip6";
@@ -1277,6 +1336,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.numFillerDuration)).EndInit();
             this.tabTask.ResumeLayout(false);
             this.tabTask.PerformLayout();
+            this.tabService.ResumeLayout(false);
+            this.tabService.PerformLayout();
             this.grpAccount.ResumeLayout(false);
             this.grpAccount.PerformLayout();
             this.tabLineups.ResumeLayout(false);
@@ -1391,5 +1452,10 @@
         private System.Windows.Forms.ToolStripButton btnSelectNone;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripLabel labelLineupCounts;
+        private System.Windows.Forms.TabPage tabService;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.CheckBox cbRefreshToken;
+        private System.Windows.Forms.CheckBox cbCacheImages;
     }
 }

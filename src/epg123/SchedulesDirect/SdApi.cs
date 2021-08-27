@@ -19,7 +19,7 @@ namespace epg123.SchedulesDirect
         };
 
         private static string userAgent;
-        private static string myToken;
+        public static string myToken;
         private static long totalBytes;
 
         private static readonly JsonSerializerSettings jSettings = new JsonSerializerSettings
@@ -46,9 +46,9 @@ namespace epg123.SchedulesDirect
             var url = $"{JsonBaseUrl}{JsonApi}{uri}";
 
             // send request and get response
-            var maxTries = uri.Equals("token") ? 1 : 2;
+            var maxTries = (uri.Equals("token") || uri.Equals("status")) ? 1 : 2;
             var cntTries = 0;
-            var timeout = uri.Equals("token") ? 3000 : 300000;
+            var timeout = (uri.Equals("token") || uri.Equals("status")) ? 3000 : 300000;
             do
             {
                 try
@@ -117,6 +117,10 @@ namespace epg123.SchedulesDirect
                                 {
                                     ErrorString = $"Message: {err.Message ?? string.Empty} Response: {err.Response ?? string.Empty}";
                                     Logger.WriteVerbose($"SD responded with error code: {err.Code} , message: {err.Message ?? err.Response} , serverID: {err.ServerId} , datetime: {err.Datetime:s}Z");
+                                    if (err.Code == 4003) // invalid user or token expired
+                                    {
+                                        return null;
+                                    }
                                 }
                             }
                             catch
@@ -134,7 +138,7 @@ namespace epg123.SchedulesDirect
             } while (cntTries < maxTries);
 
             // failed miserably
-            Logger.WriteError("Failed to complete request. Exiting");
+            Logger.WriteVerbose("Failed to complete request. Exiting");
             return null;
         }
 

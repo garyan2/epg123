@@ -78,6 +78,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Source: "misc\dotNetFx40_Full_setup.exe"; DestDir: "{tmp}"; Flags: dontcopy
 Source: "..\..\bin\Release\epg123.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: main1
 Source: "..\..\bin\Release\epg123.exe.config"; DestDir: "{app}"; Flags: ignoreversion; Attribs: hidden; Components: main1
+Source: "..\..\bin\Release\epg123Server.exe"; DestDir: "{app}"; BeforeInstall: TaskKill('epg123Server.exe'); Flags: ignoreversion signonce; Components: main1
 Source: "..\..\bin\Release\hdhr2mxf.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: hdhr
 Source: "..\..\bin\Release\Newtonsoft.Json.dll"; DestDir: "{app}"; Flags: ignoreversion; Components: main1 hdhr
 Source: "..\..\bin\Release\epg123Client.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: main2
@@ -101,14 +102,22 @@ Name: "{commondesktop}\{#MyClientName}"; Filename: "{app}\{#MyClientExeName}"; T
 Name: "{commonstartup}\EPG123 Tray"; Filename: "{app}\epgTray.exe"; Components: main2
 
 [Registry]
-; Registry keys to add epg123 and epg123client as sources to the event log
 Root: HKLM; Subkey: "SYSTEM\CurrentControlSet\Services\EventLog\Media Center\EPG123"; ValueType: expandsz; ValueName: "EventMessageFile"; ValueData: "{win}\Microsoft.NET\Framework\v4.0.30319\EventLogMessages.dll;{win}\Microsoft.NET\Framework64\v4.0.30319\EventLogMessages.dll"; Flags: createvalueifdoesntexist noerror; Components: main1
 Root: HKLM; Subkey: "SYSTEM\CurrentControlSet\Services\EventLog\Media Center\EPG123Client"; ValueType: expandsz; ValueName: "EventMessageFile"; ValueData: "{win}\Microsoft.NET\Framework\v4.0.30319\EventLogMessages.dll;{win}\Microsoft.NET\Framework64\v4.0.30319\EventLogMessages.dll"; Flags: createvalueifdoesntexist noerror; Components: main2
+Root: HKLM; Subkey: "SOFTWARE\GaRyan2\"; Check: not IsWin64
+Root: HKLM; Subkey: "SOFTWARE\GaRyan2\epg123\"; Permissions: everyone-modify; Check: not IsWin64
+Root: HKLM64; Subkey: "SOFTWARE\GaRyan2\"; Check: IsWin64
+Root: HKLM64; Subkey: "SOFTWARE\GaRyan2\epg123\"; Permissions: everyone-modify; Check: IsWin64
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent runascurrentuser unchecked; Components: main1
 Filename: "{app}\{#MyClientExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyClientName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent runascurrentuser unchecked; Components: main2
 Filename: "{app}\epgTray.exe"; Flags: nowait runasoriginaluser; Components: main2
+Filename: "{sys}\sc.exe"; Parameters: "create epg123Server start= auto binPath= ""{app}\epg123Server.exe"" displayname= ""EPG123 Server"""; Flags: nowait runhidden; Components: main1
+Filename: "{sys}\sc.exe"; Parameters: "description epg123Server ""Services image redirects adding token requirements and provides an endpoint to download output files."""; Flags: nowait runhidden; Components: main1
+Filename: "{sys}\sc.exe"; Parameters: "start epg123Server"; Flags: nowait runhidden; Components: main1
+Filename: "{sys}\netsh.exe"; Parameters: "firewall add allowedprogram ""{app}\epg123Server.exe"" ""EPG123 Server"" ENABLE ALL"; Flags: nowait runhidden; Components: main1
+Filename: "{sys}\netsh.exe"; Parameters: "firewall add allowedprogram ""{app}\epg123Client.exe"" ""EPG123 Client"" ENABLE ALL"; Flags: nowait runhidden; Components: main2
 
 [Dirs]
 Name: {code:GetRootDataFolder}; Permissions: everyone-full
@@ -117,6 +126,7 @@ Name: {code:GetRootDataFolder}; Permissions: everyone-full
 Type: files; Name: "{app}\Newtonsoft.json.dll"; Components: main1 main2 hdhr
 Type: files; Name: "{app}\epg123.exe"; Components: not main1
 Type: files; Name: "{app}\epg123.exe.config"; Components: not main1
+Type: files; Name: "{app}\epg123Server.exe"; Components: not main1
 Type: files; Name: "{app}\hdhr2mxf.exe"; Components: not hdhr
 Type: files; Name: "{app}\epg123Client.exe"; Components: not main2
 Type: files; Name: "{app}\epg123Client.exe.config"; Components: not main2
@@ -134,7 +144,11 @@ Type: files; Name: "{commonprograms}\{#MyAppName}\HDHR2MXF Update.lnk"; Componen
 Type: files; Name: "{commonstartup}\EPG123 Tray.lnk"; Components: not main2
 
 [UninstallRun]
-Filename: "taskkill"; Parameters: "/im ""epgTray.exe"" /f"; Flags: runhidden
+Filename: "taskkill"; Parameters: """epgTray.exe"" /f"; Flags: runhidden
+Filename: "{sys}\sc.exe"; Parameters: "delete epg123Server" ; Flags: runhidden; StatusMsg: "Deleting services..."
+Filename: "{sys}\netsh.exe"; Parameters: "firewall delete allowedprogram ""{app}\epg123Server.exe"""; Flags: runhidden; StatusMsg: "Removing firewall rule..."
+Filename: "{sys}\sc.exe"; Parameters: "delete epg123Client" ; Flags: runhidden; StatusMsg: "Deleting services..."
+Filename: "{sys}\netsh.exe"; Parameters: "firewall delete allowedprogram ""{app}\epg123Client.exe"""; Flags: runhidden; StatusMsg: "Removing firewall rule..."
 
 [Code]
 // determine whether .NET Framework is installed
@@ -163,6 +177,7 @@ begin
             end;
         end;
     end;
+    Exec(ExpandConstant('net.exe'), 'stop epg123Server', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
 end;
 
 // check where the installation folder is located

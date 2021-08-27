@@ -14,6 +14,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 using System.Xml.Serialization;
+using Microsoft.Win32;
 using epg123.Properties;
 using epg123.SchedulesDirect;
 using epg123.Task;
@@ -486,6 +487,9 @@ namespace epg123
 
                 // update the task panel
                 UpdateTaskPanel();
+
+                // update service panel
+                UpdateServiceTab();
 
                 // automatically save a .cfg file with account info if first login or password change
                 if (_newLogin)
@@ -1590,6 +1594,44 @@ namespace epg123
             UpdateTaskPanel(true);
         }
         #endregion
+        #region ========== TAB: Service ==========
+        private void UpdateServiceTab()
+        {
+            using (var regKey = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\GaRyan2\epg123", true))
+            {
+                if (regKey != null)
+                {
+                    cbCacheImages.Checked = (int)regKey.GetValue("cacheImages", 0) > 0;
+                    cbRefreshToken.Checked = (int)regKey.GetValue("autoRefreshToken", 0) > 0;
+                }
+                else cbCacheImages.Enabled = cbRefreshToken.Enabled = false;
+            }
+        }
+
+        private void cbCacheImages_CheckedChanged(object sender, EventArgs e)
+        {
+            using (var regKey = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\GaRyan2\epg123", true))
+            {
+                if (regKey != null)
+                {
+                    regKey.SetValue("cacheImages", cbCacheImages.Checked ? 1 : 0, RegistryValueKind.DWord);
+                    cbCacheImages.Checked = (int)regKey.GetValue("cacheImages", 0) > 0;
+                }
+            }
+        }
+
+        private void cbRefreshToken_CheckedChanged(object sender, EventArgs e)
+        {
+            using (var regKey = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\GaRyan2\epg123", true))
+            {
+                if (regKey != null)
+                {
+                    regKey.SetValue("autoRefreshToken", cbRefreshToken.Checked ? 1 : 0, RegistryValueKind.DWord);
+                    cbRefreshToken.Checked = (int)regKey.GetValue("autoRefreshToken", 0) > 0;
+                }
+            }
+        }
+        #endregion
         #endregion
 
         private void lineupMenuStrip_Opening(object sender, CancelEventArgs e)
@@ -1604,6 +1646,7 @@ namespace epg123
             textToAdd = lvLineupChannels.Items.Cast<ListViewItem>().Aggregate(textToAdd, (current, listViewItem) => current + $"{listViewItem.SubItems[0].Text}\t{listViewItem.SubItems[1].Text}\t{listViewItem.SubItems[2].Text}\t{listViewItem.SubItems[3].Text}\r\n");
             Clipboard.SetText(textToAdd);
         }
+
     }
 }
 

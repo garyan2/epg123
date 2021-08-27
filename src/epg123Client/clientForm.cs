@@ -371,9 +371,7 @@ namespace epg123Client
             }
             else
             {
-                tbTaskInfo.Text = File.Exists(Helper.Epg123MxfPath)
-                    ? Helper.Epg123MxfPath
-                    : "*** Click here to set MXF file path. ***";
+                tbTaskInfo.Text = "*** Click here to set MXF file path. ***";
             }
         }
 
@@ -444,22 +442,32 @@ namespace epg123Client
             // don't modify if text box is displaying current existing task
             if (_task.Exist || _task.ExistNoAccess) return;
 
-            // determine path to existing file
-            openFileDialog1.InitialDirectory = tbTaskInfo.Text.StartsWith("***")
-                ? Helper.Epg123OutputFolder
-                : tbTaskInfo.Text.Substring(0, tbTaskInfo.Text.LastIndexOf('\\'));
-            openFileDialog1.Filter = (rdoFullMode.Checked) ? "EPG123 Executable|*.exe" : "MXF File|*.mxf";
-            openFileDialog1.Title = (rdoFullMode.Checked) ? "Select the EPG123 Executable" : "Select a MXF File";
-            openFileDialog1.Multiselect = false;
-            openFileDialog1.FileName = string.Empty;
-            if (openFileDialog1.ShowDialog() != DialogResult.OK) return;
-            tbTaskInfo.Text = openFileDialog1.FileName;
-
-            // if directed to a MXF file, ask if user wants to import immediately
-            if (rdoFullMode.Checked) return;
-            if (DialogResult.Yes == MessageBox.Show("Do you wish to import the guide listings now? If not, you can click the [Manual Import] button later or allow the scheduled task to perform the import.", "Import MXF File", MessageBoxButtons.YesNo, MessageBoxIcon.Question))
+            if (rdoFullMode.Checked)
             {
-                btnImport_Click(tbTaskInfo, null);
+                // determine path to existing file
+                openFileDialog1.InitialDirectory = tbTaskInfo.Text.StartsWith("***")
+                    ? Helper.ExecutablePath
+                    : tbTaskInfo.Text.Substring(0, tbTaskInfo.Text.LastIndexOf('\\'));
+                openFileDialog1.Filter = "EPG123 Executable|*.exe";
+                openFileDialog1.Title = "Select the EPG123 Executable";
+                openFileDialog1.Multiselect = false;
+                openFileDialog1.FileName = string.Empty;
+                if (openFileDialog1.ShowDialog() != DialogResult.OK) return;
+                tbTaskInfo.Text = openFileDialog1.FileName;
+                return;
+            }
+
+            var frmRemote = new frmRemoteServers();
+            frmRemote.ShowDialog();
+            if (!string.IsNullOrEmpty(frmRemote.mxfPath))
+            {
+                tbTaskInfo.Text = frmRemote.mxfPath;
+
+                // if directed to a MXF file, ask if user wants to import immediately
+                if (DialogResult.Yes == MessageBox.Show("Do you wish to import the guide listings now? If not, you can click the [Manual Import] button later or allow the scheduled task to perform the import.", "Import MXF File", MessageBoxButtons.YesNo, MessageBoxIcon.Question))
+                {
+                    btnImport_Click(tbTaskInfo, null);
+                }
             }
         }
         #endregion
@@ -1466,7 +1474,7 @@ namespace epg123Client
             {
                 openFileDialog1.InitialDirectory = Helper.Epg123OutputFolder;
             }
-            else if (!tbTaskInfo.Text.StartsWith("***"))
+            else if (!tbTaskInfo.Text.StartsWith("***") && !tbTaskInfo.Text.StartsWith("http"))
             {
                 openFileDialog1.InitialDirectory = tbTaskInfo.Text.Substring(0, tbTaskInfo.Text.LastIndexOf('\\'));
             }

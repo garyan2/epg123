@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Net;
 using Microsoft.Win32;
 using epg123;
 
@@ -103,7 +104,7 @@ namespace epg123Client
                 var startInfo = new ProcessStartInfo()
                 {
                     FileName = Mcupdate,
-                    Arguments = "-dbgc -updateTrigger",
+                    Arguments = "-b -dbgc -updateTrigger",
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     UseShellExecute = false,
@@ -175,6 +176,29 @@ namespace epg123Client
             Logger.WriteMessage($"Entering ImportMxfFile() for file \"{mxfFile}\".");
             try
             {
+                // check for http download
+                if (mxfFile.StartsWith("http"))
+                {
+                    try
+                    {
+                        Helper.SendPipeMessage("Importing|Downloading remote MXF file...");
+                        if (File.Exists(Helper.Epg123MxfPath))
+                        {
+                            File.Delete(Helper.Epg123MxfPath);
+                        }
+                        using (var wc = new WebClient())
+                        {
+                            wc.DownloadFile(new Uri(mxfFile), Helper.Epg123MxfPath);                           
+                            mxfFile = Helper.Epg123MxfPath;
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.WriteError($"Failed to download MXF file from \"{mxfFile}\".\n{e.Message}");
+                        return false;
+                    }
+                }
+
                 // establish program to run and environment for import
                 var startInfo = new ProcessStartInfo()
                 {

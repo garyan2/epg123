@@ -361,7 +361,7 @@ namespace epg123.sdJson2mxf
                 artwork = mxfProgram.mxfSeriesInfo.extras["artwork"];
             }
 
-            return artwork.Count == 0 ? null : artwork.Select(image => new XmltvIcon { Src = image.Uri, Height = image.Height, Width = image.Width }).ToList();
+            return artwork.Count == 0 ? null : artwork.Select(image => new XmltvIcon { Src = $"{image.Uri.Replace($"{SdApi.JsonBaseUrl}{SdApi.JsonApi}", $"http://{Environment.MachineName}:{Helper.TcpPort}/")}", Height = image.Height, Width = image.Width }).ToList();
         }
 
         private static XmltvText GrabSportEvent(MxfProgram program)
@@ -408,7 +408,7 @@ namespace epg123.sdJson2mxf
                 var oad = mxfProgram.OriginalAirdate;
                 if (!mxfScheduleEntry.IsRepeat)
                 {
-                    oad = $"{mxfScheduleEntry.StartTime.ToLocalTime():yyyy-MM-dd HH:mm:ss}{RandomNumber.Next(1, 60):00}";
+                    oad = $"{mxfScheduleEntry.StartTime.ToLocalTime():yyyy-MM-dd HH:mm}:{RandomNumber.Next(1, 60):00}";
                 }
                 else if (!string.IsNullOrEmpty(oad))
                 {

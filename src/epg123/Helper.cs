@@ -28,6 +28,9 @@ namespace epg123
         public static string BackupZipFile { get; set; }
         public static string OutputPathOverride { get; set; }
 
+        public const int TcpPort = 9009;
+        public const int UdpPort = 9010;
+
         public static void EstablishFileFolderPaths()
         {
             // set the base path and the working directory

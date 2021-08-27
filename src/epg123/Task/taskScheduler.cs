@@ -58,7 +58,7 @@ namespace epg123.Task
                     for (var i = 0; i < task.Actions.Exec.Length; ++i)
                     {
                         Actions[i].Path = task.Actions.Exec[i].Command;
-                        Actions[i].Arguments = task.Actions.Exec[i].Arguments;
+                        Actions[i].Arguments = task.Actions.Exec[i].Arguments.Replace("EPG:", "http:");
                     }
 
                     Wake = task.Settings.WakeToRun;
@@ -208,7 +208,7 @@ namespace epg123.Task
                 {
                     id = $"epg123 Execution Action {i + 1}",
                     Command = tActions[i].Path,
-                    Arguments = tActions[i].Arguments,
+                    Arguments = tActions[i].Arguments.Replace("http:", "EPG:"),
                     WorkingDirectory = Helper.ExecutablePath
                 };
             }

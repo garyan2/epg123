@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Xml;
 using System.Xml.Linq;
@@ -30,6 +31,7 @@ namespace epg123Client
             get
             {
                 // if mxf file doesn't exist, automatically an error
+                if (MxfFile.StartsWith("http")) MxfFile = Helper.Epg123MxfPath;
                 if (string.IsNullOrEmpty(MxfFile) || !File.Exists(MxfFile))
                 {
                     return EPG123STATUS.ERROR;

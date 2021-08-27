@@ -245,7 +245,15 @@ namespace epg123
                         case "-i":
                             if (i + 1 < args.Length)
                             {
-                                if (!File.Exists(filename = args[++i]))
+                                filename = args[++i].Replace("EPG:", "http:");
+                                if (filename.StartsWith("http"))
+                                {
+                                    statusLogo.MxfFile = Helper.Epg123MxfPath;
+                                    import = true;
+                                    break;
+                                }
+
+                                if (!File.Exists(filename))
                                 {
                                     var err = $"File \"{filename}\" does not exist.";
                                     Logger.WriteError(err);
@@ -256,7 +264,7 @@ namespace epg123
                                 var testNewFile = filename.Replace("\\epg123.mxf", "\\output\\epg123.mxf");
                                 if (File.Exists(testNewFile))
                                 {
-                                    Logger.WriteWarning($"It appears the MXF file to import is incorrect. Changing the import file from \"{filename}\" to \"{testNewFile}\".");
+                                    Logger.WriteWarning($"It appears the MXF file to import is incorrect. Changing the import file from \"{filename}\" to \"{testNewFile}\". Delete and re-create your Scheduled Task.");
                                     filename = testNewFile;
                                 }
                                 statusLogo.MxfFile = filename;
@@ -349,10 +357,6 @@ namespace epg123
                         if (!nogc && !force && WmcRegistries.IsGarbageCleanupDue() && !ProgramRecording(60))
                         {
                             _ = WmcUtilities.PerformGarbageCleanup();
-                        }
-                        else if (!nogc && !force && WmcRegistries.IsWmcBackupDue() && !ProgramRecording(10))
-                        {
-                            _ = WmcUtilities.PerformWmcConfigurationsBackup();
                         }
 
                         // ensure no recordings are active if importing

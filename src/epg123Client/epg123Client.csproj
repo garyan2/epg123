@@ -87,6 +87,7 @@
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Configuration.Install" />
     <Reference Include="System.Core" />
+    <Reference Include="System.DirectoryServices" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Management" />
     <Reference Include="System.ServiceProcess" />
@@ -151,6 +152,12 @@
     <Compile Include="frmMerge.Designer.cs">
       <DependentUpon>frmMerge.cs</DependentUpon>
     </Compile>
+    <Compile Include="frmRemoteServers.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmRemoteServers.Designer.cs">
+      <DependentUpon>frmRemoteServers.cs</DependentUpon>
+    </Compile>
     <Compile Include="frmUndelete.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -208,6 +215,9 @@
     </None>
     <EmbeddedResource Include="frmMerge.resx">
       <DependentUpon>frmMerge.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmRemoteServers.resx">
+      <DependentUpon>frmRemoteServers.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="TABLE.MCML" />
   </ItemGroup>
