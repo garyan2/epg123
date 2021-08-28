@@ -73,6 +73,7 @@
             this.tabTask = new System.Windows.Forms.TabPage();
             this.cbAutomatch = new System.Windows.Forms.CheckBox();
             this.lblSchedStatus = new System.Windows.Forms.Label();
+            this.btnTask = new epg123.ElevatedButton();
             this.cbImport = new System.Windows.Forms.CheckBox();
             this.cbTaskWake = new System.Windows.Forms.CheckBox();
             this.tbSchedTime = new System.Windows.Forms.MaskedTextBox();
@@ -129,7 +130,6 @@
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.btnClearCache = new System.Windows.Forms.Button();
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
-            this.btnTask = new epg123.ElevatedButton();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -718,6 +718,17 @@
             this.lblSchedStatus.TabIndex = 4;
             this.lblSchedStatus.Text = "Task Status";
             // 
+            // btnTask
+            // 
+            this.btnTask.FlatStyle = System.Windows.Forms.FlatStyle.System;
+            this.btnTask.Location = new System.Drawing.Point(228, 87);
+            this.btnTask.Name = "btnTask";
+            this.btnTask.Size = new System.Drawing.Size(75, 23);
+            this.btnTask.TabIndex = 21;
+            this.btnTask.Text = "Create";
+            this.btnTask.UseVisualStyleBackColor = true;
+            this.btnTask.Click += new System.EventHandler(this.btnTask_Click);
+            // 
             // cbImport
             // 
             this.cbImport.AutoSize = true;
@@ -775,9 +786,9 @@
             // 
             // label2
             // 
-            this.label2.Location = new System.Drawing.Point(6, 105);
+            this.label2.Location = new System.Drawing.Point(6, 130);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(297, 93);
+            this.label2.Size = new System.Drawing.Size(297, 108);
             this.label2.TabIndex = 3;
             this.label2.Text = resources.GetString("label2.Text");
             // 
@@ -785,14 +796,14 @@
             // 
             this.label1.Location = new System.Drawing.Point(6, 3);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(297, 54);
+            this.label1.Size = new System.Drawing.Size(297, 73);
             this.label1.TabIndex = 2;
             this.label1.Text = resources.GetString("label1.Text");
             // 
             // cbRefreshToken
             // 
             this.cbRefreshToken.AutoSize = true;
-            this.cbRefreshToken.Location = new System.Drawing.Point(6, 201);
+            this.cbRefreshToken.Location = new System.Drawing.Point(6, 241);
             this.cbRefreshToken.Name = "cbRefreshToken";
             this.cbRefreshToken.Size = new System.Drawing.Size(153, 17);
             this.cbRefreshToken.TabIndex = 1;
@@ -803,7 +814,7 @@
             // cbCacheImages
             // 
             this.cbCacheImages.AutoSize = true;
-            this.cbCacheImages.Location = new System.Drawing.Point(6, 60);
+            this.cbCacheImages.Location = new System.Drawing.Point(9, 79);
             this.cbCacheImages.Name = "cbCacheImages";
             this.cbCacheImages.Size = new System.Drawing.Size(131, 17);
             this.cbCacheImages.TabIndex = 0;
@@ -1007,7 +1018,7 @@
             this.toolStrip6.MaximumSize = new System.Drawing.Size(0, 46);
             this.toolStrip6.MinimumSize = new System.Drawing.Size(0, 46);
             this.toolStrip6.Name = "toolStrip6";
-            this.toolStrip6.Size = new System.Drawing.Size(0, 46);
+            this.toolStrip6.Size = new System.Drawing.Size(432, 46);
             this.toolStrip6.Stretch = true;
             this.toolStrip6.TabIndex = 2;
             this.toolStrip6.Text = "toolStrip6";
@@ -1288,17 +1299,6 @@
             this.btnClearCache.Text = "Clear Cache";
             this.btnClearCache.UseVisualStyleBackColor = true;
             this.btnClearCache.Click += new System.EventHandler(this.btnClearCache_Click);
-            // 
-            // btnTask
-            // 
-            this.btnTask.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.btnTask.Location = new System.Drawing.Point(228, 87);
-            this.btnTask.Name = "btnTask";
-            this.btnTask.Size = new System.Drawing.Size(75, 23);
-            this.btnTask.TabIndex = 21;
-            this.btnTask.Text = "Create";
-            this.btnTask.UseVisualStyleBackColor = true;
-            this.btnTask.Click += new System.EventHandler(this.btnTask_Click);
             // 
             // frmMain
             // 

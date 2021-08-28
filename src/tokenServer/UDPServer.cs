@@ -32,7 +32,7 @@ namespace tokenServer
             {
                 if (e.SocketErrorCode != SocketError.Interrupted)
                 {
-                    Helper.WriteLogEntry(e.Message);
+                    Helper.WriteLogEntry($"StartUdpListener() - {e.Message}");
                     _udpServer.Close();
                 }
             }

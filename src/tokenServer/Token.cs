@@ -13,10 +13,12 @@ namespace tokenServer
         public static bool GoodToken;
         public static string Token = "";
         public static bool RefreshToken;
-        private static readonly object _refreshLock = new object();
+        private static DateTime lastRefresh = DateTime.MinValue;
 
         public static bool RefreshTokenFromSD()
         {
+            if (DateTime.Now - lastRefresh < TimeSpan.FromMinutes(1)) return true;
+
             // get username and passwordhash
             epgConfig config;
             using (var stream = new StreamReader(Helper.Epg123CfgPath, Encoding.Default))
@@ -47,24 +49,21 @@ namespace tokenServer
             // send request and get response
             try
             {
-                lock (_refreshLock)
+                using (var response = req.GetResponse() as HttpWebResponse)
+                using (var sr = new StreamReader(response.GetResponseStream(), Encoding.UTF8))
                 {
-                    if (GoodToken) return true;
-                    using (var response = req.GetResponse() as HttpWebResponse)
-                    using (var sr = new StreamReader(response.GetResponseStream(), Encoding.UTF8))
-                    {
-                        var ret = JsonConvert.DeserializeObject<TokenResponse>(sr.ReadToEnd());
-                        if (ret == null || ret.Code != 0) goto End;
+                    var ret = JsonConvert.DeserializeObject<TokenResponse>(sr.ReadToEnd());
+                    if (ret == null || ret.Code != 0) goto End;
 
-                        using (var key = Registry.LocalMachine.CreateSubKey(@"SOFTWARE\GaRyan2\epg123", RegistryKeyPermissionCheck.ReadWriteSubTree))
+                    using (var key = Registry.LocalMachine.CreateSubKey(@"SOFTWARE\GaRyan2\epg123", RegistryKeyPermissionCheck.ReadWriteSubTree))
+                    {
+                        if (key != null)
                         {
-                            if (key != null)
-                            {
-                                key.SetValue("token", ret.Token);
-                                key.SetValue("tokenExpires", ret.Datetime.ToLocalTime().AddDays(1));
-                                Helper.WriteLogEntry("Refreshed token upon receiving an UNKNOWN_USER (5004) error code.");
-                                return GoodToken = true;
-                            }
+                            key.SetValue("token", ret.Token);
+                            key.SetValue("tokenExpires", ret.Datetime.ToLocalTime().AddDays(1));
+                            Helper.WriteLogEntry("Refreshed token upon receiving an UNKNOWN_USER (5004) error code.");
+                            lastRefresh = DateTime.Now;
+                            return GoodToken = true;
                         }
                     }
                 }

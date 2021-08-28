@@ -14,6 +14,7 @@ namespace tokenServer
         private TcpListener _tcpListener;
         private bool _limitExceeded;
         private readonly object _limitLock = new object();
+        private readonly object _tokenLock = new object();
 
         public void StartTcpListener()
         {
@@ -24,15 +25,14 @@ namespace tokenServer
             {
                 while (true)
                 {
-                    var client = _tcpListener.AcceptTcpClient();
-                    new Thread(HandleDevice).Start(client);
+                    new Thread(HandleDevice).Start(_tcpListener.AcceptTcpClient());
                 }
             }
             catch (SocketException e)
             {
                 if (e.SocketErrorCode != SocketError.Interrupted)
                 {
-                    Helper.WriteLogEntry(e.Message);
+                    Helper.WriteLogEntry($"StartTcpListener() - {e.Message}");
                     Cleanup();
                 }
             }
@@ -52,15 +52,15 @@ namespace tokenServer
                         Thread.Sleep(1);
                     } while (client.Available == 0 && --timer > 0);
 
-                    if (client.Available == 0) goto Cleanup;
+                    if (client.Available == 0) return;
                 }
-                catch { goto Cleanup; }
+                catch { return; }
 
                 try
                 {
                     // read the client message and store
                     var bytes = new byte[client.Available];
-                    if (netStream.Read(bytes, 0, bytes.Length) == 0) goto Cleanup;
+                    if (netStream.Read(bytes, 0, bytes.Length) == 0) return;
                     var data = Encoding.ASCII.GetString(bytes, 0, bytes.Length).ToLower();
 
                     // determine asset requested
@@ -68,25 +68,21 @@ namespace tokenServer
                     using (var reader = new StringReader(data))
                     {
                         var startline = HttpUtility.UrlDecode(reader.ReadLine()).Split(' ');
-                        if (!startline[0].Equals("get")) goto Cleanup;
+                        if (!startline[0].Equals("get")) return;
                         asset = startline[1];
                     }
 
                     if (asset.StartsWith("/image/"))
                     {
                         ProcessImageRequest(netStream, asset);
-                        goto Cleanup;
+                        return;
                     }
                     ProcessFileRequest(netStream, asset);
                 }
                 catch (Exception e)
                 {
-                    Helper.WriteLogEntry($"{e.Message}");
+                    Helper.WriteLogEntry($"HandleDevice() - {e.Message}");
                 }
-
-                Cleanup:
-                netStream.Close();
-                client.Close();
             }
         }
 
@@ -112,6 +108,24 @@ namespace tokenServer
                 {
                     using (var response = request.GetResponse() as HttpWebResponse)
                     {
+                        if (!response.ContentType.ToLower().Contains("image"))
+                        {
+                            using (var sr = new StreamReader(response.GetResponseStream()))
+                            {
+                                var body = sr.ReadToEnd();
+                                var message = $"HTTP/1.1 {(int)response.StatusCode} {response.StatusDescription}\r\n";
+                                for (var i = 0; i < response.Headers.Count; ++i)
+                                {
+                                    message += $"{response.Headers.Keys[i]}: {response.Headers[i]}\r\n";
+                                }
+                                var messageBytes = Encoding.UTF8.GetBytes($"{message}\r\n");
+                                var bodyBytes = Encoding.UTF8.GetBytes(body);
+                                stream.Write(messageBytes, 0, messageBytes.Length);
+                                stream.Write(bodyBytes, 0, bodyBytes.Length);
+                                Helper.WriteLogEntry($"{asset}\n{body}");
+                                return;
+                            }
+                        }
                         SendFile(stream, _cache.SaveImageToCache(asset, response.GetResponseStream()), "image/jpg", "inline");
                     }
                 }
@@ -141,29 +155,37 @@ namespace tokenServer
                     stream.Write(messageBytes, 0, messageBytes.Length);
                     return;
                 }
+                if (e.Response == null) return;
 
                 using (var sr = new StreamReader(e.Response.GetResponseStream(), Encoding.UTF8))
                 {
                     var resp = sr.ReadToEnd();
                     var err = JsonConvert.DeserializeObject<BaseResponse>(resp);
-
-                    if (err?.Code == 5002) // catch image download limit and log only once
-                    {
-                        lock (_limitLock)
-                        {
-                            if (_limitExceeded) return;
-                            _limitExceeded = true;
-                        }
-                    }
-
                     Helper.WriteLogEntry($"{asset}:\n{resp}");
-                    if (err?.Code == 5004 && TokenService.GoodToken && TokenService.RefreshToken) // catch expired token access
+
+                    switch (err?.Code)
                     {
-                        TokenService.GoodToken = false;
-                        if (!retry && TokenService.RefreshTokenFromSD())
+                        case 5002:
                         {
-                            ProcessImageRequest(stream, asset, true);
-                            return;
+                            lock (_limitLock)
+                            {
+                                if (_limitExceeded) break;
+                                _limitExceeded = true;
+                            }
+                            break;
+                        }
+                        case 5004:
+                        {
+                            lock (_tokenLock)
+                            {
+                                if (!TokenService.GoodToken) break;
+                                if (TokenService.RefreshToken && !retry && TokenService.RefreshTokenFromSD())
+                                {
+                                    ProcessImageRequest(stream, asset, true);
+                                    return;
+                                }
+                            }
+                            break;
                         }
                     }
 
