@@ -18,10 +18,11 @@ namespace tokenServer
                 {
                     TokenService.Token = (string) key.GetValue("token", "");
                     TokenService.GoodToken = TokenService.Token != "";
-                    TokenService.RefreshToken = (int) key.GetValue("autoRefreshToken", 0) > 0;
+                    TokenService.RefreshToken = (int) key.GetValue("autoRefreshToken", 1) > 0;
                     _cache.cacheImages = (int) key.GetValue("cacheImages", 0) > 0;
+                    _cache.cacheRetention = (int) key.GetValue("cacheRetention", 30);
 
-                    Helper.WriteLogEntry($"version {Helper.Epg123Version} : token={TokenService.Token} , autoRefreshToken={TokenService.RefreshToken} , cacheImages={_cache.cacheImages}");
+                    Helper.WriteLogEntry($"version {Helper.Epg123Version} : token={TokenService.Token} , autoRefreshToken={TokenService.RefreshToken} , cacheImages={_cache.cacheImages} , cacheRetention={_cache.cacheRetention}");
                 }
                 else
                 {
@@ -61,6 +62,13 @@ namespace tokenServer
                     {
                         Helper.WriteLogEntry($"Cache images setting changed. cacheImages={regCache}");
                         _cache.cacheImages = regCache;
+                    }
+
+                    var regCacheRetent = (int) key.GetValue("cacheRetention", 30);
+                    if (regCacheRetent != _cache.cacheRetention)
+                    {
+                        Helper.WriteLogEntry($"Cache retention setting changed. cacheRetention={regCacheRetent}");
+                        _cache.cacheRetention = regCacheRetent;
                     }
                 }
                 else

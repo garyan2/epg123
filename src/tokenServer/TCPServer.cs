@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -9,6 +10,22 @@ using Newtonsoft.Json;
 
 namespace tokenServer
 {
+    public static class WebRequestExtensions
+    {
+        public static WebResponse GetResponseWithoutException(this WebRequest request)
+        {
+            try
+            {
+                return request.GetResponse();
+            }
+            catch (WebException e)
+            {
+                if (e.Response == null) throw e;
+                return e.Response;
+            }
+        }
+    }
+
     public partial class Server
     {
         private TcpListener _tcpListener;
@@ -19,7 +36,7 @@ namespace tokenServer
         public void StartTcpListener()
         {
             _tcpListener = new TcpListener(IPAddress.Any, Helper.TcpPort);
-            _tcpListener.Start();
+            _tcpListener.Start(100);
 
             try
             {
@@ -46,11 +63,11 @@ namespace tokenServer
                 // wait until we have data available on the stream to read
                 try
                 {
-                    var timer = 200;
+                    var tick = 200;
                     do
                     {
                         Thread.Sleep(1);
-                    } while (client.Available == 0 && --timer > 0);
+                    } while (client.Available == 0 && --tick > 0);
 
                     if (client.Available == 0) return;
                 }
@@ -58,23 +75,39 @@ namespace tokenServer
 
                 try
                 {
-                    // read the client message and store
+                    // read the client request and store
                     var bytes = new byte[client.Available];
                     if (netStream.Read(bytes, 0, bytes.Length) == 0) return;
                     var data = Encoding.ASCII.GetString(bytes, 0, bytes.Length).ToLower();
 
-                    // determine asset requested
+                    // determine asset requested and if-modified-since header
                     var asset = string.Empty;
+                    var ifModifiedSince = new DateTime();
                     using (var reader = new StringReader(data))
                     {
                         var startline = HttpUtility.UrlDecode(reader.ReadLine()).Split(' ');
                         if (!startline[0].Equals("get")) return;
                         asset = startline[1];
+
+                        string line;
+                        while ((line = reader.ReadLine()) != null)
+                        {
+                            var separator = line.IndexOf(':');
+                            if (separator > 0 && line.Substring(0, separator).Equals("if-modified-since"))
+                            {
+                                ifModifiedSince = DateTime.Parse(line.Substring(separator + 1).Trim()) + TimeSpan.FromSeconds(1);
+                            }
+                        }
                     }
 
                     if (asset.StartsWith("/image/"))
                     {
-                        ProcessImageRequest(netStream, asset);
+                        ProcessImageRequest(netStream, asset, ifModifiedSince);
+                        return;
+                    }
+                    if (asset.StartsWith("/logos/"))
+                    {
+                        ProcessLogoRequest(netStream, asset, ifModifiedSince);
                         return;
                     }
                     ProcessFileRequest(netStream, asset);
@@ -86,127 +119,142 @@ namespace tokenServer
             }
         }
 
-        private void ProcessImageRequest(Stream stream, string asset, bool retry = false)
+        private static void ProcessLogoRequest(Stream stream, string asset, DateTime ifModifiedSince)
         {
-            // use cached image if available and allowed
-            if (_cache.cacheImages && _cache.GetCachedImage(asset) is var fileInfo && fileInfo != null)
+            var fileInfo = new FileInfo($"{Helper.Epg123LogosFolder}\\{asset.Substring(7)}");
+            if (fileInfo.Exists && Send304OrImageFromCache(stream, ifModifiedSince, fileInfo)) return;
+
+            // nothing to give the client
+            var messageBytes = Encoding.UTF8.GetBytes($"HTTP/1.1 404 Not Found\r\nDate: {DateTime.UtcNow:R}\r\n\r\n");
+            stream.Write(messageBytes, 0, messageBytes.Length);
+        }
+
+        #region ========== Send Images ==========
+        private void ProcessImageRequest(Stream stream, string asset, DateTime ifModifiedSince, bool retry = false)
+        {
+            // throttle refreshing images that have already been checked recently
+            if (_cache.cacheImages && _cache.ImageCache.ContainsKey(asset.Substring(7)) &&
+                _cache.ImageCache[asset.Substring(7)].LastUsed + TimeSpan.FromHours(12) > DateTime.Now)
             {
-                SendFile(stream, fileInfo, "image/jpg", "inline");
-                return;
+                if (Send304OrImageFromCache(stream, ifModifiedSince, new FileInfo($"{Helper.Epg123ImageCache}\\{asset.Substring(7, 1)}\\{asset.Substring(7)}")))
+                    return;
             }
 
             // build url for Schedules Direct with token
             var url = $"{Helper.SdBaseName}{asset}";
             if (!string.IsNullOrEmpty(TokenService.Token)) url += $"?token={TokenService.Token}";
 
-            // connect to SD servers to get redirect or download image
+            // create web request
             var request = (HttpWebRequest)WebRequest.Create(url);
-            request.Timeout = 3000;
+            request.Timeout = 6000;
+
+            // add if-modified-since as needed
+            var fileInfo = _cache.cacheImages ? _cache.GetCachedImage(asset) : null;
+            if (ifModifiedSince != DateTime.MinValue || fileInfo != null)
+            {
+                request.IfModifiedSince = new[] {ifModifiedSince.ToUniversalTime(), fileInfo?.LastWriteTimeUtc ?? DateTime.MinValue}.Max();
+            }
+
             try
             {
-                if (_cache.cacheImages)
+                // get response
+                using (var response = request.GetResponseWithoutException() as HttpWebResponse)
                 {
-                    using (var response = request.GetResponse() as HttpWebResponse)
+                    // if image is included
+                    if (response.ContentLength > 0 && response.ContentType.StartsWith("image"))
                     {
-                        if (!response.ContentType.ToLower().Contains("image"))
-                        {
-                            using (var sr = new StreamReader(response.GetResponseStream()))
-                            {
-                                var body = sr.ReadToEnd();
-                                var message = $"HTTP/1.1 {(int)response.StatusCode} {response.StatusDescription}\r\n";
-                                for (var i = 0; i < response.Headers.Count; ++i)
-                                {
-                                    message += $"{response.Headers.Keys[i]}: {response.Headers[i]}\r\n";
-                                }
-                                var messageBytes = Encoding.UTF8.GetBytes($"{message}\r\n");
-                                var bodyBytes = Encoding.UTF8.GetBytes(body);
-                                stream.Write(messageBytes, 0, messageBytes.Length);
-                                stream.Write(bodyBytes, 0, bodyBytes.Length);
-                                Helper.WriteLogEntry($"{asset}\n{body}");
-                                return;
-                            }
-                        }
-                        SendFile(stream, _cache.SaveImageToCache(asset, response.GetResponseStream()), "image/jpg", "inline");
-                    }
-                }
-                else
-                {
-                    using (var response = request.GetResponse() as HttpWebResponse)
-                    {
+                        // success implies limit has not been exceeded
                         lock (_limitLock) _limitExceeded = false;
-                        var message = $"HTTP/1.1 {(int)response.StatusCode} {response.StatusDescription}\r\n";
+
+                        // update cache if enabled and send to client
+                        if (_cache.cacheImages)
+                        {
+                            SendImage(stream, _cache.SaveImageToCache(asset, response.GetResponseStream(), response.LastModified));
+                            return;
+                        }
+
+                        // send response to client
+                        var message = $"HTTP/1.1 {(int) response.StatusCode} {response.StatusDescription}\r\n";
                         for (var i = 0; i < response.Headers.Count; ++i)
                         {
                             message += $"{response.Headers.Keys[i]}: {response.Headers[i]}\r\n";
                         }
+
                         var messageBytes = Encoding.UTF8.GetBytes($"{message}\r\n");
                         stream.Write(messageBytes, 0, messageBytes.Length);
                         response.GetResponseStream()?.CopyTo(stream);
+                        return;
                     }
+
+                    // handle responses that do not include images (200 w/ Exceeded Limit, 304, and 404 primarily)
+                    if (Send304OrImageFromCache(stream, ifModifiedSince, fileInfo)) return; // 304 or 404 for either client cache or server cache
+                    HandleRequestError(stream, asset, response, ifModifiedSince, retry); // 200 for exceeded image limit or unknown user
+                    return;
                 }
             }
             catch (WebException e)
             {
-                if (e.Status == WebExceptionStatus.Timeout)
-                {
-                    var messageBytes = Encoding.UTF8.GetBytes("HTTP/1.1 408 Request Timeout\r\n" +
-                                                                $"Date: {DateTime.UtcNow:r}\r\n" +
-                                                                "Connection: close\r\n\r\n");
-                    stream.Write(messageBytes, 0, messageBytes.Length);
-                    return;
-                }
-                if (e.Response == null) return;
-
-                using (var sr = new StreamReader(e.Response.GetResponseStream(), Encoding.UTF8))
-                {
-                    var resp = sr.ReadToEnd();
-                    var err = JsonConvert.DeserializeObject<BaseResponse>(resp);
-                    Helper.WriteLogEntry($"{asset}:\n{resp}");
-
-                    switch (err?.Code)
-                    {
-                        case 5002:
-                        {
-                            lock (_limitLock)
-                            {
-                                if (_limitExceeded) break;
-                                _limitExceeded = true;
-                            }
-                            break;
-                        }
-                        case 5004:
-                        {
-                            lock (_tokenLock)
-                            {
-                                if (!TokenService.GoodToken) break;
-                                if (TokenService.RefreshToken && !retry && TokenService.RefreshTokenFromSD())
-                                {
-                                    ProcessImageRequest(stream, asset, true);
-                                    return;
-                                }
-                            }
-                            break;
-                        }
-                    }
-
-                    using (var response = e.Response as HttpWebResponse)
-                    {
-                        if (response != null)
-                        {
-                            var body = Encoding.UTF8.GetBytes(resp);
-                            var messageBytes = Encoding.UTF8.GetBytes($"HTTP/1.1 {(int)response.StatusCode} {response.StatusDescription}\r\n" +
-                                                                 $"Date: {DateTime.UtcNow:r}\r\n" +
-                                                                 "Content-Type: application/json;charset=utf-8\r\n" +
-                                                                 $"Content-Length: {body.Length}\r\n" +
-                                                                 "Connection: close\r\n\r\n");
-                            stream.Write(messageBytes, 0, messageBytes.Length);
-                            stream.Write(body, 0, body.Length);
-                        }
-                    }
-                }
+                Helper.WriteLogEntry($"WebException: {e.Status}\n{e.Message}");
             }
+
+            // fallback for failed connection
+            if (Send304OrImageFromCache(stream, ifModifiedSince, fileInfo)) return;
+
+            // nothing to give the client
+            var messageBytes2 = Encoding.UTF8.GetBytes($"HTTP/1.1 404 Not Found\r\nDate: {DateTime.UtcNow:R}\r\n\r\n");
+            stream.Write(messageBytes2, 0, messageBytes2.Length);
         }
 
+        private static bool Send304OrImageFromCache(Stream stream, DateTime ifModifiedSince, FileInfo fileInfo)
+        {
+            if (ifModifiedSince != DateTime.MinValue && ifModifiedSince.ToUniversalTime() + TimeSpan.FromSeconds(1) > (fileInfo?.LastWriteTimeUtc ?? DateTime.MinValue))
+            {
+                var message = "HTTP/1.1 304 Not Modified\r\n" +
+                              $"Date: {DateTime.UtcNow:R}\r\n" +
+                              $"Last-Modified: {ifModifiedSince.ToUniversalTime() - TimeSpan.FromSeconds(1):R}\r\n";
+                var messageBytes = Encoding.UTF8.GetBytes($"{message}\r\n");
+                stream.Write(messageBytes, 0, messageBytes.Length);
+                return true;
+            }
+
+            if (fileInfo == null) return false;
+            SendImage(stream, fileInfo);
+            return true;
+        }
+
+        private static void SendImage(Stream stream, FileInfo fileInfo)
+        {
+            if (fileInfo != null && fileInfo.Exists)
+            {
+                var messageBytes = Encoding.UTF8.GetBytes("HTTP/1.1 200 OK\r\n" +
+                                                          "Accept-Ranges: bytes\r\n" +
+                                                          $"Content-Length: {fileInfo.Length}\r\n" +
+                                                          "Content-Type: image/jpg\r\n" +
+                                                          $"Date: {DateTime.UtcNow:R}\r\n" +
+                                                          $"Last-Modified: {fileInfo.LastWriteTimeUtc:R}\r\n\r\n");
+                stream.Write(messageBytes, 0, messageBytes.Length);
+
+                try
+                {
+                    using (var fs = new FileStream(fileInfo.FullName, FileMode.Open, FileAccess.Read, FileShare.Read))
+                    {
+                        fs.CopyTo(stream);
+                    }
+                }
+                catch (Exception e)
+                {
+                    Helper.WriteLogEntry($"{fileInfo.FullName}\n{e.Message}");
+                }
+            }
+            else
+            {
+                var messageBytes = Encoding.UTF8.GetBytes($"HTTP/1.1 404 Not Found\r\nDate: {DateTime.UtcNow:R}\r\n\r\n");
+                stream.Write(messageBytes, 0, messageBytes.Length);
+            }
+        }
+        #endregion
+
+        #region ========== Send Files ==========
         private static void ProcessFileRequest(Stream stream, string asset)
         {
             string filepath = null, type = "text/xml", disposition = "attachment";
@@ -237,13 +285,12 @@ namespace tokenServer
             if (fileInfo != null && fileInfo.Exists)
             {
                 var messageBytes = Encoding.UTF8.GetBytes("HTTP/1.1 200 OK\r\n" +
-                                                    $"Date: {DateTime.UtcNow:r}\r\n" +
-                                                    $"Content-Type: {contentType}\r\n" +
-                                                    $"Content-Disposition: {contentDisposition}; filename=\"{fileInfo.Name}\"\r\n" +
-                                                    $"Last-Modified: {fileInfo.LastWriteTimeUtc:r}\r\n" +
-                                                    "Content-Transfer-Encoding: binary\r\n" +
-                                                    $"Content-Length: {fileInfo.Length}\r\n" +
-                                                    "Connection: close\r\n\r\n");
+                                                          $"Date: {DateTime.UtcNow:R}\r\n" +
+                                                          $"Content-Type: {contentType}\r\n" +
+                                                          $"Content-Disposition: {contentDisposition}; filename=\"{fileInfo.Name}\"\r\n" +
+                                                          $"Last-Modified: {fileInfo.LastWriteTimeUtc:R}\r\n" +
+                                                          "Content-Transfer-Encoding: binary\r\n" +
+                                                          $"Content-Length: {fileInfo.Length}\r\n\r\n");
                 stream.Write(messageBytes, 0, messageBytes.Length);
 
                 try
@@ -262,6 +309,60 @@ namespace tokenServer
             {
                 var messageBytes = Encoding.UTF8.GetBytes($"HTTP/1.1 404 Not Found\r\nDate: {DateTime.UtcNow:R}\r\n\r\n");
                 stream.Write(messageBytes, 0, messageBytes.Length);
+            }
+        }
+        #endregion
+
+        private void HandleRequestError(Stream stream, string asset, WebResponse webResponse, DateTime ifModifiedSince, bool retry)
+        {
+            using (var sr = new StreamReader(webResponse.GetResponseStream(), Encoding.UTF8))
+            {
+                var resp = sr.ReadToEnd();
+                var err = JsonConvert.DeserializeObject<BaseResponse>(resp);
+                if (!string.IsNullOrEmpty(resp) && !_limitExceeded) Helper.WriteLogEntry($"{asset}:\n{resp}");
+
+                using (var response = webResponse as HttpWebResponse)
+                {
+                    if (response == null) return;
+
+                    var statusCode = (int) response.StatusCode;
+                    var statusDescription = response.StatusDescription;
+
+                    switch (err?.Code)
+                    {
+                        case 5002: // MAX_IMAGE_DOWNLOADS
+                            lock (_limitLock)
+                            {
+                                statusCode = 429;
+                                statusDescription = "Too Many Requests";
+                                if (_limitExceeded) break;
+                                _limitExceeded = true;
+                            }
+                            break;
+                        case 5004: // UNKNOWN_USER
+                            lock (_tokenLock)
+                            {
+                                statusCode = 401;
+                                statusDescription = "Unauthorized";
+                                if (!TokenService.GoodToken) break;
+                                if (TokenService.RefreshToken && !retry && TokenService.RefreshTokenFromSD())
+                                {
+                                    ProcessImageRequest(stream, asset, ifModifiedSince, true);
+                                    return;
+                                }
+                            }
+                            break;
+                    }
+
+                    var body = Encoding.UTF8.GetBytes(resp);
+                    var messageBytes = Encoding.UTF8.GetBytes(
+                        $"HTTP/1.1 {statusCode} {statusDescription}\r\n" +
+                        $"Date: {DateTime.UtcNow:R}\r\n" +
+                        $"Content-Type: {response.ContentType}\r\n" +
+                        $"Content-Length: {body.Length}\r\n\r\n");
+                    stream.Write(messageBytes, 0, messageBytes.Length);
+                    stream.Write(body, 0, body.Length);
+                }
             }
         }
     }

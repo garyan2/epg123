@@ -74,15 +74,17 @@ namespace epg123Client
                 {
                     if (mxfStartTime == DateTime.MinValue) mxfStartTime = entry.StartTime;
                     ++discontinuities;
+                    if (discontinuities != 1) continue;
+                    Logger.WriteInformation($"Service {mxfService.Uid}: {mxfService.CallSign} has a time discontinuity at {entry.StartTime.ToLocalTime()}. Skipping verification of this station's schedule entries.");
+                    break;
                 }
                 if (discontinuities > 0)
                 {
-                    Logger.WriteInformation($"Service {mxfService.CallSign} has a time discontinuity. Skipping verification of this station's schedule entries.");
                     continue;
                 }
                 if (mxfStartTime > DateTime.UtcNow)
                 {
-                    Logger.WriteInformation($"Service {mxfService.CallSign}: first mxf schedule entry to verify is in the future at {mxfStartTime.ToLocalTime()}.");
+                    Logger.WriteInformation($"Service {mxfService.Uid}: {mxfService.CallSign}: first mxf schedule entry to verify is in the future at {mxfStartTime.ToLocalTime()}.");
                 }
 
                 // build a list of wmc schedule entries based on start times

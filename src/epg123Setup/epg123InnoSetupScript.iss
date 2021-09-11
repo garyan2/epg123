@@ -67,12 +67,14 @@ Name: "custom"; Description: "Custom Install"; Flags: IsCustom
 Name: "main1"; Description: "Server Files"; Types: full server; Flags: disablenouninstallwarning
 Name: "hdhr"; Description: "HDHR2MXF for SiliconDust HDHR DVR Service"; Types: custom; Flags: disablenouninstallwarning
 Name: "main2"; Description: "Client Files"; Types: full client; MinVersion: 6.1; Flags: disablenouninstallwarning
+Name: "main2\tray"; Description: "Notification Tray Tool"; Types: full client; Flags: disablenouninstallwarning
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]
-Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+Name: "desktopicon"; Description: "Create desktop shortcut(s)"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+Name: "startmenu"; Description: "Create start menu icons"; GroupDescription: "{cm:AdditionalIcons}"
 
 [Files]
 Source: "misc\dotNetFx40_Full_setup.exe"; DestDir: "{tmp}"; Flags: dontcopy
@@ -85,21 +87,21 @@ Source: "..\..\bin\Release\epg123Client.exe"; DestDir: "{app}"; Flags: ignorever
 Source: "..\..\bin\Release\epg123Client.exe.config"; DestDir: "{app}"; Flags: ignoreversion; Attribs: hidden; MinVersion: 6.1; OnlyBelowVersion: 6.2; Components: main2
 Source: "..\..\bin\Release\epg123Transfer.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: main2
 Source: "..\..\bin\Release\epg123Transfer.exe.config"; DestDir: "{app}"; Flags: ignoreversion; Attribs: hidden; MinVersion: 6.1; OnlyBelowVersion: 6.2; Components: main2
-Source: "..\..\bin\Release\epgTray.exe"; DestDir: "{app}"; BeforeInstall: TaskKill('epgTray.exe'); Flags: ignoreversion signonce; Components: main2
-Source: "..\..\bin\Release\epgTray.exe.config"; DestDir: "{app}"; Flags: ignoreversion; Attribs: hidden; Components: main2
+Source: "..\..\bin\Release\epgTray.exe"; DestDir: "{app}"; BeforeInstall: TaskKill('epgTray.exe'); Flags: ignoreversion signonce; Components: main2\tray
+Source: "..\..\bin\Release\epgTray.exe.config"; DestDir: "{app}"; Flags: ignoreversion; Attribs: hidden; Components: main2\tray
 Source: "docs\license.rtf"; DestDir: "{app}"; Flags: ignoreversion
 Source: "docs\customLineup.xml.example"; DestDir: "{app}"; Flags: ignoreversion; Components: main1
-Source: "links\EPG123 Online.url"; DestDir: "{commonprograms}\{#MyAppName}"; Flags: ignoreversion
+Source: "links\EPG123 Online.url"; DestDir: "{commonprograms}\{#MyAppName}"; Tasks: startmenu; Flags: ignoreversion
 
 [Icons]
-Name: "{commonprograms}\{#MyAppName}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Components: main1
-Name: "{commonprograms}\{#MyAppName}\{#MyClientName}"; Filename: "{app}\{#MyClientExeName}"; Components: main2
-Name: "{commonprograms}\{#MyAppName}\EPG123 Transfer Tool"; Filename: "{app}\epg123Transfer.exe"; Components: main2
-Name: "{commonprograms}\{#MyAppName}\HDHR2MXF Update"; Filename: "{app}\hdhr2mxf.exe"; Parameters: "-update -import"; Components: hdhr
-Name: "{commonprograms}\{#MyAppName}\EPG123 Tray"; Filename: "{app}\epgTray.exe"; Components: main2
+Name: "{commonprograms}\{#MyAppName}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: startmenu; Components: main1
+Name: "{commonprograms}\{#MyAppName}\{#MyClientName}"; Filename: "{app}\{#MyClientExeName}"; Tasks: startmenu; Components: main2
+Name: "{commonprograms}\{#MyAppName}\EPG123 Transfer Tool"; Filename: "{app}\epg123Transfer.exe"; Tasks: startmenu; Components: main2
+Name: "{commonprograms}\{#MyAppName}\HDHR2MXF Update"; Filename: "{app}\hdhr2mxf.exe"; Parameters: "-update -import"; Tasks: startmenu; Components: hdhr
+Name: "{commonprograms}\{#MyAppName}\EPG123 Tray"; Filename: "{app}\epgTray.exe"; Tasks: startmenu; Components: main2\tray
 Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon; Components: main1
 Name: "{commondesktop}\{#MyClientName}"; Filename: "{app}\{#MyClientExeName}"; Tasks: desktopicon; Components: main2
-Name: "{commonstartup}\EPG123 Tray"; Filename: "{app}\epgTray.exe"; Components: main2
+Name: "{commonstartup}\EPG123 Tray"; Filename: "{app}\epgTray.exe"; Components: main2\tray
 
 [Registry]
 Root: HKLM; Subkey: "SYSTEM\CurrentControlSet\Services\EventLog\Media Center\EPG123"; ValueType: expandsz; ValueName: "EventMessageFile"; ValueData: "{win}\Microsoft.NET\Framework\v4.0.30319\EventLogMessages.dll;{win}\Microsoft.NET\Framework64\v4.0.30319\EventLogMessages.dll"; Flags: createvalueifdoesntexist noerror; Components: main1
@@ -112,12 +114,12 @@ Root: HKLM64; Subkey: "SOFTWARE\GaRyan2\epg123\"; Permissions: everyone-modify; 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent runascurrentuser unchecked; Components: main1
 Filename: "{app}\{#MyClientExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyClientName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent runascurrentuser unchecked; Components: main2
-Filename: "{app}\epgTray.exe"; Flags: nowait runasoriginaluser; Components: main2
-Filename: "{sys}\sc.exe"; Parameters: "create epg123Server start= auto binPath= ""{app}\epg123Server.exe"" displayname= ""EPG123 Server"""; Flags: nowait runhidden; Components: main1
-Filename: "{sys}\sc.exe"; Parameters: "description epg123Server ""Services image redirects adding token requirements and provides an endpoint to download output files."""; Flags: nowait runhidden; Components: main1
-Filename: "{sys}\sc.exe"; Parameters: "start epg123Server"; Flags: nowait runhidden; Components: main1
-Filename: "{sys}\netsh.exe"; Parameters: "firewall add allowedprogram ""{app}\epg123Server.exe"" ""EPG123 Server"" ENABLE ALL"; Flags: nowait runhidden; Components: main1
-Filename: "{sys}\netsh.exe"; Parameters: "firewall add allowedprogram ""{app}\epg123Client.exe"" ""EPG123 Client"" ENABLE ALL"; Flags: nowait runhidden; Components: main2
+Filename: "{app}\epgTray.exe"; Flags: nowait runasoriginaluser; Components: main2\tray
+Filename: "{sys}\sc.exe"; Parameters: "create epg123Server start= auto binPath= ""{app}\epg123Server.exe"" displayname= ""EPG123 Server"""; Flags: runhidden; Components: main1
+Filename: "{sys}\sc.exe"; Parameters: "description epg123Server ""Services image redirects adding token requirements and provides an endpoint to download output files."""; Flags: runhidden; Components: main1
+Filename: "{sys}\sc.exe"; Parameters: "start epg123Server"; Flags: runhidden; Components: main1
+Filename: "{sys}\netsh.exe"; Parameters: "firewall add allowedprogram ""{app}\epg123Server.exe"" ""EPG123 Server"" ENABLE ALL"; Flags: runhidden; Components: main1
+Filename: "{sys}\netsh.exe"; Parameters: "firewall add allowedprogram ""{app}\epg123Client.exe"" ""EPG123 Client"" ENABLE ALL"; Flags: runhidden; Components: main2
 
 [Dirs]
 Name: {code:GetRootDataFolder}; Permissions: everyone-full
@@ -133,18 +135,16 @@ Type: files; Name: "{app}\epg123Client.exe.config"; Components: not main2
 Type: files; Name: "{app}\epg123Transfer.exe"; Components: not main2
 Type: files; Name: "{app}\epg123Transfer.exe.config"; Components: not main2
 Type: files; Name: "{app}\customLineup.xml.example"; Components: not main1
-Type: files; Name: "{app}\epgTray.exe"; BeforeInstall: TaskKill('epgTray.exe'); Components: not main2
-Type: files; Name: "{app}\epgTray.exe.config"; Components: not main2
-Type: files; Name: "{commondesktop}\{#MyAppName}.lnk"; Components: not main1
-Type: files; Name: "{commondesktop}\{#MyClientName}.lnk"; Components: not main2
-Type: files; Name: "{commonprograms}\{#MyAppName}\{#MyAppName}.lnk"; Components: not main1
-Type: files; Name: "{commonprograms}\{#MyAppName}\{#MyClientName}.lnk"; Components: not main2
-Type: files; Name: "{commonprograms}\{#MyAppName}\EPG123 Transfer Tool.lnk"; Components: not main2
-Type: files; Name: "{commonprograms}\{#MyAppName}\HDHR2MXF Update.lnk"; Components: not hdhr
-Type: files; Name: "{commonstartup}\EPG123 Tray.lnk"; Components: not main2
+Type: files; Name: "{app}\epgTray.exe"; BeforeInstall: TaskKill('epgTray.exe'); Components: not main2\tray
+Type: files; Name: "{app}\epgTray.exe.config"; Components: not main2\tray
+Type: filesandordirs; Name: "{commonprograms}\{#MyAppName}"
+Type: files; Name: "{commondesktop}\{#MyAppName}.lnk"
+Type: files; Name: "{commondesktop}\{#MyClientName}.lnk"
+Type: files; Name: "{commonstartup}\EPG123 Tray.lnk"
 
 [UninstallRun]
-Filename: "taskkill"; Parameters: """epgTray.exe"" /f"; Flags: runhidden
+Filename: "taskkill"; Parameters: "/im ""epgTray.exe"" /f"; Flags: runhidden
+Filename: "{sys}\sc.exe"; Parameters: "stop epg123Server"; Flags: runhidden; StatusMsg: "Stopping EPG123 Server..."
 Filename: "{sys}\sc.exe"; Parameters: "delete epg123Server" ; Flags: runhidden; StatusMsg: "Deleting services..."
 Filename: "{sys}\netsh.exe"; Parameters: "firewall delete allowedprogram ""{app}\epg123Server.exe"""; Flags: runhidden; StatusMsg: "Removing firewall rule..."
 Filename: "{sys}\sc.exe"; Parameters: "delete epg123Client" ; Flags: runhidden; StatusMsg: "Deleting services..."

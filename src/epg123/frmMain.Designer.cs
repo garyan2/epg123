@@ -63,9 +63,7 @@
             this.lblFillerDuration = new System.Windows.Forms.Label();
             this.numFillerDuration = new System.Windows.Forms.NumericUpDown();
             this.ckXmltvFillerData = new System.Windows.Forms.CheckBox();
-            this.txtSubstitutePath = new System.Windows.Forms.TextBox();
             this.cbXmltv = new System.Windows.Forms.CheckBox();
-            this.ckSubstitutePath = new System.Windows.Forms.CheckBox();
             this.ckLocalLogos = new System.Windows.Forms.CheckBox();
             this.ckUrlLogos = new System.Windows.Forms.CheckBox();
             this.ckChannelLogos = new System.Windows.Forms.CheckBox();
@@ -73,14 +71,14 @@
             this.tabTask = new System.Windows.Forms.TabPage();
             this.cbAutomatch = new System.Windows.Forms.CheckBox();
             this.lblSchedStatus = new System.Windows.Forms.Label();
-            this.btnTask = new epg123.ElevatedButton();
             this.cbImport = new System.Windows.Forms.CheckBox();
             this.cbTaskWake = new System.Windows.Forms.CheckBox();
             this.tbSchedTime = new System.Windows.Forms.MaskedTextBox();
             this.lblUpdateTime = new System.Windows.Forms.Label();
             this.tabService = new System.Windows.Forms.TabPage();
-            this.label2 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
+            this.btnServiceStart = new System.Windows.Forms.Button();
+            this.btnServiceStop = new System.Windows.Forms.Button();
             this.cbRefreshToken = new System.Windows.Forms.CheckBox();
             this.cbCacheImages = new System.Windows.Forms.CheckBox();
             this.grpAccount = new System.Windows.Forms.GroupBox();
@@ -130,6 +128,10 @@
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.btnClearCache = new System.Windows.Forms.Button();
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
+            this.cbCacheRetention = new System.Windows.Forms.ComboBox();
+            this.label2 = new System.Windows.Forms.Label();
+            this.label3 = new System.Windows.Forms.Label();
+            this.btnTask = new epg123.ElevatedButton();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -459,9 +461,7 @@
             this.tabXmltv.Controls.Add(this.lblFillerDuration);
             this.tabXmltv.Controls.Add(this.numFillerDuration);
             this.tabXmltv.Controls.Add(this.ckXmltvFillerData);
-            this.tabXmltv.Controls.Add(this.txtSubstitutePath);
             this.tabXmltv.Controls.Add(this.cbXmltv);
-            this.tabXmltv.Controls.Add(this.ckSubstitutePath);
             this.tabXmltv.Controls.Add(this.ckLocalLogos);
             this.tabXmltv.Controls.Add(this.ckUrlLogos);
             this.tabXmltv.Controls.Add(this.ckChannelLogos);
@@ -476,7 +476,7 @@
             // cbXmltvSingleImage
             // 
             this.cbXmltvSingleImage.AutoSize = true;
-            this.cbXmltvSingleImage.Location = new System.Drawing.Point(6, 294);
+            this.cbXmltvSingleImage.Location = new System.Drawing.Point(6, 245);
             this.cbXmltvSingleImage.Name = "cbXmltvSingleImage";
             this.cbXmltvSingleImage.Size = new System.Drawing.Size(277, 17);
             this.cbXmltvSingleImage.TabIndex = 30;
@@ -487,7 +487,7 @@
             // ckXmltvExtendedInfo
             // 
             this.ckXmltvExtendedInfo.AutoSize = true;
-            this.ckXmltvExtendedInfo.Location = new System.Drawing.Point(6, 271);
+            this.ckXmltvExtendedInfo.Location = new System.Drawing.Point(6, 222);
             this.ckXmltvExtendedInfo.Name = "ckXmltvExtendedInfo";
             this.ckXmltvExtendedInfo.Size = new System.Drawing.Size(199, 17);
             this.ckXmltvExtendedInfo.TabIndex = 29;
@@ -538,7 +538,7 @@
             // rtbFillerDescription
             // 
             this.rtbFillerDescription.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.rtbFillerDescription.Location = new System.Drawing.Point(23, 219);
+            this.rtbFillerDescription.Location = new System.Drawing.Point(23, 170);
             this.rtbFillerDescription.Name = "rtbFillerDescription";
             this.rtbFillerDescription.Size = new System.Drawing.Size(280, 46);
             this.rtbFillerDescription.TabIndex = 24;
@@ -549,7 +549,7 @@
             // lblFillerDuration
             // 
             this.lblFillerDuration.AutoSize = true;
-            this.lblFillerDuration.Location = new System.Drawing.Point(65, 195);
+            this.lblFillerDuration.Location = new System.Drawing.Point(65, 146);
             this.lblFillerDuration.Name = "lblFillerDuration";
             this.lblFillerDuration.Size = new System.Drawing.Size(143, 13);
             this.lblFillerDuration.TabIndex = 22;
@@ -557,7 +557,7 @@
             // 
             // numFillerDuration
             // 
-            this.numFillerDuration.Location = new System.Drawing.Point(24, 193);
+            this.numFillerDuration.Location = new System.Drawing.Point(24, 144);
             this.numFillerDuration.Maximum = new decimal(new int[] {
             24,
             0,
@@ -586,21 +586,13 @@
             this.ckXmltvFillerData.AutoSize = true;
             this.ckXmltvFillerData.Checked = true;
             this.ckXmltvFillerData.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.ckXmltvFillerData.Location = new System.Drawing.Point(6, 170);
+            this.ckXmltvFillerData.Location = new System.Drawing.Point(6, 121);
             this.ckXmltvFillerData.Name = "ckXmltvFillerData";
             this.ckXmltvFillerData.Size = new System.Drawing.Size(294, 17);
             this.ckXmltvFillerData.TabIndex = 13;
             this.ckXmltvFillerData.Text = "Create filler programs for stations that have no guide data";
             this.ckXmltvFillerData.UseVisualStyleBackColor = true;
             this.ckXmltvFillerData.CheckedChanged += new System.EventHandler(this.ckXmltvConfigs_Changed);
-            // 
-            // txtSubstitutePath
-            // 
-            this.txtSubstitutePath.Location = new System.Drawing.Point(41, 144);
-            this.txtSubstitutePath.Name = "txtSubstitutePath";
-            this.txtSubstitutePath.Size = new System.Drawing.Size(263, 20);
-            this.txtSubstitutePath.TabIndex = 12;
-            this.txtSubstitutePath.TextChanged += new System.EventHandler(this.ckXmltvConfigs_Changed);
             // 
             // cbXmltv
             // 
@@ -614,20 +606,6 @@
             this.cbXmltv.Text = "Create XMLTV file";
             this.cbXmltv.UseVisualStyleBackColor = true;
             this.cbXmltv.CheckedChanged += new System.EventHandler(this.ckXmltvConfigs_Changed);
-            // 
-            // ckSubstitutePath
-            // 
-            this.ckSubstitutePath.AutoSize = true;
-            this.ckSubstitutePath.Checked = true;
-            this.ckSubstitutePath.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.ckSubstitutePath.Location = new System.Drawing.Point(41, 121);
-            this.ckSubstitutePath.Margin = new System.Windows.Forms.Padding(37, 3, 3, 3);
-            this.ckSubstitutePath.Name = "ckSubstitutePath";
-            this.ckSubstitutePath.Size = new System.Drawing.Size(191, 17);
-            this.ckSubstitutePath.TabIndex = 11;
-            this.ckSubstitutePath.Text = "Substitute path to logos folder with:";
-            this.ckSubstitutePath.UseVisualStyleBackColor = true;
-            this.ckSubstitutePath.CheckedChanged += new System.EventHandler(this.ckXmltvConfigs_Changed);
             // 
             // ckLocalLogos
             // 
@@ -718,17 +696,6 @@
             this.lblSchedStatus.TabIndex = 4;
             this.lblSchedStatus.Text = "Task Status";
             // 
-            // btnTask
-            // 
-            this.btnTask.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.btnTask.Location = new System.Drawing.Point(228, 87);
-            this.btnTask.Name = "btnTask";
-            this.btnTask.Size = new System.Drawing.Size(75, 23);
-            this.btnTask.TabIndex = 21;
-            this.btnTask.Text = "Create";
-            this.btnTask.UseVisualStyleBackColor = true;
-            this.btnTask.Click += new System.EventHandler(this.btnTask_Click);
-            // 
             // cbImport
             // 
             this.cbImport.AutoSize = true;
@@ -773,8 +740,12 @@
             // tabService
             // 
             this.tabService.BackColor = System.Drawing.SystemColors.Control;
+            this.tabService.Controls.Add(this.label3);
             this.tabService.Controls.Add(this.label2);
+            this.tabService.Controls.Add(this.cbCacheRetention);
             this.tabService.Controls.Add(this.label1);
+            this.tabService.Controls.Add(this.btnServiceStart);
+            this.tabService.Controls.Add(this.btnServiceStop);
             this.tabService.Controls.Add(this.cbRefreshToken);
             this.tabService.Controls.Add(this.cbCacheImages);
             this.tabService.Location = new System.Drawing.Point(4, 22);
@@ -784,41 +755,54 @@
             this.tabService.TabIndex = 5;
             this.tabService.Text = "Service";
             // 
-            // label2
-            // 
-            this.label2.Location = new System.Drawing.Point(6, 130);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(297, 108);
-            this.label2.TabIndex = 3;
-            this.label2.Text = resources.GetString("label2.Text");
-            // 
             // label1
             // 
-            this.label1.Location = new System.Drawing.Point(6, 3);
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(6, 11);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(297, 73);
-            this.label1.TabIndex = 2;
-            this.label1.Text = resources.GetString("label1.Text");
+            this.label1.Size = new System.Drawing.Size(120, 13);
+            this.label1.TabIndex = 4;
+            this.label1.Text = "EPG123 Server Service";
+            // 
+            // btnServiceStart
+            // 
+            this.btnServiceStart.Location = new System.Drawing.Point(147, 6);
+            this.btnServiceStart.Name = "btnServiceStart";
+            this.btnServiceStart.Size = new System.Drawing.Size(75, 23);
+            this.btnServiceStart.TabIndex = 3;
+            this.btnServiceStart.Text = "Start";
+            this.btnServiceStart.UseVisualStyleBackColor = true;
+            this.btnServiceStart.Click += new System.EventHandler(this.btnServiceStartStop_Click);
+            // 
+            // btnServiceStop
+            // 
+            this.btnServiceStop.Location = new System.Drawing.Point(228, 6);
+            this.btnServiceStop.Name = "btnServiceStop";
+            this.btnServiceStop.Size = new System.Drawing.Size(75, 23);
+            this.btnServiceStop.TabIndex = 2;
+            this.btnServiceStop.Text = "Stop";
+            this.btnServiceStop.UseVisualStyleBackColor = true;
+            this.btnServiceStop.Click += new System.EventHandler(this.btnServiceStartStop_Click);
             // 
             // cbRefreshToken
             // 
             this.cbRefreshToken.AutoSize = true;
-            this.cbRefreshToken.Location = new System.Drawing.Point(6, 241);
+            this.cbRefreshToken.Location = new System.Drawing.Point(6, 106);
             this.cbRefreshToken.Name = "cbRefreshToken";
-            this.cbRefreshToken.Size = new System.Drawing.Size(153, 17);
+            this.cbRefreshToken.Size = new System.Drawing.Size(200, 17);
             this.cbRefreshToken.TabIndex = 1;
-            this.cbRefreshToken.Text = "Automatically refresh token";
+            this.cbRefreshToken.Text = "Automatically refresh token if needed";
             this.cbRefreshToken.UseVisualStyleBackColor = true;
             this.cbRefreshToken.CheckedChanged += new System.EventHandler(this.cbRefreshToken_CheckedChanged);
             // 
             // cbCacheImages
             // 
             this.cbCacheImages.AutoSize = true;
-            this.cbCacheImages.Location = new System.Drawing.Point(9, 79);
+            this.cbCacheImages.Location = new System.Drawing.Point(6, 35);
             this.cbCacheImages.Name = "cbCacheImages";
-            this.cbCacheImages.Size = new System.Drawing.Size(131, 17);
+            this.cbCacheImages.Size = new System.Drawing.Size(224, 17);
             this.cbCacheImages.TabIndex = 0;
-            this.cbCacheImages.Text = "Enable image caching";
+            this.cbCacheImages.Text = "Enable image caching for servicing clients";
             this.cbCacheImages.UseVisualStyleBackColor = true;
             this.cbCacheImages.CheckedChanged += new System.EventHandler(this.cbCacheImages_CheckedChanged);
             // 
@@ -1018,7 +1002,7 @@
             this.toolStrip6.MaximumSize = new System.Drawing.Size(0, 46);
             this.toolStrip6.MinimumSize = new System.Drawing.Size(0, 46);
             this.toolStrip6.Name = "toolStrip6";
-            this.toolStrip6.Size = new System.Drawing.Size(432, 46);
+            this.toolStrip6.Size = new System.Drawing.Size(0, 46);
             this.toolStrip6.Stretch = true;
             this.toolStrip6.TabIndex = 2;
             this.toolStrip6.Text = "toolStrip6";
@@ -1300,6 +1284,54 @@
             this.btnClearCache.UseVisualStyleBackColor = true;
             this.btnClearCache.Click += new System.EventHandler(this.btnClearCache_Click);
             // 
+            // cbCacheRetention
+            // 
+            this.cbCacheRetention.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cbCacheRetention.FormattingEnabled = true;
+            this.cbCacheRetention.Items.AddRange(new object[] {
+            "7 days",
+            "14 days",
+            "30 days",
+            "60 days",
+            "90 days",
+            "180 days",
+            "365 days",
+            "indefinitely"});
+            this.cbCacheRetention.Location = new System.Drawing.Point(142, 58);
+            this.cbCacheRetention.Name = "cbCacheRetention";
+            this.cbCacheRetention.Size = new System.Drawing.Size(78, 21);
+            this.cbCacheRetention.TabIndex = 5;
+            this.cbCacheRetention.SelectedIndexChanged += new System.EventHandler(this.cbCacheRetention_SelectedIndexChanged);
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(23, 62);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(113, 13);
+            this.label2.TabIndex = 6;
+            this.label2.Text = "Retain cached images";
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(23, 79);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(87, 13);
+            this.label3.TabIndex = 7;
+            this.label3.Text = "after last access.";
+            // 
+            // btnTask
+            // 
+            this.btnTask.FlatStyle = System.Windows.Forms.FlatStyle.System;
+            this.btnTask.Location = new System.Drawing.Point(228, 87);
+            this.btnTask.Name = "btnTask";
+            this.btnTask.Size = new System.Drawing.Size(75, 23);
+            this.btnTask.TabIndex = 21;
+            this.btnTask.Text = "Create";
+            this.btnTask.UseVisualStyleBackColor = true;
+            this.btnTask.Click += new System.EventHandler(this.btnTask_Click);
+            // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
@@ -1398,8 +1430,6 @@
         private System.Windows.Forms.TabPage tabConfig;
         private System.Windows.Forms.TabPage tabXmltv;
         private System.Windows.Forms.CheckBox ckXmltvFillerData;
-        private System.Windows.Forms.TextBox txtSubstitutePath;
-        private System.Windows.Forms.CheckBox ckSubstitutePath;
         private System.Windows.Forms.CheckBox ckLocalLogos;
         private System.Windows.Forms.CheckBox ckUrlLogos;
         private System.Windows.Forms.CheckBox ckChannelLogos;
@@ -1453,9 +1483,13 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripLabel labelLineupCounts;
         private System.Windows.Forms.TabPage tabService;
-        private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.Label label1;
         private System.Windows.Forms.CheckBox cbRefreshToken;
         private System.Windows.Forms.CheckBox cbCacheImages;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Button btnServiceStart;
+        private System.Windows.Forms.Button btnServiceStop;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.ComboBox cbCacheRetention;
+        private System.Windows.Forms.Label label3;
     }
 }

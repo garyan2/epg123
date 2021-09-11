@@ -117,12 +117,6 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="label2.Text" xml:space="preserve">
-    <value>If the response for an image download from Schedules Direct indicates the token has expired, this setting will allow the service to automatically acquire a new token to continue downloading images. It will only attempt this 1 time for each "old" token. If unsuccessful, it will then be necessary to login using the configuration GUI or wait until the next scheduled update.</value>
-  </data>
-  <data name="label1.Text" xml:space="preserve">
-    <value>In order to reduce the number of image download requests from Schedules Direct, it is recommended to enable image caching if the EPG123 server will be providing guide listings and images to remote clients, particularly for large lineups.</value>
-  </data>
   <metadata name="lineupMenuStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>639, 17</value>
   </metadata>

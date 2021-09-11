@@ -183,6 +183,7 @@ namespace epg123.sdJson2mxf
 
                         // add station logo if available and allowed
                         var logoPath = $"{Helper.Epg123LogosFolder}\\{station.Callsign}.png";
+                        var urlLogoPath = logoPath.Replace($"{Helper.Epg123LogosFolder}\\", $"http://{Environment.MachineName}:{Helper.TcpPort}/logos/");
                         var customPath = $"{Helper.Epg123LogosFolder}\\{station.Callsign}_c.png";
                         if (config.IncludeSdLogos)
                         {
@@ -238,9 +239,11 @@ namespace epg123.sdJson2mxf
                             {
                                 logoPath = customPath;
                             }
+                            urlLogoPath = logoPath.Replace($"{Helper.Epg123LogosFolder}\\", $"http://{Environment.MachineName}:{Helper.TcpPort}/logos/");
+
                             if (File.Exists(logoPath))
                             {
-                                mxfService.mxfGuideImage = SdMxf.GetGuideImage($"file://{logoPath}", GetStringEncodedImage(logoPath));
+                                mxfService.mxfGuideImage = SdMxf.GetGuideImage(urlLogoPath);
                             }
                         }
 
@@ -257,7 +260,7 @@ namespace epg123.sdJson2mxf
                                 var image = Image.FromFile(logoPath);
                                 mxfService.extras.Add("logo", new StationImage
                                 {
-                                    Url = logoPath,
+                                    Url = urlLogoPath,
                                     Height = image.Height,
                                     Width = image.Width
                                 });
@@ -266,27 +269,7 @@ namespace epg123.sdJson2mxf
                             {
                                 mxfService.extras.Add("logo", new StationImage
                                 {
-                                    Url = logoPath
-                                });
-                            }
-                        }
-                        else if (config.XmltvIncludeChannelLogos.Equals("substitute") && config.IncludeSdLogos)
-                        {
-                            if (File.Exists(logoPath))
-                            {
-                                var image = Image.FromFile(logoPath);
-                                mxfService.extras.Add("logo", new StationImage
-                                {
-                                    Url = logoPath.Replace(Helper.Epg123LogosFolder, config.XmltvLogoSubstitutePath.TrimEnd('\\')),
-                                    Height = image.Height,
-                                    Width = image.Width
-                                });
-                            }
-                            else if (stationLogo != null)
-                            {
-                                mxfService.extras.Add("logo", new StationImage
-                                {
-                                    Url = logoPath.Replace(Helper.Epg123LogosFolder, config.XmltvLogoSubstitutePath.TrimEnd('\\'))
+                                    Url = urlLogoPath
                                 });
                             }
                         }
@@ -374,13 +357,13 @@ namespace epg123.sdJson2mxf
                         var channelNumber = number + ((subnumber > 0) ? "." + subnumber : null);
                         if (channelNumbers.Add(channelNumber + ":" + station.StationId))
                         {
-                            SdMxf.With.Lineups[lineupIndex].channels.Add(new MxfChannel()
+                            SdMxf.With.Lineups[lineupIndex].channels.Add(new MxfChannel
                             {
                                 mxfLineup = SdMxf.With.Lineups[lineupIndex],
                                 mxfService = mxfService,
                                 Number = number,
                                 SubNumber = subnumber,
-                                MatchName = matchName
+                                MatchName = ""
                             });
                         }
                     }

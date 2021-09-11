@@ -9,6 +9,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.ServiceProcess;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -449,10 +450,8 @@ namespace epg123
                     cmbPreferredLogos.SelectedIndex = (int)(Helper.PreferredLogos)Enum.Parse(typeof(Helper.PreferredLogos), Config.PreferredLogoStyle, true);
                     ckChannelNumbers.Checked = Config.XmltvIncludeChannelNumbers;
                     ckChannelLogos.Checked = !string.IsNullOrEmpty(Config.XmltvIncludeChannelLogos) && (Config.XmltvIncludeChannelLogos != "false");
-                    ckLocalLogos.Checked = (Config.XmltvIncludeChannelLogos == "local") || (Config.XmltvIncludeChannelLogos == "substitute");
-                    ckUrlLogos.Checked = (Config.XmltvIncludeChannelLogos == "url");
-                    ckSubstitutePath.Checked = (Config.XmltvIncludeChannelLogos == "substitute");
-                    txtSubstitutePath.Text = Config.XmltvLogoSubstitutePath;
+                    ckLocalLogos.Checked = Config.XmltvIncludeChannelLogos == "local";
+                    ckUrlLogos.Checked = Config.XmltvIncludeChannelLogos == "url";
                     ckXmltvFillerData.Checked = Config.XmltvAddFillerData;
                     ckXmltvExtendedInfo.Checked = Config.XmltvExtendedInfoInTitleDescriptions;
                     numFillerDuration.Value = Config.XmltvFillerProgramLength;
@@ -490,6 +489,7 @@ namespace epg123
 
                 // update service panel
                 UpdateServiceTab();
+                SetServiceButtonEnables();
 
                 // automatically save a .cfg file with account info if first login or password change
                 if (_newLogin)
@@ -1389,14 +1389,12 @@ namespace epg123
                         cbXmltv.Checked;
                 if (!cbXmltv.Checked)
                 {
-                    ckUrlLogos.Enabled = ckLocalLogos.Enabled = ckSubstitutePath.Enabled = txtSubstitutePath.Enabled = false;
+                    ckUrlLogos.Enabled = ckLocalLogos.Enabled = false;
                     numFillerDuration.Enabled = lblFillerDuration.Enabled = rtbFillerDescription.Enabled = false;
                 }
                 else
                 {
                     ckUrlLogos.Enabled = ckLocalLogos.Enabled = ckChannelLogos.Checked;
-                    ckSubstitutePath.Enabled = (ckLocalLogos.Checked && ckChannelLogos.Checked);
-                    txtSubstitutePath.Enabled = (ckSubstitutePath.Checked && ckLocalLogos.Checked && ckChannelLogos.Checked);
                     numFillerDuration.Enabled = lblFillerDuration.Enabled = rtbFillerDescription.Enabled = ckXmltvFillerData.Checked;
                 }
             }
@@ -1407,12 +1405,10 @@ namespace epg123
             else if (sender.Equals(ckChannelLogos))
             {
                 ckUrlLogos.Enabled = ckLocalLogos.Enabled = ckChannelLogos.Checked;
-                ckSubstitutePath.Enabled = ckLocalLogos.Checked && ckChannelLogos.Checked;
-                txtSubstitutePath.Enabled = ckSubstitutePath.Checked && ckLocalLogos.Checked && ckChannelLogos.Checked;
 
                 if (!ckChannelLogos.Checked) Config.XmltvIncludeChannelLogos = "false";
 
-                Config.XmltvIncludeChannelLogos = !ckChannelLogos.Checked ? "false" : ckUrlLogos.Checked ? "url" : !ckSubstitutePath.Checked ? "local" : "substitute";
+                Config.XmltvIncludeChannelLogos = !ckChannelLogos.Checked ? "false" : ckUrlLogos.Checked ? "url" : "local";
             }
             else if (sender.Equals(ckUrlLogos))
             {
@@ -1422,24 +1418,7 @@ namespace epg123
             else if (sender.Equals(ckLocalLogos))
             {
                 ckUrlLogos.Checked = !ckLocalLogos.Checked;
-                ckSubstitutePath.Enabled = ckLocalLogos.Checked && cbXmltv.Checked;
-                txtSubstitutePath.Enabled = ckSubstitutePath.Checked && ckLocalLogos.Checked && cbXmltv.Checked;
-                if (!ckUrlLogos.Checked)
-                {
-                    Config.XmltvIncludeChannelLogos = (ckSubstitutePath.Checked && ckLocalLogos.Checked) ? "substitute" : "local";
-                }
-            }
-            else if (sender.Equals(ckSubstitutePath))
-            {
-                txtSubstitutePath.Enabled = ckSubstitutePath.Checked && ckLocalLogos.Checked && cbXmltv.Checked;
-                if (!Config.XmltvIncludeChannelLogos.Equals("url") && !Config.XmltvIncludeChannelLogos.Equals("false"))
-                {
-                    Config.XmltvIncludeChannelLogos = (ckSubstitutePath.Checked && ckLocalLogos.Checked) ? "substitute" : "local";
-                }
-            }
-            else if (sender.Equals(txtSubstitutePath))
-            {
-                Config.XmltvLogoSubstitutePath = txtSubstitutePath.Text;
+                Config.XmltvIncludeChannelLogos = "local";
             }
             else if (sender.Equals(ckXmltvFillerData))
             {
@@ -1602,9 +1581,13 @@ namespace epg123
                 if (regKey != null)
                 {
                     cbCacheImages.Checked = (int)regKey.GetValue("cacheImages", 0) > 0;
-                    cbRefreshToken.Checked = (int)regKey.GetValue("autoRefreshToken", 0) > 0;
+                    cbRefreshToken.Checked = (int)regKey.GetValue("autoRefreshToken", 1) > 0;
+
+                    var days = new[] { 7, 14, 30, 60, 90, 180, 365, 10958 };
+                    var index = Array.FindIndex(days, arg => arg == (int)regKey.GetValue("cacheRetention", 30));
+                    cbCacheRetention.Text = (string)cbCacheRetention.Items[index];
                 }
-                else cbCacheImages.Enabled = cbRefreshToken.Enabled = false;
+                else cbCacheImages.Enabled = cbRefreshToken.Enabled = cbCacheRetention.Enabled = false;
             }
         }
 
@@ -1612,11 +1595,22 @@ namespace epg123
         {
             using (var regKey = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\GaRyan2\epg123", true))
             {
-                if (regKey != null)
-                {
-                    regKey.SetValue("cacheImages", cbCacheImages.Checked ? 1 : 0, RegistryValueKind.DWord);
-                    cbCacheImages.Checked = (int)regKey.GetValue("cacheImages", 0) > 0;
-                }
+                if (regKey == null) return;
+                regKey.SetValue("cacheImages", cbCacheImages.Checked ? 1 : 0, RegistryValueKind.DWord);
+                cbCacheImages.Checked = (int)regKey.GetValue("cacheImages", 0) > 0;
+            }
+        }
+
+        private void cbCacheRetention_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            var days = new[] { 7, 14, 30, 60, 90, 180, 365, 10958 };
+            using (var regKey = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\GaRyan2\epg123", true))
+            {
+                if (regKey == null) return;
+                regKey.SetValue("cacheRetention", days[cbCacheRetention.SelectedIndex]);
+
+                var index = Array.FindIndex(days, arg => arg == (int) regKey.GetValue("cacheRetention", 30));
+                cbCacheRetention.Text = (string) cbCacheRetention.Items[index];
             }
         }
 
@@ -1630,6 +1624,47 @@ namespace epg123
                     cbRefreshToken.Checked = (int)regKey.GetValue("autoRefreshToken", 0) > 0;
                 }
             }
+        }
+
+        private void btnServiceStartStop_Click(object sender, EventArgs e)
+        {
+            // need to verify server is not running
+            var serviceName = "epg123Server";
+            if (ServiceController.GetServices().Any(arg => arg.ServiceName.Equals(serviceName)))
+            {
+                var cmd = "stop";
+                if ((Button)sender == btnServiceStart) cmd = "start";
+                var sc = new ServiceController
+                {
+                    ServiceName = serviceName
+                };
+
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = "net.exe",
+                    Arguments = $"{cmd} {serviceName}",
+                    Verb = "runas"
+                })?.WaitForExit();
+
+                btnServiceStop.Enabled = sc.Status == ServiceControllerStatus.Running;
+                btnServiceStart.Enabled = sc.Status != ServiceControllerStatus.Running;
+            }
+        }
+
+        private void SetServiceButtonEnables()
+        {
+            var serviceName = "epg123Server";
+            if (ServiceController.GetServices().Any(arg => arg.ServiceName.Equals(serviceName)))
+            {
+                var sc = new ServiceController
+                {
+                    ServiceName = serviceName
+                };
+
+                btnServiceStop.Enabled = sc.Status == ServiceControllerStatus.Running;
+                btnServiceStart.Enabled = sc.Status == ServiceControllerStatus.Stopped;
+            }
+            else btnServiceStop.Enabled = btnServiceStart.Enabled = false;
         }
         #endregion
         #endregion
@@ -1646,7 +1681,6 @@ namespace epg123
             textToAdd = lvLineupChannels.Items.Cast<ListViewItem>().Aggregate(textToAdd, (current, listViewItem) => current + $"{listViewItem.SubItems[0].Text}\t{listViewItem.SubItems[1].Text}\t{listViewItem.SubItems[2].Text}\t{listViewItem.SubItems[3].Text}\r\n");
             Clipboard.SetText(textToAdd);
         }
-
     }
 }
 

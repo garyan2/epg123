@@ -22,6 +22,7 @@ namespace tokenServer
 
         protected override void OnStart(string[] args)
         {
+            Helper.DeleteLogFile();
             StartRegistryWatcher();
 
             new Thread(() =>

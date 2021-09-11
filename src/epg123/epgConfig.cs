@@ -43,7 +43,6 @@ namespace epg123
             CreateXmltv = other.CreateXmltv;
             XmltvIncludeChannelNumbers = other.XmltvIncludeChannelNumbers;
             XmltvIncludeChannelLogos = other.XmltvIncludeChannelLogos;
-            XmltvLogoSubstitutePath = other.XmltvLogoSubstitutePath;
             XmltvAddFillerData = other.XmltvAddFillerData;
             XmltvFillerProgramLength = other.XmltvFillerProgramLength;
             XmltvFillerProgramDescription = other.XmltvFillerProgramDescription;
@@ -114,7 +113,6 @@ namespace epg123
             if (!CreateXmltv.Equals(other.CreateXmltv)) return false;
             if (!XmltvIncludeChannelNumbers.Equals(other.XmltvIncludeChannelNumbers)) return false;
             if (!XmltvIncludeChannelLogos.Equals(other.XmltvIncludeChannelLogos)) return false;
-            if (!XmltvLogoSubstitutePath.Equals(other.XmltvLogoSubstitutePath)) return false;
             if (!XmltvAddFillerData.Equals(other.XmltvAddFillerData)) return false;
             if (!XmltvFillerProgramLength.Equals(other.XmltvFillerProgramLength)) return false;
             if (!XmltvFillerProgramDescription.Equals(other.XmltvFillerProgramDescription)) return false;
@@ -207,10 +205,7 @@ namespace epg123
         public bool XmltvIncludeChannelNumbers { get; set; } = true;
 
         [XmlElement("XmltvIncludeChannelLogos")]
-        public string XmltvIncludeChannelLogos { get; set; } = "url";
-
-        [XmlElement("XmltvLogoSubtitutePath")]
-        public string XmltvLogoSubstitutePath { get; set; } = string.Empty;
+        public string XmltvIncludeChannelLogos { get; set; } = "local";
 
         [XmlElement("XmltvAddFillerData")]
         public bool XmltvAddFillerData { get; set; } = true;

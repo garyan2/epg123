@@ -12,6 +12,7 @@ namespace tokenServer
         public Dictionary<string, CacheImage> ImageCache;
         private readonly object _cacheLock = new object();
         public bool cacheImages;
+        public int cacheRetention;
 
         public JsonImageCache()
         {
@@ -33,14 +34,15 @@ namespace tokenServer
 
         public void Cleanup()
         {
-            var markedForDelete = ImageCache.Where(arg => arg.Value.Delete);
+            var markedForDelete = ImageCache.Where(arg => arg.Value.LastUsed + TimeSpan.FromDays(cacheRetention) < DateTime.Now)
+                .Select(arg => arg.Key).ToList();
             foreach (var image in markedForDelete)
             {
-                var path = $"{Helper.Epg123ImageCache}\\{image.Key.Substring(0, 1)}\\{image.Key}";
+                var path = $"{Helper.Epg123ImageCache}\\{image.Substring(0, 1)}\\{image}";
                 try
                 {
                     if (File.Exists(path)) File.Delete(path);
-                    ImageCache.Remove(image.Key);
+                    ImageCache.Remove(image);
                 }
                 catch { }
             }
@@ -64,7 +66,7 @@ namespace tokenServer
             lock (_cacheLock)
             {
                 // remove "/image/" from beginning
-                filename = filename.Remove(0, 7);
+                filename = filename.Substring(7);
                 var location = $"{Helper.Epg123ImageCache}\\{filename.Substring(0, 1)}\\{filename}";
                 if (ImageCache.ContainsKey(filename))
                 {
@@ -85,12 +87,12 @@ namespace tokenServer
             }
         }
 
-        public FileInfo SaveImageToCache(string filename, Stream stream)
+        public FileInfo SaveImageToCache(string filename, Stream stream, DateTime lastModified)
         {
             lock (_cacheLock)
             {
                 // remove "/image/" from beginning
-                filename = filename.Remove(0, 7);
+                filename = filename.Substring(7);
                 try
                 {
                     var image = Image.FromStream(stream);
@@ -98,7 +100,9 @@ namespace tokenServer
                     var location = $"{baseFolder}\\{filename}";
                     _ = Directory.CreateDirectory(baseFolder);
                     image.Save(location);
-                    ImageCache.Add(filename, new CacheImage { LastUsed = DateTime.Now });
+                    if (lastModified != DateTime.MinValue) File.SetLastWriteTimeUtc(location, lastModified);
+                    if (ImageCache.ContainsKey(filename)) ImageCache[filename].LastUsed = DateTime.Now;
+                    else ImageCache.Add(filename, new CacheImage { LastUsed = DateTime.Now });
                     return new FileInfo(location);
                 }
                 catch { }
@@ -111,8 +115,5 @@ namespace tokenServer
     {
         [JsonProperty("LastUsed")]
         public DateTime LastUsed { get; set; }
-
-        [JsonIgnore]
-        public bool Delete => DateTime.Now - LastUsed > TimeSpan.FromDays(30);
     }
 }

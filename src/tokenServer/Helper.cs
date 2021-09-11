@@ -17,10 +17,22 @@ namespace tokenServer
         {
             lock (logLock)
             {
-                using (var writer = new StreamWriter(Helper.Epg123ServerLogPath, true))
+                using (var writer = new StreamWriter(Epg123ServerLogPath, true))
                 {
                     writer.WriteLine($"[{DateTime.Now:G}] {message}");
                 }
+            }
+        }
+
+        public static void DeleteLogFile()
+        {
+            try
+            {
+                lock(logLock) File.Delete(Epg123ServerLogPath);
+            }
+            catch
+            {
+                // do nothing
             }
         }
 
@@ -59,6 +71,11 @@ namespace tokenServer
         /// The folder used to deposit generated guide files
         /// </summary>
         public static string Epg123OutputFolder => Epg123ProgramDataFolder + "\\output";
+
+        /// <summary>
+        /// The folder used to store all the station logos
+        /// </summary>
+        public static string Epg123LogosFolder => Epg123ProgramDataFolder + "\\logos";
 
         /// <summary>
         /// The folder used to cache images for use and distribution over the network
