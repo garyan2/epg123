@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -73,6 +74,7 @@ namespace tokenServer
                 }
                 catch { return; }
 
+                var asset = string.Empty;
                 try
                 {
                     // read the client request and store
@@ -81,7 +83,6 @@ namespace tokenServer
                     var data = Encoding.ASCII.GetString(bytes, 0, bytes.Length).ToLower();
 
                     // determine asset requested and if-modified-since header
-                    var asset = string.Empty;
                     var ifModifiedSince = new DateTime();
                     using (var reader = new StringReader(data))
                     {
@@ -110,11 +111,22 @@ namespace tokenServer
                         ProcessLogoRequest(netStream, asset, ifModifiedSince);
                         return;
                     }
+                    if (asset.Equals("/") || asset.Equals("/status.html"))
+                    {
+                        var htmlBytes = Encoding.UTF8.GetBytes(WebStats.Html);
+                        var headerBytes = Encoding.UTF8.GetBytes($"HTTP/1.1 200 OK\r\n" +
+                                                                 $"Date: {DateTime.UtcNow:R}\r\n" +
+                                                                 $"Content-Type: text/html;charset=utf-8\r\n" +
+                                                                 $"Content-Length: {htmlBytes.Length}\r\n\r\n");
+                        netStream.Write(headerBytes, 0, headerBytes.Length);
+                        netStream.Write(htmlBytes, 0, htmlBytes.Length);
+                        return;
+                    }
                     ProcessFileRequest(netStream, asset);
                 }
                 catch (Exception e)
                 {
-                    Helper.WriteLogEntry($"HandleDevice() - {e.Message}");
+                    Helper.WriteLogEntry($"{asset}\nHandleDevice() - {e.Message}");
                 }
             }
         }
@@ -122,7 +134,7 @@ namespace tokenServer
         private static void ProcessLogoRequest(Stream stream, string asset, DateTime ifModifiedSince)
         {
             var fileInfo = new FileInfo($"{Helper.Epg123LogosFolder}\\{asset.Substring(7)}");
-            if (fileInfo.Exists && Send304OrImageFromCache(stream, ifModifiedSince, fileInfo)) return;
+            if (fileInfo.Exists && Send304OrImageFromCache(stream, ifModifiedSince, fileInfo, true)) return;
 
             // nothing to give the client
             var messageBytes = Encoding.UTF8.GetBytes($"HTTP/1.1 404 Not Found\r\nDate: {DateTime.UtcNow:R}\r\n\r\n");
@@ -132,11 +144,14 @@ namespace tokenServer
         #region ========== Send Images ==========
         private void ProcessImageRequest(Stream stream, string asset, DateTime ifModifiedSince, bool retry = false)
         {
+            // update web stats
+            if (ifModifiedSince == DateTime.MinValue) WebStats.IncrementRequestReceived();
+            else WebStats.IncrementProvisionRequestReceived();
+
             // throttle refreshing images that have already been checked recently
-            if (_cache.cacheImages && _cache.ImageCache.ContainsKey(asset.Substring(7)) &&
-                _cache.ImageCache[asset.Substring(7)].LastUsed + TimeSpan.FromHours(12) > DateTime.Now)
+            if (JsonImageCache.cacheImages && JsonImageCache.IsImageRecent(asset))
             {
-                if (Send304OrImageFromCache(stream, ifModifiedSince, new FileInfo($"{Helper.Epg123ImageCache}\\{asset.Substring(7, 1)}\\{asset.Substring(7)}")))
+                if (Send304OrImageFromCache(stream, ifModifiedSince, JsonImageCache.GetCachedImage(asset)))
                     return;
             }
 
@@ -149,7 +164,7 @@ namespace tokenServer
             request.Timeout = 6000;
 
             // add if-modified-since as needed
-            var fileInfo = _cache.cacheImages ? _cache.GetCachedImage(asset) : null;
+            var fileInfo = JsonImageCache.cacheImages ? JsonImageCache.GetCachedImage(asset) : null;
             if (ifModifiedSince != DateTime.MinValue || fileInfo != null)
             {
                 request.IfModifiedSince = new[] {ifModifiedSince.ToUniversalTime(), fileInfo?.LastWriteTimeUtc ?? DateTime.MinValue}.Max();
@@ -157,6 +172,10 @@ namespace tokenServer
 
             try
             {
+                // update web stats
+                if (request.IfModifiedSince == DateTime.MinValue) WebStats.IncrementRequestSent();
+                else WebStats.IncrementProvisionRequestSent();
+
                 // get response
                 using (var response = request.GetResponseWithoutException() as HttpWebResponse)
                 {
@@ -164,26 +183,48 @@ namespace tokenServer
                     if (response.ContentLength > 0 && response.ContentType.StartsWith("image"))
                     {
                         // success implies limit has not been exceeded
-                        lock (_limitLock) _limitExceeded = false;
+                        lock (_limitLock) {_limitExceeded = WebStats.LimitLocked = false;}
 
-                        // update cache if enabled and send to client
-                        if (_cache.cacheImages)
-                        {
-                            SendImage(stream, _cache.SaveImageToCache(asset, response.GetResponseStream(), response.LastModified));
-                            return;
-                        }
-
-                        // send response to client
-                        var message = $"HTTP/1.1 {(int) response.StatusCode} {response.StatusDescription}\r\n";
+                        // send response header to client
+                        var message = $"HTTP/1.1 {(int)response.StatusCode} {response.StatusDescription}\r\n";
                         for (var i = 0; i < response.Headers.Count; ++i)
                         {
                             message += $"{response.Headers.Keys[i]}: {response.Headers[i]}\r\n";
                         }
-
                         var messageBytes = Encoding.UTF8.GetBytes($"{message}\r\n");
                         stream.Write(messageBytes, 0, messageBytes.Length);
-                        response.GetResponseStream()?.CopyTo(stream);
-                        return;
+
+                        // get the response stream
+                        var content = response.GetResponseStream();
+                        if (content == null) return;
+
+                        // update web stats
+                        WebStats.AddSdDownload(response.ContentLength);
+
+                        // copy response body directly to network stream if not caching
+                        if (!JsonImageCache.cacheImages)
+                        {
+                            content.CopyTo(stream);
+                            return;
+                        }
+
+                        // save image to cache if enabled and send to client
+                        var filename = asset.Substring(7);
+                        var dirInfo = Directory.CreateDirectory($"{Helper.Epg123ImageCache}\\{filename.Substring(0, 1)}");
+                        var location = $"{dirInfo.FullName}\\{filename}";
+                        using (var fStream = new FileStream(location, FileMode.Create, FileAccess.Write))
+                        {
+                            var buffer = new byte[1024];
+                            int bytesRead;
+                            while ((bytesRead = content.Read(buffer, 0, buffer.Length)) > 0)
+                            {
+                                stream.Write(buffer, 0, bytesRead);
+                                fStream.Write(buffer, 0, bytesRead);
+                            }
+                            fStream.Flush();
+                        }
+                        File.SetLastWriteTimeUtc(location, response.LastModified);
+                        JsonImageCache.AddImageToCache(filename);
                     }
 
                     // handle responses that do not include images (200 w/ Exceeded Limit, 304, and 404 primarily)
@@ -194,7 +235,7 @@ namespace tokenServer
             }
             catch (WebException e)
             {
-                Helper.WriteLogEntry($"WebException: {e.Status}\n{e.Message}");
+                Helper.WriteLogEntry($"{asset}\nWebException: {e.Status} - {e.Message}");
             }
 
             // fallback for failed connection
@@ -205,10 +246,11 @@ namespace tokenServer
             stream.Write(messageBytes2, 0, messageBytes2.Length);
         }
 
-        private static bool Send304OrImageFromCache(Stream stream, DateTime ifModifiedSince, FileInfo fileInfo)
+        private static bool Send304OrImageFromCache(Stream stream, DateTime ifModifiedSince, FileInfo fileInfo, bool logo = false)
         {
             if (ifModifiedSince != DateTime.MinValue && ifModifiedSince.ToUniversalTime() + TimeSpan.FromSeconds(1) > (fileInfo?.LastWriteTimeUtc ?? DateTime.MinValue))
             {
+                WebStats.Increment304Response();
                 var message = "HTTP/1.1 304 Not Modified\r\n" +
                               $"Date: {DateTime.UtcNow:R}\r\n" +
                               $"Last-Modified: {ifModifiedSince.ToUniversalTime() - TimeSpan.FromSeconds(1):R}\r\n";
@@ -218,6 +260,8 @@ namespace tokenServer
             }
 
             if (fileInfo == null) return false;
+            if (!logo) WebStats.AddCacheDownload(fileInfo.Length);
+            else WebStats.AddLogoDownload(fileInfo.Length);
             SendImage(stream, fileInfo);
             return true;
         }
@@ -226,10 +270,11 @@ namespace tokenServer
         {
             if (fileInfo != null && fileInfo.Exists)
             {
+                var ext = fileInfo.Extension.ToLower().Substring(1);
                 var messageBytes = Encoding.UTF8.GetBytes("HTTP/1.1 200 OK\r\n" +
                                                           "Accept-Ranges: bytes\r\n" +
                                                           $"Content-Length: {fileInfo.Length}\r\n" +
-                                                          "Content-Type: image/jpg\r\n" +
+                                                          $"Content-Type: image/{ext}\r\n" +
                                                           $"Date: {DateTime.UtcNow:R}\r\n" +
                                                           $"Last-Modified: {fileInfo.LastWriteTimeUtc:R}\r\n\r\n");
                 stream.Write(messageBytes, 0, messageBytes.Length);
@@ -319,7 +364,13 @@ namespace tokenServer
             {
                 var resp = sr.ReadToEnd();
                 var err = JsonConvert.DeserializeObject<BaseResponse>(resp);
-                if (!string.IsNullOrEmpty(resp) && !_limitExceeded) Helper.WriteLogEntry($"{asset}:\n{resp}");
+                if (!string.IsNullOrEmpty(resp))
+                {
+                    if (!(err.Code == 5002 && _limitExceeded) && !(err.Code == 5004 && !TokenService.GoodToken))
+                    {
+                        Helper.WriteLogEntry($"{asset}:\n{resp}");
+                    }
+                }
 
                 using (var response = webResponse as HttpWebResponse)
                 {
@@ -330,16 +381,20 @@ namespace tokenServer
 
                     switch (err?.Code)
                     {
+                        case 5000: // IMAGE_NOT_FOUND
+                            WebStats.IncrementImageNotFound();
+                            break;
                         case 5002: // MAX_IMAGE_DOWNLOADS
+                            WebStats.IncrementMaxDownloads();
                             lock (_limitLock)
                             {
                                 statusCode = 429;
                                 statusDescription = "Too Many Requests";
-                                if (_limitExceeded) break;
-                                _limitExceeded = true;
+                                _limitExceeded = WebStats.LimitLocked = true;
                             }
                             break;
                         case 5004: // UNKNOWN_USER
+                            WebStats.IncrementUnknownUser();
                             lock (_tokenLock)
                             {
                                 statusCode = 401;

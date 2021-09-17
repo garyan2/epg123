@@ -68,6 +68,7 @@
     <Compile Include="UDPServer.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="WebStats.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

@@ -54,6 +54,7 @@ namespace tokenServer
                 {
                     var ret = JsonConvert.DeserializeObject<TokenResponse>(sr.ReadToEnd());
                     if (ret == null || ret.Code != 0) goto End;
+                    WebStats.IncrementTokenRefresh();
 
                     using (var key = Registry.LocalMachine.CreateSubKey(@"SOFTWARE\GaRyan2\epg123", RegistryKeyPermissionCheck.ReadWriteSubTree))
                     {

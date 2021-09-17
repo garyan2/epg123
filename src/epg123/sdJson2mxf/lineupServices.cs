@@ -363,7 +363,7 @@ namespace epg123.sdJson2mxf
                                 mxfService = mxfService,
                                 Number = number,
                                 SubNumber = subnumber,
-                                MatchName = ""
+                                MatchName = matchName
                             });
                         }
                     }

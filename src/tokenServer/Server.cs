@@ -7,8 +7,6 @@ namespace tokenServer
 {
     public partial class Server : ServiceBase
     {
-        private readonly JsonImageCache _cache;
-
         public Server()
         {
             InitializeComponent();
@@ -17,13 +15,13 @@ namespace tokenServer
 
             Helper.ExecutablePath = AppDomain.CurrentDomain.BaseDirectory;
             Directory.CreateDirectory(Helper.Epg123ImageCache);
-            _cache = new JsonImageCache();
         }
 
         protected override void OnStart(string[] args)
         {
             Helper.DeleteLogFile();
             StartRegistryWatcher();
+            WebStats.StartTime = DateTime.Now;
 
             new Thread(() =>
             {
@@ -55,7 +53,7 @@ namespace tokenServer
             _regWatcher?.Stop();
             _tcpListener?.Stop();
             _udpServer?.Close();
-            _cache?.Save();
+            JsonImageCache.Save();
         }
     }
 }

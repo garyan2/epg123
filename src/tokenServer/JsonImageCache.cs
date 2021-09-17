@@ -1,25 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
 
 namespace tokenServer
 {
-    public class JsonImageCache
+    public static class JsonImageCache
     {
-        public Dictionary<string, CacheImage> ImageCache;
-        private readonly object _cacheLock = new object();
-        public bool cacheImages;
-        public int cacheRetention;
+        public static Dictionary<string, CacheImage> ImageCache;
+        private static readonly object _cacheLock = new object();
+        public static bool cacheImages;
+        public static int cacheRetention;
 
-        public JsonImageCache()
+        static JsonImageCache()
         {
             Load();
         }
 
-        private void Load()
+        private static void Load()
         {
             if (File.Exists(Helper.Epg123ImageCachePath))
             {
@@ -32,7 +31,7 @@ namespace tokenServer
             else ImageCache = new Dictionary<string, CacheImage>();
         }
 
-        public void Cleanup()
+        public static void Cleanup()
         {
             var markedForDelete = ImageCache.Where(arg => arg.Value.LastUsed + TimeSpan.FromDays(cacheRetention) < DateTime.Now)
                 .Select(arg => arg.Key).ToList();
@@ -48,7 +47,7 @@ namespace tokenServer
             }
         }
 
-        public void Save()
+        public static void Save()
         {
             lock (_cacheLock)
             {
@@ -61,13 +60,13 @@ namespace tokenServer
             }
         }
 
-        public FileInfo GetCachedImage(string filename)
+        public static FileInfo GetCachedImage(string filename)
         {
+            // remove "/image/" from beginning
+            filename = filename.Substring(7);
+            var location = $"{Helper.Epg123ImageCache}\\{filename.Substring(0, 1)}\\{filename}";
             lock (_cacheLock)
             {
-                // remove "/image/" from beginning
-                filename = filename.Substring(7);
-                var location = $"{Helper.Epg123ImageCache}\\{filename.Substring(0, 1)}\\{filename}";
                 if (ImageCache.ContainsKey(filename))
                 {
                     if (File.Exists(location))
@@ -87,27 +86,23 @@ namespace tokenServer
             }
         }
 
-        public FileInfo SaveImageToCache(string filename, Stream stream, DateTime lastModified)
+        public static void AddImageToCache(string filename)
         {
             lock (_cacheLock)
             {
-                // remove "/image/" from beginning
-                filename = filename.Substring(7);
-                try
-                {
-                    var image = Image.FromStream(stream);
-                    var baseFolder = $"{Helper.Epg123ImageCache}\\{filename.Substring(0, 1)}";
-                    var location = $"{baseFolder}\\{filename}";
-                    _ = Directory.CreateDirectory(baseFolder);
-                    image.Save(location);
-                    if (lastModified != DateTime.MinValue) File.SetLastWriteTimeUtc(location, lastModified);
-                    if (ImageCache.ContainsKey(filename)) ImageCache[filename].LastUsed = DateTime.Now;
-                    else ImageCache.Add(filename, new CacheImage { LastUsed = DateTime.Now });
-                    return new FileInfo(location);
-                }
-                catch { }
-                return null;
+                if (ImageCache.ContainsKey(filename)) ImageCache[filename].LastUsed = DateTime.Now;
+                else ImageCache.Add(filename, new CacheImage { LastUsed = DateTime.Now });
             }
+        }
+
+        public static bool IsImageRecent(string filename)
+        {
+            lock (_cacheLock)
+            {
+                if (!ImageCache.ContainsKey(filename)) return false;
+                if (ImageCache[filename].LastUsed + TimeSpan.FromHours(24) > DateTime.Now) return true;
+            }
+            return false;
         }
     }
 

@@ -17,12 +17,12 @@ namespace tokenServer
                 if (key != null)
                 {
                     TokenService.Token = (string) key.GetValue("token", "");
-                    TokenService.GoodToken = TokenService.Token != "";
+                    TokenService.GoodToken = true;
                     TokenService.RefreshToken = (int) key.GetValue("autoRefreshToken", 1) > 0;
-                    _cache.cacheImages = (int) key.GetValue("cacheImages", 0) > 0;
-                    _cache.cacheRetention = (int) key.GetValue("cacheRetention", 30);
+                    JsonImageCache.cacheImages = (int) key.GetValue("cacheImages", 0) > 0;
+                    JsonImageCache.cacheRetention = (int) key.GetValue("cacheRetention", 30);
 
-                    Helper.WriteLogEntry($"version {Helper.Epg123Version} : token={TokenService.Token} , autoRefreshToken={TokenService.RefreshToken} , cacheImages={_cache.cacheImages} , cacheRetention={_cache.cacheRetention}");
+                    Helper.WriteLogEntry($"version {Helper.Epg123Version} : token={TokenService.Token} , autoRefreshToken={TokenService.RefreshToken} , cacheImages={JsonImageCache.cacheImages} , cacheRetention={JsonImageCache.cacheRetention}");
                 }
                 else
                 {
@@ -47,7 +47,7 @@ namespace tokenServer
                     {
                         Helper.WriteLogEntry($"New token detected in registry. token={regToken}");
                         TokenService.Token = regToken;
-                        _cache.Save(); // seems like a good time to save
+                        JsonImageCache.Save(); // seems like a good time to save
                     }
 
                     var regRefresh = (int)key.GetValue("autoRefreshToken", 0) > 0;
@@ -58,17 +58,17 @@ namespace tokenServer
                     }
 
                     var regCache = (int)key.GetValue("cacheImages", 0) > 0;
-                    if (regCache != _cache.cacheImages)
+                    if (regCache != JsonImageCache.cacheImages)
                     {
                         Helper.WriteLogEntry($"Cache images setting changed. cacheImages={regCache}");
-                        _cache.cacheImages = regCache;
+                        JsonImageCache.cacheImages = regCache;
                     }
 
                     var regCacheRetent = (int) key.GetValue("cacheRetention", 30);
-                    if (regCacheRetent != _cache.cacheRetention)
+                    if (regCacheRetent != JsonImageCache.cacheRetention)
                     {
                         Helper.WriteLogEntry($"Cache retention setting changed. cacheRetention={regCacheRetent}");
-                        _cache.cacheRetention = regCacheRetent;
+                        JsonImageCache.cacheRetention = regCacheRetent;
                     }
                 }
                 else
