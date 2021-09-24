@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -149,7 +148,7 @@ namespace tokenServer
             else WebStats.IncrementProvisionRequestReceived();
 
             // throttle refreshing images that have already been checked recently
-            if (JsonImageCache.cacheImages && JsonImageCache.IsImageRecent(asset))
+            if (JsonImageCache.cacheImages && JsonImageCache.IsImageRecent(asset.Substring(7)))
             {
                 if (Send304OrImageFromCache(stream, ifModifiedSince, JsonImageCache.GetCachedImage(asset)))
                     return;
@@ -178,58 +177,62 @@ namespace tokenServer
 
                 // get response
                 using (var response = request.GetResponseWithoutException() as HttpWebResponse)
+                using (var memStream = new MemoryStream())
                 {
+                    response.GetResponseStream().CopyTo(memStream);
+                    memStream.Position = 0;
+
                     // if image is included
-                    if (response.ContentLength > 0 && response.ContentType.StartsWith("image"))
+                    if (memStream.Length > 0 && response.ContentType.StartsWith("image"))
                     {
+                        // update web stats
+                        WebStats.AddSdDownload(memStream.Length);
+
                         // success implies limit has not been exceeded
                         lock (_limitLock) {_limitExceeded = WebStats.LimitLocked = false;}
 
-                        // send response header to client
-                        var message = $"HTTP/1.1 {(int)response.StatusCode} {response.StatusDescription}\r\n";
+                        // send response to client
+                        var message = $"HTTP/1.1 {(int) response.StatusCode} {response.StatusDescription}\r\n";
                         for (var i = 0; i < response.Headers.Count; ++i)
                         {
                             message += $"{response.Headers.Keys[i]}: {response.Headers[i]}\r\n";
                         }
                         var messageBytes = Encoding.UTF8.GetBytes($"{message}\r\n");
                         stream.Write(messageBytes, 0, messageBytes.Length);
+                        memStream.CopyTo(stream);
+                        if (!JsonImageCache.cacheImages) return;
 
-                        // get the response stream
-                        var content = response.GetResponseStream();
-                        if (content == null) return;
-
-                        // update web stats
-                        WebStats.AddSdDownload(response.ContentLength);
-
-                        // copy response body directly to network stream if not caching
-                        if (!JsonImageCache.cacheImages)
-                        {
-                            content.CopyTo(stream);
-                            return;
-                        }
-
-                        // save image to cache if enabled and send to client
+                        // save image to cache if enabled
+                        memStream.Position = 0;
                         var filename = asset.Substring(7);
                         var dirInfo = Directory.CreateDirectory($"{Helper.Epg123ImageCache}\\{filename.Substring(0, 1)}");
                         var location = $"{dirInfo.FullName}\\{filename}";
                         using (var fStream = new FileStream(location, FileMode.Create, FileAccess.Write))
                         {
-                            var buffer = new byte[1024];
-                            int bytesRead;
-                            while ((bytesRead = content.Read(buffer, 0, buffer.Length)) > 0)
-                            {
-                                stream.Write(buffer, 0, bytesRead);
-                                fStream.Write(buffer, 0, bytesRead);
-                            }
+                            memStream.CopyTo(fStream);
                             fStream.Flush();
                         }
                         File.SetLastWriteTimeUtc(location, response.LastModified);
                         JsonImageCache.AddImageToCache(filename);
+                        return;
                     }
 
-                    // handle responses that do not include images (200 w/ Exceeded Limit, 304, and 404 primarily)
-                    if (Send304OrImageFromCache(stream, ifModifiedSince, fileInfo)) return; // 304 or 404 for either client cache or server cache
-                    HandleRequestError(stream, asset, response, ifModifiedSince, retry); // 200 for exceeded image limit or unknown user
+                    // handle any 304 or 404 responses by providing either a 304 response or the cached image if available
+                    if (Send304OrImageFromCache(stream, ifModifiedSince, fileInfo)) return;
+
+                    // reject a 200 response that has no content
+                    if (response.StatusCode == HttpStatusCode.OK && memStream.Length == 0)
+                    {
+                        WebStats.IncrementBadGateway();
+                        var message = "HTTP/1.1 502 Bad Gateway\r\n" +
+                                      $"Date: {DateTime.UtcNow:R}\r\n";
+                        var messageBytes = Encoding.UTF8.GetBytes($"{message}\r\n");
+                        stream.Write(messageBytes, 0, messageBytes.Length);
+                        return;
+                    }
+
+                    // handle any errors from SD
+                    HandleRequestError(stream, asset, response, ifModifiedSince, memStream, retry); // 200 for exceeded image limit or unknown user
                     return;
                 }
             }
@@ -358,9 +361,9 @@ namespace tokenServer
         }
         #endregion
 
-        private void HandleRequestError(Stream stream, string asset, WebResponse webResponse, DateTime ifModifiedSince, bool retry)
+        private void HandleRequestError(Stream stream, string asset, WebResponse webResponse, DateTime ifModifiedSince, MemoryStream memStream, bool retry)
         {
-            using (var sr = new StreamReader(webResponse.GetResponseStream(), Encoding.UTF8))
+            using (var sr = new StreamReader(memStream, Encoding.UTF8))
             {
                 var resp = sr.ReadToEnd();
                 var err = JsonConvert.DeserializeObject<BaseResponse>(resp);
@@ -374,8 +377,6 @@ namespace tokenServer
 
                 using (var response = webResponse as HttpWebResponse)
                 {
-                    if (response == null) return;
-
                     var statusCode = (int) response.StatusCode;
                     var statusDescription = response.StatusDescription;
 
@@ -409,13 +410,17 @@ namespace tokenServer
                             break;
                     }
 
-                    var body = Encoding.UTF8.GetBytes(resp);
-                    var messageBytes = Encoding.UTF8.GetBytes(
-                        $"HTTP/1.1 {statusCode} {statusDescription}\r\n" +
-                        $"Date: {DateTime.UtcNow:R}\r\n" +
-                        $"Content-Type: {response.ContentType}\r\n" +
-                        $"Content-Length: {body.Length}\r\n\r\n");
+                    // send response header to client
+                    var message = $"HTTP/1.1 {statusCode} {statusDescription}\r\n";
+                    for (var i = 0; i < response.Headers.Count; ++i)
+                    {
+                        message += $"{response.Headers.Keys[i]}: {response.Headers[i]}\r\n";
+                    }
+                    var messageBytes = Encoding.UTF8.GetBytes($"{message}\r\n");
                     stream.Write(messageBytes, 0, messageBytes.Length);
+
+                    if (string.IsNullOrEmpty(resp)) return;
+                    var body = Encoding.UTF8.GetBytes(resp);
                     stream.Write(body, 0, body.Length);
                 }
             }

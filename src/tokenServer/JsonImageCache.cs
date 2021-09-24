@@ -100,7 +100,7 @@ namespace tokenServer
             lock (_cacheLock)
             {
                 if (!ImageCache.ContainsKey(filename)) return false;
-                if (ImageCache[filename].LastUsed + TimeSpan.FromHours(24) > DateTime.Now) return true;
+                if (ImageCache[filename].LastUsed.ToLocalTime() + TimeSpan.FromHours(24) > DateTime.Now) return true;
             }
             return false;
         }
