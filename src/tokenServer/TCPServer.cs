@@ -132,10 +132,12 @@ namespace tokenServer
 
         private static void ProcessLogoRequest(Stream stream, string asset, DateTime ifModifiedSince)
         {
+            WebStats.IncrementLogoRequestReceived();
             var fileInfo = new FileInfo($"{Helper.Epg123LogosFolder}\\{asset.Substring(7)}");
             if (fileInfo.Exists && Send304OrImageFromCache(stream, ifModifiedSince, fileInfo, true)) return;
 
             // nothing to give the client
+            WebStats.Increment404Response();
             var messageBytes = Encoding.UTF8.GetBytes($"HTTP/1.1 404 Not Found\r\nDate: {DateTime.UtcNow:R}\r\n\r\n");
             stream.Write(messageBytes, 0, messageBytes.Length);
         }
@@ -145,7 +147,7 @@ namespace tokenServer
         {
             // update web stats
             if (ifModifiedSince == DateTime.MinValue) WebStats.IncrementRequestReceived();
-            else WebStats.IncrementProvisionRequestReceived();
+            else WebStats.IncrementConditionalRequestReceived();
 
             // throttle refreshing images that have already been checked recently
             if (JsonImageCache.cacheImages && JsonImageCache.IsImageRecent(asset.Substring(7)))
@@ -173,7 +175,7 @@ namespace tokenServer
             {
                 // update web stats
                 if (request.IfModifiedSince == DateTime.MinValue) WebStats.IncrementRequestSent();
-                else WebStats.IncrementProvisionRequestSent();
+                else WebStats.IncrementConditionalRequestSent();
 
                 // get response
                 using (var response = request.GetResponseWithoutException() as HttpWebResponse)
@@ -223,7 +225,7 @@ namespace tokenServer
                     // reject a 200 response that has no content
                     if (response.StatusCode == HttpStatusCode.OK && memStream.Length == 0)
                     {
-                        WebStats.IncrementBadGateway();
+                        WebStats.Increment502Response();
                         var message = "HTTP/1.1 502 Bad Gateway\r\n" +
                                       $"Date: {DateTime.UtcNow:R}\r\n";
                         var messageBytes = Encoding.UTF8.GetBytes($"{message}\r\n");
@@ -245,6 +247,7 @@ namespace tokenServer
             if (Send304OrImageFromCache(stream, ifModifiedSince, fileInfo)) return;
 
             // nothing to give the client
+            WebStats.Increment404Response();
             var messageBytes2 = Encoding.UTF8.GetBytes($"HTTP/1.1 404 Not Found\r\nDate: {DateTime.UtcNow:R}\r\n\r\n");
             stream.Write(messageBytes2, 0, messageBytes2.Length);
         }
@@ -296,6 +299,7 @@ namespace tokenServer
             }
             else
             {
+                WebStats.Increment404Response();
                 var messageBytes = Encoding.UTF8.GetBytes($"HTTP/1.1 404 Not Found\r\nDate: {DateTime.UtcNow:R}\r\n\r\n");
                 stream.Write(messageBytes, 0, messageBytes.Length);
             }
@@ -325,12 +329,22 @@ namespace tokenServer
                     filepath = Helper.Epg123XmltvPath;
                     break;
             }
-            SendFile(stream, filepath == null ? null : new FileInfo(filepath), type, disposition);
+
+            if (filepath != null)
+            {
+                WebStats.IncrementFileRequestReceived();
+                SendFile(stream, new FileInfo(filepath), type, disposition);
+            }
+            else
+            {
+                var messageBytes = Encoding.UTF8.GetBytes($"HTTP/1.1 404 Not Found\r\nDate: {DateTime.UtcNow:R}\r\n\r\n");
+                stream.Write(messageBytes, 0, messageBytes.Length);
+            }
         }
 
         private static void SendFile(Stream stream, FileInfo fileInfo, string contentType, string contentDisposition)
         {
-            if (fileInfo != null && fileInfo.Exists)
+            if (fileInfo.Exists)
             {
                 var messageBytes = Encoding.UTF8.GetBytes("HTTP/1.1 200 OK\r\n" +
                                                           $"Date: {DateTime.UtcNow:R}\r\n" +
@@ -343,6 +357,7 @@ namespace tokenServer
 
                 try
                 {
+                    WebStats.AddFileDownload(fileInfo.Length);
                     using (var fs = new FileStream(fileInfo.FullName, FileMode.Open, FileAccess.Read, FileShare.Read))
                     {
                         fs.CopyTo(stream);
@@ -355,6 +370,7 @@ namespace tokenServer
             }
             else
             {
+                WebStats.Increment404Response();
                 var messageBytes = Encoding.UTF8.GetBytes($"HTTP/1.1 404 Not Found\r\nDate: {DateTime.UtcNow:R}\r\n\r\n");
                 stream.Write(messageBytes, 0, messageBytes.Length);
             }
@@ -364,65 +380,73 @@ namespace tokenServer
         private void HandleRequestError(Stream stream, string asset, WebResponse webResponse, DateTime ifModifiedSince, MemoryStream memStream, bool retry)
         {
             using (var sr = new StreamReader(memStream, Encoding.UTF8))
+            using (var response = webResponse as HttpWebResponse)
             {
+                var statusCode = (int) response.StatusCode;
+                var statusDescription = response.StatusDescription;
+
                 var resp = sr.ReadToEnd();
                 var err = JsonConvert.DeserializeObject<BaseResponse>(resp);
-                if (!string.IsNullOrEmpty(resp))
+                switch (err?.Code)
                 {
-                    if (!(err.Code == 5002 && _limitExceeded) && !(err.Code == 5004 && !TokenService.GoodToken))
-                    {
-                        Helper.WriteLogEntry($"{asset}:\n{resp}");
-                    }
+                    case 5000: // IMAGE_NOT_FOUND
+                        statusCode = 404;
+                        statusDescription = "Not Found";
+                        break;
+                    case 5002: // MAX_IMAGE_DOWNLOADS
+                        lock (_limitLock) _limitExceeded = WebStats.LimitLocked = true;
+                        statusCode = 429;
+                        statusDescription = "Too Many Requests";
+                        break;
+                    case 5004: // UNKNOWN_USER
+                        bool refresh;
+                        lock (_tokenLock) refresh = TokenService.GoodToken && TokenService.RefreshToken && !retry && TokenService.RefreshTokenFromSD();
+                        
+                        if (refresh)
+                        {
+                            WebStats.AddSdDownload(0);
+                            ProcessImageRequest(stream, asset, ifModifiedSince, true);
+                            return;
+                        }
+                        statusCode = 401;
+                        statusDescription = "Unauthorized";
+                        break;
                 }
 
-                using (var response = webResponse as HttpWebResponse)
+                switch (statusCode)
                 {
-                    var statusCode = (int) response.StatusCode;
-                    var statusDescription = response.StatusDescription;
-
-                    switch (err?.Code)
-                    {
-                        case 5000: // IMAGE_NOT_FOUND
-                            WebStats.IncrementImageNotFound();
-                            break;
-                        case 5002: // MAX_IMAGE_DOWNLOADS
-                            WebStats.IncrementMaxDownloads();
-                            lock (_limitLock)
-                            {
-                                statusCode = 429;
-                                statusDescription = "Too Many Requests";
-                                _limitExceeded = WebStats.LimitLocked = true;
-                            }
-                            break;
-                        case 5004: // UNKNOWN_USER
-                            WebStats.IncrementUnknownUser();
-                            lock (_tokenLock)
-                            {
-                                statusCode = 401;
-                                statusDescription = "Unauthorized";
-                                if (!TokenService.GoodToken) break;
-                                if (TokenService.RefreshToken && !retry && TokenService.RefreshTokenFromSD())
-                                {
-                                    ProcessImageRequest(stream, asset, ifModifiedSince, true);
-                                    return;
-                                }
-                            }
-                            break;
-                    }
-
-                    // send response header to client
-                    var message = $"HTTP/1.1 {statusCode} {statusDescription}\r\n";
-                    for (var i = 0; i < response.Headers.Count; ++i)
-                    {
-                        message += $"{response.Headers.Keys[i]}: {response.Headers[i]}\r\n";
-                    }
-                    var messageBytes = Encoding.UTF8.GetBytes($"{message}\r\n");
-                    stream.Write(messageBytes, 0, messageBytes.Length);
-
-                    if (string.IsNullOrEmpty(resp)) return;
-                    var body = Encoding.UTF8.GetBytes(resp);
-                    stream.Write(body, 0, body.Length);
+                    case 401:
+                        WebStats.Increment401Response();
+                        break;
+                    case 404:
+                        WebStats.Increment404Response();
+                        break;
+                    case 429:
+                        WebStats.Increment429Response();
+                        break;
+                    default:
+                        WebStats.IncrementOtherResponse();
+                        break;
                 }
+
+                // log the error response
+                if (!(err?.Code == 5002 && _limitExceeded) && !(err?.Code == 5004 && !TokenService.GoodToken))
+                {
+                    Helper.WriteLogEntry($"{asset}: {statusCode} {statusDescription}{(!string.IsNullOrEmpty(resp) ? $"\n{resp}" : "")}");
+                }
+
+                // send response header and body to client
+                var message = $"HTTP/1.1 {statusCode} {statusDescription}\r\n";
+                for (var i = 0; i < response.Headers.Count; ++i)
+                {
+                    message += $"{response.Headers.Keys[i]}: {response.Headers[i]}\r\n";
+                }
+                var messageBytes = Encoding.UTF8.GetBytes($"{message}\r\n");
+                stream.Write(messageBytes, 0, messageBytes.Length);
+
+                if (string.IsNullOrEmpty(resp)) return;
+                var body = Encoding.UTF8.GetBytes(resp);
+                stream.Write(body, 0, body.Length);
             }
         }
     }

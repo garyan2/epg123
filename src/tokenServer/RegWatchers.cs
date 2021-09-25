@@ -1,4 +1,5 @@
-﻿using System.Management;
+﻿using System;
+using System.Management;
 using Microsoft.Win32;
 
 namespace tokenServer
@@ -33,7 +34,16 @@ namespace tokenServer
 
             _regWatcher = new ManagementEventWatcher(RegQuery);
             _regWatcher.EventArrived += RegEventHandler;
-            _regWatcher.Start();
+
+            try
+            {
+                _regWatcher.Start();
+                WebStats.RegWatcherRunning = true;
+            }
+            catch (Exception e)
+            {
+                Helper.WriteLogEntry($"Failed to start registry watcher. message: {e.Message}\n{e.StackTrace}");
+            }
         }
 
         private void RegEventHandler(object sender, EventArrivedEventArgs e)
