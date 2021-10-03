@@ -496,7 +496,7 @@ namespace epg123.sdJson2mxf
             if (mxfProgram.SeasonNumber != 0)
             {
                 mxfProgram.mxfSeason = SdMxf.GetSeason(mxfProgram.mxfSeriesInfo.SeriesId, mxfProgram.SeasonNumber, 
-                    sdProgram.HasSeasonArtwork ? mxfProgram.ProgramId : null);
+                    (sdProgram.HasSeasonArtwork || sdProgram.HasEpisodeArtwork) ? mxfProgram.ProgramId : null);
             }
         }
 

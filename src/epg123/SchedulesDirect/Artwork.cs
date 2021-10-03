@@ -42,6 +42,8 @@ namespace epg123.SchedulesDirect
 
     public class ProgramArtwork
     {
+        private string _size;
+
         [JsonProperty("width")]
         public int Width { get; set; }
 
@@ -52,7 +54,25 @@ namespace epg123.SchedulesDirect
         public string Uri { get; set; }
 
         [JsonProperty("size")]
-        public string Size { get; set; }
+        public string Size
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(_size))
+                {
+                    switch (Height * Width)
+                    {
+                        case 129600:
+                            return "Sm";
+                        case 86400:
+                        case 97200:
+                            return "Md";
+                    }
+                }
+                return _size;
+            }
+            set => _size = value;
+        }
 
         [JsonProperty("aspect")]
         public string Aspect { get; set; }

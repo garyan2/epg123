@@ -125,7 +125,7 @@ namespace tokenServer
                 }
                 catch (Exception e)
                 {
-                    Helper.WriteLogEntry($"{asset}\nHandleDevice() - {e.Message}");
+                    Helper.WriteLogEntry($"{asset}\nHandleDevice() - {e.Message}\n{e.StackTrace}");
                 }
             }
         }
@@ -386,31 +386,39 @@ namespace tokenServer
                 var statusDescription = response.StatusDescription;
 
                 var resp = sr.ReadToEnd();
-                var err = JsonConvert.DeserializeObject<BaseResponse>(resp);
-                switch (err?.Code)
+                var err = new BaseResponse();
+                try
                 {
-                    case 5000: // IMAGE_NOT_FOUND
-                        statusCode = 404;
-                        statusDescription = "Not Found";
-                        break;
-                    case 5002: // MAX_IMAGE_DOWNLOADS
-                        lock (_limitLock) _limitExceeded = WebStats.LimitLocked = true;
-                        statusCode = 429;
-                        statusDescription = "Too Many Requests";
-                        break;
-                    case 5004: // UNKNOWN_USER
-                        bool refresh;
-                        lock (_tokenLock) refresh = TokenService.GoodToken && TokenService.RefreshToken && !retry && TokenService.RefreshTokenFromSD();
-                        
-                        if (refresh)
-                        {
-                            WebStats.AddSdDownload(0);
-                            ProcessImageRequest(stream, asset, ifModifiedSince, true);
-                            return;
-                        }
-                        statusCode = 401;
-                        statusDescription = "Unauthorized";
-                        break;
+                    err = JsonConvert.DeserializeObject<BaseResponse>(resp);
+                    switch (err.Code)
+                    {
+                        case 5000: // IMAGE_NOT_FOUND
+                            statusCode = 404;
+                            statusDescription = "Not Found";
+                            break;
+                        case 5002: // MAX_IMAGE_DOWNLOADS
+                            lock (_limitLock) _limitExceeded = WebStats.LimitLocked = true;
+                            statusCode = 429;
+                            statusDescription = "Too Many Requests";
+                            break;
+                        case 5004: // UNKNOWN_USER
+                            bool refresh;
+                            lock (_tokenLock) refresh = TokenService.GoodToken && TokenService.RefreshToken && !retry && TokenService.RefreshTokenFromSD();
+
+                            if (refresh)
+                            {
+                                WebStats.AddSdDownload(0);
+                                ProcessImageRequest(stream, asset, ifModifiedSince, true);
+                                return;
+                            }
+                            statusCode = 401;
+                            statusDescription = "Unauthorized";
+                            break;
+                    }
+                }
+                catch
+                {
+                    // do nothing
                 }
 
                 switch (statusCode)
@@ -430,7 +438,7 @@ namespace tokenServer
                 }
 
                 // log the error response
-                if (!(err?.Code == 5002 && _limitExceeded) && !(err?.Code == 5004 && !TokenService.GoodToken))
+                if (!(err.Code == 5002 && _limitExceeded) && !(err.Code == 5004 && !TokenService.GoodToken))
                 {
                     Helper.WriteLogEntry($"{asset}: {statusCode} {statusDescription}{(!string.IsNullOrEmpty(resp) ? $"\n{resp}" : "")}");
                 }

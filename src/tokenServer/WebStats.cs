@@ -75,10 +75,10 @@ namespace tokenServer
                        $"Other (see log): <font color=\"{(respOther > 0 ? "red" : "blue")}\">{respOther}</font></p>" +
 
                        $"<h1>Links</h1><p>" +
-                       $"<a href=\"http://{Environment.MachineName}:{Helper.TcpPort}/trace.log\" target=\"_blank\">View EPG123 Log</a><br>" +
-                       $"<a href=\"http://{Environment.MachineName}:{Helper.TcpPort}/server.log\" target=\"_blank\">View Service Log</a><br>" +
-                       $"<a href=\"http://{Environment.MachineName}:{Helper.TcpPort}/output/epg123.mxf\">Download MXF file</a><br>" +
-                       $"<a href=\"http://{Environment.MachineName}:{Helper.TcpPort}/output/epg123.xmltv\">Download XMLTV file</a></p>" +
+                       $"<a href=\"trace.log\" target=\"_blank\">View EPG123 Log</a><br>" +
+                       $"<a href=\"server.log\" target=\"_blank\">View Service Log</a><br>" +
+                       $"<a href=\"output/epg123.mxf\">Download MXF file</a><br>" +
+                       $"<a href=\"output/epg123.xmltv\">Download XMLTV file</a></p>" +
 
                        $"<p><small><b><i>EPG123 Server v{Helper.Epg123Version}</i></b></small></p>" +
                        $"</body></html>";
