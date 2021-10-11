@@ -14,7 +14,7 @@ namespace epg123.SchedulesDirect
                 {
                     var expires = DateTime.Parse((string) key.GetValue("tokenExpires", DateTime.MinValue.ToString()));
                     myToken = (string)key.GetValue("token", "");
-                    if (expires - DateTime.Now > TimeSpan.FromHours(1.0))
+                    if (expires.ToLocalTime() - DateTime.Now > TimeSpan.FromHours(1.0))
                     {
                         if (ValidateToken()) return true;
                         Logger.WriteVerbose("Validation of cached token failed. Requesting new token.");
@@ -46,7 +46,7 @@ namespace epg123.SchedulesDirect
                             if (key != null)
                             {
                                 key.SetValue("token", ret.Token);
-                                key.SetValue("tokenExpires", ret.Datetime.ToLocalTime().AddDays(1));
+                                key.SetValue("tokenExpires", $"{ret.Datetime.AddDays(1):R}");
                             }
                         }
                         myToken = ret.Token;

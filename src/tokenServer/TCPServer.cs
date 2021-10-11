@@ -162,7 +162,6 @@ namespace tokenServer
 
             // create web request
             var request = (HttpWebRequest)WebRequest.Create(url);
-            request.Timeout = 6000;
 
             // add if-modified-since as needed
             var fileInfo = JsonImageCache.cacheImages ? JsonImageCache.GetCachedImage(asset) : null;

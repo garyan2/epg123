@@ -13,6 +13,9 @@ namespace epg123.MxfXml
             if (_programs.TryGetValue(programId, out var program)) return program;
             With.Programs.Add(program = new MxfProgram
             {
+                Description = mxfProgram?.Description,
+                IsGeneric = mxfProgram?.IsGeneric ?? false,
+                Title = mxfProgram?.Title,
                 Index = With.Programs.Count + 1,
                 ProgramId = programId
             });

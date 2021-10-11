@@ -39,8 +39,7 @@ namespace epg123.sdJson2mxf
                             Description = config.XmltvFillerProgramDescription,
                             IsGeneric = true,
                             Title = service.Name,
-                            ProgramId = $"EPG123FILL{service.StationId}",
-                            Index = SdMxf.With.Programs.Count + 1,
+                            ProgramId = $"EPG123FILL{service.StationId}"
                         };
 
                         // populate the schedule entries

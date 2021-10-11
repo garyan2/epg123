@@ -1423,10 +1423,7 @@ namespace epg123Client
         #region ========== View Log ==========
         private void btnViewLog_Click(object sender, EventArgs e)
         {
-            if (File.Exists(Helper.Epg123TraceLogPath))
-            {
-                Process.Start(Helper.Epg123TraceLogPath);
-            }
+            Helper.ViewLogFile();
         }
         #endregion
 

@@ -425,7 +425,7 @@ namespace epg123
                 {
                     numDays.Value = 14;
                     cbTVDB.Checked = true;
-                    cbOadOverride.Checked = true;
+                    cbSeasonEventImages.Checked = true;
                     cbTMDb.Checked = true;
                     cbSdLogos.Checked = true;
                     cbAddNewStations.Checked = true;
@@ -435,7 +435,7 @@ namespace epg123
                     numDays.Value = Math.Min(Config.DaysToDownload, numDays.Maximum);
                     cbPrefixTitle.Checked = Config.PrefixEpisodeTitle;
                     cbAppendDescription.Checked = Config.AppendEpisodeDesc;
-                    cbOadOverride.Checked = Config.OadOverride;
+                    cbSeasonEventImages.Checked = Config.SeasonEventImages;
                     cbTMDb.Checked = Config.TMDbCoverArt;
                     cbSdLogos.Checked = Config.IncludeSdLogos;
 
@@ -969,10 +969,7 @@ namespace epg123
         }
         private void btnViewLog_Click(object sender, EventArgs e)
         {
-            if (File.Exists(Helper.Epg123TraceLogPath))
-            {
-                Process.Start(Helper.Epg123TraceLogPath);
-            }
+            Helper.ViewLogFile();
         }
         private void btnClearCache_Click(object sender, EventArgs e)
         {
@@ -994,7 +991,7 @@ namespace epg123
         private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
             linkLabel1.LinkVisited = true;
-            Process.Start("http://garyan2.github.io/");
+            Process.Start("http://garyan2.github.io/download.html");
         }
         #endregion
 
@@ -1525,9 +1522,9 @@ namespace epg123
             {
                 Config.AppendEpisodeDesc = cbAppendDescription.Checked;
             }
-            else if (sender.Equals(cbOadOverride))
+            else if (sender.Equals(cbSeasonEventImages))
             {
-                Config.OadOverride = cbOadOverride.Checked;
+                Config.SeasonEventImages = cbSeasonEventImages.Checked;
             }
             else if (sender.Equals(cbAddNewStations))
             {
@@ -1629,31 +1626,30 @@ namespace epg123
         private void btnServiceStartStop_Click(object sender, EventArgs e)
         {
             // need to verify server is not running
-            var serviceName = "epg123Server";
-            if (ServiceController.GetServices().Any(arg => arg.ServiceName.Equals(serviceName)))
+            const string serviceName = "epg123Server";
+            if (!ServiceController.GetServices().Any(arg => arg.ServiceName.Equals(serviceName))) return;
+
+            var cmd = "stop";
+            if ((Button)sender == btnServiceStart) cmd = "start";
+            var sc = new ServiceController
             {
-                var cmd = "stop";
-                if ((Button)sender == btnServiceStart) cmd = "start";
-                var sc = new ServiceController
-                {
-                    ServiceName = serviceName
-                };
+                ServiceName = serviceName
+            };
 
-                Process.Start(new ProcessStartInfo
-                {
-                    FileName = "net.exe",
-                    Arguments = $"{cmd} {serviceName}",
-                    Verb = "runas"
-                })?.WaitForExit();
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = "net.exe",
+                Arguments = $"{cmd} {serviceName}",
+                Verb = "runas"
+            })?.WaitForExit();
 
-                btnServiceStop.Enabled = sc.Status == ServiceControllerStatus.Running;
-                btnServiceStart.Enabled = sc.Status != ServiceControllerStatus.Running;
-            }
+            btnServiceStop.Enabled = sc.Status == ServiceControllerStatus.Running;
+            btnServiceStart.Enabled = sc.Status != ServiceControllerStatus.Running;
         }
 
         private void SetServiceButtonEnables()
         {
-            var serviceName = "epg123Server";
+            const string serviceName = "epg123Server";
             if (ServiceController.GetServices().Any(arg => arg.ServiceName.Equals(serviceName)))
             {
                 var sc = new ServiceController
@@ -1665,6 +1661,12 @@ namespace epg123
                 btnServiceStart.Enabled = sc.Status == ServiceControllerStatus.Stopped;
             }
             else btnServiceStop.Enabled = btnServiceStart.Enabled = false;
+        }
+
+        private void linkLabel2_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            linkLabel2.LinkVisited = true;
+            Process.Start($"http://{Environment.MachineName}:{Helper.TcpPort}/");
         }
         #endregion
         #endregion

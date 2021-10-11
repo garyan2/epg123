@@ -299,7 +299,7 @@ namespace epg123.sdJson2mxf
                     {
                         mxfProgram.extras.Add("multipart", $"{scheduleProgram.Multipart.PartNumber}/{scheduleProgram.Multipart.TotalParts}");
                     }
-                    if (config.OadOverride && scheduleProgram.New)
+                    if (scheduleProgram.New)
                     {
                         mxfProgram.extras.Add("newAirDate", scheduleProgram.AirDateTime.ToLocalTime());
                     }

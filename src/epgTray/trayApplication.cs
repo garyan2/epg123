@@ -340,14 +340,16 @@ namespace epgTray
                     filePath = Helper.Epg123TransferExePath;
                     break;
                 case "_viewLogMenuItem":
-                    filePath = Helper.Epg123TraceLogPath;
-                    break;
+                    Helper.ViewLogFile();
+                    return;
                 case "_gotoDownloadMenuItem":
                     filePath = "https://garyan2.github.io/download.html";
                     break;
                 default:
                     return;
             }
+
+            if (!File.Exists(filePath)) return;
             Process.Start(filePath);
         }
 

@@ -19,10 +19,11 @@ namespace epg123.sdJson2mxf
             imageQueue = new List<string>();
             imageResponses = new ConcurrentBag<ProgramMetadata>();
             processedObjects = 0;
-            Logger.WriteMessage($"Entering GetAllSeasonImages() for {totalObjects = SdMxf.With.Seasons.Count} seasons.");
             ++processStage; ReportProgress();
+            if (!config.SeasonEventImages) return true;
 
             // scan through each series in the mxf
+            Logger.WriteMessage($"Entering GetAllSeasonImages() for {totalObjects = SdMxf.With.Seasons.Count} seasons.");
             foreach (var season in SdMxf.With.Seasons)
             {
                 var uid = $"{season.mxfSeriesInfo.SeriesId}_{season.SeasonNumber}";

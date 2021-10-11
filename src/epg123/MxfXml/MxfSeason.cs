@@ -8,7 +8,11 @@ namespace epg123.MxfXml
         private readonly Dictionary<string, MxfSeason> _seasons = new Dictionary<string, MxfSeason>();
         public MxfSeason GetSeason(string seriesId, int seasonNumber, string protoTypicalProgram)
         {
-            if (_seasons.TryGetValue($"{seriesId}_{seasonNumber}", out var season)) return season;
+            if (_seasons.TryGetValue($"{seriesId}_{seasonNumber}", out var season))
+            {
+                season.ProtoTypicalProgram = season.ProtoTypicalProgram ?? protoTypicalProgram;
+                return season;
+            }
             With.Seasons.Add(season = new MxfSeason
             {
                 Index = With.Seasons.Count + 1,

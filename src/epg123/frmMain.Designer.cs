@@ -35,6 +35,7 @@
             this.tabConfig = new System.Windows.Forms.TabPage();
             this.cbSeriesWsArt = new System.Windows.Forms.CheckBox();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
+            this.cbSeasonEventImages = new System.Windows.Forms.CheckBox();
             this.cbNoCastCrew = new System.Windows.Forms.CheckBox();
             this.cbBrandLogo = new System.Windows.Forms.CheckBox();
             this.cbAlternateSEFormat = new System.Windows.Forms.CheckBox();
@@ -50,7 +51,6 @@
             this.cbModernMedia = new System.Windows.Forms.CheckBox();
             this.numDays = new System.Windows.Forms.NumericUpDown();
             this.lblDaysDownload = new System.Windows.Forms.Label();
-            this.cbOadOverride = new System.Windows.Forms.CheckBox();
             this.cbAddNewStations = new System.Windows.Forms.CheckBox();
             this.tabXmltv = new System.Windows.Forms.TabPage();
             this.cbXmltvSingleImage = new System.Windows.Forms.CheckBox();
@@ -71,11 +71,16 @@
             this.tabTask = new System.Windows.Forms.TabPage();
             this.cbAutomatch = new System.Windows.Forms.CheckBox();
             this.lblSchedStatus = new System.Windows.Forms.Label();
+            this.btnTask = new epg123.ElevatedButton();
             this.cbImport = new System.Windows.Forms.CheckBox();
             this.cbTaskWake = new System.Windows.Forms.CheckBox();
             this.tbSchedTime = new System.Windows.Forms.MaskedTextBox();
             this.lblUpdateTime = new System.Windows.Forms.Label();
             this.tabService = new System.Windows.Forms.TabPage();
+            this.linkLabel2 = new System.Windows.Forms.LinkLabel();
+            this.label3 = new System.Windows.Forms.Label();
+            this.label2 = new System.Windows.Forms.Label();
+            this.cbCacheRetention = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
             this.btnServiceStart = new System.Windows.Forms.Button();
             this.btnServiceStop = new System.Windows.Forms.Button();
@@ -128,10 +133,6 @@
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.btnClearCache = new System.Windows.Forms.Button();
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
-            this.cbCacheRetention = new System.Windows.Forms.ComboBox();
-            this.label2 = new System.Windows.Forms.Label();
-            this.label3 = new System.Windows.Forms.Label();
-            this.btnTask = new epg123.ElevatedButton();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -198,6 +199,7 @@
             this.tabConfig.BackColor = System.Drawing.SystemColors.Control;
             this.tabConfig.Controls.Add(this.cbSeriesWsArt);
             this.tabConfig.Controls.Add(this.pictureBox1);
+            this.tabConfig.Controls.Add(this.cbSeasonEventImages);
             this.tabConfig.Controls.Add(this.cbNoCastCrew);
             this.tabConfig.Controls.Add(this.cbBrandLogo);
             this.tabConfig.Controls.Add(this.cbAlternateSEFormat);
@@ -213,7 +215,6 @@
             this.tabConfig.Controls.Add(this.cbModernMedia);
             this.tabConfig.Controls.Add(this.numDays);
             this.tabConfig.Controls.Add(this.lblDaysDownload);
-            this.tabConfig.Controls.Add(this.cbOadOverride);
             this.tabConfig.Controls.Add(this.cbAddNewStations);
             this.tabConfig.Location = new System.Drawing.Point(4, 22);
             this.tabConfig.Name = "tabConfig";
@@ -225,7 +226,7 @@
             // cbSeriesWsArt
             // 
             this.cbSeriesWsArt.AutoSize = true;
-            this.cbSeriesWsArt.Location = new System.Drawing.Point(6, 216);
+            this.cbSeriesWsArt.Location = new System.Drawing.Point(6, 193);
             this.cbSeriesWsArt.Name = "cbSeriesWsArt";
             this.cbSeriesWsArt.Size = new System.Drawing.Size(258, 17);
             this.cbSeriesWsArt.TabIndex = 40;
@@ -241,6 +242,17 @@
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pictureBox1.TabIndex = 39;
             this.pictureBox1.TabStop = false;
+            // 
+            // cbSeasonEventImages
+            // 
+            this.cbSeasonEventImages.AutoSize = true;
+            this.cbSeasonEventImages.Location = new System.Drawing.Point(6, 216);
+            this.cbSeasonEventImages.Name = "cbSeasonEventImages";
+            this.cbSeasonEventImages.Size = new System.Drawing.Size(211, 17);
+            this.cbSeasonEventImages.TabIndex = 12;
+            this.cbSeasonEventImages.Text = "Include season and sport event images";
+            this.cbSeasonEventImages.UseVisualStyleBackColor = true;
+            this.cbSeasonEventImages.CheckedChanged += new System.EventHandler(this.configs_Changed);
             // 
             // cbNoCastCrew
             // 
@@ -304,7 +316,7 @@
             // cbSeriesPosterArt
             // 
             this.cbSeriesPosterArt.AutoSize = true;
-            this.cbSeriesPosterArt.Location = new System.Drawing.Point(6, 193);
+            this.cbSeriesPosterArt.Location = new System.Drawing.Point(6, 170);
             this.cbSeriesPosterArt.Name = "cbSeriesPosterArt";
             this.cbSeriesPosterArt.Size = new System.Drawing.Size(252, 17);
             this.cbSeriesPosterArt.TabIndex = 30;
@@ -426,21 +438,10 @@
             this.lblDaysDownload.TabIndex = 2;
             this.lblDaysDownload.Text = "days of schedule data to download";
             // 
-            // cbOadOverride
-            // 
-            this.cbOadOverride.AutoSize = true;
-            this.cbOadOverride.Location = new System.Drawing.Point(6, 147);
-            this.cbOadOverride.Name = "cbOadOverride";
-            this.cbOadOverride.Size = new System.Drawing.Size(232, 17);
-            this.cbOadOverride.TabIndex = 12;
-            this.cbOadOverride.Text = "Allow NEW flag to override Original Air Date";
-            this.cbOadOverride.UseVisualStyleBackColor = true;
-            this.cbOadOverride.CheckedChanged += new System.EventHandler(this.configs_Changed);
-            // 
             // cbAddNewStations
             // 
             this.cbAddNewStations.AutoSize = true;
-            this.cbAddNewStations.Location = new System.Drawing.Point(6, 170);
+            this.cbAddNewStations.Location = new System.Drawing.Point(6, 147);
             this.cbAddNewStations.Name = "cbAddNewStations";
             this.cbAddNewStations.Size = new System.Drawing.Size(246, 17);
             this.cbAddNewStations.TabIndex = 13;
@@ -696,6 +697,17 @@
             this.lblSchedStatus.TabIndex = 4;
             this.lblSchedStatus.Text = "Task Status";
             // 
+            // btnTask
+            // 
+            this.btnTask.FlatStyle = System.Windows.Forms.FlatStyle.System;
+            this.btnTask.Location = new System.Drawing.Point(228, 87);
+            this.btnTask.Name = "btnTask";
+            this.btnTask.Size = new System.Drawing.Size(75, 23);
+            this.btnTask.TabIndex = 21;
+            this.btnTask.Text = "Create";
+            this.btnTask.UseVisualStyleBackColor = true;
+            this.btnTask.Click += new System.EventHandler(this.btnTask_Click);
+            // 
             // cbImport
             // 
             this.cbImport.AutoSize = true;
@@ -740,6 +752,7 @@
             // tabService
             // 
             this.tabService.BackColor = System.Drawing.SystemColors.Control;
+            this.tabService.Controls.Add(this.linkLabel2);
             this.tabService.Controls.Add(this.label3);
             this.tabService.Controls.Add(this.label2);
             this.tabService.Controls.Add(this.cbCacheRetention);
@@ -754,6 +767,54 @@
             this.tabService.Size = new System.Drawing.Size(309, 395);
             this.tabService.TabIndex = 5;
             this.tabService.Text = "Service";
+            // 
+            // linkLabel2
+            // 
+            this.linkLabel2.AutoSize = true;
+            this.linkLabel2.Location = new System.Drawing.Point(6, 140);
+            this.linkLabel2.Name = "linkLabel2";
+            this.linkLabel2.Size = new System.Drawing.Size(90, 13);
+            this.linkLabel2.TabIndex = 8;
+            this.linkLabel2.TabStop = true;
+            this.linkLabel2.Text = "View Service Log";
+            this.linkLabel2.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel2_LinkClicked);
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(23, 79);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(87, 13);
+            this.label3.TabIndex = 7;
+            this.label3.Text = "after last access.";
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(23, 62);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(113, 13);
+            this.label2.TabIndex = 6;
+            this.label2.Text = "Retain cached images";
+            // 
+            // cbCacheRetention
+            // 
+            this.cbCacheRetention.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cbCacheRetention.FormattingEnabled = true;
+            this.cbCacheRetention.Items.AddRange(new object[] {
+            "7 days",
+            "14 days",
+            "30 days",
+            "60 days",
+            "90 days",
+            "180 days",
+            "365 days",
+            "indefinitely"});
+            this.cbCacheRetention.Location = new System.Drawing.Point(142, 58);
+            this.cbCacheRetention.Name = "cbCacheRetention";
+            this.cbCacheRetention.Size = new System.Drawing.Size(78, 21);
+            this.cbCacheRetention.TabIndex = 5;
+            this.cbCacheRetention.SelectedIndexChanged += new System.EventHandler(this.cbCacheRetention_SelectedIndexChanged);
             // 
             // label1
             // 
@@ -1002,7 +1063,7 @@
             this.toolStrip6.MaximumSize = new System.Drawing.Size(0, 46);
             this.toolStrip6.MinimumSize = new System.Drawing.Size(0, 46);
             this.toolStrip6.Name = "toolStrip6";
-            this.toolStrip6.Size = new System.Drawing.Size(0, 46);
+            this.toolStrip6.Size = new System.Drawing.Size(432, 46);
             this.toolStrip6.Stretch = true;
             this.toolStrip6.TabIndex = 2;
             this.toolStrip6.Text = "toolStrip6";
@@ -1284,54 +1345,6 @@
             this.btnClearCache.UseVisualStyleBackColor = true;
             this.btnClearCache.Click += new System.EventHandler(this.btnClearCache_Click);
             // 
-            // cbCacheRetention
-            // 
-            this.cbCacheRetention.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cbCacheRetention.FormattingEnabled = true;
-            this.cbCacheRetention.Items.AddRange(new object[] {
-            "7 days",
-            "14 days",
-            "30 days",
-            "60 days",
-            "90 days",
-            "180 days",
-            "365 days",
-            "indefinitely"});
-            this.cbCacheRetention.Location = new System.Drawing.Point(142, 58);
-            this.cbCacheRetention.Name = "cbCacheRetention";
-            this.cbCacheRetention.Size = new System.Drawing.Size(78, 21);
-            this.cbCacheRetention.TabIndex = 5;
-            this.cbCacheRetention.SelectedIndexChanged += new System.EventHandler(this.cbCacheRetention_SelectedIndexChanged);
-            // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(23, 62);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(113, 13);
-            this.label2.TabIndex = 6;
-            this.label2.Text = "Retain cached images";
-            // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(23, 79);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(87, 13);
-            this.label3.TabIndex = 7;
-            this.label3.Text = "after last access.";
-            // 
-            // btnTask
-            // 
-            this.btnTask.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.btnTask.Location = new System.Drawing.Point(228, 87);
-            this.btnTask.Name = "btnTask";
-            this.btnTask.Size = new System.Drawing.Size(75, 23);
-            this.btnTask.TabIndex = 21;
-            this.btnTask.Text = "Create";
-            this.btnTask.UseVisualStyleBackColor = true;
-            this.btnTask.Click += new System.EventHandler(this.btnTask_Click);
-            // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
@@ -1406,7 +1419,7 @@
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Button btnExecute;
         private System.Windows.Forms.Button btnClientLineups;
-        private System.Windows.Forms.CheckBox cbOadOverride;
+        private System.Windows.Forms.CheckBox cbSeasonEventImages;
         private System.Windows.Forms.CheckBox cbAddNewStations;
         private System.Windows.Forms.Button btnHelp;
         private System.Windows.Forms.Label lblUpdate;
@@ -1491,5 +1504,6 @@
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.ComboBox cbCacheRetention;
         private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.LinkLabel linkLabel2;
     }
 }

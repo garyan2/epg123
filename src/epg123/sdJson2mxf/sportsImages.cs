@@ -19,10 +19,11 @@ namespace epg123.sdJson2mxf
             imageQueue = new List<string>();
             imageResponses = new ConcurrentBag<ProgramMetadata>();
             processedObjects = 0;
-            Logger.WriteMessage($"Entering GetAllSportsImages() for {totalObjects = sportEvents.Count} sports events.");
             ++processStage; ReportProgress();
+            if (!config.SeasonEventImages) return true;
 
             // scan through each series in the mxf
+            Logger.WriteMessage($"Entering GetAllSportsImages() for {totalObjects = sportEvents.Count} sports events.");
             foreach (var sportEvent in sportEvents)
             {
                 string md5 = sportEvent.extras["md5"];
