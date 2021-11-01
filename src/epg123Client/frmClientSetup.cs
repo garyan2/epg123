@@ -434,6 +434,7 @@ namespace epg123Client
 
             // increase the tuner count to 32
             TweakMediaCenterTunerCount(TUNERLIMIT);
+            UpdateSatelliteTransponders();
             UpdateStatusText(string.Empty);
 
             return true;
@@ -536,6 +537,13 @@ namespace epg123Client
             UpdateStatusText("Increasing tuner limits ...");
             Logger.WriteVerbose("Increasing tuner limits ...");
             WmcUtilities.SetWmcTunerLimits(count);
+        }
+
+        private void UpdateSatelliteTransponders()
+        {
+            UpdateStatusText("Updating satellite transponders ...");
+            Logger.WriteVerbose("Updating satellite transponders ...");
+            WmcUtilities.UpdateDvbsTransponders();
         }
 
         private static bool IsTunerCountTweaked()

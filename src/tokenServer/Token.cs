@@ -69,9 +69,9 @@ namespace tokenServer
                     }
                 }
             }
-            catch
+            catch (WebException ex)
             {
-                // do nothing
+                Helper.WriteLogEntry($"SD API WebException Thrown. Message: {ex.Message} , Status: {ex.Status}");
             }
 
             End:

@@ -684,6 +684,28 @@ namespace epg123Client
             try
             {
                 if (!(WmcObjectStore.Fetch(mergedChannelId) is MergedChannel mergedChannel)) return;
+                if (mergedChannel.IsSuggestedBlocked)
+                {
+                    foreach (TuningInfo tuningInfo in mergedChannel.TuningInfos)
+                    {
+                        var infoOverride = tuningInfo.GetOverride(mergedChannel);
+                        if (infoOverride == null)
+                        {
+                            infoOverride = new TuningInfoOverride(mergedChannel, tuningInfo, true)
+                            {
+                                PreferredOrder = int.MaxValue,
+                                UserBlockedState = enable ? UserBlockedState.Enabled : UserBlockedState.Blocked
+                            };
+                            tuningInfo.ObjectStore.Add(infoOverride);
+                        }
+                        else
+                        {
+                            infoOverride.Refresh();
+                            infoOverride.UserBlockedState = enable ? UserBlockedState.Enabled : UserBlockedState.Blocked;
+                            infoOverride.Update();
+                        }
+                    }
+                }
                 mergedChannel.UserBlockedState = enable ? UserBlockedState.Enabled : UserBlockedState.Blocked;
                 mergedChannel.Update();
             }
@@ -984,7 +1006,7 @@ namespace epg123Client
             SubItems[5].Text = WmcStore.GetAllTuningInfos(MergedChannel);
 
             // set checkbox
-            Checked = Enabled = MergedChannel.UserBlockedState <= UserBlockedState.Enabled;
+            Checked = Enabled = (!MergedChannel.IsSuggestedBlocked || MergedChannel.UserBlockedState != UserBlockedState.Unknown) && MergedChannel.UserBlockedState <= UserBlockedState.Enabled;
         }
     }
 }

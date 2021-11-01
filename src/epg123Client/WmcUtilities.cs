@@ -1,10 +1,18 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Net;
+using System.Reflection;
+using System.Text;
+using System.Xml;
+using System.Xml.Serialization;
 using Microsoft.Win32;
 using epg123;
+using epg123Client.SatMxf;
+using epg123Client.SatXml;
 
 namespace epg123Client
 {
@@ -299,6 +307,84 @@ namespace epg123Client
             catch (Exception ex)
             {
                 Logger.WriteError($"Exception thrown during SetWmcTunerLimits(). {ex.Message}\n{ex.StackTrace}");
+            }
+            return ret;
+        }
+
+        public static bool UpdateDvbsTransponders()
+        {
+            var ret = false;
+            try
+            {
+                // if defaultsatellites.mxf exists, import it and return
+                if (File.Exists(Helper.DefaultSatellitesPath))
+                {
+                    return ImportMxfFile(Helper.DefaultSatellitesPath);
+                }
+
+                // read the satellites.xml file from either the file system or the resource file
+                var satXml = new Satellites();
+                if (File.Exists(Helper.SatellitesXmlPath))
+                {
+                    using (var stream = new StreamReader(Helper.SatellitesXmlPath, Encoding.UTF8))
+                    {
+                        var serializer = new XmlSerializer(typeof(Satellites));
+                        TextReader reader = new StringReader(stream.ReadToEnd());
+                        satXml = (Satellites)serializer.Deserialize(reader);
+                        reader.Close();
+                    }
+                }
+                else
+                {
+                    using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("epg123Client.satellites.xml"))
+                    using (var reader = new StreamReader(stream, Encoding.UTF8))
+                    {
+                        var serializer = new XmlSerializer(typeof(Satellites));
+                        TextReader tr = new StringReader(reader.ReadToEnd());
+                        satXml = (Satellites) serializer.Deserialize(tr);
+                        tr.Close();
+                    }
+                }
+
+                // populate the mxf class
+                var mxf = new Mxf();
+                mxf.InitializeMxf();
+                var unique = satXml.Satellite.GroupBy(arg => arg.Name).Select(arg => arg.FirstOrDefault());
+                foreach (var sat in unique)
+                {
+                    var freqs = new HashSet<string>();
+                    var mxfSat = new MxfDvbsSatellite { Name = sat.Name, PositionEast = sat.Position, _transponders = new List<MxfDvbsTransponder>() };
+                    var matches = satXml.Satellite.Where(arg => arg.Name == sat.Name);
+                    foreach (var match in matches)
+                    foreach (var txp in match.Transponder.Where(txp => freqs.Add($"{txp.Frequency}_{txp.Polarization}")))
+                    {
+                        mxfSat._transponders.Add(new MxfDvbsTransponder
+                        {
+                            _satellite = mxfSat,
+                            CarrierFrequency = txp.Frequency,
+                            Polarization = txp.Polarization,
+                            SymbolRate = txp.SymbolRate
+                        });
+                    }
+                    mxf.DvbsDataSet._allSatellites.Add(mxfSat);
+                }
+
+                // create the temporary mxf file
+                using (var stream = new StreamWriter(Helper.TransponderMxfPath, false, Encoding.UTF8))
+                using (var writer = XmlWriter.Create(stream, new XmlWriterSettings { Indent = true }))
+                {
+                    var serializer = new XmlSerializer(typeof(Mxf));
+                    var ns = new XmlSerializerNamespaces();
+                    ns.Add("", "");
+                    serializer.Serialize(writer, mxf, ns);
+                }
+
+                // import the mxf file with new satellite transponders
+                ret = ImportMxfFile(Helper.TransponderMxfPath);
+            }
+            catch (Exception ex)
+            {
+                Logger.WriteError($"Exception thrown during UpdateDvbsTransponders(). {ex.Message}\n{ex.StackTrace}");
             }
             return ret;
         }

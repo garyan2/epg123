@@ -10,7 +10,6 @@ using System.Windows.Forms;
 using epg123.Task;
 using Microsoft.MediaCenter.Guide;
 using epg123Client;
-using Microsoft.MediaCenter.Store;
 
 namespace epg123
 {

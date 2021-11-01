@@ -57,6 +57,7 @@ namespace tokenServer
                     {
                         Helper.WriteLogEntry($"New token detected in registry. token={regToken}");
                         TokenService.Token = regToken;
+                        TokenService.GoodToken = true;
                         JsonImageCache.Save(); // seems like a good time to save
                     }
 

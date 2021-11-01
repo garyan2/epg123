@@ -90,6 +90,7 @@ namespace epg123Client
             this.lblToolStripStatus = new System.Windows.Forms.ToolStripStatusLabel();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.grpClientConfig = new System.Windows.Forms.GroupBox();
+            this.btnSatellites = new System.Windows.Forms.Button();
             this.btnViewLog = new System.Windows.Forms.Button();
             this.btnTransferTool = new System.Windows.Forms.Button();
             this.lblDatabaseUtilities = new System.Windows.Forms.Label();
@@ -687,6 +688,7 @@ namespace epg123Client
             // 
             // grpClientConfig
             // 
+            this.grpClientConfig.Controls.Add(this.btnSatellites);
             this.grpClientConfig.Controls.Add(this.btnViewLog);
             this.grpClientConfig.Controls.Add(this.btnTransferTool);
             this.grpClientConfig.Controls.Add(this.lblDatabaseUtilities);
@@ -703,9 +705,19 @@ namespace epg123Client
             this.grpClientConfig.TabStop = false;
             this.grpClientConfig.Text = "Client Configuration && Actions";
             // 
+            // btnSatellites
+            // 
+            this.btnSatellites.Location = new System.Drawing.Point(105, 19);
+            this.btnSatellites.Name = "btnSatellites";
+            this.btnSatellites.Size = new System.Drawing.Size(93, 23);
+            this.btnSatellites.TabIndex = 25;
+            this.btnSatellites.Text = "Transponders";
+            this.btnSatellites.UseVisualStyleBackColor = true;
+            this.btnSatellites.Click += new System.EventHandler(this.btnSatellites_Click);
+            // 
             // btnViewLog
             // 
-            this.btnViewLog.Location = new System.Drawing.Point(105, 44);
+            this.btnViewLog.Location = new System.Drawing.Point(105, 70);
             this.btnViewLog.Name = "btnViewLog";
             this.btnViewLog.Size = new System.Drawing.Size(93, 23);
             this.btnViewLog.TabIndex = 24;
@@ -715,7 +727,7 @@ namespace epg123Client
             // 
             // btnTransferTool
             // 
-            this.btnTransferTool.Location = new System.Drawing.Point(105, 19);
+            this.btnTransferTool.Location = new System.Drawing.Point(105, 44);
             this.btnTransferTool.Name = "btnTransferTool";
             this.btnTransferTool.Size = new System.Drawing.Size(93, 23);
             this.btnTransferTool.TabIndex = 23;
@@ -1047,5 +1059,6 @@ namespace epg123Client
         private System.Windows.Forms.ToolStripMenuItem splitMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator7;
         private System.Windows.Forms.ToolStripMenuItem mergeMenuItem;
+        private System.Windows.Forms.Button btnSatellites;
     }
 }

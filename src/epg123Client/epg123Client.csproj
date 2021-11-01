@@ -171,6 +171,16 @@
       <DependentUpon>frmWmcTweak.cs</DependentUpon>
     </Compile>
     <Compile Include="ListViewSorter.cs" />
+    <Compile Include="SatMxf\MXF.cs" />
+    <Compile Include="SatMxf\MxfDvbsChannel.cs" />
+    <Compile Include="SatMxf\MxfDvbsDataSet.cs" />
+    <Compile Include="SatMxf\MxfDvbsFootprint.cs" />
+    <Compile Include="SatMxf\MxfDvbsHeadend.cs" />
+    <Compile Include="SatMxf\MxfDvbsRegion.cs" />
+    <Compile Include="SatMxf\MxfDvbsSatellite.cs" />
+    <Compile Include="SatMxf\MxfDvbsService.cs" />
+    <Compile Include="SatMxf\MxfDvbsTransponder.cs" />
+    <Compile Include="SatMxf\SatellitesXml.cs" />
     <Compile Include="WmcRegistries.cs" />
     <Compile Include="WmcStore.cs" />
     <Compile Include="WmcUtilities.cs" />
@@ -287,7 +297,9 @@
     <Content Include="Resources\statusLogoLight.png" />
     <Content Include="Resources\StatusOK.png" />
     <Content Include="Resources\updateAvailable.png" />
+    <EmbeddedResource Include="satellites.xml" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>

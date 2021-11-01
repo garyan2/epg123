@@ -44,7 +44,7 @@ namespace epg123
             }
             else
             {
-                string[] folders = {Epg123BackupFolder, Epg123CacheFolder, Epg123LogosFolder, Epg123OutputFolder };
+                string[] folders = {Epg123BackupFolder, Epg123CacheFolder, Epg123LogosFolder, Epg123OutputFolder, DefaultSatelliteFolder };
                 foreach (var folder in folders)
                 {
                     if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
@@ -427,6 +427,26 @@ namespace epg123
         /// The file path for the epg123.xml file
         /// </summary>
         public static string Epg123XmltvPath => Epg123OutputFolder + "\\epg123.xmltv";
+
+        /// <summary>
+        /// The folder used to store default satellite overrides
+        /// </summary>
+        public static string DefaultSatelliteFolder => Epg123ProgramDataFolder + "\\satellites";
+
+        /// <summary>
+        /// The file path for a defaultsatellites.mxf file for custom setups
+        /// </summary>
+        public static string DefaultSatellitesPath => DefaultSatelliteFolder + "\\DefaultSatellites.mxf";
+
+        /// <summary>
+        /// The file path to update satellite transponders
+        /// </summary>
+        public static string SatellitesXmlPath => DefaultSatelliteFolder + "\\satellites.xml";
+
+        /// <summary>
+        /// The resulting transponder file based on satellites.xml
+        /// </summary>
+        public static string TransponderMxfPath => DefaultSatelliteFolder + "\\transponders.mxf";
 
         /// <summary>
         /// The file path for the epg123_Guide.pdf help file

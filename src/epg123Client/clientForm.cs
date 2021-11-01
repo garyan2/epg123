@@ -189,19 +189,15 @@ namespace epg123Client
 
         private void clientForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            Cursor = Cursors.WaitCursor;
-
             // check to see if any EPG123 lineups are mapped in the database
             if (!_forceExit)
             {
                 if (cmbObjectStoreLineups.Items.Count > 0 && cmbObjectStoreLineups.FindString("EPG123") > -1 && mergedChannelListView.Items.Count > 0)
                 {
-
                     if (!_allMergedChannels.Any(mergedChannel => mergedChannel != null && mergedChannel.SubItems[3].Text.StartsWith("EPG123")))
                     {
                         if (DialogResult.No == MessageBox.Show("It does not appear any EPG123 lineup service guide listings (right side) are associated with any guide channels (left side). You can manually \"Subscribe\" listings to channels or you can use the automated Match by: [# Number] button.\n\nDo you still wish to exit the Client Guide Tool?", "No EPG123 guide listings in WMC", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation))
                         {
-                            Application.UseWaitCursor = false;
                             e.Cancel = true;
                             return;
                         }
@@ -1918,6 +1914,13 @@ namespace epg123Client
             btnImport_Click(null, null);
         }
         #endregion
+
+        private void btnSatellites_Click(object sender, EventArgs e)
+        {
+            Cursor = Cursors.WaitCursor;
+            WmcUtilities.UpdateDvbsTransponders();
+            Cursor = Cursors.Arrow;
+        }
     }
 
     public static class ControlExtensions

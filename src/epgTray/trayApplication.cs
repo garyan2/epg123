@@ -348,8 +348,6 @@ namespace epgTray
                 default:
                     return;
             }
-
-            if (!File.Exists(filePath)) return;
             Process.Start(filePath);
         }
 

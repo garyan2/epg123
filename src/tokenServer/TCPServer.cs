@@ -36,7 +36,7 @@ namespace tokenServer
         public void StartTcpListener()
         {
             _tcpListener = new TcpListener(IPAddress.Any, Helper.TcpPort);
-            _tcpListener.Start(100);
+            _tcpListener.Start(200);
 
             try
             {

@@ -58,16 +58,14 @@ namespace epg123.SchedulesDirect
         {
             get
             {
-                if (string.IsNullOrEmpty(_size))
+                if (!string.IsNullOrEmpty(_size)) return _size;
+                switch (Width * Height)
                 {
-                    switch (Height * Width)
-                    {
-                        case 129600:
-                            return "Sm";
-                        case 86400:
-                        case 97200:
-                            return "Md";
-                    }
+                    case 129600: // 16x9 (480 x 270)
+                        return "Sm";
+                    case 86400: // 2x3 (240 x 360)
+                    case 97200: // 3x4 (270 x 360) and 4x3 (360 x 270)
+                        return "Md";
                 }
                 return _size;
             }
