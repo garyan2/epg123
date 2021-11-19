@@ -125,7 +125,7 @@ namespace tokenServer
                 }
                 catch (Exception e)
                 {
-                    Helper.WriteLogEntry($"{asset}\nHandleDevice() - {e.Message}\n{e.StackTrace}");
+                    Helper.WriteLogEntry($"{asset}\nHandleDevice() - {e.Message}");
                 }
             }
         }
@@ -325,7 +325,7 @@ namespace tokenServer
                     filepath = Helper.Epg123MxfPath;
                     break;
                 case "/output/epg123.xmltv":
-                    filepath = Helper.Epg123XmltvPath;
+                    filepath = Config.GetXmltvPath();
                     break;
             }
 
@@ -430,6 +430,9 @@ namespace tokenServer
                         break;
                     case 429:
                         WebStats.Increment429Response();
+                        break;
+                    case 502:
+                        WebStats.Increment502Response();
                         break;
                     default:
                         WebStats.IncrementOtherResponse();

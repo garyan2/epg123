@@ -29,6 +29,7 @@ namespace epg123
             PrefixEpisodeDescription = other.PrefixEpisodeDescription;
             AlternateSEFormat = other.AlternateSEFormat;
             AppendEpisodeDesc = other.AppendEpisodeDesc;
+            OadOverride = other.OadOverride;
             SeasonEventImages = other.SeasonEventImages;
             SeriesPosterArt = other.SeriesPosterArt;
             SeriesWsArt = other.SeriesWsArt;
@@ -99,6 +100,7 @@ namespace epg123
             if (!PrefixEpisodeDescription.Equals(other.PrefixEpisodeDescription)) return false;
             if (!AlternateSEFormat.Equals(other.AlternateSEFormat)) return false;
             if (!AppendEpisodeDesc.Equals(other.AppendEpisodeDesc)) return false;
+            if (!OadOverride.Equals(other.OadOverride)) return false;
             if (!SeasonEventImages.Equals(other.SeasonEventImages)) return false;
             if (!SeriesPosterArt.Equals(other.SeriesPosterArt)) return false;
             if (!SeriesWsArt.Equals(other.SeriesWsArt)) return false;
@@ -164,6 +166,9 @@ namespace epg123
 
         [XmlElement("AppendEpisodeDesc")]
         public bool AppendEpisodeDesc { get; set; }
+
+        [XmlElement("OADOverride")]
+        public bool OadOverride { get; set; } = true;
 
         [XmlElement("SeasonEventImages")]
         public bool SeasonEventImages { get; set; } = true;
@@ -231,6 +236,9 @@ namespace epg123
         [XmlElement("ModernMediaUiPlusJsonFilepath")]
         public string ModernMediaUiPlusJsonFilepath { get; set; }
 
+        [XmlAnyElement("BrandLogoImageComment")]
+        public XmlComment BrandLogoImageComment { get => new XmlDocument().CreateComment(" BrandLogoImage: Add status image to guide view in WMC. Options are \"none\", \"light\", and \"dark\".");
+            set { } }
         [XmlElement("BrandLogoImage")]
         public string BrandLogoImage { get; set; } = "none";
 

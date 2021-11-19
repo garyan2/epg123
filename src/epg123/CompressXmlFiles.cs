@@ -8,7 +8,7 @@ namespace epg123
 {
     class CompressXmlFiles
     {
-        public bool CompressSingleStreamToFile(Stream stream, string fileUri, string filePath,
+        public static bool CompressSingleStreamToFile(Stream stream, string fileUri, string filePath,
             CompressionOption option = CompressionOption.Normal)
         {
             using (var pack = Package.Open(filePath, FileMode.Create))
@@ -26,7 +26,7 @@ namespace epg123
         /// </summary>
         /// <param name="files">KeyValuePair is FilePath, ArchivePath</param>
         /// <param name="archivePrefix">string that will prepend the archive filename</param>
-        public string CreatePackage(Dictionary<string, string> files, string archivePrefix)
+        public static string CreatePackage(Dictionary<string, string> files, string archivePrefix)
         {
             // build the filepath for the destination archive
             var filepath = Helper.Epg123BackupFolder;
@@ -56,7 +56,7 @@ namespace epg123
 
         private static Package package;
 
-        public Stream GetBackupFileStream(string backup, string fileUri = null)
+        public static Stream GetBackupFileStream(string backup, string fileUri = null)
         {
             if (!string.IsNullOrEmpty(fileUri))
             {
@@ -72,12 +72,12 @@ namespace epg123
             return package != null ? (from part in package.GetParts() where part.Uri.ToString().Contains(backup) select part.GetStream()).FirstOrDefault() : null;
         }
 
-        public void ClosePackage()
+        public static void ClosePackage()
         {
             package?.Close();
         }
 
-        private void CopyStream(Stream source, Stream target)
+        private static void CopyStream(Stream source, Stream target)
         {
             const int bufSize = 0x1000;
             var buf = new byte[bufSize];

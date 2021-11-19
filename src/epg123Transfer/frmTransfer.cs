@@ -10,6 +10,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using System.Xml.Serialization;
+using epg123;
 using epg123Client;
 using Microsoft.MediaCenter.Pvr;
 
@@ -52,7 +53,7 @@ namespace epg123Transfer
             {
                 if (_oldWmcFile.ToLower().EndsWith(".zip"))
                 {
-                    using (var stream = new epg123.CompressXmlFiles().GetBackupFileStream("recordings.mxf", _oldWmcFile))
+                    using (var stream = CompressXmlFiles.GetBackupFileStream("recordings.mxf", _oldWmcFile))
                     {
                         try
                         {

@@ -2,7 +2,6 @@
 using System.IO;
 using System.Net;
 using System.Text;
-using System.Xml.Serialization;
 using Microsoft.Win32;
 using Newtonsoft.Json;
 
@@ -20,14 +19,7 @@ namespace tokenServer
             if (DateTime.Now - lastRefresh < TimeSpan.FromMinutes(1)) return true;
 
             // get username and passwordhash
-            epgConfig config;
-            using (var stream = new StreamReader(Helper.Epg123CfgPath, Encoding.Default))
-            {
-                var serializer = new XmlSerializer(typeof(epgConfig));
-                TextReader reader = new StringReader(stream.ReadToEnd());
-                config = (epgConfig)serializer.Deserialize(reader);
-                reader.Close();
-            }
+            var config = Config.GetEpgConfig();
             if (config == null) goto End;
 
             // create the request with headers
@@ -114,28 +106,5 @@ namespace tokenServer
     {
         [JsonProperty("token")]
         public string Token { get; set; }
-    }
-
-    [XmlRoot("EPG123")]
-    public class epgConfig
-    {
-        [XmlElement("UserAccount")]
-        public SdUserAccount UserAccount { get; set; }
-    }
-
-    public class SdUserAccount
-    {
-        [XmlIgnore]
-        private string _passwordHash;
-
-        [XmlElement("LoginName")]
-        public string LoginName { get; set; }
-
-        [XmlElement("PasswordHash")]
-        public string PasswordHash
-        {
-            get => _passwordHash;
-            set => _passwordHash = value;
-        }
     }
 }

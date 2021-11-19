@@ -413,12 +413,12 @@ namespace epg123Client
 
                     // unfortunately the lock emoji didn't come into play until Unicode 6.0.0
                     // Windows 7 uses Unicode 5.x, it will just show an open block
-                    const string lockSymbol = "\uD83D\uDD12";
+                    //const string lockSymbol = "\uD83D\uDD12"; // lock
+                    const string lockSymbol = "\u26BF"; // squared key
                     switch (tuningInfo)
                     {
                         case DvbTuningInfo dvbTuningInfo:
                         {
-                            var ti = dvbTuningInfo;
                             switch (dvbTuningInfo.TuningSpace)
                             {
                                 case "DVB-T":
@@ -426,19 +426,19 @@ namespace epg123Client
                                     // formula to convert channel (n) to frequency (fc) is fc = 7n + 142.5 (in MHz) for VHF
                                     int channel;
                                     var band = "UHF";
-                                    if (ti.Frequency < 230000)
+                                    if (dvbTuningInfo.Frequency < 230000)
                                     {
-                                        channel = (ti.Frequency - 142300) / 7000;
+                                        channel = (dvbTuningInfo.Frequency - 142300) / 7000;
                                         band = "VHF";
                                     }
                                     else
                                     {
-                                        channel = (ti.Frequency - 305800) / 8000;
+                                        channel = (dvbTuningInfo.Frequency - 305800) / 8000;
                                     }
-                                    tuningInfos.Add($"{(ti.IsEncrypted ? lockSymbol : string.Empty)}{band} {channel}");
+                                    tuningInfos.Add($"{(dvbTuningInfo.IsEncrypted ? lockSymbol : string.Empty)}{band} {channel}");
                                     break;
                                 case "DVB-S":
-                                    var locator = ti.TuneRequest.Locator as DVBSLocator;
+                                    var locator = dvbTuningInfo.TuneRequest.Locator as DVBSLocator;
                                     var polarization = string.Empty;
                                     switch (locator.SignalPolarisation)
                                     {
@@ -456,7 +456,7 @@ namespace epg123Client
                                             break;
                                     }
 
-                                    tuningInfos.Add($"{(ti.IsEncrypted ? lockSymbol : string.Empty)}{ti.Frequency / 1000.0:F0}{polarization} ({ti.Sid})");
+                                    tuningInfos.Add($"{(dvbTuningInfo.IsEncrypted ? lockSymbol : string.Empty)}{dvbTuningInfo.Frequency / 1000.0:F0}{polarization} ({dvbTuningInfo.Sid})");
                                     break;
                                 case "DVB-C":
                                 case "ISDB-T":
@@ -469,19 +469,18 @@ namespace epg123Client
                         }
                         case ChannelTuningInfo channelTuningInfo:
                         {
-                            var ti = channelTuningInfo;
                             switch (channelTuningInfo.TuningSpace)
                             {
                                 case "ATSC":
-                                    tuningInfos.Add($"{(ti.PhysicalNumber < 14 ? "VHF" : "UHF")} {ti.PhysicalNumber}");
+                                    tuningInfos.Add($"{(channelTuningInfo.PhysicalNumber < 14 ? "VHF" : "UHF")} {channelTuningInfo.PhysicalNumber}");
                                     break;
                                 case "Cable":
                                 case "ClearQAM":
                                 case "Digital Cable":
-                                    tuningInfos.Add($"{(ti.IsEncrypted ? lockSymbol : string.Empty)}C{ti.PhysicalNumber}");
+                                    tuningInfos.Add($"{(channelTuningInfo.IsEncrypted ? lockSymbol : string.Empty)}C{channelTuningInfo.PhysicalNumber}");
                                     break;
                                 case "{adb10da8-5286-4318-9ccb-cbedc854f0dc}":
-                                    tuningInfos.Add($"IR {ti.PhysicalNumber}{((ti.SubNumber > 0) ? "." + ti.SubNumber : null)}");
+                                    tuningInfos.Add($"IR {channelTuningInfo.PhysicalNumber}{((channelTuningInfo.SubNumber > 0) ? "." + channelTuningInfo.SubNumber : null)}");
                                     break;
                                 case "AuxIn1":
                                 case "Antenna":
@@ -493,11 +492,10 @@ namespace epg123Client
                         }
                         case StringTuningInfo stringTuningInfo:
                         {
-                            var ti = stringTuningInfo;
                             switch (stringTuningInfo.TuningSpace)
                             {
                                 case "dc65aa02-5cb0-4d6d-a020-68702a5b34b8": // Hauppauge HD PVR
-                                    foreach (Channel channel in ti.Channels)
+                                    foreach (Channel channel in stringTuningInfo.Channels)
                                     {
                                         tuningInfos.Add("C" + channel.OriginalNumber);
                                     }
@@ -505,7 +503,7 @@ namespace epg123Client
                                 case "DVB-T": // DVBLink
                                 case "DVB-S":
                                 case "DVB-C":
-                                    foreach (Channel channel in ti.Channels)
+                                    foreach (Channel channel in stringTuningInfo.Channels)
                                     {
                                         tuningInfos.Add($"C{channel.OriginalNumber}{(channel.SubNumber > 0 ? $".{channel.SubNumber}" : string.Empty)}");
                                     }

@@ -425,6 +425,7 @@ namespace epg123
                 {
                     numDays.Value = 14;
                     cbTVDB.Checked = true;
+                    cbOadOverride.Checked = true;
                     cbSeasonEventImages.Checked = true;
                     cbTMDb.Checked = true;
                     cbSdLogos.Checked = true;
@@ -435,6 +436,7 @@ namespace epg123
                     numDays.Value = Math.Min(Config.DaysToDownload, numDays.Maximum);
                     cbPrefixTitle.Checked = Config.PrefixEpisodeTitle;
                     cbAppendDescription.Checked = Config.AppendEpisodeDesc;
+                    cbOadOverride.Checked = Config.OadOverride;
                     cbSeasonEventImages.Checked = Config.SeasonEventImages;
                     cbTMDb.Checked = Config.TMDbCoverArt;
                     cbSdLogos.Checked = Config.IncludeSdLogos;
@@ -446,7 +448,6 @@ namespace epg123
                     cbSeriesPosterArt.Checked = Config.SeriesPosterArt;
                     cbSeriesWsArt.Checked = Config.SeriesWsArt;
                     cbModernMedia.Checked = Config.ModernMediaUiPlusSupport;
-                    cbBrandLogo.Checked = !Config.BrandLogoImage.Equals("none");
                     cmbPreferredLogos.SelectedIndex = (int)(Helper.PreferredLogos)Enum.Parse(typeof(Helper.PreferredLogos), Config.PreferredLogoStyle, true);
                     ckChannelNumbers.Checked = Config.XmltvIncludeChannelNumbers;
                     ckChannelLogos.Checked = !string.IsNullOrEmpty(Config.XmltvIncludeChannelLogos) && (Config.XmltvIncludeChannelLogos != "false");
@@ -1489,7 +1490,6 @@ namespace epg123
                         break;
                 }
                 GetAllServiceLogos(true);
-                configs_Changed(cbBrandLogo, null);
             }
         }
         #endregion
@@ -1522,6 +1522,10 @@ namespace epg123
             {
                 Config.AppendEpisodeDesc = cbAppendDescription.Checked;
             }
+            else if (sender.Equals(cbOadOverride))
+            {
+                Config.OadOverride = cbOadOverride.Checked;
+            }
             else if (sender.Equals(cbSeasonEventImages))
             {
                 Config.SeasonEventImages = cbSeasonEventImages.Checked;
@@ -1529,18 +1533,6 @@ namespace epg123
             else if (sender.Equals(cbAddNewStations))
             {
                 Config.AutoAddNew = cbAddNewStations.Checked;
-            }
-            else if (sender.Equals(cbBrandLogo))
-            {
-                if (cbBrandLogo.Checked)
-                {
-                    if (!Config.PreferredLogoStyle.Equals("LIGHT", StringComparison.OrdinalIgnoreCase) && !Config.AlternateLogoStyle.Equals("LIGHT", StringComparison.OrdinalIgnoreCase))
-                    {
-                        Config.BrandLogoImage = "light";
-                    }
-                    else Config.BrandLogoImage = "dark";
-                }
-                else Config.BrandLogoImage = "none";
             }
             else if (sender.Equals(cbModernMedia))
             {

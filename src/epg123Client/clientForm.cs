@@ -1557,7 +1557,7 @@ namespace epg123Client
             }
 
             Helper.BackupZipFile = backups.Count > 0 
-                ? new CompressXmlFiles().CreatePackage(backups, "backups")
+                ? CompressXmlFiles.CreatePackage(backups, "backups")
                 : string.Empty;
         }
 
@@ -1628,7 +1628,7 @@ namespace epg123Client
         {
             foreach (var backup in BackupFolders)
             {
-                using (var stream = new CompressXmlFiles().GetBackupFileStream(backup + ".mxf", Helper.BackupZipFile))
+                using (var stream = CompressXmlFiles.GetBackupFileStream(backup + ".mxf", Helper.BackupZipFile))
                 {
                     if (stream == null) continue;
                     if (rebuild && backup == "lineup")
@@ -1678,7 +1678,9 @@ namespace epg123Client
             }
 
             // collect all the devices that exist in the backup file
-            var devices = doc.Descendants().Where(arg => (arg.Name.LocalName == "Device" && arg.HasElements) || arg.Name.LocalName == "device").ToList();
+            var devices = doc.Descendants()
+                .Where(arg => (arg.Name.LocalName.Equals("Device") || arg.Name.LocalName == "device"))
+                .Where(arg => arg.Attribute("name") != null).ToList();
             if (devices.Count == 0)
             {
                 MessageBox.Show(

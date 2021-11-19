@@ -33,11 +33,11 @@
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tabConfigs = new System.Windows.Forms.TabControl();
             this.tabConfig = new System.Windows.Forms.TabPage();
+            this.cbOadOverride = new System.Windows.Forms.CheckBox();
             this.cbSeriesWsArt = new System.Windows.Forms.CheckBox();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.cbSeasonEventImages = new System.Windows.Forms.CheckBox();
             this.cbNoCastCrew = new System.Windows.Forms.CheckBox();
-            this.cbBrandLogo = new System.Windows.Forms.CheckBox();
             this.cbAlternateSEFormat = new System.Windows.Forms.CheckBox();
             this.lblPreferredLogos = new System.Windows.Forms.Label();
             this.cmbPreferredLogos = new System.Windows.Forms.ComboBox();
@@ -197,11 +197,11 @@
             // tabConfig
             // 
             this.tabConfig.BackColor = System.Drawing.SystemColors.Control;
+            this.tabConfig.Controls.Add(this.cbOadOverride);
             this.tabConfig.Controls.Add(this.cbSeriesWsArt);
             this.tabConfig.Controls.Add(this.pictureBox1);
             this.tabConfig.Controls.Add(this.cbSeasonEventImages);
             this.tabConfig.Controls.Add(this.cbNoCastCrew);
-            this.tabConfig.Controls.Add(this.cbBrandLogo);
             this.tabConfig.Controls.Add(this.cbAlternateSEFormat);
             this.tabConfig.Controls.Add(this.lblPreferredLogos);
             this.tabConfig.Controls.Add(this.cmbPreferredLogos);
@@ -223,6 +223,17 @@
             this.tabConfig.TabIndex = 2;
             this.tabConfig.Text = "Configuration";
             // 
+            // cbOadOverride
+            // 
+            this.cbOadOverride.AutoSize = true;
+            this.cbOadOverride.Location = new System.Drawing.Point(6, 216);
+            this.cbOadOverride.Name = "cbOadOverride";
+            this.cbOadOverride.Size = new System.Drawing.Size(232, 17);
+            this.cbOadOverride.TabIndex = 41;
+            this.cbOadOverride.Text = "Allow NEW flag to override Original Air Date";
+            this.cbOadOverride.UseVisualStyleBackColor = true;
+            this.cbOadOverride.CheckedChanged += new System.EventHandler(this.configs_Changed);
+            // 
             // cbSeriesWsArt
             // 
             this.cbSeriesWsArt.AutoSize = true;
@@ -236,7 +247,7 @@
             // 
             // pictureBox1
             // 
-            this.pictureBox1.Location = new System.Drawing.Point(284, 288);
+            this.pictureBox1.Location = new System.Drawing.Point(284, 310);
             this.pictureBox1.Name = "pictureBox1";
             this.pictureBox1.Size = new System.Drawing.Size(16, 16);
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
@@ -246,7 +257,7 @@
             // cbSeasonEventImages
             // 
             this.cbSeasonEventImages.AutoSize = true;
-            this.cbSeasonEventImages.Location = new System.Drawing.Point(6, 216);
+            this.cbSeasonEventImages.Location = new System.Drawing.Point(6, 239);
             this.cbSeasonEventImages.Name = "cbSeasonEventImages";
             this.cbSeasonEventImages.Size = new System.Drawing.Size(211, 17);
             this.cbSeasonEventImages.TabIndex = 12;
@@ -265,17 +276,6 @@
             this.cbNoCastCrew.UseVisualStyleBackColor = true;
             this.cbNoCastCrew.CheckedChanged += new System.EventHandler(this.configs_Changed);
             // 
-            // cbBrandLogo
-            // 
-            this.cbBrandLogo.AutoSize = true;
-            this.cbBrandLogo.Location = new System.Drawing.Point(6, 312);
-            this.cbBrandLogo.Name = "cbBrandLogo";
-            this.cbBrandLogo.Size = new System.Drawing.Size(294, 17);
-            this.cbBrandLogo.TabIndex = 37;
-            this.cbBrandLogo.Text = "Add status logo in channel guide (viewable by extenders)";
-            this.cbBrandLogo.UseVisualStyleBackColor = true;
-            this.cbBrandLogo.CheckedChanged += new System.EventHandler(this.configs_Changed);
-            // 
             // cbAlternateSEFormat
             // 
             this.cbAlternateSEFormat.AutoSize = true;
@@ -291,7 +291,7 @@
             // lblPreferredLogos
             // 
             this.lblPreferredLogos.AutoSize = true;
-            this.lblPreferredLogos.Location = new System.Drawing.Point(14, 288);
+            this.lblPreferredLogos.Location = new System.Drawing.Point(14, 311);
             this.lblPreferredLogos.Name = "lblPreferredLogos";
             this.lblPreferredLogos.Size = new System.Drawing.Size(99, 13);
             this.lblPreferredLogos.TabIndex = 32;
@@ -307,7 +307,7 @@
             "logos for dark backgrounds",
             "logos for light backgrounds",
             "do not use SD logos"});
-            this.cmbPreferredLogos.Location = new System.Drawing.Point(119, 285);
+            this.cmbPreferredLogos.Location = new System.Drawing.Point(119, 308);
             this.cmbPreferredLogos.Name = "cmbPreferredLogos";
             this.cmbPreferredLogos.Size = new System.Drawing.Size(160, 21);
             this.cmbPreferredLogos.TabIndex = 31;
@@ -327,7 +327,7 @@
             // cbTMDb
             // 
             this.cbTMDb.AutoSize = true;
-            this.cbTMDb.Location = new System.Drawing.Point(6, 239);
+            this.cbTMDb.Location = new System.Drawing.Point(6, 262);
             this.cbTMDb.Name = "cbTMDb";
             this.cbTMDb.Size = new System.Drawing.Size(249, 17);
             this.cbTMDb.TabIndex = 28;
@@ -338,7 +338,7 @@
             // cbSdLogos
             // 
             this.cbSdLogos.AutoSize = true;
-            this.cbSdLogos.Location = new System.Drawing.Point(6, 262);
+            this.cbSdLogos.Location = new System.Drawing.Point(6, 285);
             this.cbSdLogos.Name = "cbSdLogos";
             this.cbSdLogos.Size = new System.Drawing.Size(199, 17);
             this.cbSdLogos.TabIndex = 29;
@@ -1473,7 +1473,6 @@
         private System.Windows.Forms.CheckBox cbTMDb;
         private System.Windows.Forms.CheckBox cbSdLogos;
         private System.Windows.Forms.CheckBox cbAlternateSEFormat;
-        private System.Windows.Forms.CheckBox cbBrandLogo;
         private System.Windows.Forms.CheckBox ckXmltvExtendedInfo;
         private System.Windows.Forms.Label lblXmltvLogosNote;
         private System.Windows.Forms.TabPage tabLineup;
@@ -1505,5 +1504,6 @@
         private System.Windows.Forms.ComboBox cbCacheRetention;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.LinkLabel linkLabel2;
+        private System.Windows.Forms.CheckBox cbOadOverride;
     }
 }

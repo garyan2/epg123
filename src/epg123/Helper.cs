@@ -360,24 +360,20 @@ namespace epg123
         public static string Epg123TransferExePath => (ExecutablePath + "\\epg123Transfer.exe");
 
         /// <summary>
-        /// The folder for all user writeable files are based from
+        /// The folder for all user writable files are based from
         /// </summary>
         public static string Epg123ProgramDataFolder
         {
             get
             {
-                if (ExecutablePath.ToLower()
-                        .Contains(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles).ToLower()) ||
-                    ExecutablePath.ToLower()
-                        .Contains(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86).ToLower()))
+                if (ExecutablePath != null && 
+                    (ExecutablePath.ToLower().Contains(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles).ToLower()) ||
+                     ExecutablePath.ToLower().Contains(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86).ToLower())))
                 {
                     return Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData) +
                            "\\GaRyan2\\epg123";
                 }
-                else
-                {
-                    return ExecutablePath;
-                }
+                return ExecutablePath;
             }
         }
 

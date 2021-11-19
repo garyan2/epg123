@@ -243,7 +243,7 @@ namespace epg123.sdJson2mxf
 
                             if (File.Exists(logoPath))
                             {
-                                mxfService.mxfGuideImage = SdMxf.GetGuideImage(urlLogoPath);
+                                mxfService.mxfGuideImage = SdMxf.GetGuideImage(urlLogoPath, GetStringEncodedImage(logoPath));
                             }
                         }
 

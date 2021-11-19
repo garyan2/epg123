@@ -39,7 +39,7 @@ namespace epg123.sdJson2mxf
 
             // initialize event buffer
             Logger.WriteInformation($"Beginning EPG123 update execution. {DateTime.Now.ToUniversalTime():u}");
-            Logger.WriteVerbose($"DaysToDownload: {config.DaysToDownload} , TheTVDBNumbers : {config.TheTvdbNumbers} , PrefixEpisodeTitle: {config.PrefixEpisodeTitle} , PrefixEpisodeDescription : {config.PrefixEpisodeDescription} , AppendEpisodeDesc: {config.AppendEpisodeDesc} , SeasonEventImages : {config.SeasonEventImages} , TMDbCoverArt: {config.TMDbCoverArt} , IncludeSDLogos : {config.IncludeSdLogos} , AutoAddNew: {config.AutoAddNew} , CreateXmltv: {config.CreateXmltv} , ModernMediaUiPlusSupport: {config.ModernMediaUiPlusSupport}");
+            Logger.WriteVerbose($"DaysToDownload: {config.DaysToDownload} , TheTVDBNumbers : {config.TheTvdbNumbers} , PrefixEpisodeTitle: {config.PrefixEpisodeTitle} , PrefixEpisodeDescription : {config.PrefixEpisodeDescription} , AppendEpisodeDesc: {config.AppendEpisodeDesc} , OADOverride : {config.OadOverride} , SeasonEventImages : {config.SeasonEventImages} , TMDbCoverArt: {config.TMDbCoverArt} , IncludeSDLogos : {config.IncludeSdLogos} , AutoAddNew: {config.AutoAddNew} , CreateXmltv: {config.CreateXmltv} , ModernMediaUiPlusSupport: {config.ModernMediaUiPlusSupport}");
 
             // populate station prefixes to suppress
             suppressedPrefixes = new List<string>(config.SuppressStationEmptyWarnings.Split(','));

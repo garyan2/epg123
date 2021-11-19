@@ -63,6 +63,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="epgConfig.cs" />
     <Compile Include="Helper.cs" />
     <Compile Include="JsonImageCache.cs" />
     <Compile Include="RegWatchers.cs">

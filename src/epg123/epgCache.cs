@@ -19,13 +19,12 @@ namespace epg123
             {
                 if (File.Exists(Helper.Epg123CompressCachePath))
                 {
-                    var zip = new CompressXmlFiles();
-                    using (var reader = new StreamReader(zip.GetBackupFileStream(CacheFileUri, Helper.Epg123CompressCachePath)))
+                    using (var reader = new StreamReader(CompressXmlFiles.GetBackupFileStream(CacheFileUri, Helper.Epg123CompressCachePath)))
                     {
                         var serializer = new JsonSerializer();
                         JsonFiles = (Dictionary<string, epgJsonCache>)serializer.Deserialize(reader, typeof(Dictionary<string, epgJsonCache>));
                     }
-                    zip.ClosePackage();
+                    CompressXmlFiles.ClosePackage();
                 }
                 else if (File.Exists(Helper.Epg123CacheJsonPath))
                 {

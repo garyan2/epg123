@@ -43,6 +43,21 @@
             this.label1 = new System.Windows.Forms.Label();
             this.btnAddChannelTuningInfo = new System.Windows.Forms.Button();
             this.tabDvbTuningInfo = new System.Windows.Forms.TabPage();
+            this.dvbLcn = new System.Windows.Forms.TextBox();
+            this.label13 = new System.Windows.Forms.Label();
+            this.dvbSid = new System.Windows.Forms.TextBox();
+            this.label12 = new System.Windows.Forms.Label();
+            this.dvbTsid = new System.Windows.Forms.TextBox();
+            this.label11 = new System.Windows.Forms.Label();
+            this.dvbOnid = new System.Windows.Forms.TextBox();
+            this.lblOnid = new System.Windows.Forms.Label();
+            this.btnAddDvbChannel = new System.Windows.Forms.Button();
+            this.label10 = new System.Windows.Forms.Label();
+            this.dvbFreq = new System.Windows.Forms.TextBox();
+            this.lblUnits = new System.Windows.Forms.Label();
+            this.label9 = new System.Windows.Forms.Label();
+            this.dvbTiCallsign = new System.Windows.Forms.TextBox();
+            this.label8 = new System.Windows.Forms.Label();
             this.tabUnsupported = new System.Windows.Forms.TabPage();
             this.lblUnsupported = new System.Windows.Forms.Label();
             this.tabGhostTuner = new System.Windows.Forms.TabPage();
@@ -59,11 +74,14 @@
             this.lvDevices = new System.Windows.Forms.ListView();
             this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.rtbChannelAddHistory = new System.Windows.Forms.RichTextBox();
+            this.dvbNid = new System.Windows.Forms.TextBox();
+            this.label14 = new System.Windows.Forms.Label();
             this.tabTunerSpace.SuspendLayout();
             this.tabChannelTuningInfo.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.chnTiPhysicalNumber)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.chnTiSubnumber)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.chnTiNumber)).BeginInit();
+            this.tabDvbTuningInfo.SuspendLayout();
             this.tabUnsupported.SuspendLayout();
             this.tabGhostTuner.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.chnNtiSubnumber)).BeginInit();
@@ -253,6 +271,23 @@
             // 
             // tabDvbTuningInfo
             // 
+            this.tabDvbTuningInfo.Controls.Add(this.dvbNid);
+            this.tabDvbTuningInfo.Controls.Add(this.label14);
+            this.tabDvbTuningInfo.Controls.Add(this.dvbLcn);
+            this.tabDvbTuningInfo.Controls.Add(this.label13);
+            this.tabDvbTuningInfo.Controls.Add(this.dvbSid);
+            this.tabDvbTuningInfo.Controls.Add(this.label12);
+            this.tabDvbTuningInfo.Controls.Add(this.dvbTsid);
+            this.tabDvbTuningInfo.Controls.Add(this.label11);
+            this.tabDvbTuningInfo.Controls.Add(this.dvbOnid);
+            this.tabDvbTuningInfo.Controls.Add(this.lblOnid);
+            this.tabDvbTuningInfo.Controls.Add(this.btnAddDvbChannel);
+            this.tabDvbTuningInfo.Controls.Add(this.label10);
+            this.tabDvbTuningInfo.Controls.Add(this.dvbFreq);
+            this.tabDvbTuningInfo.Controls.Add(this.lblUnits);
+            this.tabDvbTuningInfo.Controls.Add(this.label9);
+            this.tabDvbTuningInfo.Controls.Add(this.dvbTiCallsign);
+            this.tabDvbTuningInfo.Controls.Add(this.label8);
             this.tabDvbTuningInfo.Location = new System.Drawing.Point(4, 22);
             this.tabDvbTuningInfo.Name = "tabDvbTuningInfo";
             this.tabDvbTuningInfo.Padding = new System.Windows.Forms.Padding(3);
@@ -260,6 +295,146 @@
             this.tabDvbTuningInfo.TabIndex = 3;
             this.tabDvbTuningInfo.Text = "DvbTuningInfo";
             this.tabDvbTuningInfo.UseVisualStyleBackColor = true;
+            // 
+            // dvbLcn
+            // 
+            this.dvbLcn.Location = new System.Drawing.Point(272, 98);
+            this.dvbLcn.Name = "dvbLcn";
+            this.dvbLcn.Size = new System.Drawing.Size(50, 20);
+            this.dvbLcn.TabIndex = 5;
+            this.dvbLcn.Text = "-1";
+            this.dvbLcn.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.dvbLcn.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.dvbInput_KeyPress);
+            // 
+            // label13
+            // 
+            this.label13.AutoSize = true;
+            this.label13.Location = new System.Drawing.Point(235, 101);
+            this.label13.Name = "label13";
+            this.label13.Size = new System.Drawing.Size(31, 13);
+            this.label13.TabIndex = 20;
+            this.label13.Text = "LCN:";
+            // 
+            // dvbSid
+            // 
+            this.dvbSid.Location = new System.Drawing.Point(272, 72);
+            this.dvbSid.Name = "dvbSid";
+            this.dvbSid.Size = new System.Drawing.Size(50, 20);
+            this.dvbSid.TabIndex = 4;
+            this.dvbSid.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.dvbSid.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.dvbInput_KeyPress);
+            // 
+            // label12
+            // 
+            this.label12.AutoSize = true;
+            this.label12.Location = new System.Drawing.Point(238, 75);
+            this.label12.Name = "label12";
+            this.label12.Size = new System.Drawing.Size(28, 13);
+            this.label12.TabIndex = 18;
+            this.label12.Text = "SID:";
+            // 
+            // dvbTsid
+            // 
+            this.dvbTsid.Location = new System.Drawing.Point(173, 72);
+            this.dvbTsid.Name = "dvbTsid";
+            this.dvbTsid.Size = new System.Drawing.Size(50, 20);
+            this.dvbTsid.TabIndex = 3;
+            this.dvbTsid.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.dvbTsid.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.dvbInput_KeyPress);
+            // 
+            // label11
+            // 
+            this.label11.AutoSize = true;
+            this.label11.Location = new System.Drawing.Point(132, 75);
+            this.label11.Name = "label11";
+            this.label11.Size = new System.Drawing.Size(35, 13);
+            this.label11.TabIndex = 16;
+            this.label11.Text = "TSID:";
+            // 
+            // dvbOnid
+            // 
+            this.dvbOnid.Location = new System.Drawing.Point(173, 46);
+            this.dvbOnid.Name = "dvbOnid";
+            this.dvbOnid.Size = new System.Drawing.Size(50, 20);
+            this.dvbOnid.TabIndex = 2;
+            this.dvbOnid.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.dvbOnid.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.dvbInput_KeyPress);
+            this.dvbOnid.KeyUp += new System.Windows.Forms.KeyEventHandler(this.dvbOnid_KeyUp);
+            // 
+            // lblOnid
+            // 
+            this.lblOnid.AutoSize = true;
+            this.lblOnid.Location = new System.Drawing.Point(130, 49);
+            this.lblOnid.Name = "lblOnid";
+            this.lblOnid.Size = new System.Drawing.Size(37, 13);
+            this.lblOnid.TabIndex = 14;
+            this.lblOnid.Text = "ONID:";
+            // 
+            // btnAddDvbChannel
+            // 
+            this.btnAddDvbChannel.Location = new System.Drawing.Point(236, 151);
+            this.btnAddDvbChannel.Name = "btnAddDvbChannel";
+            this.btnAddDvbChannel.Size = new System.Drawing.Size(100, 23);
+            this.btnAddDvbChannel.TabIndex = 6;
+            this.btnAddDvbChannel.Text = "Add Channel";
+            this.btnAddDvbChannel.UseVisualStyleBackColor = true;
+            this.btnAddDvbChannel.Click += new System.EventHandler(this.btnAddChannel_Click);
+            // 
+            // label10
+            // 
+            this.label10.AutoSize = true;
+            this.label10.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Underline))), System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label10.Location = new System.Drawing.Point(170, 3);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(57, 13);
+            this.label10.TabIndex = 12;
+            this.label10.Text = "Channel:";
+            this.label10.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // dvbFreq
+            // 
+            this.dvbFreq.Location = new System.Drawing.Point(173, 20);
+            this.dvbFreq.Name = "dvbFreq";
+            this.dvbFreq.Size = new System.Drawing.Size(50, 20);
+            this.dvbFreq.TabIndex = 1;
+            this.dvbFreq.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.dvbFreq.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.dvbInput_KeyPress);
+            // 
+            // lblUnits
+            // 
+            this.lblUnits.AutoSize = true;
+            this.lblUnits.Location = new System.Drawing.Point(229, 24);
+            this.lblUnits.Name = "lblUnits";
+            this.lblUnits.Size = new System.Drawing.Size(26, 13);
+            this.lblUnits.TabIndex = 10;
+            this.lblUnits.Text = "kHz";
+            // 
+            // label9
+            // 
+            this.label9.AutoSize = true;
+            this.label9.Location = new System.Drawing.Point(136, 23);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(31, 13);
+            this.label9.TabIndex = 9;
+            this.label9.Text = "Freq:";
+            // 
+            // dvbTiCallsign
+            // 
+            this.dvbTiCallsign.Location = new System.Drawing.Point(6, 19);
+            this.dvbTiCallsign.Name = "dvbTiCallsign";
+            this.dvbTiCallsign.Size = new System.Drawing.Size(110, 20);
+            this.dvbTiCallsign.TabIndex = 0;
+            // 
+            // label8
+            // 
+            this.label8.AutoSize = true;
+            this.label8.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Underline))), System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label8.Location = new System.Drawing.Point(6, 3);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(61, 13);
+            this.label8.TabIndex = 7;
+            this.label8.Text = "Call Sign:";
+            this.label8.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
             // tabUnsupported
             // 
@@ -454,6 +629,24 @@
             this.rtbChannelAddHistory.TabIndex = 4;
             this.rtbChannelAddHistory.Text = "";
             // 
+            // dvbNid
+            // 
+            this.dvbNid.Location = new System.Drawing.Point(272, 46);
+            this.dvbNid.Name = "dvbNid";
+            this.dvbNid.Size = new System.Drawing.Size(50, 20);
+            this.dvbNid.TabIndex = 21;
+            this.dvbNid.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.dvbNid.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.dvbInput_KeyPress);
+            // 
+            // label14
+            // 
+            this.label14.AutoSize = true;
+            this.label14.Location = new System.Drawing.Point(237, 49);
+            this.label14.Name = "label14";
+            this.label14.Size = new System.Drawing.Size(29, 13);
+            this.label14.TabIndex = 22;
+            this.label14.Text = "NID:";
+            // 
             // frmAddChannel
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -473,6 +666,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.chnTiPhysicalNumber)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.chnTiSubnumber)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.chnTiNumber)).EndInit();
+            this.tabDvbTuningInfo.ResumeLayout(false);
+            this.tabDvbTuningInfo.PerformLayout();
             this.tabUnsupported.ResumeLayout(false);
             this.tabGhostTuner.ResumeLayout(false);
             this.tabGhostTuner.PerformLayout();
@@ -515,5 +710,22 @@
         private System.Windows.Forms.NumericUpDown chnNtiSubnumber;
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.RichTextBox rtbChannelAddHistory;
+        private System.Windows.Forms.TextBox dvbTiCallsign;
+        private System.Windows.Forms.Label label8;
+        private System.Windows.Forms.Label lblUnits;
+        private System.Windows.Forms.Label label9;
+        private System.Windows.Forms.Label label10;
+        private System.Windows.Forms.TextBox dvbFreq;
+        private System.Windows.Forms.Button btnAddDvbChannel;
+        private System.Windows.Forms.TextBox dvbSid;
+        private System.Windows.Forms.Label label12;
+        private System.Windows.Forms.TextBox dvbTsid;
+        private System.Windows.Forms.Label label11;
+        private System.Windows.Forms.TextBox dvbOnid;
+        private System.Windows.Forms.Label lblOnid;
+        private System.Windows.Forms.TextBox dvbLcn;
+        private System.Windows.Forms.Label label13;
+        private System.Windows.Forms.TextBox dvbNid;
+        private System.Windows.Forms.Label label14;
     }
 }

@@ -132,13 +132,17 @@ namespace epg123Client
                             cmbScannedLineups.Focus();
                             break;
 
+                        case "DVB-T":                                   // Local DVB-T Digital Antenna
+                            tabTunerSpace.SelectTab(tabDvbTuningInfo);
+                            cmbScannedLineups.Focus();
+                            break;
+
                         // the following are "ChannelTuningInfo"
                         //case "AuxIn1":                                  // Analog Auxiliary Input #1
                         //case "Antenna":                                 // Local Analog Antenna
                         //case "ATSCCable":                               // Local ATSC Digital Cable
 
                         // the following are "DvbTuningInfo"
-                        //case "DVB-T":                                   // Local DVB-T Digital Antenna
                         //case "DVB-S":                                   // Default Digital DVB-S Tuning Space
                         //case "DVB-C":
                         //case "ISDB-T":                                  // Local ISDB-T Digital Antenna
@@ -174,28 +178,56 @@ namespace epg123Client
 
         private void btnAddChannel_Click(object sender, EventArgs e)
         {
-            if (!sender.Equals(btnAddChannelTuningInfo)) return;
-            
             // get the scannedlineup from the combo list
             var scannedLineup = (Lineup)cmbScannedLineups.SelectedItem;
 
-            // create a new service based on channel callsign
-            var service = new Service
+            Service service; Channel channel; string msg;
+            if (sender.Equals(btnAddChannelTuningInfo))
             {
-                CallSign = chnTiCallsign.Text,
-                Name = chnTiCallsign.Text
-            };
+                service = new Service
+                {
+                    CallSign = chnTiCallsign.Text,
+                    Name = chnTiCallsign.Text
+                };
 
-            // create a new channel with service and channel number(s)
-            var channel = new Channel()
+                channel = new Channel
+                {
+                    Service = service,
+                    Number = (int)chnTiNumber.Value,
+                    SubNumber = (int)chnTiSubnumber.Value,
+                    OriginalNumber = (int)chnTiNumber.Value,
+                    OriginalSubNumber = (int)chnTiSubnumber.Value,
+                    ChannelType = ChannelType.UserAdded
+                };
+
+                msg = $"{channel.ChannelNumber}{(chnTiPhysicalNumber.Value > 0 ? $" ({chnTiPhysicalNumber.Value})" : string.Empty)} {channel.CallSign}";
+            }
+            else if (sender.Equals(btnAddDvbChannel))
             {
-                Service = service,
-                Number = (int)chnTiNumber.Value,
-                SubNumber = (int)chnTiSubnumber.Value,
-                OriginalNumber = (int)chnTiNumber.Value,
-                OriginalSubNumber = (int)chnTiSubnumber.Value,
-                ChannelType = ChannelType.UserAdded
-            };
+                if (!int.TryParse(dvbFreq.Text, out var i1) || !int.TryParse(dvbOnid.Text, out var i2) ||
+                    !int.TryParse(dvbNid.Text, out var i3) || !int.TryParse(dvbTsid.Text, out var i4) ||
+                    !int.TryParse(dvbSid.Text, out var i5) || !int.TryParse(dvbLcn.Text, out var i6))
+                    return;
+
+                service = new Service
+                {
+                    CallSign = dvbTiCallsign.Text,
+                    Name = dvbTiCallsign.Text
+                };
+
+                channel = new Channel
+                {
+                    Service = service,
+                    Number = int.Parse(dvbLcn.Text),
+                    SubNumber = 0,
+                    OriginalNumber = int.Parse(dvbLcn.Text),
+                    OriginalSubNumber = 0,
+                    ChannelType = ChannelType.UserAdded
+                };
+
+                msg = $"{channel.ChannelNumber} {channel.CallSign} ({int.Parse(dvbFreq.Text) / 1000.0:n3} MHz, {int.Parse(dvbOnid.Text)}:{int.Parse(dvbTsid.Text)}:{int.Parse(dvbSid.Text)})";
+            }
+            else return;
 
             // create a device specific tuning info
             var tuningInfos = new List<TuningInfo>();
@@ -205,17 +237,21 @@ namespace epg123Client
                 switch (device.DeviceType.TuningSpaceName)
                 {
                     case "ATSC":
+                        channel.MatchName = $"OC:{channel.Number}:{channel.SubNumber}{(!string.IsNullOrEmpty(service.CallSign) ? $"|{service.CallSign}" : "")}";
                         tuningInfos.Add(new ChannelTuningInfo(device, (int)chnTiNumber.Value, (int)chnTiSubnumber.Value, (int)chnTiPhysicalNumber.Value));
                         break;
                     case "ClearQAM":
+                        channel.MatchName = !string.IsNullOrEmpty(chnTiCallsign.Text) ? chnTiCallsign.Text : "";
                         tuningInfos.Add(new ChannelTuningInfo(device, (int)chnTiNumber.Value, (int)chnTiSubnumber.Value, (ModulationType)(chnTiModulationType.SelectedIndex + 1)));
                         break;
                     case "Cable":
                     case "Digital Cable":
                     case "{adb10da8-5286-4318-9ccb-cbedc854f0dc}":
+                        channel.MatchName = !string.IsNullOrEmpty(chnTiCallsign.Text) ? chnTiCallsign.Text : "";
                         tuningInfos.Add(new ChannelTuningInfo(device, (int)chnTiNumber.Value, (int)chnTiSubnumber.Value, ModulationType.BDA_MOD_NOT_DEFINED));
                         break;
                     case "dc65aa02-5cb0-4d6d-a020-68702a5b34b8":
+                        channel.MatchName = !string.IsNullOrEmpty(chnTiCallsign.Text) ? chnTiCallsign.Text : "";
                         var tuningString = $"<tune:ChannelID ChannelID=\"{channel.OriginalNumber}\">" +
                                            "  <tune:TuningSpace xsi:type=\"tune:ChannelIDTuningSpaceType\" Name=\"DC65AA02-5CB0-4d6d-A020-68702A5B34B8\" NetworkType=\"{DC65AA02-5CB0-4d6d-A020-68702A5B34B8}\" />" +
                                            "  <tune:Locator xsi:type=\"tune:ATSCLocatorType\" Frequency=\"-1\" PhysicalChannel=\"-1\" TransportStreamID=\"-1\" ProgramNumber=\"1\" />" +
@@ -223,15 +259,29 @@ namespace epg123Client
                                            "</tune:ChannelID>";
                         tuningInfos.Add(new StringTuningInfo(device, tuningString));
                         break;
+                    case "DVB-T":
+                        channel.MatchName = $"DVBT:{dvbOnid.Text}:{dvbTsid.Text}:{dvbSid}{(string.IsNullOrEmpty(service.CallSign) ? $"|{dvbTiCallsign.Text}" : "")}";
+                        tuningInfos.Add(new DvbTuningInfo(device, int.Parse(dvbOnid.Text), int.Parse(dvbTsid.Text), int.Parse(dvbSid.Text), int.Parse(dvbNid.Text), int.Parse(dvbFreq.Text)));
+                        break;
                 }
             }
 
             // add the channel
-            var msg = $"Adding channel {channel.ChannelNumber}{(chnTiPhysicalNumber.Value > 0 ? $" ({chnTiPhysicalNumber.Value})" : string.Empty)} {channel.CallSign} to {scannedLineup.Name}";
             WmcStore.AddUserChannel(scannedLineup, service, channel, tuningInfos);
-            rtbChannelAddHistory.Text += msg + "\n\n";
+            rtbChannelAddHistory.Text += $"Adding channel {msg} to {scannedLineup.Name}\n\n";
             Logger.WriteInformation(msg);
             ChannelAdded = true;
+        }
+
+        private void dvbInput_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (!char.IsControl(e.KeyChar) && !char.IsDigit(e.KeyChar) && !e.KeyChar.Equals('-')) e.Handled = true;
+            if ((e.KeyChar == '-') && !string.IsNullOrEmpty((sender as TextBox).Text)) e.Handled = true;
+        }
+
+        private void dvbOnid_KeyUp(object sender, KeyEventArgs e)
+        {
+            dvbNid.Text = dvbOnid.Text;
         }
     }
 }
