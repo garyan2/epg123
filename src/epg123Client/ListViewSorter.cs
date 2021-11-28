@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Linq;
 using System.Windows.Forms;
 
 /// <summary>
@@ -67,7 +68,7 @@ public class ListViewColumnSorter : System.Collections.Generic.IComparer<ListVie
             case 3:
             case 4:
             case 5:
-                if ((compareResult = InitialNullResult(x, y)) == NoNulls) compareResult = _objectCompare.Compare(x?.SubItems[_columnToSort].Text, y?.SubItems[_columnToSort].Text);
+                if ((compareResult = InitialNullResult(x, y)) == NoNulls) compareResult = _objectCompare.Compare(new string(x?.SubItems[_columnToSort].Text.Where(c => c <= sbyte.MaxValue).ToArray()), new string(y?.SubItems[_columnToSort].Text.Where(c => c <= sbyte.MaxValue).ToArray()));
                 if (compareResult == 0) compareResult = _objectCompare.Compare(ExtendChannelSubchannel(x?.SubItems[1].Text), ExtendChannelSubchannel(y?.SubItems[1].Text));
                 break;
             case 6:

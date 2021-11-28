@@ -198,6 +198,7 @@ namespace epg123Client
             this.columnGuideEndTime});
             this.mergedChannelListView.ContextMenuStrip = this.contextMenuStrip1;
             this.mergedChannelListView.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.mergedChannelListView.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.mergedChannelListView.FullRowSelect = true;
             this.mergedChannelListView.HideSelection = false;
             this.mergedChannelListView.Location = new System.Drawing.Point(0, 0);
@@ -711,7 +712,7 @@ namespace epg123Client
             this.btnSatellites.Name = "btnSatellites";
             this.btnSatellites.Size = new System.Drawing.Size(93, 23);
             this.btnSatellites.TabIndex = 25;
-            this.btnSatellites.Text = "Transponders";
+            this.btnSatellites.Text = "Satellites";
             this.btnSatellites.UseVisualStyleBackColor = true;
             this.btnSatellites.Click += new System.EventHandler(this.btnSatellites_Click);
             // 

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Serialization;
 
 namespace epg123Client.SatMxf
@@ -6,7 +7,6 @@ namespace epg123Client.SatMxf
     public class MxfDvbsTransponder
     {
         [XmlIgnore] public MxfDvbsSatellite _satellite;
-        [XmlIgnore] public bool IncludeInHeadend;
         [XmlIgnore] public int _originalNetworkId;
         [XmlIgnore] public int _transportStreamId;
 
@@ -24,6 +24,23 @@ namespace epg123Client.SatMxf
                 default:
                     return "CircularRight";
             }
+        }
+
+        public MxfDvbsService GetOrCreateService(string name, int sid, int type, bool encrypted)
+        {
+            var service = _services.SingleOrDefault(arg => arg.ServiceId == (short)(sid & 0xFFFF));
+            if (service != null) return service;
+
+            service = new MxfDvbsService
+            {
+                _transponder = this,
+                Name = name,
+                ServiceId = sid,
+                ServiceType = type,
+                IsEncrypted = encrypted
+            };
+            _services.Add(service);
+            return service;
         }
 
         [XmlAttribute("uid")]

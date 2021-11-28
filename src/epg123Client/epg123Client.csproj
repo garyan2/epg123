@@ -158,6 +158,12 @@
     <Compile Include="frmRemoteServers.Designer.cs">
       <DependentUpon>frmRemoteServers.cs</DependentUpon>
     </Compile>
+    <Compile Include="frmSatellites.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmSatellites.Designer.cs">
+      <DependentUpon>frmSatellites.cs</DependentUpon>
+    </Compile>
     <Compile Include="frmUndelete.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -228,6 +234,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="frmRemoteServers.resx">
       <DependentUpon>frmRemoteServers.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmSatellites.resx">
+      <DependentUpon>frmSatellites.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="TABLE.MCML" />
   </ItemGroup>

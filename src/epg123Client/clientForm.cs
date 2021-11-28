@@ -11,8 +11,10 @@ using System.Threading;
 using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Linq;
+using System.Xml.Serialization;
 using epg123;
 using epg123.Task;
+using epg123Client.SatMxf;
 using Microsoft.Win32;
 using Microsoft.MediaCenter.Guide;
 using Microsoft.MediaCenter.Store;
@@ -1919,9 +1921,8 @@ namespace epg123Client
 
         private void btnSatellites_Click(object sender, EventArgs e)
         {
-            Cursor = Cursors.WaitCursor;
-            WmcUtilities.UpdateDvbsTransponders();
-            Cursor = Cursors.Arrow;
+            var satFrm = new frmSatellites();
+            satFrm.ShowDialog();
         }
     }
 

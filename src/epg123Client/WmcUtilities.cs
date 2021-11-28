@@ -311,13 +311,13 @@ namespace epg123Client
             return ret;
         }
 
-        public static bool UpdateDvbsTransponders()
+        public static bool UpdateDvbsTransponders(bool ignoreDefault = false)
         {
             var ret = false;
             try
             {
                 // if defaultsatellites.mxf exists, import it and return
-                if (File.Exists(Helper.DefaultSatellitesPath))
+                if (!ignoreDefault && File.Exists(Helper.DefaultSatellitesPath))
                 {
                     return ImportMxfFile(Helper.DefaultSatellitesPath);
                 }
@@ -348,7 +348,6 @@ namespace epg123Client
 
                 // populate the mxf class
                 var mxf = new Mxf();
-                mxf.InitializeMxf();
                 var unique = satXml.Satellite.GroupBy(arg => arg.Name).Select(arg => arg.FirstOrDefault());
                 foreach (var sat in unique)
                 {

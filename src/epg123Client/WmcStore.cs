@@ -413,8 +413,9 @@ namespace epg123Client
 
                     // unfortunately the lock emoji didn't come into play until Unicode 6.0.0
                     // Windows 7 uses Unicode 5.x, it will just show an open block
-                    //const string lockSymbol = "\uD83D\uDD12"; // lock
-                    const string lockSymbol = "\u26BF"; // squared key
+                    const string lockSymbol = "\u25C6\u2005"; // black diamond
+                    const string radioSymbol = "\u200A\u266B\u2006"; // beamed eighth note
+                    const string emptySpace = "\u2003\u200A";
                     switch (tuningInfo)
                     {
                         case DvbTuningInfo dvbTuningInfo:
@@ -422,20 +423,8 @@ namespace epg123Client
                             switch (dvbTuningInfo.TuningSpace)
                             {
                                 case "DVB-T":
-                                    // formula to convert channel (n) to frequency (fc) is fc = 8n + 306 (in MHz) for UHF
-                                    // formula to convert channel (n) to frequency (fc) is fc = 7n + 142.5 (in MHz) for VHF
-                                    int channel;
-                                    var band = "UHF";
-                                    if (dvbTuningInfo.Frequency < 230000)
-                                    {
-                                        channel = (dvbTuningInfo.Frequency - 142300) / 7000;
-                                        band = "VHF";
-                                    }
-                                    else
-                                    {
-                                        channel = (dvbTuningInfo.Frequency - 305800) / 8000;
-                                    }
-                                    tuningInfos.Add($"{(dvbTuningInfo.IsEncrypted ? lockSymbol : string.Empty)}{band} {channel}");
+                                    if (tuningInfo.IsSuggestedBlocked) continue;
+                                    tuningInfos.Add($"{(dvbTuningInfo.IsEncrypted || dvbTuningInfo.IsSuggestedBlocked ? lockSymbol : mergedChannel.Service.ServiceType == 2 ? radioSymbol : emptySpace)}{dvbTuningInfo.Frequency / 1000.0:F3} ({dvbTuningInfo.Sid})");
                                     break;
                                 case "DVB-S":
                                     var locator = dvbTuningInfo.TuneRequest.Locator as DVBSLocator;
@@ -455,8 +444,7 @@ namespace epg123Client
                                             polarization = " RHC";
                                             break;
                                     }
-
-                                    tuningInfos.Add($"{(dvbTuningInfo.IsEncrypted ? lockSymbol : string.Empty)}{dvbTuningInfo.Frequency / 1000.0:F0}{polarization} ({dvbTuningInfo.Sid})");
+                                    tuningInfos.Add($"{(dvbTuningInfo.IsEncrypted || dvbTuningInfo.IsSuggestedBlocked ? lockSymbol : mergedChannel.Service.ServiceType == 2 ? radioSymbol : emptySpace)}{locator.OrbitalPosition}:{dvbTuningInfo.Frequency / 1000.0:F0}{polarization} ({dvbTuningInfo.Sid})");
                                     break;
                                 case "DVB-C":
                                 case "ISDB-T":
@@ -682,28 +670,28 @@ namespace epg123Client
             try
             {
                 if (!(WmcObjectStore.Fetch(mergedChannelId) is MergedChannel mergedChannel)) return;
-                if (mergedChannel.IsSuggestedBlocked)
-                {
-                    foreach (TuningInfo tuningInfo in mergedChannel.TuningInfos)
-                    {
-                        var infoOverride = tuningInfo.GetOverride(mergedChannel);
-                        if (infoOverride == null)
-                        {
-                            infoOverride = new TuningInfoOverride(mergedChannel, tuningInfo, true)
-                            {
-                                PreferredOrder = int.MaxValue,
-                                UserBlockedState = enable ? UserBlockedState.Enabled : UserBlockedState.Blocked
-                            };
-                            tuningInfo.ObjectStore.Add(infoOverride);
-                        }
-                        else
-                        {
-                            infoOverride.Refresh();
-                            infoOverride.UserBlockedState = enable ? UserBlockedState.Enabled : UserBlockedState.Blocked;
-                            infoOverride.Update();
-                        }
-                    }
-                }
+                //if (mergedChannel.IsSuggestedBlocked)
+                //{
+                //    foreach (TuningInfo tuningInfo in mergedChannel.TuningInfos)
+                //    {
+                //        var infoOverride = tuningInfo.GetOverride(mergedChannel);
+                //        if (infoOverride == null)
+                //        {
+                //            infoOverride = new TuningInfoOverride(mergedChannel, tuningInfo, true)
+                //            {
+                //                PreferredOrder = int.MaxValue,
+                //                UserBlockedState = enable ? UserBlockedState.Enabled : UserBlockedState.Blocked
+                //            };
+                //            tuningInfo.ObjectStore.Add(infoOverride);
+                //        }
+                //        else
+                //        {
+                //            infoOverride.Refresh();
+                //            infoOverride.UserBlockedState = enable ? UserBlockedState.Enabled : UserBlockedState.Blocked;
+                //            infoOverride.Update();
+                //        }
+                //    }
+                //}
                 mergedChannel.UserBlockedState = enable ? UserBlockedState.Enabled : UserBlockedState.Blocked;
                 mergedChannel.Update();
             }

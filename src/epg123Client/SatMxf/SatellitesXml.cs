@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Xml;
 using System.Xml.Serialization;
 
 namespace epg123Client.SatXml
@@ -6,6 +7,9 @@ namespace epg123Client.SatXml
     [XmlRoot("satellites")]
     public class Satellites
     {
+        [XmlAnyElement]
+        public XmlComment CreationDate { get; set; }
+
         [XmlElement("sat")]
         public List<Satellite> Satellite { get; set; }
     }

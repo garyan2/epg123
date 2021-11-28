@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Serialization;
 
 namespace epg123Client.SatMxf
@@ -7,6 +8,20 @@ namespace epg123Client.SatMxf
     {
         [XmlIgnore] public MxfDvbsRegion _region;
         [XmlIgnore] public MxfDvbsSatellite _satellite;
+
+        public MxfDvbsHeadend GetOrCreateHeadend(int csiId)
+        {
+            var headend = headends.SingleOrDefault(arg => arg.CsiId == csiId);
+            if (headend != null) return headend;
+
+            headend = new MxfDvbsHeadend
+            {
+                CsiId = csiId,
+                _channels = new List<MxfDvbsChannel>()
+            };
+            headends.Add(headend);
+            return headend;
+        }
 
         [XmlAttribute("uid")]
         public string Uid
