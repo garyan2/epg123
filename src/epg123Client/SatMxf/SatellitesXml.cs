@@ -7,9 +7,6 @@ namespace epg123Client.SatXml
     [XmlRoot("satellites")]
     public class Satellites
     {
-        [XmlAnyElement]
-        public XmlComment CreationDate { get; set; }
-
         [XmlElement("sat")]
         public List<Satellite> Satellite { get; set; }
     }

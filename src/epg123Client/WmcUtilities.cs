@@ -311,15 +311,17 @@ namespace epg123Client
             return ret;
         }
 
-        public static bool UpdateDvbsTransponders(bool ignoreDefault = false)
+        public static bool UpdateDvbsTransponders(bool ignoreDefault)
         {
             var ret = false;
+            var mxfPath = Helper.TransponderMxfPath;
             try
             {
                 // if defaultsatellites.mxf exists, import it and return
                 if (!ignoreDefault && File.Exists(Helper.DefaultSatellitesPath))
                 {
-                    return ImportMxfFile(Helper.DefaultSatellitesPath);
+                    mxfPath = Helper.DefaultSatellitesPath;
+                    goto ImportAndLock;
                 }
 
                 // read the satellites.xml file from either the file system or the resource file
@@ -379,7 +381,11 @@ namespace epg123Client
                 }
 
                 // import the mxf file with new satellite transponders
-                ret = ImportMxfFile(Helper.TransponderMxfPath);
+                ImportAndLock:
+                ret = ImportMxfFile(mxfPath);
+                var uid = WmcStore.WmcObjectStore.UIds["!DvbsDataSet"];
+                uid.Lock();
+                uid.Update();
             }
             catch (Exception ex)
             {
@@ -496,54 +502,6 @@ namespace epg123Client
             return ret;
         }
         #endregion
-
-        public static bool DetermineRecordingsInProgress()
-        {
-            try
-            {
-                // establish program to run and environment for import
-                var startInfo = new ProcessStartInfo()
-                {
-                    FileName = "schtasks.exe",
-                    Arguments = "/query /tn \"\\Microsoft\\Windows\\Media Center\\RecordingRestart\" /fo table",
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                    WindowStyle = ProcessWindowStyle.Hidden,
-                    RedirectStandardError = true,
-                    RedirectStandardOutput = true
-                };
-
-                // begin import
-                var proc = Process.Start(startInfo);
-                if (proc != null)
-                {
-                    var error = proc.StandardError.ReadToEnd();
-                    var table = proc.StandardOutput.ReadToEnd();
-
-                    // wait for exit and process exit code
-                    proc.WaitForExit();
-
-                    // check for error
-                    if (!string.IsNullOrWhiteSpace(error))
-                    {
-                        Logger.WriteInformation($"An error occurred trying to determine if recordings are in progress. {error}");
-                    }
-                    else
-                    {
-                        return table.Contains("Ready");
-                    }
-                }
-                else
-                {
-                    Logger.WriteInformation($"An error occurred trying to determine if recordings are in progress.");
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.WriteInformation($"Exception thrown during DetermineRecordingsInProgress() using schtasks.exe. {ex.Message}\n{ex.StackTrace}");
-            }
-            return false;
-        }
 
         #region ========== Process Outputs ==========
         private static void Process_ErrorDataReceived(object sender, DataReceivedEventArgs e)

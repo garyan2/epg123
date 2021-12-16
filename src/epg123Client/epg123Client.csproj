@@ -302,6 +302,10 @@
     <Content Include="Resources\EPG123_error_base .png" />
     <Content Include="Resources\EPG123_OK_base.png" />
     <Content Include="Resources\EPG123_Warning_base.png" />
+    <None Include="Resources\music.png" />
+    <None Include="Resources\padlock.png" />
+    <None Include="Resources\music_highlight.png" />
+    <None Include="Resources\padlock_highlight.png" />
     <Content Include="Resources\statusLogoDark.png" />
     <Content Include="Resources\statusLogoLight.png" />
     <Content Include="Resources\StatusOK.png" />

@@ -1094,7 +1094,6 @@ namespace epg123
             if (e.Item.ListView.Columns[e.ColumnIndex].Width < (int)textSize.Width + 51)
             {
                 e.Item.ListView.Columns[e.ColumnIndex].Width = (int)textSize.Width + 51;
-                return;
             }
 
             if (!e.Item.ListView.Enabled)

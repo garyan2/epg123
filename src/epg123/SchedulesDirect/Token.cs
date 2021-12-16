@@ -73,8 +73,7 @@ namespace epg123.SchedulesDirect
             if (sr == null) return false;
 
             var ret = JsonConvert.DeserializeObject<UserStatus>(sr, jSettings);
-            if (ret.Code == 0) return true;
-            return false;
+            return ret.Code == 0;
         }
     }
 

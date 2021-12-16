@@ -8,6 +8,7 @@ using System.Xml.Serialization;
 using epg123;
 using epg123Client.SatMxf;
 using Microsoft.MediaCenter.Guide;
+using Microsoft.MediaCenter.Satellites;
 
 namespace epg123Client
 {
@@ -16,6 +17,11 @@ namespace epg123Client
         public frmSatellites()
         {
             InitializeComponent();
+
+            // if LNBs are empty, that means there are no satellites currently configured
+            // disable the default satellite mxf create button if no LNBs exist
+            var lnbs = new LowNoiseBlocks(WmcStore.WmcObjectStore);
+            btnCreateDefault.Enabled = cbRadio.Enabled = cbEncrypted.Enabled = cbEnabled.Enabled = !lnbs.Empty;
         }
 
         private void btnCreateDefault_Click(object sender, EventArgs e)
@@ -50,7 +56,7 @@ namespace epg123Client
         private void btnImport_Click(object sender, EventArgs e)
         {
             Cursor = Cursors.WaitCursor;
-            WmcUtilities.UpdateDvbsTransponders();
+            WmcUtilities.UpdateDvbsTransponders(false);
             Cursor = Cursors.Arrow;
         }
 

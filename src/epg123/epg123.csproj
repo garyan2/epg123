@@ -300,7 +300,6 @@
   <ItemGroup>
     <None Include="Resources\EPG123_download.ico" />
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>

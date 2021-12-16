@@ -57,6 +57,7 @@ namespace epg123.SchedulesDirect
         public string StationId { get; set; }
 
         [JsonProperty("date")]
+        [JsonConverter(typeof(SingleOrArrayConverter<string>))]
         public string[] Date { get; set; }
     }
 
@@ -87,6 +88,7 @@ namespace epg123.SchedulesDirect
         public string RequestedDate { get; set; }
 
         [JsonProperty("programs")]
+        [JsonConverter(typeof(SingleOrListConverter<ScheduleProgram>))]
         public List<ScheduleProgram> Programs { get; set; }
 
         [JsonProperty("metadata")]
@@ -153,12 +155,15 @@ namespace epg123.SchedulesDirect
         public string IsPremiereOrFinale { get; set; }
 
         [JsonProperty("audioProperties")]
+        [JsonConverter(typeof(SingleOrArrayConverter<string>))]
         public string[] AudioProperties { get; set; }
 
         [JsonProperty("videoProperties")]
+        [JsonConverter(typeof(SingleOrArrayConverter<string>))]
         public string[] VideoProperties { get; set; }
 
         [JsonProperty("ratings")]
+        [JsonConverter(typeof(SingleOrListConverter<ScheduleTvRating>))]
         public List<ScheduleTvRating> Ratings { get; set; }
 
         [JsonProperty("multipart")]

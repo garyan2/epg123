@@ -31,9 +31,11 @@ namespace epg123.SchedulesDirect
     public class StationChannelMap
     {
         [JsonProperty("map")]
+        [JsonConverter(typeof(SingleOrListConverter<LineupChannel>))]
         public List<LineupChannel> Map { get; set; }
 
         [JsonProperty("stations")]
+        [JsonConverter(typeof(SingleOrListConverter<LineupStation>))]
         public List<LineupStation> Stations { get; set; }
 
         [JsonProperty("metadata")]
@@ -121,9 +123,11 @@ namespace epg123.SchedulesDirect
         public string Affiliate { get; set; }
 
         [JsonProperty("broadcastLanguage")]
+        [JsonConverter(typeof(SingleOrArrayConverter<string>))]
         public string[] BroadcastLanguage { get; set; }
 
         [JsonProperty("descriptionLanguage")]
+        [JsonConverter(typeof(SingleOrArrayConverter<string>))]
         public string[] DescriptionLanguage { get; set; }
 
         [JsonProperty("broadcaster")]
@@ -133,6 +137,7 @@ namespace epg123.SchedulesDirect
         public bool IsCommercialFree { get; set; }
 
         [JsonProperty("stationLogo")]
+        [JsonConverter(typeof(SingleOrListConverter<StationImage>))]
         public List<StationImage> StationLogos { get; set; }
 
         [JsonProperty("logo")]

@@ -40,6 +40,7 @@ namespace epg123.SchedulesDirect
         public string Location { get; set; }
 
         [JsonProperty("lineups")]
+        [JsonConverter(typeof(SingleOrListConverter<HeadendLineup>))]
         public List<HeadendLineup> Lineups { get; set; }
     }
 

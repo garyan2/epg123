@@ -543,7 +543,7 @@ namespace epg123Client
         {
             UpdateStatusText("Updating satellite transponders ...");
             Logger.WriteVerbose("Updating satellite transponders ...");
-            WmcUtilities.UpdateDvbsTransponders();
+            WmcUtilities.UpdateDvbsTransponders(false);
         }
 
         private static bool IsTunerCountTweaked()

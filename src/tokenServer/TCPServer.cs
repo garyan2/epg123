@@ -150,7 +150,7 @@ namespace tokenServer
             else WebStats.IncrementConditionalRequestReceived();
 
             // throttle refreshing images that have already been checked recently
-            if (JsonImageCache.cacheImages && JsonImageCache.IsImageRecent(asset.Substring(7)))
+            if (JsonImageCache.cacheImages && JsonImageCache.IsImageRecent(asset.Substring(7), ifModifiedSince))
             {
                 if (Send304OrImageFromCache(stream, ifModifiedSince, JsonImageCache.GetCachedImage(asset)))
                     return;
@@ -214,7 +214,7 @@ namespace tokenServer
                             fStream.Flush();
                         }
                         File.SetLastWriteTimeUtc(location, response.LastModified);
-                        JsonImageCache.AddImageToCache(filename);
+                        JsonImageCache.AddImageToCache(filename, response.LastModified);
                         return;
                     }
 

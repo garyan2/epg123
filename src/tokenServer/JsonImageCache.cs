@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
@@ -86,20 +87,33 @@ namespace tokenServer
             }
         }
 
-        public static void AddImageToCache(string filename)
+        public static void AddImageToCache(string filename, DateTime lastModified)
         {
             lock (_cacheLock)
             {
-                if (ImageCache.ContainsKey(filename)) ImageCache[filename].LastUsed = DateTime.Now;
-                else ImageCache.Add(filename, new CacheImage { LastUsed = DateTime.Now });
+                if (ImageCache.ContainsKey(filename))
+                {
+                    ImageCache[filename].LastUsed = DateTime.Now;
+                    ImageCache[filename].LastModified = lastModified;
+                }
+                else ImageCache.Add(filename, new CacheImage { LastUsed = DateTime.Now, LastModified = lastModified});
             }
         }
 
-        public static bool IsImageRecent(string filename)
+        public static bool IsImageRecent(string filename, DateTime ifModifiedSince)
         {
             lock (_cacheLock)
             {
                 if (!ImageCache.ContainsKey(filename)) return false;
+                if (ImageCache[filename].LastModified == DateTime.MinValue)
+                {
+                    var info = new FileInfo($"{Helper.Epg123ImageCache}\\{filename.Substring(0, 1)}\\{filename}");
+                    ImageCache[filename].LastModified = info.LastWriteTimeUtc;
+                }
+                if (ifModifiedSince == DateTime.MinValue && DateTime.UtcNow - ImageCache[filename].LastModified < TimeSpan.FromDays(30))
+                {
+                    return true;
+                }
                 if (ImageCache[filename].LastUsed.ToLocalTime() + TimeSpan.FromHours(24) > DateTime.Now) return true;
             }
             return false;
@@ -110,5 +124,8 @@ namespace tokenServer
     {
         [JsonProperty("LastUsed")]
         public DateTime LastUsed { get; set; }
+
+        [JsonProperty("LastModified")]
+        public DateTime LastModified { get; set; }
     }
 }

@@ -36,6 +36,7 @@ namespace epg123.SchedulesDirect
     public class LineupResponse : BaseResponse
     {
         [JsonProperty("lineups")]
+        [JsonConverter(typeof(SingleOrListConverter<SubscribedLineup>))]
         public List<SubscribedLineup> Lineups { get; set; }
     }
 

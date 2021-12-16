@@ -11,10 +11,9 @@ using System.Threading;
 using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Linq;
-using System.Xml.Serialization;
 using epg123;
 using epg123.Task;
-using epg123Client.SatMxf;
+using epg123Client.Properties;
 using Microsoft.Win32;
 using Microsoft.MediaCenter.Guide;
 using Microsoft.MediaCenter.Store;
@@ -533,7 +532,58 @@ namespace epg123Client
 
         private void mergedChannelListView_DrawSubItem(object sender, DrawListViewSubItemEventArgs e)
         {
-            e.DrawDefault = true;
+            if (e.ColumnIndex != 5)
+            {
+                e.DrawDefault = true;
+                return;
+            }
+
+            var textSize = e.Graphics.MeasureString(e.SubItem.Text, mergedChannelListView.Font);
+            if (e.Item.ListView.Columns[e.ColumnIndex].Width < (int) textSize.Width + 8)
+            {
+                e.Item.ListView.Columns[e.ColumnIndex].Width = (int) textSize.Width + 8;
+            }
+
+            Bitmap bmp = null;
+            var highlight = false;
+            var backColor = e.SubItem.BackColor;
+            var foreColor = e.SubItem.ForeColor;
+            if (e.Item.ListView.SelectedIndices.Contains(e.Item.Index))
+            {
+                if ((e.ItemState & ListViewItemStates.Selected) != 0 && e.Item.ListView.ContainsFocus)
+                {
+                    backColor = SystemColors.Highlight;
+                    foreColor = SystemColors.HighlightText;
+                    highlight = true;
+                }
+                else
+                {
+                    backColor = SystemColors.Control;
+                    foreColor = SystemColors.ControlText;
+                }
+            }
+
+            if (((myChannelLvi)e.Item).IsSuggestedBlocked || ((myChannelLvi)e.Item).IsEncrypted)
+            {
+                bmp = highlight ? Resources.padlock_highlight : Resources.padlock;
+            }
+            else if (((myChannelLvi)e.Item).IsRadio)
+            {
+                bmp = highlight ? Resources.music_highlight : Resources.music;
+            }
+
+            e.DrawBackground();
+            e.Graphics.FillRectangle(new SolidBrush(backColor), e.Bounds);
+
+            var sf = new StringFormat {LineAlignment = StringAlignment.Center, FormatFlags = StringFormatFlags.NoWrap};
+            e.Graphics.DrawString(e.SubItem.Text, mergedChannelListView.Font, new SolidBrush(foreColor),
+                new Rectangle(e.Bounds.X + 8, e.Bounds.Y, e.Bounds.Width + 8, e.Bounds.Height), sf);
+
+            if (bmp != null)
+            {
+                var imageRect = new Rectangle(e.Bounds.X, e.Bounds.Y + 4, 8, 10);
+                e.Graphics.DrawImage(bmp, imageRect);
+            }
         }
         #endregion
 

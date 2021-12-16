@@ -39,6 +39,7 @@ namespace epg123.SchedulesDirect
         public bool ShouldSerializeResourceId() { return false; }
 
         [JsonProperty("titles")]
+        [JsonConverter(typeof(SingleOrListConverter<ProgramTitle>))]
         public List<ProgramTitle> Titles { get; set; }
 
         [JsonProperty("episodeTitle150")]
@@ -65,6 +66,7 @@ namespace epg123.SchedulesDirect
         public ProgramMovie Movie { get; set; }
 
         [JsonProperty("genres")]
+        [JsonConverter(typeof(SingleOrArrayConverter<string>))]
         public string[] Genres { get; set; }
 
         [JsonProperty("officialURL")]
@@ -75,15 +77,19 @@ namespace epg123.SchedulesDirect
         public ProgramKeyWords KeyWords { get; set; }
 
         [JsonProperty("contentRating")]
+        [JsonConverter(typeof(SingleOrListConverter<ProgramContentRating>))]
         public List<ProgramContentRating> ContentRating { get; set; }
 
         [JsonProperty("contentAdvisory")]
+        [JsonConverter(typeof(SingleOrArrayConverter<string>))]
         public string[] ContentAdvisory { get; set; }
 
         [JsonProperty("cast")]
+        [JsonConverter(typeof(SingleOrListConverter<sdProgramPerson>))]
         public List<sdProgramPerson> Cast { get; set; }
 
         [JsonProperty("crew")]
+        [JsonConverter(typeof(SingleOrListConverter<sdProgramPerson>))]
         public List<sdProgramPerson> Crew { get; set; }
 
         [JsonProperty("entityType")]
@@ -96,6 +102,7 @@ namespace epg123.SchedulesDirect
         public string EpisodeImage { get; set; }
 
         [JsonProperty("recommendations")]
+        [JsonConverter(typeof(SingleOrListConverter<sdProgramRecommendation>))]
         public List<sdProgramRecommendation> Recommendations { get; set; }
         public bool ShouldSerializeRecommendations() { return false; }
 
@@ -142,6 +149,7 @@ namespace epg123.SchedulesDirect
         public string Venue100 { get; set; }
 
         [JsonProperty("teams")]
+        [JsonConverter(typeof(SingleOrListConverter<ProgramEventDetailsTeam>))]
         public List<ProgramEventDetailsTeam> Teams { get; set; }
 
         [JsonProperty("gameDate")]
@@ -163,9 +171,11 @@ namespace epg123.SchedulesDirect
     public class ProgramDescriptions
     {
         [JsonProperty("description100")]
+        [JsonConverter(typeof(SingleOrListConverter<ProgramDescription>))]
         public List<ProgramDescription> Description100 { get; set; }
 
         [JsonProperty("description1000")]
+        [JsonConverter(typeof(SingleOrListConverter<ProgramDescription>))]
         public List<ProgramDescription> Description1000 { get; set; }
     }
 
@@ -181,24 +191,31 @@ namespace epg123.SchedulesDirect
     public class ProgramKeyWords
     {
         [JsonProperty("Mood")]
+        [JsonConverter(typeof(SingleOrArrayConverter<string>))]
         public string[] Mood { get; set; }
 
         [JsonProperty("Time Period")]
+        [JsonConverter(typeof(SingleOrArrayConverter<string>))]
         public string[] TimePeriod { get; set; }
 
         [JsonProperty("Theme")]
+        [JsonConverter(typeof(SingleOrArrayConverter<string>))]
         public string[] Theme { get; set; }
 
         [JsonProperty("Character")]
+        [JsonConverter(typeof(SingleOrArrayConverter<string>))]
         public string[] Character { get; set; }
 
         [JsonProperty("Setting")]
+        [JsonConverter(typeof(SingleOrArrayConverter<string>))]
         public string[] Setting { get; set; }
 
         [JsonProperty("Subject")]
+        [JsonConverter(typeof(SingleOrArrayConverter<string>))]
         public string[] Subject { get; set; }
 
         [JsonProperty("General")]
+        [JsonConverter(typeof(SingleOrArrayConverter<string>))]
         public string[] General { get; set; }
     }
 
@@ -244,6 +261,7 @@ namespace epg123.SchedulesDirect
         public string Country { get; set; }
 
         [JsonProperty("contentAdvisory")]
+        [JsonConverter(typeof(SingleOrArrayConverter<string>))]
         public string[] ContentAdvisory { get; set; }
     }
 
@@ -257,6 +275,7 @@ namespace epg123.SchedulesDirect
         public bool ShouldSerializeDuration() { return Duration > 0; }
 
         [JsonProperty("qualityRating")]
+        [JsonConverter(typeof(SingleOrListConverter<ProgramQualityRating>))]
         public List<ProgramQualityRating> QualityRating { get; set; }
     }
 

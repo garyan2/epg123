@@ -47,15 +47,18 @@ namespace epg123.SchedulesDirect
         public StatusAccount Account { get; set; }
 
         [JsonProperty("lineups")]
+        [JsonConverter(typeof(SingleOrListConverter<StatusLineup>))]
         public List<StatusLineup> Lineups { get; set; }
 
         [JsonProperty("lastDataUpdate")]
         public DateTime LastDataUpdate { get; set; }
 
         [JsonProperty("notifications")]
+        [JsonConverter(typeof(SingleOrArrayConverter<string>))]
         public string[] Notifications { get; set; }
 
         [JsonProperty("systemStatus")]
+        [JsonConverter(typeof(SingleOrListConverter<SystemStatus>))]
         public List<SystemStatus> SystemStatus { get; set; }
     }
 
@@ -65,6 +68,7 @@ namespace epg123.SchedulesDirect
         public DateTime Expires { get; set; }
 
         [JsonProperty("messages")]
+        [JsonConverter(typeof(SingleOrArrayConverter<string>))]
         public string[] Messages { get; set; }
 
         [JsonProperty("maxLineups")]

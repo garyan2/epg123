@@ -411,11 +411,6 @@ namespace epg123Client
 
                     if (!shown) continue;
 
-                    // unfortunately the lock emoji didn't come into play until Unicode 6.0.0
-                    // Windows 7 uses Unicode 5.x, it will just show an open block
-                    const string lockSymbol = "\u25C6\u2005"; // black diamond
-                    const string radioSymbol = "\u200A\u266B\u2006"; // beamed eighth note
-                    const string emptySpace = "\u2003\u200A";
                     switch (tuningInfo)
                     {
                         case DvbTuningInfo dvbTuningInfo:
@@ -424,7 +419,7 @@ namespace epg123Client
                             {
                                 case "DVB-T":
                                     if (tuningInfo.IsSuggestedBlocked) continue;
-                                    tuningInfos.Add($"{(dvbTuningInfo.IsEncrypted || dvbTuningInfo.IsSuggestedBlocked ? lockSymbol : mergedChannel.Service.ServiceType == 2 ? radioSymbol : emptySpace)}{dvbTuningInfo.Frequency / 1000.0:F3} ({dvbTuningInfo.Sid})");
+                                    tuningInfos.Add($"{dvbTuningInfo.Frequency / 1000.0:F3} ({dvbTuningInfo.Sid})");
                                     break;
                                 case "DVB-S":
                                     var locator = dvbTuningInfo.TuneRequest.Locator as DVBSLocator;
@@ -444,7 +439,7 @@ namespace epg123Client
                                             polarization = " RHC";
                                             break;
                                     }
-                                    tuningInfos.Add($"{(dvbTuningInfo.IsEncrypted || dvbTuningInfo.IsSuggestedBlocked ? lockSymbol : mergedChannel.Service.ServiceType == 2 ? radioSymbol : emptySpace)}{locator.OrbitalPosition}:{dvbTuningInfo.Frequency / 1000.0:F0}{polarization} ({dvbTuningInfo.Sid})");
+                                    tuningInfos.Add($"{locator.OrbitalPosition}:{dvbTuningInfo.Frequency / 1000.0:F0}{polarization} ({dvbTuningInfo.Sid})");
                                     break;
                                 case "DVB-C":
                                 case "ISDB-T":
@@ -465,7 +460,7 @@ namespace epg123Client
                                 case "Cable":
                                 case "ClearQAM":
                                 case "Digital Cable":
-                                    tuningInfos.Add($"{(channelTuningInfo.IsEncrypted ? lockSymbol : string.Empty)}C{channelTuningInfo.PhysicalNumber}");
+                                    tuningInfos.Add($"C{channelTuningInfo.PhysicalNumber}");
                                     break;
                                 case "{adb10da8-5286-4318-9ccb-cbedc854f0dc}":
                                     tuningInfos.Add($"IR {channelTuningInfo.PhysicalNumber}{((channelTuningInfo.SubNumber > 0) ? "." + channelTuningInfo.SubNumber : null)}");
@@ -881,22 +876,17 @@ namespace epg123Client
     public class myChannelLvi : ListViewItem
     {
         public long ChannelId { get; private set; }
-
         public HashSet<long> ScannedLineupIds { get; private set; }
-
         public bool Enabled { get; private set; }
-
         private bool Custom { get; set; } = true;
-
         public string Callsign { get; private set; }
-
         public string CustomCallsign { get; private set; }
-
         public string Number { get; private set; }
-
         public string CustomNumber { get; private set; }
-
         private MergedChannel MergedChannel { get; set; }
+        public bool IsEncrypted => MergedChannel.IsEncrypted;
+        public bool IsSuggestedBlocked => MergedChannel.IsSuggestedBlocked;
+        public bool IsRadio => MergedChannel.Service.ServiceType == 2;
 
         public myChannelLvi(MergedChannel channel) : base(new string[7])
         {
