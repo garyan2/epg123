@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using System.Xml.Serialization;
@@ -9,9 +10,11 @@ namespace epg123
 {
     public partial class frmCustomLineup : Form
     {
+        private List<myStation> availableStations;
         public frmCustomLineup(List<myStation> stations)
         {
             InitializeComponent();
+            availableStations = stations;
 
             // assign listview sorters
             lvAvailable.ListViewItemSorter = new ListViewColumnSorter
@@ -77,11 +80,6 @@ namespace epg123
             ((ListView)sender).Sort();
         }
 
-        private void frmCustomLineup_Shown(object sender, EventArgs e)
-        {
-            //UpdateCustomListView();
-        }
-
         private void cbCustom_SelectedIndexChanged(object sender, EventArgs e)
         {
             UpdateCustomListView();
@@ -96,6 +94,12 @@ namespace epg123
             var lineup = (CustomLineup)cbCustom.SelectedItem;
             foreach (var channel in lineup.Station)
             {
+                var sd = availableStations.SingleOrDefault(arg => arg.StationId?.Equals(channel.StationId) ?? false);
+                if (sd != null)
+                {
+                    channel.Name = sd.Name;
+                    channel.Callsign = sd.Callsign;
+                }
                 lvCustom.Items.Add(new customChannel(channel));
             }
             lvCustom.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);
@@ -103,14 +107,67 @@ namespace epg123
             lvCustom.EndUpdate();
         }
 
-        private void frmCustomLineup_ResizeEnd(object sender, EventArgs e)
-        {
-
-        }
-
         private void splitContainer1_Panel2_Resize(object sender, EventArgs e)
         {
             cbCustom.Width = splitContainer1.Panel2.Width - btnAddLineup.Width - btnRemoveLineup.Width - 27;
+        }
+
+        private void lvAvailable_ItemDrag(object sender, ItemDragEventArgs e)
+        {
+            var items = ((ListView)sender).SelectedItems.Cast<availableStation>().ToList();
+            if (items.Count == 0) return;
+            DoDragDrop(items, DragDropEffects.Copy);
+        }
+
+        private void lvAvailable_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            var item = lvAvailable.GetItemAt(e.X, e.Y) as availableStation;
+            var station = new CustomStation
+            {
+                Number = -1,
+                Subnumber = 0,
+                Callsign = item.Station.Callsign,
+                Name = item.Station.Name,
+                StationId = item.Station.StationId
+            };
+            ((CustomLineup)cbCustom.SelectedItem).Station.Add(station);
+            lvCustom.Items.Add(new customChannel(station));
+        }
+
+        private void lvCustom_DragEnter(object sender, DragEventArgs e)
+        {
+            e.Effect = e.Data.GetDataPresent(typeof(List<availableStation>)) ? DragDropEffects.Copy : DragDropEffects.None;
+        }
+
+        private void lvCustom_DragDrop(object sender, DragEventArgs e)
+        {
+            if (!e.Data.GetDataPresent(typeof(List<availableStation>))) return;
+            var items = (List<availableStation>)e.Data.GetData(typeof(List<availableStation>));
+            foreach (var station in items.Select(item => new CustomStation
+            {
+                Number = -1,
+                Subnumber = 0,
+                Callsign = item.Station.Callsign,
+                Name = item.Station.Name,
+                StationId = item.Station.StationId,
+            }))
+            {
+                ((CustomLineup)cbCustom.SelectedItem).Station.Add(station);
+                lvCustom.Items.Add(new customChannel(station));
+            }
+        }
+
+        private void btnAddLineup_Click(object sender, EventArgs e)
+        {
+            var lineup = new CustomLineup
+            {
+                Lineup = "OTA-CUSTOM-TUCSON",
+                Location = "Tucson",
+                Name = "Local Over the Air Broadcast",
+                Station = new List<CustomStation>()
+            };
+            cbCustom.Items.Add(lineup);
+            UpdateCustomListView();
         }
     }
 

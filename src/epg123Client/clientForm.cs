@@ -273,77 +273,86 @@ namespace epg123Client
             // get status
             _task.QueryTask();
 
-            // set .Enabled properties
-            if (!_task.Exist && !_task.ExistNoAccess)
-            {
-                rdoFullMode.Enabled = File.Exists(Helper.Epg123ExePath) || File.Exists(Helper.Hdhr2MxfExePath);
-                rdoClientMode.Enabled = tbSchedTime.Enabled = lblUpdateTime.Enabled = cbTaskWake.Enabled = cbAutomatch.Enabled = tbTaskInfo.Enabled = true;
-            }
-            else
-            {
-                rdoFullMode.Enabled = rdoClientMode.Enabled = tbSchedTime.Enabled = lblUpdateTime.Enabled = cbTaskWake.Enabled = cbAutomatch.Enabled = tbTaskInfo.Enabled = false;
-            }
+            // set .Enabled flags for components
+            tbSchedTime.Enabled = lblUpdateTime.Enabled = cbTaskWake.Enabled = cbAutomatch.Enabled = tbTaskInfo.Enabled = rdoFullMode.Enabled = rdoClientMode.Enabled = !_task.Exist && !_task.ExistNoAccess;
 
-            // set radio button controls
-            rdoFullMode.Checked = _task.Exist && (_task.Actions[0].Path.ToLower().Contains("epg123.exe") || _task.Actions[0].Path.ToLower().Contains("hdhr2mxf.exe")) ||
-                                  !_task.Exist && (File.Exists(Helper.Epg123ExePath) || File.Exists(Helper.Hdhr2MxfExePath));
-            rdoClientMode.Checked = !rdoFullMode.Checked;
+            // set task create/delete button text
+            btnTask.Text = _task.Exist || _task.ExistNoAccess ? "Delete" : "Create";
 
             // update scheduled task run time
             tbSchedTime.Text = _task.SchedTime.ToString("HH:mm");
 
-            // set sheduled task wake checkbox
+            // set scheduled task wake checkbox
             cbTaskWake.Checked = _task.Wake;
 
-            // determine which action is the client action
+            // set .Enabled properties
+            if (!_task.Exist && !_task.ExistNoAccess)
+            {
+                rdoFullMode.Enabled = File.Exists(Helper.Epg123ExePath) || File.Exists(Helper.Hdhr2MxfExePath);
+            }
+
             var clientIndex = -1;
+            var epg123Index = -1;
+            var hdhr2mxfIndex = -1;
             if (_task.Exist)
             {
                 for (var i = 0; i < _task.Actions.Length; ++i)
                 {
-                    if (_task.Actions[i].Path.ToLower().Contains("epg123client.exe")) clientIndex = i;
+                    if (_task.Actions[i].Path.ToLower().Contains(Helper.Epg123ExePath.ToLower())) epg123Index = i;
+                    else if (_task.Actions[i].Path.ToLower().Contains(Helper.Epg123ClientExePath.ToLower())) clientIndex = i;
+                    else if (_task.Actions[i].Path.ToLower().Contains(Helper.Hdhr2MxfExePath.ToLower())) hdhr2mxfIndex = i;
                 }
+
+                // display task status
+                if (clientIndex >= 0)
+                {
+                    lblSchedStatus.Text = _task.StatusString;
+                    lblSchedStatus.ForeColor = Color.Black;
+                    if (epg123Index >= 0)
+                    {
+                        rdoFullMode.Checked = true;
+                        tbTaskInfo.Text = _task.Actions[epg123Index].Path;
+                    }
+                    else if (hdhr2mxfIndex >= 0)
+                    {
+                        rdoFullMode.Checked = true;
+                        tbTaskInfo.Text = _task.Actions[hdhr2mxfIndex].Path;
+                    }
+                    else
+                    {
+                        rdoClientMode.Checked = true;
+                        var arguments = _task.Actions[clientIndex].Arguments.Split(' ');
+                        for (var i = 0; i < arguments.Length; ++i)
+                        {
+                            if (!arguments[i].Equals("-i") || i >= arguments.Length - 1) continue;
+                            tbTaskInfo.Text = arguments[i + 1];
+                            break;
+                        }
+                    }
+                    cbAutomatch.Checked = _task.Actions[clientIndex].Arguments.ToLower().Contains("-match");
+                    return;
+                }
+
+                if (epg123Index >= 0 || hdhr2mxfIndex >= 0)
+                {
+                    lblSchedStatus.Text = "### Server Mode ONLY - Guide will not be imported. ###";
+                    lblSchedStatus.ForeColor = Color.Red;
+                    return;
+                }
+
+                MessageBox.Show($"The location of this program file is not the same location configured in the Scheduled Task.\n\nThis program:\n{Helper.Epg123ClientExePath}", "Configuration Warning", MessageBoxButtons.OK);
+                grpScheduledTask.Enabled = false;
             }
 
-            // verify task configuration with respect to this executable
-            if (clientIndex >= 0 && !_task.Actions[clientIndex].Path.ToLower().Replace("\"", "").Equals(Helper.Epg123ClientExePath.ToLower()))
+            if (_task.Exist || _task.ExistNoAccess)
             {
-                MessageBox.Show($"The location of this program file is not the same location configured in the Scheduled Task.\n\nThis program:\n{Helper.Epg123ExePath}\n\nTask program:\n{_task.Actions[clientIndex].Path}", "Configuration Warning", MessageBoxButtons.OK);
-            }
-
-            // set automatch checkbox state
-            cbAutomatch.Checked = !_task.Exist || clientIndex >= 0 && _task.Actions[clientIndex].Arguments.ToLower().Contains("-match");
-
-            // set task info text and label
-            if (_task.Exist && rdoFullMode.Checked)
-            {
-                tbTaskInfo.Text = _task.Actions[0].Path;
-            }
-            else if (_task.Exist && (clientIndex >= 0))
-            {
-                var arg = _task.Actions[clientIndex].Arguments;
-                tbTaskInfo.Text = arg.Substring(arg.ToLower().IndexOf("-i", StringComparison.Ordinal) + 3,
-                    arg.ToLower().IndexOf(".mxf", StringComparison.Ordinal) - arg.ToLower().IndexOf("-i", StringComparison.Ordinal) + 1).TrimStart('\"');
-            }
-            else if (_task.Exist)
-            {
+                lblSchedStatus.Text = string.Empty;
                 tbTaskInfo.Text = "*** UNKNOWN TASK CONFIGURATION ***";
-            }
-
-            // set task create/delete button text and update status string
-            btnTask.Text = _task.Exist || _task.ExistNoAccess ? "Delete" : "Create";
-            if (_task.Exist && (clientIndex >= 0))
-            {
-                lblSchedStatus.Text = _task.StatusString;
-                lblSchedStatus.ForeColor = Color.Black;
-            }
-            else if (_task.Exist && rdoFullMode.Enabled)
-            {
-                lblSchedStatus.Text = "### Server Mode ONLY - Guide will not be imported. ###";
-                lblSchedStatus.ForeColor = Color.Red;
             }
             else
             {
+                rdoFullMode.Checked = File.Exists(Helper.Epg123ExePath) || File.Exists(Helper.Hdhr2MxfExePath);
+                rdoClientMode.Checked = !rdoFullMode.Checked;
                 lblSchedStatus.Text = _task.StatusString;
                 lblSchedStatus.ForeColor = Color.Red;
             }
@@ -1099,8 +1108,15 @@ namespace epg123Client
                     // increment progress bar
                     IncrementProgressBar();
 
-                    // do not include broadband channels
+                    // do not include broadband or user hidden channels
                     if (channel.ChannelType == ChannelType.WmisBroadband || channel.ChannelType == ChannelType.UserHidden) continue;
+
+                    // remove channels that do not have any tuningInfo
+                    if (channel.TuningInfos?.Empty ?? true)
+                    {
+                        WmcStore.DeleteChannel(channel.Id);
+                        continue;
+                    }
 
                     // make sure channel has a primary channel with lineup
                     if (channel.PrimaryChannel?.Lineup == null)
@@ -1538,7 +1554,6 @@ namespace epg123Client
             if (importForm.Success)
             {
                 BuildLineupChannelListView();
-                WmcStore.CleanUpMergedChannelTuningInfos();
                 WmcUtilities.ReindexDatabase();
             }
             else

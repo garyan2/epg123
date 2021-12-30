@@ -357,34 +357,6 @@ namespace epg123Client
             return ret;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="mergedChannel"></param>
-        /// <returns></returns>
-        public static string GetAllTuningInfos(MergedChannel mergedChannel)
-        {
-            // attempt to repair tuning infos
-            if (mergedChannel.TuningInfos == null || mergedChannel.TuningInfos.Empty)
-            {
-                try
-                {
-                    mergedChannel.AddChannelListings(null);
-                }
-                catch
-                {
-                    Logger.WriteInformation($"Attempted to repair merged channel \"{mergedChannel}\" with no tuning infos.");
-                }
-            }
-
-            return GetAllTuningInfos((Channel) mergedChannel);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="mergedChannel"></param>
-        /// <returns></returns>
         public static string GetAllTuningInfos(Channel mergedChannel)
         {
             string ret = null;
@@ -522,22 +494,6 @@ namespace epg123Client
             return ret;
         }
 
-        public static void CleanUpMergedChannelTuningInfos()
-        {
-            foreach (MergedChannel mergedChannel in WmcMergedLineup.UncachedChannels)
-            {
-                if (!mergedChannel.TuningInfos.Empty || mergedChannel.PrimaryChannel == null) continue;
-                try
-                {
-                    mergedChannel.AddChannelListings(null);
-                }
-                catch
-                {
-                    Logger.WriteInformation($"Attempted to repair merged channel \"{mergedChannel}\" with no tuning infos.");
-                }
-            }
-        }
-
         public static void AutoMapChannels()
         {
             // get all active channels in lineup(s) from EPG123
@@ -552,7 +508,7 @@ namespace epg123Client
             var mergedChannels = new List<MergedChannel>();
             foreach (MergedChannel mergedChannel in WmcMergedLineup.UncachedChannels)
             {
-                mergedChannels.Add(mergedChannel);
+                if (!mergedChannel.TuningInfos?.Empty ?? false) mergedChannels.Add(mergedChannel);
             }
             if (mergedChannels.Count == 0)
             {
@@ -979,7 +935,7 @@ namespace epg123Client
                 }
                 SubItems[4].Text = text;
             }
-            SubItems[5].Text = WmcStore.GetAllTuningInfos(MergedChannel);
+            SubItems[5].Text = WmcStore.GetAllTuningInfos((Channel) MergedChannel);
 
             // set checkbox
             Checked = Enabled = (!MergedChannel.IsSuggestedBlocked || MergedChannel.UserBlockedState != UserBlockedState.Unknown) && MergedChannel.UserBlockedState <= UserBlockedState.Enabled;

@@ -226,7 +226,7 @@
             // cbOadOverride
             // 
             this.cbOadOverride.AutoSize = true;
-            this.cbOadOverride.Location = new System.Drawing.Point(6, 216);
+            this.cbOadOverride.Location = new System.Drawing.Point(6, 170);
             this.cbOadOverride.Name = "cbOadOverride";
             this.cbOadOverride.Size = new System.Drawing.Size(232, 17);
             this.cbOadOverride.TabIndex = 41;
@@ -237,7 +237,7 @@
             // cbSeriesWsArt
             // 
             this.cbSeriesWsArt.AutoSize = true;
-            this.cbSeriesWsArt.Location = new System.Drawing.Point(6, 193);
+            this.cbSeriesWsArt.Location = new System.Drawing.Point(6, 216);
             this.cbSeriesWsArt.Name = "cbSeriesWsArt";
             this.cbSeriesWsArt.Size = new System.Drawing.Size(258, 17);
             this.cbSeriesWsArt.TabIndex = 40;
@@ -316,7 +316,7 @@
             // cbSeriesPosterArt
             // 
             this.cbSeriesPosterArt.AutoSize = true;
-            this.cbSeriesPosterArt.Location = new System.Drawing.Point(6, 170);
+            this.cbSeriesPosterArt.Location = new System.Drawing.Point(6, 193);
             this.cbSeriesPosterArt.Name = "cbSeriesPosterArt";
             this.cbSeriesPosterArt.Size = new System.Drawing.Size(252, 17);
             this.cbSeriesPosterArt.TabIndex = 30;
@@ -1207,7 +1207,6 @@
             // toolStrip5
             // 
             this.toolStrip5.CanOverflow = false;
-            this.toolStrip5.Enabled = false;
             this.toolStrip5.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
             this.toolStrip5.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.L5IncludeExclude,
@@ -1236,8 +1235,9 @@
             // L5includeToolStripMenuItem
             // 
             this.L5includeToolStripMenuItem.CheckOnClick = true;
+            this.L5includeToolStripMenuItem.Enabled = false;
             this.L5includeToolStripMenuItem.Name = "L5includeToolStripMenuItem";
-            this.L5includeToolStripMenuItem.Size = new System.Drawing.Size(115, 22);
+            this.L5includeToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.L5includeToolStripMenuItem.Text = "Include";
             this.L5includeToolStripMenuItem.Click += new System.EventHandler(this.LineupEnableToolStripMenuItem_Click);
             // 
@@ -1246,7 +1246,7 @@
             this.L5excludeToolStripMenuItem.Checked = true;
             this.L5excludeToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.L5excludeToolStripMenuItem.Name = "L5excludeToolStripMenuItem";
-            this.L5excludeToolStripMenuItem.Size = new System.Drawing.Size(115, 22);
+            this.L5excludeToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.L5excludeToolStripMenuItem.Text = "Exclude";
             this.L5excludeToolStripMenuItem.Click += new System.EventHandler(this.LineupEnableToolStripMenuItem_Click);
             // 

@@ -253,11 +253,11 @@ namespace epg123.sdJson2mxf
                         serializer.Serialize(writer, xmltv, ns);
                     }
                 }
-                Logger.WriteInformation($"Completed save of the XMLTV file to \"{Helper.Epg123XmltvPath}\".");
+                Logger.WriteInformation($"Completed save of the XMLTV file to \"{config.XmltvOutputFile}\".");
             }
             catch (Exception ex)
             {
-                Logger.WriteError($"Failed to save the XMLTV file to \"{Helper.Epg123XmltvPath}\". Message: {ex.Message}");
+                Logger.WriteError($"Failed to save the XMLTV file to \"{config.XmltvOutputFile}\". Message: {ex.Message}");
             }
         }
     }

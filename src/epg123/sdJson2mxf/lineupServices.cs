@@ -243,7 +243,7 @@ namespace epg123.sdJson2mxf
 
                             if (File.Exists(logoPath))
                             {
-                                mxfService.mxfGuideImage = SdMxf.GetGuideImage(urlLogoPath, GetStringEncodedImage(logoPath));
+                                mxfService.mxfGuideImage = SdMxf.GetGuideImage(Helper.Standalone ? $"file://{logoPath}" : urlLogoPath, GetStringEncodedImage(logoPath));
                             }
                         }
 
@@ -260,7 +260,7 @@ namespace epg123.sdJson2mxf
                                 var image = Image.FromFile(logoPath);
                                 mxfService.extras.Add("logo", new StationImage
                                 {
-                                    Url = urlLogoPath,
+                                    Url = Helper.Standalone ? logoPath : urlLogoPath,
                                     Height = image.Height,
                                     Width = image.Width
                                 });
@@ -269,7 +269,7 @@ namespace epg123.sdJson2mxf
                             {
                                 mxfService.extras.Add("logo", new StationImage
                                 {
-                                    Url = urlLogoPath
+                                    Url = Helper.Standalone ? logoPath : urlLogoPath
                                 });
                             }
                         }

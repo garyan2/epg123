@@ -68,6 +68,8 @@ namespace epg123
             this.lvAvailable.UseCompatibleStateImageBehavior = false;
             this.lvAvailable.View = System.Windows.Forms.View.Details;
             this.lvAvailable.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.LvLineupSort);
+            this.lvAvailable.ItemDrag += new System.Windows.Forms.ItemDragEventHandler(this.lvAvailable_ItemDrag);
+            this.lvAvailable.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.lvAvailable_MouseDoubleClick);
             // 
             // cCallSign
             // 
@@ -84,6 +86,7 @@ namespace epg123
             // 
             // lvCustom
             // 
+            this.lvCustom.AllowDrop = true;
             this.lvCustom.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
@@ -102,6 +105,8 @@ namespace epg123
             this.lvCustom.UseCompatibleStateImageBehavior = false;
             this.lvCustom.View = System.Windows.Forms.View.Details;
             this.lvCustom.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.LvLineupSort);
+            this.lvCustom.DragDrop += new System.Windows.Forms.DragEventHandler(this.lvCustom_DragDrop);
+            this.lvCustom.DragEnter += new System.Windows.Forms.DragEventHandler(this.lvCustom_DragEnter);
             // 
             // ccCallSign
             // 
@@ -143,6 +148,7 @@ namespace epg123
             this.btnAddLineup.TabIndex = 3;
             this.btnAddLineup.Text = "button1";
             this.btnAddLineup.UseVisualStyleBackColor = true;
+            this.btnAddLineup.Click += new System.EventHandler(this.btnAddLineup_Click);
             // 
             // btnRemoveLineup
             // 
@@ -193,11 +199,9 @@ namespace epg123
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(934, 561);
             this.Controls.Add(this.splitContainer1);
-            this.MinimumSize = new System.Drawing.Size(480, 0);
+            this.MinimumSize = new System.Drawing.Size(480, 39);
             this.Name = "frmCustomLineup";
             this.Text = "frmCustomLineup";
-            this.Shown += new System.EventHandler(this.frmCustomLineup_Shown);
-            this.ResizeEnd += new System.EventHandler(this.frmCustomLineup_ResizeEnd);
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel1.PerformLayout();
             this.splitContainer1.Panel2.ResumeLayout(false);

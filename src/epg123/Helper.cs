@@ -24,6 +24,7 @@ namespace epg123
         };
 
         public static string Epg123Version => Assembly.GetEntryAssembly()?.GetName().Version.ToString();
+        public static bool Standalone => !File.Exists(TokenServer);
 
         public static string BackupZipFile { get; set; }
         public static string OutputPathOverride { get; set; }
@@ -342,22 +343,27 @@ namespace epg123
         /// <summary>
         /// The file path for the epg123.exe executable
         /// </summary>
-        public static string Epg123ExePath => (ExecutablePath + "\\epg123.exe");
+        public static string Epg123ExePath => ExecutablePath + "\\epg123.exe";
 
         /// <summary>
         /// The file path for the hdhr2mxf.exe executable
         /// </summary>
-        public static string Hdhr2MxfExePath => (ExecutablePath + "\\hdhr2mxf.exe");
+        public static string Hdhr2MxfExePath => ExecutablePath + "\\hdhr2mxf.exe";
 
         /// <summary>
         /// The file path for the epg123Client.exe executable
         /// </summary>
-        public static string Epg123ClientExePath => (ExecutablePath + "\\epg123Client.exe");
+        public static string Epg123ClientExePath => ExecutablePath + "\\epg123Client.exe";
 
         /// <summary>
         /// The file path for the epg123Transfer.exe executable
         /// </summary>
-        public static string Epg123TransferExePath => (ExecutablePath + "\\epg123Transfer.exe");
+        public static string Epg123TransferExePath => ExecutablePath + "\\epg123Transfer.exe";
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public static string TokenServer => ExecutablePath + "\\epg123Server.exe";
 
         /// <summary>
         /// The folder for all user writable files are based from
@@ -370,8 +376,7 @@ namespace epg123
                     (ExecutablePath.ToLower().Contains(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles).ToLower()) ||
                      ExecutablePath.ToLower().Contains(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86).ToLower())))
                 {
-                    return Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData) +
-                           "\\GaRyan2\\epg123";
+                    return Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData) + "\\GaRyan2\\epg123";
                 }
                 return ExecutablePath;
             }
@@ -482,9 +487,7 @@ namespace epg123
         /// <summary>
         /// The file path to the WMC ehshell.exe file
         /// </summary>
-        public static string EhshellExeFilePath =>
-            Environment.ExpandEnvironmentVariables(@"%SystemRoot%\ehome\ehshell.exe");
-
+        public static string EhshellExeFilePath => Environment.ExpandEnvironmentVariables(@"%SystemRoot%\ehome\ehshell.exe");
         #endregion
     }
 }

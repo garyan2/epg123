@@ -91,7 +91,7 @@ namespace epg123
             SdApi.Initialize("EPG123");
 
             // complete the title bar label with version number
-            Text += $" v{Helper.Epg123Version}";
+            Text += $" v{Helper.Epg123Version}{(Helper.Standalone ? " (portable)" : "")}";
 
             // check for updates
             var veresp = SdApi.GetClientVersion();
@@ -171,6 +171,9 @@ namespace epg123
             lvLineupChannels.DoubleBuffered(true);
             lvL5Lineup.DoubleBuffered(true);
 
+            // disable service tab if standalone
+            if (Helper.Standalone) tabService.Enabled = false;
+
             Cursor = Cursors.Arrow;
         }
 
@@ -239,16 +242,16 @@ namespace epg123
             // get status
             _task.QueryTask(silent);
 
+            // set .Enabled flags for components
+            tbSchedTime.Enabled = lblUpdateTime.Enabled = cbTaskWake.Enabled = !_task.Exist && !_task.ExistNoAccess;
+            
             // set task create/delete button text
-            btnTask.Text = (_task.Exist || _task.ExistNoAccess) ? "Delete" : "Create";
+            btnTask.Text = _task.Exist || _task.ExistNoAccess ? "Delete" : "Create";
 
             // update scheduled task run time
-            tbSchedTime.Enabled = (!_task.Exist && !_task.ExistNoAccess);
             tbSchedTime.Text = _task.SchedTime.ToString("HH:mm");
-            lblUpdateTime.Enabled = (!_task.Exist && !_task.ExistNoAccess);
 
-            // set sheduled task wake checkbox
-            cbTaskWake.Enabled = (!_task.Exist && !_task.ExistNoAccess);
+            // set scheduled task wake checkbox
             cbTaskWake.Checked = _task.Wake;
 
             // determine which action is the client action
@@ -258,47 +261,45 @@ namespace epg123
             {
                 for (var i = 0; i < _task.Actions.Length; ++i)
                 {
-                    if (_task.Actions[i].Path.ToLower().Contains("epg123.exe")) epg123Index = i;
-                    if (_task.Actions[i].Path.ToLower().Contains("epg123client.exe")) clientIndex = i;
+                    if (_task.Actions[i].Path.ToLower().Contains(Helper.Epg123ExePath.ToLower())) epg123Index = i;
+                    else if (_task.Actions[i].Path.ToLower().Contains(Helper.Epg123ClientExePath.ToLower())) clientIndex = i;
+                }
+                
+                // display task status
+                if (epg123Index >= 0)
+                {
+                    lblSchedStatus.Text = _task.StatusString;
+                    lblSchedStatus.ForeColor = Color.Black;
+                }
+                else if (clientIndex >= 0)
+                {
+                    lblSchedStatus.Text = "### Client Mode ONLY - Guide will not be downloaded. ###";
+                    lblSchedStatus.ForeColor = Color.Red;
                 }
 
                 // verify task configuration with respect to this executable
-                if (!silent && epg123Index >= 0 && !_task.Actions[epg123Index].Path.ToLower().Replace("\"", "").Equals(Helper.Epg123ExePath.ToLower()))
+                if (epg123Index >= 0 || clientIndex >= 0)
                 {
-                    MessageBox.Show($"The location of this program file is not the same location configured in the Scheduled Task.\n\nThis program:\n{Helper.Epg123ExePath}\n\nTask program:\n{_task.Actions[epg123Index].Path}", "Configuration Warning", MessageBoxButtons.OK);
+                    // update import checkbox
+                    cbImport.Enabled = false;
+                    cbImport.Checked = clientIndex >= 0;
+
+                    // update automatch checkbox
+                    cbAutomatch.Enabled = false;
+                    cbAutomatch.Checked = clientIndex >= 0 && _task.Actions[clientIndex].Arguments.ToLower().Contains("-match");
+
+                    return;
                 }
+
+                // adjust for task pointing to different location
+                if (!silent) MessageBox.Show($"The location of this program file is not the same location configured in the Scheduled Task.\n\nThis program:\n{Helper.Epg123ExePath}", "Configuration Warning", MessageBoxButtons.OK);
+                btnTask.Enabled = false;
             }
 
             // set import and automatch checkbox states
-            if (!File.Exists(Helper.Epg123ClientExePath) || !File.Exists(Helper.EhshellExeFilePath))
-            {
-                cbImport.Enabled = cbAutomatch.Enabled = false;
-                cbImport.Checked = cbAutomatch.Checked = false;
-            }
-            else
-            {
-                cbImport.Enabled = !_task.Exist && !_task.ExistNoAccess;
-                cbImport.Checked = (clientIndex >= 0) || (!_task.Exist && Config.AutoImport);
-                cbAutomatch.Enabled = !_task.Exist && !_task.ExistNoAccess && cbImport.Checked;
-                cbAutomatch.Checked = ((clientIndex >= 0) && _task.Actions[clientIndex].Arguments.ToLower().Contains("-match")) || (!_task.Exist && Config.Automatch);
-            }
-
-            // update status string
-            if (_task.Exist && (epg123Index >= 0))
-            {
-                lblSchedStatus.Text = _task.StatusString;
-                lblSchedStatus.ForeColor = Color.Black;
-            }
-            else if (_task.Exist && (clientIndex >= 0))
-            {
-                lblSchedStatus.Text = "### Client Mode ONLY - Guide will not be downloaded. ###";
-                lblSchedStatus.ForeColor = Color.Red;
-            }
-            else
-            {
-                lblSchedStatus.Text = _task.StatusString;
-                lblSchedStatus.ForeColor = Color.Red;
-            }
+            cbImport.Enabled = cbAutomatch.Enabled = File.Exists(Helper.Epg123ClientExePath) && File.Exists(Helper.EhshellExeFilePath);
+            lblSchedStatus.Text = _task.Exist || _task.ExistNoAccess ? string.Empty : _task.StatusString;
+            lblSchedStatus.ForeColor = Color.Red;
         }
         private void btnTask_Click(object sender, EventArgs e)
         {
@@ -314,7 +315,7 @@ namespace epg123
                         actions[0].Path = Helper.Epg123ExePath;
                         actions[0].Arguments = "-update";
                         actions[1].Path = Helper.Epg123ClientExePath;
-                        actions[1].Arguments = "-i \"" + Helper.Epg123MxfPath + "\"" + ((cbAutomatch.Checked) ? " -match" : null);
+                        actions[1].Arguments = "-i \"" + Helper.Epg123MxfPath + "\"" + (cbAutomatch.Checked ? " -match" : null);
                         _task.CreateTask(cbTaskWake.Checked, tbSchedTime.Text, actions);
                     }
                     // create task using epg123.exe
@@ -674,13 +675,12 @@ namespace epg123
                 {
                     btnCustomLineup.DropDownItems.Add($"{lineup.Name} ({lineup.Location})").Tag = lineup;
                 }
-                toolStrip5.Enabled = true;
+                if (btnCustomLineup.DropDownItems.Count > 0) L5includeToolStripMenuItem.Enabled = true;
             }
             else
             {
                 btnCustomLineup.Text = "Click here to manage custom lineups.";
                 btnCustomLineup.Tag = string.Empty;
-                toolStrip5.Enabled = false;
             }
 
             if (btnCustomLineup.DropDownItems.Count <= 0) return;
@@ -1231,8 +1231,8 @@ namespace epg123
         #region ===== Subscribed Lineups =====
         private void toolStrip6_Resize(object sender, EventArgs e)
         {
-            comboLineups.Width = toolStrip6.Bounds.Width - btnIncludeExclude.Bounds.Right - 4;
-            labelLineupCounts.Width = toolStrip6.Bounds.Width - toolStripSeparator1.Bounds.Right - 4;
+            comboLineups.Width = toolStrip6.Bounds.Width - btnIncludeExclude.Bounds.Right - 5;
+            labelLineupCounts.Width = toolStrip6.Bounds.Width - toolStripSeparator1.Bounds.Right - 5;
         }
 
         private void menuIncludeExclude_Click(object sender, EventArgs e)
@@ -1443,6 +1443,9 @@ namespace epg123
         {
             var fileInfo = new FileInfo(tbXmltvOutput.Text);
             saveFileDialog1.InitialDirectory = fileInfo.DirectoryName;
+            saveFileDialog1.Filter = "XMLTV Files (*.xmltv)|*.xmltv|XML Files (*.xml)|*.xml|All Files (*.*)|*.*";
+            saveFileDialog1.DefaultExt = "xmltv";
+            saveFileDialog1.AddExtension = true;
             saveFileDialog1.FileName = fileInfo.Name;
 
             if (DialogResult.OK == saveFileDialog1.ShowDialog())

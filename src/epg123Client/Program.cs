@@ -411,9 +411,6 @@ namespace epg123
                     // import success
                     if (import)
                     {
-                        // fix merged channels that no longer have tuninginfos
-                        WmcStore.CleanUpMergedChannelTuningInfos();
-
                         // refresh the lineups after import
                         using (var mergedLineups = new MergedLineups(WmcStore.WmcObjectStore))
                         {

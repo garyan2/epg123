@@ -93,10 +93,10 @@ namespace epg123Client
                 switch (ret)
                 {
                     case EPG123STATUS.WARNING:
-                        Logger.WriteWarning("The imported MXF file contained a WARNING in its status field.");
+                        Logger.WriteWarning("There was a WARNING generated during the MXF file creation.");
                         break;
                     case EPG123STATUS.ERROR:
-                        Logger.WriteError("The imported MXF file contained an ERROR in its status field.");
+                        Logger.WriteWarning("There was an ERROR generated during the MXF file creation.");
                         break;
                 }
                 return ret;

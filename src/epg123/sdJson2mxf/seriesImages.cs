@@ -285,7 +285,7 @@ namespace epg123.sdJson2mxf
             {
                 image = artwork.SingleOrDefault(arg => arg.Aspect.ToLower().Equals("4x3"));
             }
-            return image != null ? SdMxf.GetGuideImage(image.Uri.Replace($"{SdApi.JsonBaseUrl}{SdApi.JsonApi}", $"http://{Environment.MachineName}:{Helper.TcpPort}/")) : null;
+            return image != null ? SdMxf.GetGuideImage(Helper.Standalone ? image.Uri : image.Uri.Replace($"{SdApi.JsonBaseUrl}{SdApi.JsonApi}", $"http://{Environment.MachineName}:{Helper.TcpPort}/")) : null;
         }
     }
 }

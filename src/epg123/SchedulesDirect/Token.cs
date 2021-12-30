@@ -8,16 +8,19 @@ namespace epg123.SchedulesDirect
     {
         public static bool GetToken(string username, string passwordHash, ref string errorString)
         {
-            using (var key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\GaRyan2\epg123", false))
+            if (!Helper.Standalone)
             {
-                if (key != null)
+                using (var key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\GaRyan2\epg123", false))
                 {
-                    var expires = DateTime.Parse((string) key.GetValue("tokenExpires", DateTime.MinValue.ToString()));
-                    myToken = (string)key.GetValue("token", "");
-                    if (expires.ToLocalTime() - DateTime.Now > TimeSpan.FromHours(1.0))
+                    if (key != null)
                     {
-                        if (ValidateToken()) return true;
-                        Logger.WriteVerbose("Validation of cached token failed. Requesting new token.");
+                        var expires = DateTime.Parse((string) key.GetValue("tokenExpires", DateTime.MinValue.ToString()));
+                        myToken = (string)key.GetValue("token", "");
+                        if (expires.ToLocalTime() - DateTime.Now > TimeSpan.FromHours(1.0))
+                        {
+                            if (ValidateToken()) return true;
+                            Logger.WriteVerbose("Validation of cached token failed. Requesting new token.");
+                        }
                     }
                 }
             }
@@ -41,12 +44,15 @@ namespace epg123.SchedulesDirect
                     Logger.WriteVerbose($"Token request successful. serverID: {ret.ServerId} , datetime: {ret.Datetime:s}Z");
                     try
                     {
-                        using (var key = Registry.LocalMachine.CreateSubKey(@"SOFTWARE\GaRyan2\epg123", RegistryKeyPermissionCheck.ReadWriteSubTree))
+                        if (!Helper.Standalone)
                         {
-                            if (key != null)
+                            using (var key = Registry.LocalMachine.CreateSubKey(@"SOFTWARE\GaRyan2\epg123", RegistryKeyPermissionCheck.ReadWriteSubTree))
                             {
-                                key.SetValue("token", ret.Token);
-                                key.SetValue("tokenExpires", $"{ret.Datetime.AddDays(1):R}");
+                                if (key != null)
+                                {
+                                    key.SetValue("token", ret.Token);
+                                    key.SetValue("tokenExpires", $"{ret.Datetime.AddDays(1):R}");
+                                }
                             }
                         }
                         myToken = ret.Token;
