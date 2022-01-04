@@ -82,19 +82,34 @@ namespace epg123
         #region ========== Binding Redirects ==========
         static Program()
         {
+            // initialize logger
+            Logger.Initialize("Media Center", "epg123Client");
+
+            // establish file/folder locations
+            Helper.EstablishFileFolderPaths();
+
             // ensure WMC is installed
             if (!File.Exists(Helper.EhshellExeFilePath))
             {
                 MessageBox.Show("WMC is not present on this machine. Closing EPG123 Client Guide Tool.", "Initialization Error", MessageBoxButtons.OK, MessageBoxIcon.Hand);
+                Logger.WriteError("*** WMC is not present on this machine. ***");
+                Logger.Close();
                 Application.Exit();
             }
 
             string[] assemblies = { "mcepg", "mcstore", "BDATunePIA" };
-            var version = FindDllVersion(assemblies[0]);
+            string version = null;
+            foreach (var assembly in assemblies)
+            {
+                if ((version = FindDllVersion(assembly)) != null) break;
+                Logger.WriteMessage($"*** {assembly}.dll was not found in the Global Assembly Cache (GAC). WMC has not completed its install, or is not installed correctly. ***");
+            }
+
             if (string.IsNullOrEmpty(version))
             {
                 // verify WMC is installed
                 MessageBox.Show("Could not verify Windows Media Center is installed on this machine. EPG123 Client cannot be started without WMC being present.", "Missing Windows Media Center", MessageBoxButtons.OK);
+                Logger.Close();
                 Application.Exit();
             }
 
@@ -161,10 +176,6 @@ namespace epg123
             // setup catch to fatal program crash
             AppDomain.CurrentDomain.UnhandledException += MyUnhandledException;
             Application.ThreadException += MyThreadException;
-
-            // establish file/folder locations
-            Logger.Initialize("Media Center", "epg123Client");
-            Helper.EstablishFileFolderPaths();
 
             // filter out mcupdate calls that may be redirected
             var arguments = string.Join(" ", args);
@@ -312,12 +323,15 @@ namespace epg123
                 // check for an instance already running
                 if (mutex == null) return -1;
 
+                Logger.WriteMessage("===============================================================================");
+                Logger.WriteMessage($" {(showGui ? "Activating the epg123 client GUI." : "Beginning epg123 client execution.")} version {Helper.Epg123Version}");
+                Logger.WriteMessage("===============================================================================");
+                Logger.WriteMessage($"*** {Helper.GetOsDescription()} ***");
+                Logger.WriteMessage($"*** {Helper.GetWmcDescription()} ***");
+
                 // show gui if needed
                 if (showGui)
                 {
-                    Logger.WriteMessage("===============================================================================");
-                    Logger.WriteMessage($" Activating the epg123 client GUI. version {Helper.Epg123Version}");
-                    Logger.WriteMessage("===============================================================================");
                     var client = new clientForm(advanced);
                     client.ShowDialog();
                     GC.Collect();
@@ -343,10 +357,6 @@ namespace epg123
                         (uint)ExecutionFlags.ES_SYSTEM_REQUIRED |
                         (uint)ExecutionFlags.ES_AWAYMODE_REQUIRED);
 
-                    Logger.WriteMessage("===============================================================================");
-                    Logger.WriteMessage($" Beginning epg123 client execution. version {Helper.Epg123Version}");
-                    Logger.WriteMessage("===============================================================================");
-                    Logger.WriteInformation($"Beginning epg123 client execution. {DateTime.Now.ToUniversalTime():u}");
                     Logger.WriteVerbose($"Import: {import} , Match: {match} , NoLogo: {nologo} , Force: {force} , ShowProgress: {showProgress} , NoGC: {force || nogc} , NoVerify: {noverify} , Verbose: {verbose}");
                     var startTime = DateTime.UtcNow;
 

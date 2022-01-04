@@ -300,6 +300,7 @@ namespace epg123.sdJson2mxf
             prg.IsSpecial = Helper.StringContains(sd.ShowType, "Special");
             prg.IsSports = Helper.StringContains(sd.ShowType, "Sports event") || 
                            Helper.StringContains(sd.ShowType, "Sports non-event") || 
+                           Helper.StringContains(sd.ShowType, "Team event") ||
                            Helper.TableContains(sd.Genres, "Sports talk");
 
             // set isGeneric flag if programID starts with "SH", is a series, is not a miniseries, and is not paid programming
@@ -310,7 +311,8 @@ namespace epg123.sdJson2mxf
             }
 
             // queue up the sport event to get the event image
-            if ((Helper.StringContains(sd.EntityType, "Team Event") || Helper.StringContains(sd.EntityType, "Sport event")) && sd.HasSportsArtwork | sd.HasEpisodeArtwork)
+            if ((Helper.StringContains(sd.ShowType, "Sports event") || Helper.StringContains(sd.ShowType, "Team event")) && sd.HasSportsArtwork | sd.HasEpisodeArtwork)
+            //if ((Helper.StringContains(sd.EntityType, "Team Event") || Helper.StringContains(sd.EntityType, "Sport event")) && sd.HasSportsArtwork | sd.HasEpisodeArtwork)
             {
                 sportEvents.Add(prg);
             }

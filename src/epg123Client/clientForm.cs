@@ -701,7 +701,7 @@ namespace epg123Client
 
             // only enable rename menu item if a single channel has been selected
             renameMenuItem.Enabled = mergedChannelListView.SelectedIndices.Count == 1 && _customLabelsOnly;
-            renumberMenuItem.Enabled = mergedChannelListView.SelectedIndices.Count == 1 && _customLabelsOnly;
+            renumberMenuItem.Enabled = _customLabelsOnly;
         }
 
         #region ===== Subscribe/Unsubscribe Channel =====
@@ -757,6 +757,7 @@ namespace epg123Client
         {
             // get bounds of number field
             _selectedItemForEdit = mergedChannelListView.SelectedIndices[0];
+            mergedChannelListView.Items[_selectedItemForEdit].EnsureVisible();
             var box = mergedChannelListView.Items[_selectedItemForEdit].SubItems[1].Bounds;
             lvEditTextBox.SetBounds(box.Left + mergedChannelListView.Left + 2, box.Top + mergedChannelListView.Top, box.Width, box.Height);
             lvEditTextBox.Show();
@@ -766,7 +767,7 @@ namespace epg123Client
         private void lvEditTextBox_KeyPress(object sender, KeyPressEventArgs e)
         {
             // make sure it is numbers only
-            if (!char.IsControl(e.KeyChar) && !char.IsDigit(e.KeyChar) && (e.KeyChar != '.')) e.Handled = true;
+            if (!char.IsControl(e.KeyChar) && !char.IsDigit(e.KeyChar) && e.KeyChar != '.') e.Handled = true;
             if (e.KeyChar == '.' && ((TextBox)sender).Text.IndexOf('.') > -1) e.Handled = true;
 
             // decide on what to do on a return or escape
@@ -774,7 +775,21 @@ namespace epg123Client
             {
                 case (char)Keys.Return:
                     lvEditTextBox.Hide();
-                    WmcStore.SetChannelCustomNumber(((myChannelLvi)mergedChannelListView.Items[_selectedItemForEdit]).ChannelId, lvEditTextBox.Text);
+                    var digits = lvEditTextBox.Text.Split('.');
+                    var number = 0;
+                    var subnumber = 0;
+                    if (!string.IsNullOrEmpty(digits[0])) number = int.Parse(digits[0]);
+                    if (digits.Length > 1) subnumber = int.Parse(digits[1]);
+
+                    Cursor = Cursors.WaitCursor;
+                    foreach (int index in mergedChannelListView.SelectedIndices)
+                    {
+                        WmcStore.SetChannelCustomNumber(((myChannelLvi) mergedChannelListView.Items[index]).ChannelId,
+                            $"{(number == 0 ? null : digits.Length == 1 ? $"{number++}" : $"{number}.{subnumber++}")}");
+                    }
+                    Cursor = Cursors.Default;
+
+                    lvEditTextBox.Text = "";
                     e.Handled = true;
                     break;
                 case (char)Keys.Escape:
@@ -1062,6 +1077,10 @@ namespace epg123Client
         private List<myChannelLvi> _allMergedChannels = new List<myChannelLvi>();
         private List<int> _mergedChannelFilter = new List<int>();
         private bool _enabledChannelsOnly;
+        private bool _tvChannelsOnly;
+        private bool _radioChannelsOnly;
+        private bool _encryptedChannelsOnly;
+        private bool _unencryptedChannelsOnly;
         private bool _customLabelsOnly = true;
 
         #region ===== Merged Channel ListView Items =====
@@ -1172,22 +1191,13 @@ namespace epg123Client
             _mergedChannelFilter = new List<int>(_allMergedChannels.Count);
             foreach (var channel in _allMergedChannels)
             {
-                // no filtering
-                if (!_enabledChannelsOnly && cmbSources.SelectedIndex == 0)
-                {
-                    _mergedChannelFilter.Add(_allMergedChannels.IndexOf(channel));
-                }
-                // enabled only
-                else if (_enabledChannelsOnly && cmbSources.SelectedIndex == 0 && channel.Enabled)
-                {
-                    _mergedChannelFilter.Add(_allMergedChannels.IndexOf(channel));
-                }
-                // enabled and/or scanned source
-                else if (cmbSources.SelectedIndex > 0 && channel.ScannedLineupIds.Contains(((myLineup)cmbSources.SelectedItem).LineupId) &&
-                         (!_enabledChannelsOnly || channel.Enabled))
-                {
-                    _mergedChannelFilter.Add(_allMergedChannels.IndexOf(channel));
-                }
+                if (_enabledChannelsOnly && !channel.Enabled) continue;
+                if (_tvChannelsOnly && channel.IsRadio && !_radioChannelsOnly) continue;
+                if (_radioChannelsOnly && !channel.IsRadio && !_tvChannelsOnly) continue;
+                if (_encryptedChannelsOnly && !channel.IsEncrypted && !_unencryptedChannelsOnly) continue;
+                if (_unencryptedChannelsOnly && channel.IsEncrypted && !_encryptedChannelsOnly) continue;
+                if (cmbSources.SelectedIndex > 0 && !channel.ScannedLineupIds.Contains(((myLineup) cmbSources.SelectedItem).LineupId)) continue;
+                _mergedChannelFilter.Add(_allMergedChannels.IndexOf(channel));
             }
             _mergedChannelFilter.TrimExcess();
             mergedChannelListView.VirtualListSize = _mergedChannelFilter.Count;
@@ -1276,21 +1286,49 @@ namespace epg123Client
             Cursor = Cursors.WaitCursor;
             BuildMergedChannelListView();
             Cursor = Cursors.Default;
-
-            if (!_enabledChannelsOnly)
-            {
-                btnChannelDisplay.BackColor = SystemColors.Control;
-                btnChannelDisplay.ToolTipText = "Display Enabled Channels only";
-            }
-            else
-            {
-                btnChannelDisplay.BackColor = SystemColors.ControlDark;
-                btnChannelDisplay.ToolTipText = "Display All Channels";
-            }
-
-            // update the status bar
-            UpdateStatusBar();
+            btnChannelDisplay.BackColor = !_enabledChannelsOnly ? SystemColors.Control : SystemColors.ControlDark;
         }
+
+        private void btnTelevision_Click(object sender, EventArgs e)
+        {
+            _tvChannelsOnly = !_tvChannelsOnly;
+
+            Cursor = Cursors.WaitCursor;
+            BuildMergedChannelListView();
+            Cursor = Cursors.Default;
+            btnTelevision.BackColor = !_tvChannelsOnly ? SystemColors.Control : SystemColors.ControlDark;
+        }
+
+        private void btnRadio_Click(object sender, EventArgs e)
+        {
+            _radioChannelsOnly = !_radioChannelsOnly;
+
+            Cursor = Cursors.WaitCursor;
+            BuildMergedChannelListView();
+            Cursor = Cursors.Default;
+            btnRadio.BackColor = !_radioChannelsOnly ? SystemColors.Control : SystemColors.ControlDark;
+        }
+
+        private void btnEncrypted_Click(object sender, EventArgs e)
+        {
+            _encryptedChannelsOnly = !_encryptedChannelsOnly;
+
+            Cursor = Cursors.WaitCursor;
+            BuildMergedChannelListView();
+            Cursor = Cursors.Default;
+            btnEncrypted.BackColor = !_encryptedChannelsOnly ? SystemColors.Control : SystemColors.ControlDark;
+        }
+
+        private void btnUnencrypted_Click(object sender, EventArgs e)
+        {
+            _unencryptedChannelsOnly = !_unencryptedChannelsOnly;
+
+            Cursor = Cursors.WaitCursor;
+            BuildMergedChannelListView();
+            Cursor = Cursors.Default;
+            btnUnencrypted.BackColor = !_unencryptedChannelsOnly ? SystemColors.Control : SystemColors.ControlDark;
+        }
+
         #endregion
 
         #region ===== Buttons and Dials =====
@@ -1481,6 +1519,12 @@ namespace epg123Client
             frmUndelete.ShowDialog();
             if (!frmUndelete.ChannelAdded) return;
             btnRefreshLineups_Click(null, null);
+        }
+
+        private void btnSatellites_Click(object sender, EventArgs e)
+        {
+            var satFrm = new frmSatellites();
+            satFrm.ShowDialog();
         }
         #endregion
 
@@ -1983,12 +2027,6 @@ namespace epg123Client
             btnImport_Click(null, null);
         }
         #endregion
-
-        private void btnSatellites_Click(object sender, EventArgs e)
-        {
-            var satFrm = new frmSatellites();
-            satFrm.ShowDialog();
-        }
     }
 
     public static class ControlExtensions

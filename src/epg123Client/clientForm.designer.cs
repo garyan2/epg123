@@ -64,12 +64,16 @@ namespace epg123Client
             this.btnAutoCallsign = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.cmbSources = new System.Windows.Forms.ToolStripComboBox();
-            this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.btnChannelDisplay = new System.Windows.Forms.ToolStripButton();
+            this.btnTelevision = new System.Windows.Forms.ToolStripButton();
+            this.btnRadio = new System.Windows.Forms.ToolStripButton();
+            this.btnEncrypted = new System.Windows.Forms.ToolStripButton();
+            this.btnUnencrypted = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
             this.btnDeleteChannel = new System.Windows.Forms.ToolStripButton();
             this.btnAddChannels = new System.Windows.Forms.ToolStripButton();
             this.btnUndelete = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.btnStoreExplorer = new System.Windows.Forms.ToolStripButton();
             this.btnExportMxf = new System.Windows.Forms.ToolStripButton();
             this.toolStripContainer2 = new System.Windows.Forms.ToolStripContainer();
@@ -151,8 +155,8 @@ namespace epg123Client
             // splitContainer1.Panel2
             // 
             this.splitContainer1.Panel2.Controls.Add(this.toolStripContainer2);
-            this.splitContainer1.Size = new System.Drawing.Size(784, 428);
-            this.splitContainer1.SplitterDistance = 415;
+            this.splitContainer1.Size = new System.Drawing.Size(971, 428);
+            this.splitContainer1.SplitterDistance = 598;
             this.splitContainer1.SplitterWidth = 6;
             this.splitContainer1.TabIndex = 0;
             // 
@@ -163,11 +167,11 @@ namespace epg123Client
             // 
             this.toolStripContainer1.ContentPanel.Controls.Add(this.lvEditTextBox);
             this.toolStripContainer1.ContentPanel.Controls.Add(this.mergedChannelListView);
-            this.toolStripContainer1.ContentPanel.Size = new System.Drawing.Size(415, 378);
+            this.toolStripContainer1.ContentPanel.Size = new System.Drawing.Size(598, 378);
             this.toolStripContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.toolStripContainer1.Location = new System.Drawing.Point(0, 0);
             this.toolStripContainer1.Name = "toolStripContainer1";
-            this.toolStripContainer1.Size = new System.Drawing.Size(415, 428);
+            this.toolStripContainer1.Size = new System.Drawing.Size(598, 428);
             this.toolStripContainer1.TabIndex = 1;
             this.toolStripContainer1.Text = "toolStripContainer1";
             // 
@@ -204,7 +208,7 @@ namespace epg123Client
             this.mergedChannelListView.Location = new System.Drawing.Point(0, 0);
             this.mergedChannelListView.Name = "mergedChannelListView";
             this.mergedChannelListView.OwnerDraw = true;
-            this.mergedChannelListView.Size = new System.Drawing.Size(415, 378);
+            this.mergedChannelListView.Size = new System.Drawing.Size(598, 378);
             this.mergedChannelListView.Sorting = System.Windows.Forms.SortOrder.Ascending;
             this.mergedChannelListView.TabIndex = 0;
             this.mergedChannelListView.UseCompatibleStateImageBehavior = false;
@@ -351,7 +355,7 @@ namespace epg123Client
             this.btnLablesDisplay});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(415, 25);
+            this.toolStrip1.Size = new System.Drawing.Size(598, 25);
             this.toolStrip1.Stretch = true;
             this.toolStrip1.TabIndex = 1;
             // 
@@ -359,8 +363,8 @@ namespace epg123Client
             // 
             this.lblMergedChannelListView.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.lblMergedChannelListView.Name = "lblMergedChannelListView";
-            this.lblMergedChannelListView.Size = new System.Drawing.Size(116, 22);
-            this.lblMergedChannelListView.Text = "Guide Channels with";
+            this.lblMergedChannelListView.Size = new System.Drawing.Size(149, 22);
+            this.lblMergedChannelListView.Text = "WMC Guide Channels with";
             // 
             // btnLablesDisplay
             // 
@@ -383,17 +387,21 @@ namespace epg123Client
             this.btnAutoCallsign,
             this.toolStripSeparator1,
             this.cmbSources,
-            this.toolStripSeparator3,
             this.btnChannelDisplay,
+            this.btnTelevision,
+            this.btnRadio,
+            this.btnEncrypted,
+            this.btnUnencrypted,
             this.toolStripSeparator4,
             this.btnDeleteChannel,
             this.btnAddChannels,
             this.btnUndelete,
+            this.toolStripSeparator3,
             this.btnStoreExplorer,
             this.btnExportMxf});
             this.mergedChannelToolStrip.Location = new System.Drawing.Point(0, 25);
             this.mergedChannelToolStrip.Name = "mergedChannelToolStrip";
-            this.mergedChannelToolStrip.Size = new System.Drawing.Size(415, 25);
+            this.mergedChannelToolStrip.Size = new System.Drawing.Size(598, 25);
             this.mergedChannelToolStrip.Stretch = true;
             this.mergedChannelToolStrip.TabIndex = 0;
             // 
@@ -436,11 +444,6 @@ namespace epg123Client
             this.cmbSources.Size = new System.Drawing.Size(180, 25);
             this.cmbSources.SelectedIndexChanged += new System.EventHandler(this.cmbSources_SelectedIndexChanged);
             // 
-            // toolStripSeparator3
-            // 
-            this.toolStripSeparator3.Name = "toolStripSeparator3";
-            this.toolStripSeparator3.Size = new System.Drawing.Size(6, 25);
-            // 
             // btnChannelDisplay
             // 
             this.btnChannelDisplay.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
@@ -448,10 +451,58 @@ namespace epg123Client
             this.btnChannelDisplay.Image = ((System.Drawing.Image)(resources.GetObject("btnChannelDisplay.Image")));
             this.btnChannelDisplay.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btnChannelDisplay.Name = "btnChannelDisplay";
-            this.btnChannelDisplay.Size = new System.Drawing.Size(23, 20);
+            this.btnChannelDisplay.Size = new System.Drawing.Size(23, 22);
             this.btnChannelDisplay.Text = "toolStripButton1";
-            this.btnChannelDisplay.ToolTipText = "Display Enabled Channels Only";
+            this.btnChannelDisplay.ToolTipText = "Filter: Enabled Channels Only";
             this.btnChannelDisplay.Click += new System.EventHandler(this.btnChannelDisplay_Click);
+            // 
+            // btnTelevision
+            // 
+            this.btnTelevision.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.btnTelevision.Image = global::epg123Client.Properties.Resources.television;
+            this.btnTelevision.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
+            this.btnTelevision.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnTelevision.Name = "btnTelevision";
+            this.btnTelevision.Size = new System.Drawing.Size(23, 22);
+            this.btnTelevision.Text = "Display Television Channels Only";
+            this.btnTelevision.ToolTipText = "Filter: Television Channels";
+            this.btnTelevision.Click += new System.EventHandler(this.btnTelevision_Click);
+            // 
+            // btnRadio
+            // 
+            this.btnRadio.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.btnRadio.Image = global::epg123Client.Properties.Resources.music;
+            this.btnRadio.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
+            this.btnRadio.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnRadio.Name = "btnRadio";
+            this.btnRadio.Size = new System.Drawing.Size(23, 22);
+            this.btnRadio.Text = "toolStripButton1";
+            this.btnRadio.ToolTipText = "Filter: Radio Channels";
+            this.btnRadio.Click += new System.EventHandler(this.btnRadio_Click);
+            // 
+            // btnEncrypted
+            // 
+            this.btnEncrypted.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.btnEncrypted.Image = global::epg123Client.Properties.Resources.padlock;
+            this.btnEncrypted.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
+            this.btnEncrypted.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnEncrypted.Name = "btnEncrypted";
+            this.btnEncrypted.Size = new System.Drawing.Size(23, 22);
+            this.btnEncrypted.Text = "toolStripButton1";
+            this.btnEncrypted.ToolTipText = "Filter: Encrypted Channels";
+            this.btnEncrypted.Click += new System.EventHandler(this.btnEncrypted_Click);
+            // 
+            // btnUnencrypted
+            // 
+            this.btnUnencrypted.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.btnUnencrypted.Image = global::epg123Client.Properties.Resources.open_lock;
+            this.btnUnencrypted.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
+            this.btnUnencrypted.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnUnencrypted.Name = "btnUnencrypted";
+            this.btnUnencrypted.Size = new System.Drawing.Size(23, 22);
+            this.btnUnencrypted.Text = "toolStripButton1";
+            this.btnUnencrypted.ToolTipText = "Filter: Unencrypted Channels";
+            this.btnUnencrypted.Click += new System.EventHandler(this.btnUnencrypted_Click);
             // 
             // toolStripSeparator4
             // 
@@ -464,7 +515,7 @@ namespace epg123Client
             this.btnDeleteChannel.Image = ((System.Drawing.Image)(resources.GetObject("btnDeleteChannel.Image")));
             this.btnDeleteChannel.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btnDeleteChannel.Name = "btnDeleteChannel";
-            this.btnDeleteChannel.Size = new System.Drawing.Size(23, 20);
+            this.btnDeleteChannel.Size = new System.Drawing.Size(23, 22);
             this.btnDeleteChannel.Text = "Delete Channel(s)";
             this.btnDeleteChannel.Click += new System.EventHandler(this.btnDeleteChannel_Click);
             // 
@@ -474,7 +525,7 @@ namespace epg123Client
             this.btnAddChannels.Image = ((System.Drawing.Image)(resources.GetObject("btnAddChannels.Image")));
             this.btnAddChannels.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btnAddChannels.Name = "btnAddChannels";
-            this.btnAddChannels.Size = new System.Drawing.Size(23, 20);
+            this.btnAddChannels.Size = new System.Drawing.Size(23, 22);
             this.btnAddChannels.Text = "toolStripButton1";
             this.btnAddChannels.ToolTipText = "Add Tuner Channel(s)";
             this.btnAddChannels.Click += new System.EventHandler(this.btnAddChannels_Click);
@@ -485,10 +536,15 @@ namespace epg123Client
             this.btnUndelete.Image = ((System.Drawing.Image)(resources.GetObject("btnUndelete.Image")));
             this.btnUndelete.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btnUndelete.Name = "btnUndelete";
-            this.btnUndelete.Size = new System.Drawing.Size(23, 20);
+            this.btnUndelete.Size = new System.Drawing.Size(23, 22);
             this.btnUndelete.Text = "Undelete";
             this.btnUndelete.ToolTipText = "Restore deleted scanned channels";
             this.btnUndelete.Click += new System.EventHandler(this.btnUndelete_Click);
+            // 
+            // toolStripSeparator3
+            // 
+            this.toolStripSeparator3.Name = "toolStripSeparator3";
+            this.toolStripSeparator3.Size = new System.Drawing.Size(6, 25);
             // 
             // btnStoreExplorer
             // 
@@ -516,11 +572,11 @@ namespace epg123Client
             // toolStripContainer2.ContentPanel
             // 
             this.toolStripContainer2.ContentPanel.Controls.Add(this.lineupChannelListView);
-            this.toolStripContainer2.ContentPanel.Size = new System.Drawing.Size(365, 378);
+            this.toolStripContainer2.ContentPanel.Size = new System.Drawing.Size(367, 378);
             this.toolStripContainer2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.toolStripContainer2.Location = new System.Drawing.Point(0, 0);
             this.toolStripContainer2.Name = "toolStripContainer2";
-            this.toolStripContainer2.Size = new System.Drawing.Size(365, 428);
+            this.toolStripContainer2.Size = new System.Drawing.Size(367, 428);
             this.toolStripContainer2.TabIndex = 1;
             this.toolStripContainer2.Text = "toolStripContainer2";
             // 
@@ -542,7 +598,7 @@ namespace epg123Client
             this.lineupChannelListView.Location = new System.Drawing.Point(0, 0);
             this.lineupChannelListView.MultiSelect = false;
             this.lineupChannelListView.Name = "lineupChannelListView";
-            this.lineupChannelListView.Size = new System.Drawing.Size(365, 378);
+            this.lineupChannelListView.Size = new System.Drawing.Size(367, 378);
             this.lineupChannelListView.TabIndex = 0;
             this.lineupChannelListView.UseCompatibleStateImageBehavior = false;
             this.lineupChannelListView.View = System.Windows.Forms.View.Details;
@@ -573,15 +629,15 @@ namespace epg123Client
             this.toolStripLabel4});
             this.toolStrip2.Location = new System.Drawing.Point(0, 0);
             this.toolStrip2.Name = "toolStrip2";
-            this.toolStrip2.Size = new System.Drawing.Size(365, 25);
+            this.toolStrip2.Size = new System.Drawing.Size(367, 25);
             this.toolStrip2.Stretch = true;
             this.toolStrip2.TabIndex = 1;
             // 
             // toolStripLabel4
             // 
             this.toolStripLabel4.Name = "toolStripLabel4";
-            this.toolStripLabel4.Size = new System.Drawing.Size(88, 22);
-            this.toolStripLabel4.Text = "Lineup Services";
+            this.toolStripLabel4.Size = new System.Drawing.Size(158, 22);
+            this.toolStripLabel4.Text = "Imported Lineups && Services";
             // 
             // lineupChannelToolStrip
             // 
@@ -595,7 +651,7 @@ namespace epg123Client
             this.btnDeleteLineup});
             this.lineupChannelToolStrip.Location = new System.Drawing.Point(0, 25);
             this.lineupChannelToolStrip.Name = "lineupChannelToolStrip";
-            this.lineupChannelToolStrip.Size = new System.Drawing.Size(365, 25);
+            this.lineupChannelToolStrip.Size = new System.Drawing.Size(367, 25);
             this.lineupChannelToolStrip.Stretch = true;
             this.lineupChannelToolStrip.TabIndex = 0;
             // 
@@ -647,7 +703,7 @@ namespace epg123Client
             this.lblToolStripStatus});
             this.statusStrip1.Location = new System.Drawing.Point(0, 539);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(784, 22);
+            this.statusStrip1.Size = new System.Drawing.Size(971, 22);
             this.statusStrip1.TabIndex = 1;
             this.statusStrip1.Text = "statusStrip1";
             // 
@@ -683,7 +739,7 @@ namespace epg123Client
             // 
             this.splitContainer2.Panel2.Controls.Add(this.splitContainer1);
             this.splitContainer2.Panel2MinSize = 107;
-            this.splitContainer2.Size = new System.Drawing.Size(784, 539);
+            this.splitContainer2.Size = new System.Drawing.Size(971, 539);
             this.splitContainer2.SplitterDistance = 107;
             this.splitContainer2.TabIndex = 2;
             // 
@@ -931,7 +987,7 @@ namespace epg123Client
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
-            this.ClientSize = new System.Drawing.Size(784, 561);
+            this.ClientSize = new System.Drawing.Size(971, 561);
             this.Controls.Add(this.splitContainer2);
             this.Controls.Add(this.statusStrip1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
@@ -1061,5 +1117,9 @@ namespace epg123Client
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator7;
         private System.Windows.Forms.ToolStripMenuItem mergeMenuItem;
         private System.Windows.Forms.Button btnSatellites;
+        private System.Windows.Forms.ToolStripButton btnRadio;
+        private System.Windows.Forms.ToolStripButton btnEncrypted;
+        private System.Windows.Forms.ToolStripButton btnTelevision;
+        private System.Windows.Forms.ToolStripButton btnUnencrypted;
     }
 }

@@ -72,12 +72,15 @@ namespace epg123
                 // check for an instance already running
                 if (mutex == null) return -1;
 
+                Logger.WriteMessage("===============================================================================");
+                Logger.WriteMessage($" {(showGui ? "Activating the epg123 configuration GUI." : "Beginning epg123 update execution.")} version {Helper.Epg123Version}");
+                Logger.WriteMessage("===============================================================================");
+                Logger.WriteMessage($"*** {Helper.GetOsDescription()} ***");
+                Logger.WriteMessage($"*** {Helper.GetWmcDescription()} ***");
+
                 // open the configuration GUI if needed
                 if (showGui)
                 {
-                    Logger.WriteMessage("===============================================================================");
-                    Logger.WriteMessage($" Activating the epg123 configuration GUI. version {Helper.Epg123Version}");
-                    Logger.WriteMessage("===============================================================================");
                     var cfgForm = new frmMain();
                     cfgForm.ShowDialog();
                     Logger.Close();
@@ -105,10 +108,6 @@ namespace epg123
                 var prevThreadState = NativeMethods.SetThreadExecutionState((uint)ExecutionFlags.ES_CONTINUOUS |
                                                                             (uint)ExecutionFlags.ES_SYSTEM_REQUIRED |
                                                                             (uint)ExecutionFlags.ES_AWAYMODE_REQUIRED);
-
-                Logger.WriteMessage("===============================================================================");
-                Logger.WriteMessage($" Beginning epg123 update execution. version {Helper.Epg123Version}");
-                Logger.WriteMessage("===============================================================================");
 
                 // bring in the configuration
                 if (config == null)

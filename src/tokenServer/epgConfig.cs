@@ -8,6 +8,7 @@ namespace tokenServer
     {
         public static epgConfig GetEpgConfig()
         {
+            if (!File.Exists(Helper.Epg123CfgPath)) return null;
             using (var stream = new StreamReader(Helper.Epg123CfgPath, Encoding.Default))
             {
                 var serializer = new XmlSerializer(typeof(epgConfig));
@@ -19,7 +20,7 @@ namespace tokenServer
         public static string GetXmltvPath()
         {
             var config = GetEpgConfig();
-            return config.XmltvOutputFile ?? Helper.Epg123XmltvPath;
+            return config?.XmltvOutputFile ?? Helper.Epg123XmltvPath;
         }
     }
 

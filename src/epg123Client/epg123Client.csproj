@@ -306,9 +306,11 @@
     <None Include="Resources\padlock.png" />
     <None Include="Resources\music_highlight.png" />
     <None Include="Resources\padlock_highlight.png" />
+    <None Include="Resources\open_lock.png" />
     <Content Include="Resources\statusLogoDark.png" />
     <Content Include="Resources\statusLogoLight.png" />
     <Content Include="Resources\StatusOK.png" />
+    <None Include="Resources\television.png" />
     <Content Include="Resources\updateAvailable.png" />
     <EmbeddedResource Include="satellites.xml" />
   </ItemGroup>

@@ -9,6 +9,7 @@ using System.Security.AccessControl;
 using System.Security.Principal;
 using System.Threading;
 using System.Windows.Forms;
+using Microsoft.Win32;
 
 namespace epg123
 {
@@ -25,6 +26,53 @@ namespace epg123
 
         public static string Epg123Version => Assembly.GetEntryAssembly()?.GetName().Version.ToString();
         public static bool Standalone => !File.Exists(TokenServer);
+        
+        public static string GetOsDescription()
+        {
+            var ret = string.Empty;
+            try
+            {
+                using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64))
+                {
+                    using (var key = baseKey.OpenSubKey(@"Software\Microsoft\Windows NT\CurrentVersion", false))
+                    {
+                        var kernel = FileVersionInfo.GetVersionInfo(Path.Combine(Environment.SystemDirectory, "Kernel32.dll"));
+                        if (kernel.ProductMajorPart == 10)
+                        {
+                            if (kernel.ProductBuildPart < 22000)
+                            {
+                                ret = $"Windows 10 {(string) key.GetValue("EditionID", null)}";
+                            }
+                            else
+                            {
+                                ret = ((string) key.GetValue("ProductName")).Replace("10", "11");
+                            }
+                        }
+                        else
+                        {
+                            ret = (string)key.GetValue("ProductName");
+                        }
+                        ret += $", {(Environment.Is64BitOperatingSystem ? 64 : 32)}-bit";
+                        ret += $" [Version: {kernel.ProductMajorPart}.{kernel.ProductMinorPart}.{(string)key.GetValue("CurrentBuild", null) ?? "*"}.{(int)key.GetValue("UBR", 0)}]";
+
+                        var dv = (string)key.GetValue("DisplayVersion", null);
+                        if (dv != null) ret += $" ({dv})";
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                ret = e.Message;
+            }
+            return ret;
+        }
+
+        public static string GetWmcDescription()
+        {
+            if (!File.Exists(EhshellExeFilePath)) return "Windows Media Center is not installed.";
+            var ehshell = FileVersionInfo.GetVersionInfo(EhshellExeFilePath);
+            return $"Windows Media Center [Version: {ehshell.ProductVersion}] is installed.";
+        }
 
         public static string BackupZipFile { get; set; }
         public static string OutputPathOverride { get; set; }

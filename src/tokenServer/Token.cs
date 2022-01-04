@@ -20,7 +20,7 @@ namespace tokenServer
 
             // get username and passwordhash
             var config = Config.GetEpgConfig();
-            if (config == null) goto End;
+            if (config?.UserAccount == null) goto End;
 
             // create the request with headers
             var body = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new TokenRequest { Username = config.UserAccount.LoginName, PasswordHash = config.UserAccount.PasswordHash }));
