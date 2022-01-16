@@ -69,7 +69,7 @@ namespace epg123Client.SatMxf
             };
         }
 
-        public void AddChannel(MergedChannel mergedChannel, bool includeRadio = true, bool includeEncrypted = false)
+        public void AddChannel(MergedChannel mergedChannel, bool includeEncrypted)
         {
             foreach (TuningInfo tuningInfo in mergedChannel.TuningInfos)
             {
@@ -78,7 +78,6 @@ namespace epg123Client.SatMxf
                 var locator = dvbTuningInfo.TuneRequest.Locator as DVBSLocator;
 
                 // filter on options
-                if (mergedChannel.Service.ServiceType == 2 && !includeRadio) continue;
                 if ((dvbTuningInfo.IsEncrypted || dvbTuningInfo.IsSuggestedBlocked) && !includeEncrypted) continue;
 
                 // determine satellite, transponder, and service for channel
@@ -87,7 +86,8 @@ namespace epg123Client.SatMxf
                     (int) locator.SignalPolarisation - 1, locator.SymbolRate / 1000, dvbTuningInfo.Onid,
                     dvbTuningInfo.Tsid);
                 var service = transponder.GetOrCreateService(mergedChannel.CallSign, dvbTuningInfo.Sid,
-                    mergedChannel.Service.ServiceType == 2 ? 1 : 0, dvbTuningInfo.IsEncrypted || dvbTuningInfo.IsSuggestedBlocked);
+                    mergedChannel.Service.ServiceType == 2 ? 1 : mergedChannel.Service.ServiceType == 3 ? 2 : 0,
+                    dvbTuningInfo.IsEncrypted || dvbTuningInfo.IsSuggestedBlocked);
 
                 // add channel with callsign and channel number
                 var keyValues = new KeyValues(WmcStore.WmcObjectStore);

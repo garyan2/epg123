@@ -325,7 +325,7 @@ namespace epg123Client
                         for (var i = 0; i < arguments.Length; ++i)
                         {
                             if (!arguments[i].Equals("-i") || i >= arguments.Length - 1) continue;
-                            tbTaskInfo.Text = arguments[i + 1];
+                            tbTaskInfo.Text = arguments[i + 1].Replace("\"", "");
                             break;
                         }
                     }
@@ -548,9 +548,9 @@ namespace epg123Client
             }
 
             var textSize = e.Graphics.MeasureString(e.SubItem.Text, mergedChannelListView.Font);
-            if (e.Item.ListView.Columns[e.ColumnIndex].Width < (int) textSize.Width + 8)
+            if (e.Item.ListView.Columns[e.ColumnIndex].Width < (int) textSize.Width + 10)
             {
-                e.Item.ListView.Columns[e.ColumnIndex].Width = (int) textSize.Width + 8;
+                e.Item.ListView.Columns[e.ColumnIndex].Width = (int) textSize.Width + 10;
             }
 
             Bitmap bmp = null;
@@ -572,13 +572,21 @@ namespace epg123Client
                 }
             }
 
-            if (((myChannelLvi)e.Item).IsSuggestedBlocked || ((myChannelLvi)e.Item).IsEncrypted)
+            if (((myChannelLvi)e.Item).IsEncrypted)
             {
                 bmp = highlight ? Resources.padlock_highlight : Resources.padlock;
+            }
+            else if (((myChannelLvi)e.Item).IsSuggestedBlocked)
+            {
+                bmp = highlight ? Resources.no_entry_sign_highlight : Resources.no_entry_sign;
             }
             else if (((myChannelLvi)e.Item).IsRadio)
             {
                 bmp = highlight ? Resources.music_highlight : Resources.music;
+            }
+            else if (((myChannelLvi) e.Item).IsInteractiveTV)
+            {
+                bmp = highlight ? Resources.circled_information_source_highlight : Resources.circled_information_source;
             }
 
             e.DrawBackground();
@@ -586,13 +594,11 @@ namespace epg123Client
 
             var sf = new StringFormat {LineAlignment = StringAlignment.Center, FormatFlags = StringFormatFlags.NoWrap};
             e.Graphics.DrawString(e.SubItem.Text, mergedChannelListView.Font, new SolidBrush(foreColor),
-                new Rectangle(e.Bounds.X + 8, e.Bounds.Y, e.Bounds.Width + 8, e.Bounds.Height), sf);
+                new Rectangle(e.Bounds.X + 10, e.Bounds.Y, e.Bounds.Width + 10, e.Bounds.Height), sf);
 
-            if (bmp != null)
-            {
-                var imageRect = new Rectangle(e.Bounds.X, e.Bounds.Y + 4, 8, 10);
-                e.Graphics.DrawImage(bmp, imageRect);
-            }
+            if (bmp == null) return;
+            var imageRect = new Rectangle(e.Bounds.X + (10 - bmp.Width) / 2, e.Bounds.Y + 4, bmp.Width, 10);
+            e.Graphics.DrawImage(bmp, imageRect);
         }
         #endregion
 
@@ -1081,6 +1087,9 @@ namespace epg123Client
         private bool _radioChannelsOnly;
         private bool _encryptedChannelsOnly;
         private bool _unencryptedChannelsOnly;
+        private bool _suggestedBlockedOnly;
+        private bool _notSuggestBlockedOnly;
+        private bool _interactiveTvOnly;
         private bool _customLabelsOnly = true;
 
         #region ===== Merged Channel ListView Items =====
@@ -1189,13 +1198,27 @@ namespace epg123Client
         private void FilterMergedChannels()
         {
             _mergedChannelFilter = new List<int>(_allMergedChannels.Count);
-            foreach (var channel in _allMergedChannels)
+            foreach (var channel in _allMergedChannels.Where(channel => !_enabledChannelsOnly || channel.Enabled))
             {
-                if (_enabledChannelsOnly && !channel.Enabled) continue;
-                if (_tvChannelsOnly && channel.IsRadio && !_radioChannelsOnly) continue;
-                if (_radioChannelsOnly && !channel.IsRadio && !_tvChannelsOnly) continue;
-                if (_encryptedChannelsOnly && !channel.IsEncrypted && !_unencryptedChannelsOnly) continue;
-                if (_unencryptedChannelsOnly && channel.IsEncrypted && !_encryptedChannelsOnly) continue;
+                if (_tvChannelsOnly || _radioChannelsOnly || _interactiveTvOnly)
+                {
+                    if (channel.IsRadio && !_radioChannelsOnly) continue;
+                    if (channel.IsInteractiveTV && !_interactiveTvOnly) continue;
+                    if (channel.IsTV && !_tvChannelsOnly) continue;
+                }
+
+                if (_encryptedChannelsOnly || _unencryptedChannelsOnly)
+                {
+                    if (channel.IsEncrypted && !_encryptedChannelsOnly) continue;
+                    if (!channel.IsEncrypted && !_unencryptedChannelsOnly) continue;
+                }
+
+                if (_suggestedBlockedOnly || _notSuggestBlockedOnly)
+                {
+                    if (channel.IsSuggestedBlocked && !_suggestedBlockedOnly) continue;
+                    if (!channel.IsSuggestedBlocked && !_notSuggestBlockedOnly) continue;
+                }
+
                 if (cmbSources.SelectedIndex > 0 && !channel.ScannedLineupIds.Contains(((myLineup) cmbSources.SelectedItem).LineupId)) continue;
                 _mergedChannelFilter.Add(_allMergedChannels.IndexOf(channel));
             }
@@ -1329,6 +1352,35 @@ namespace epg123Client
             btnUnencrypted.BackColor = !_unencryptedChannelsOnly ? SystemColors.Control : SystemColors.ControlDark;
         }
 
+        private void btnBlocked_Click(object sender, EventArgs e)
+        {
+            _suggestedBlockedOnly = !_suggestedBlockedOnly;
+
+            Cursor = Cursors.WaitCursor;
+            BuildMergedChannelListView();
+            Cursor = Cursors.Default;
+            btnBlocked.BackColor = !_suggestedBlockedOnly ? SystemColors.Control : SystemColors.ControlDark;
+        }
+
+        private void btnNotSuggestedBlocked_Click(object sender, EventArgs e)
+        {
+            _notSuggestBlockedOnly = !_notSuggestBlockedOnly;
+
+            Cursor = Cursors.WaitCursor;
+            BuildMergedChannelListView();
+            Cursor = Cursors.Default;
+            btnNotSuggestedBlocked.BackColor = !_notSuggestBlockedOnly ? SystemColors.Control : SystemColors.ControlDark;
+        }
+
+        private void btnInteractive_Click(object sender, EventArgs e)
+        {
+            _interactiveTvOnly = !_interactiveTvOnly;
+
+            Cursor = Cursors.WaitCursor;
+            BuildMergedChannelListView();
+            Cursor = Cursors.Default;
+            btnInteractive.BackColor = !_interactiveTvOnly ? SystemColors.Control : SystemColors.ControlDark;
+        }
         #endregion
 
         #region ===== Buttons and Dials =====
@@ -1585,7 +1637,7 @@ namespace epg123Client
             }
 
             // open the dialog
-            if (sender?.Equals(tbTaskInfo) ?? false) openFileDialog1.FileName = tbTaskInfo.Text;
+            if ((sender?.Equals(tbTaskInfo) ?? false) || tbTaskInfo.Text.StartsWith("http")) openFileDialog1.FileName = tbTaskInfo.Text;
             else if (openFileDialog1.ShowDialog() != DialogResult.OK) return;
 
             // perform the file import with progress form
@@ -1689,6 +1741,11 @@ namespace epg123Client
         #endregion
 
         #region ========== Restore Database ==========
+        /// <summary>
+        /// Method for me to import any users backup to aid in troubleshooting
+        /// GUI must already be in administrative mode
+        /// </summary>
+        private bool restoreOverride;
         private void btnRestore_Click(object sender, EventArgs e)
         {
             // check for elevated rights and open new process if necessary
@@ -1698,6 +1755,8 @@ namespace epg123Client
                 RestartClient(true);
                 return;
             }
+
+            restoreOverride = ModifierKeys == Keys.Control;
 
             // determine path to existing backup file
             openFileDialog1.InitialDirectory = Helper.Epg123BackupFolder;
@@ -1851,13 +1910,11 @@ namespace epg123Client
                 if (tuner.hwOccurence != 0) continue;
 
                 var matches = registryTuners.Where(arg => arg.devName == tuner.devName).ToList();
-                if (matches.Count > 1)
+                if (matches.Count <= 1) continue;
+                var i = 1;
+                foreach (var match in matches)
                 {
-                    int i = 1;
-                    foreach (var match in matches)
-                    {
-                        match.hwOccurence = i++;
-                    }
+                    match.hwOccurence = i++;
                 }
             }
 
@@ -1873,12 +1930,10 @@ namespace epg123Client
 
                     device.SetAttributeValue("recorderId", regTuner.recorderId.ToLower());
                     var contentRecorder = device.Element("contentRecorder");
-                    if (contentRecorder != null)
-                    {
-                        contentRecorder.SetAttributeValue("uid", $"!Recorders!{regTuner.rootDevice ?? regTuner.recorderId}{regTuner.instanceId ?? ""}");
-                        contentRecorder.SetAttributeValue("instanceId", $"{regTuner.rootDevice ?? regTuner.recorderId}{regTuner.instanceId ?? ""}");
-                        contentRecorder.SetAttributeValue("hardwareBaseId", $"{regTuner.rootDevice ?? ""}");
-                    }
+                    if (contentRecorder == null) continue;
+                    contentRecorder.SetAttributeValue("uid", $"!Recorders!{regTuner.rootDevice ?? regTuner.recorderId}{regTuner.instanceId ?? ""}");
+                    contentRecorder.SetAttributeValue("instanceId", $"{regTuner.rootDevice ?? regTuner.recorderId}{regTuner.instanceId ?? ""}");
+                    contentRecorder.SetAttributeValue("hardwareBaseId", $"{regTuner.rootDevice ?? ""}");
 
                 }
                 else
@@ -1888,7 +1943,7 @@ namespace epg123Client
             }
 
             // if any device in backup lineup file does not exist in registry, abort
-            if (unmatchedTuners.Count > 0)
+            if (unmatchedTuners.Count > 0 && !restoreOverride)
             {
                 unmatchedTuners.Sort();
                 MessageBox.Show(
@@ -1900,7 +1955,7 @@ namespace epg123Client
 
             // report any unmatched tuners still in registry
             var unmatchedDevices = registryTuners.Where(arg => !arg.matched).ToList();
-            if (unmatchedDevices.Count > 0)
+            if (unmatchedDevices.Count > 0 && !restoreOverride)
             {
                 var deviceNames = unmatchedDevices.Select(device => device.devName).ToList();
                 deviceNames.Sort();

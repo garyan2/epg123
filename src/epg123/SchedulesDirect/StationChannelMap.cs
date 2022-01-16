@@ -96,7 +96,7 @@ namespace epg123.SchedulesDirect
         public int ChannelMinor { get; set; }
 
         [JsonProperty("providerChannel")]
-        public string ProvideChannel { get; set; }
+        public string ProviderChannel { get; set; }
 
         [JsonProperty("providerCallsign")]
         public string ProviderCallsign { get; set; }
@@ -106,6 +106,9 @@ namespace epg123.SchedulesDirect
 
         [JsonProperty("matchType")]
         public string MatchType { get; set; }
+
+        [JsonIgnore]
+        public string MatchName { get; set; }
     }
 
     public class LineupStation

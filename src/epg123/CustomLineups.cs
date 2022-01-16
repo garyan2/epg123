@@ -32,6 +32,11 @@ namespace epg123
 
     public class CustomStation
     {
+        public override string ToString()
+        {
+            return $"{Callsign} - {Name} - ({StationId})";
+        }
+
         [XmlAttribute("number")]
         public int Number { get; set; }
 

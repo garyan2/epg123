@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using System.Xml;
@@ -21,7 +22,23 @@ namespace epg123Client
             // if LNBs are empty, that means there are no satellites currently configured
             // disable the default satellite mxf create button if no LNBs exist
             var lnbs = new LowNoiseBlocks(WmcStore.WmcObjectStore);
-            btnCreateDefault.Enabled = cbRadio.Enabled = cbEncrypted.Enabled = cbEnabled.Enabled = !lnbs.Empty;
+            btnCreateDefault.Enabled = cbRadio.Enabled = cbEncrypted.Enabled = cbEnabled.Enabled = cbData.Enabled = !lnbs.Empty;
+        }
+
+        private int GetMergedChannelServiceType(MergedChannel mergedChannel)
+        {
+            var channel = mergedChannel.ChannelType == ChannelType.Scanned || mergedChannel.ChannelType == ChannelType.CalculatedScanned
+                ? mergedChannel as Channel
+                : mergedChannel.SecondaryChannels.FirstOrDefault(arg => arg.ChannelType == ChannelType.Scanned || arg.ChannelType == ChannelType.CalculatedScanned);
+
+            if (channel == null) return 0;
+            switch (channel.Service.ServiceType)
+            {
+                case 0:
+                    return channel.ChannelType == ChannelType.Scanned ? 0 : 3;
+                default:
+                    return channel.Service.ServiceType;
+            }
         }
 
         private void btnCreateDefault_Click(object sender, EventArgs e)
@@ -31,7 +48,11 @@ namespace epg123Client
             foreach (MergedChannel mergedChannel in WmcStore.WmcMergedLineup.UncachedChannels)
             {
                 if (mergedChannel.UserBlockedState > UserBlockedState.Enabled && cbEnabled.Checked) continue;
-                mxf.AddChannel(mergedChannel, cbRadio.Checked, cbEncrypted.Checked);
+
+                var svcType = GetMergedChannelServiceType(mergedChannel);
+                if (svcType == 2 && !cbRadio.Checked) continue;
+                if (svcType == 3 && !cbData.Checked) continue;
+                mxf.AddChannel(mergedChannel, cbEncrypted.Checked);
             }
 
             // create the temporary mxf file

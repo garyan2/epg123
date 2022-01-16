@@ -48,11 +48,11 @@ namespace epg123.sdJson2mxf
                 {
                     customLineup = lineup;
 
-                    clientLineups.Lineups.Add(new SubscribedLineup()
+                    clientLineups.Lineups.Add(new SubscribedLineup
                     {
                         Lineup = lineup.Lineup,
                         Name = lineup.Name,
-                        Transport = string.Empty,
+                        Transport = "CUSTOM",
                         Location = lineup.Location,
                         Uri = "CUSTOM",
                         IsDeleted = false
@@ -62,7 +62,7 @@ namespace epg123.sdJson2mxf
                     {
                         Map = new List<LineupChannel>(),
                         Stations = new List<LineupStation>(),
-                        Metadata = new LineupMetadata() {Lineup = lineup.Lineup}
+                        Metadata = new LineupMetadata {Lineup = lineup.Lineup}
                     };
                 }
             }
@@ -75,7 +75,7 @@ namespace epg123.sdJson2mxf
             Logger.WriteMessage($"Entering BuildLineupServices() for {clientLineups.Lineups.Count} lineups.");
             foreach (var clientLineup in clientLineups.Lineups)
             {
-                var flagCustom = (!string.IsNullOrEmpty(clientLineup.Uri) && clientLineup.Uri.Equals("CUSTOM"));
+                var flagCustom = !string.IsNullOrEmpty(clientLineup.Uri) && clientLineup.Uri.Equals("CUSTOM");
                 ++processedObjects; ReportProgress();
 
                 // request the lineup's station maps
@@ -103,26 +103,28 @@ namespace epg123.sdJson2mxf
                 }
                 if (flagCustom)
                 {
-                    foreach (var station in customLineup.Station)
+                    foreach (var station in customLineup.Station.Where(station => station.StationId != null))
                     {
                         if (AllStations.TryGetValue(station.StationId, out var lineupStation))
                         {
-                            customMap.Map.Add(new LineupChannel()
+                            customMap.Map.Add(new LineupChannel
                             {
                                 StationId = station.StationId,
                                 AtscMajor = station.Number,
-                                AtscMinor = station.Subnumber
+                                AtscMinor = station.Subnumber,
+                                MatchName = station.MatchName
                             });
                             CustomStations.Add(station.StationId);
                             customMap.Stations.Add(lineupStation);
                         }
                         else if (!string.IsNullOrEmpty(station.Alternate) && AllStations.TryGetValue(station.Alternate, out lineupStation))
                         {
-                            customMap.Map.Add(new LineupChannel()
+                            customMap.Map.Add(new LineupChannel
                             {
                                 StationId = station.Alternate,
                                 AtscMajor = station.Number,
-                                AtscMinor = station.Subnumber
+                                AtscMinor = station.Subnumber,
+                                MatchName = station.MatchName
                             });
                             CustomStations.Add(station.Alternate);
                             customMap.Stations.Add(lineupStation);
@@ -141,13 +143,16 @@ namespace epg123.sdJson2mxf
                     Name = $"EPG123 {clientLineup.Name} ({clientLineup.Location})"
                 });
 
+                // use hashset to make sure we don't duplicate channel entries for this station
+                var channelNumbers = new HashSet<string>();
+
                 // build the services and lineup
                 foreach (var station in lineupMap.Stations)
                 {
                     // check if station should be downloaded and processed
                     if (!flagCustom)
                     {
-                        if ((station == null) || (ExcludedStations.Contains(station.StationId) && !CustomStations.Contains(station.StationId))) continue;
+                        if (station == null || (ExcludedStations.Contains(station.StationId) && !CustomStations.Contains(station.StationId))) continue;
                         if (!IncludedStations.Contains(station.StationId) && !config.AutoAddNew)
                         {
                             Logger.WriteWarning($"**** Lineup {clientLineup.Name} ({clientLineup.Location}) has added station {station.StationId} ({station.Callsign}). ****");
@@ -275,9 +280,6 @@ namespace epg123.sdJson2mxf
                         }
                     }
 
-                    // use hashset to make sure we don't duplicate channel entries for this station
-                    var channelNumbers = new HashSet<string>();
-
                     // match station with mapping for lineup number and subnumbers
                     foreach (var map in lineupMap.Map)
                     {
@@ -286,19 +288,19 @@ namespace epg123.sdJson2mxf
                         if (!map.StationId.Equals(station.StationId)) continue;
 
                         // QAM
-                        if (map.ChannelMajor > 0)
+                        if (map.ChannelMajor != 0)
                         {
                             number = map.ChannelMajor;
                             subnumber = map.ChannelMinor;
                         }
 
-                        // ATSC or NTSC
-                        else if (map.AtscMajor > 0)
+                        // ATSC (and CUSTOM) or NTSC
+                        else if (map.AtscMajor != 0)
                         {
                             number = map.AtscMajor;
                             subnumber = map.AtscMinor;
                         }
-                        else if (map.UhfVhf > 0)
+                        else if (map.UhfVhf != 0)
                         {
                             number = map.UhfVhf;
                         }
@@ -327,6 +329,9 @@ namespace epg123.sdJson2mxf
                         string matchName = null;
                         switch (clientLineup.Transport)
                         {
+                            case "CUSTOM":
+                                matchName = map.MatchName;
+                                break;
                             case "DVB-S":
                                 var m = Regex.Match(lineupMap.Metadata.Lineup, @"\d+\.\d+");
                                 if (m.Success && map.FrequencyHz > 0 && map.NetworkId > 0 && map.TransportId > 0 && map.ServiceId > 0)
@@ -354,8 +359,8 @@ namespace epg123.sdJson2mxf
                                 break;
                         }
 
-                        var channelNumber = number + ((subnumber > 0) ? "." + subnumber : null);
-                        if (channelNumbers.Add(channelNumber + ":" + station.StationId))
+                        var channelNumber = $"{number}{(subnumber > 0 ? $".{subnumber}" : "")}";
+                        if (channelNumbers.Add($"{channelNumber}:{station.StationId}"))
                         {
                             SdMxf.With.Lineups[lineupIndex].channels.Add(new MxfChannel
                             {
@@ -394,12 +399,10 @@ namespace epg123.sdJson2mxf
                 Logger.WriteMessage("Exiting BuildLineupServices(). SUCCESS.");
                 return true;
             }
-            else
-            {
-                Logger.WriteError($"There are 0 stations queued for download from {clientLineups.Lineups.Count} subscribed lineups. Exiting.");
-                Logger.WriteError("Check that lineups are 'INCLUDED' and stations are selected in the EPG123 GUI.");
-                return false;
-            }
+
+            Logger.WriteError($"There are 0 stations queued for download from {clientLineups.Lineups.Count} subscribed lineups. Exiting.");
+            Logger.WriteError("Check that lineups are 'INCLUDED' and stations are selected in the EPG123 GUI.");
+            return false;
         }
 
         private static void BackgroundDownloader_RunWorkerCompleted(object sender, System.ComponentModel.RunWorkerCompletedEventArgs e)

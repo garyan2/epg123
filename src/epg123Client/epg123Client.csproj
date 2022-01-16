@@ -291,8 +291,11 @@
     <None Include="Resources\EPG123_pause.ico" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Resources\antenna_with_bars.png" />
     <Content Include="Resources\btnDarkOnLight.png" />
     <Content Include="Resources\btnLightOnDark.png" />
+    <None Include="Resources\circled_information_source.png" />
+    <None Include="Resources\circled_information_source_highlight.png" />
     <Content Include="Resources\EPG123ErrorDark.png" />
     <Content Include="Resources\EPG123ErrorLight.png" />
     <Content Include="Resources\EPG123OKDark.png" />
@@ -307,6 +310,8 @@
     <None Include="Resources\music_highlight.png" />
     <None Include="Resources\padlock_highlight.png" />
     <None Include="Resources\open_lock.png" />
+    <None Include="Resources\no_entry_sign.png" />
+    <None Include="Resources\no_entry_sign_highlight.png" />
     <Content Include="Resources\statusLogoDark.png" />
     <Content Include="Resources\statusLogoLight.png" />
     <Content Include="Resources\StatusOK.png" />

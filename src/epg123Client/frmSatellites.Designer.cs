@@ -39,6 +39,8 @@ namespace epg123Client
             this.label1 = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.label4 = new System.Windows.Forms.Label();
+            this.cbData = new System.Windows.Forms.CheckBox();
             this.label2 = new System.Windows.Forms.Label();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.btnImport = new System.Windows.Forms.Button();
@@ -50,7 +52,7 @@ namespace epg123Client
             // 
             // btnCreateDefault
             // 
-            this.btnCreateDefault.Location = new System.Drawing.Point(402, 77);
+            this.btnCreateDefault.Location = new System.Drawing.Point(402, 95);
             this.btnCreateDefault.Name = "btnCreateDefault";
             this.btnCreateDefault.Size = new System.Drawing.Size(75, 23);
             this.btnCreateDefault.TabIndex = 0;
@@ -63,27 +65,27 @@ namespace epg123Client
             this.cbRadio.AutoSize = true;
             this.cbRadio.Checked = true;
             this.cbRadio.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbRadio.Location = new System.Drawing.Point(44, 81);
+            this.cbRadio.Location = new System.Drawing.Point(57, 73);
             this.cbRadio.Name = "cbRadio";
-            this.cbRadio.Size = new System.Drawing.Size(92, 17);
+            this.cbRadio.Size = new System.Drawing.Size(54, 17);
             this.cbRadio.TabIndex = 1;
-            this.cbRadio.Text = "Include Radio";
+            this.cbRadio.Text = "Radio";
             this.cbRadio.UseVisualStyleBackColor = true;
             // 
             // cbEncrypted
             // 
             this.cbEncrypted.AutoSize = true;
-            this.cbEncrypted.Location = new System.Drawing.Point(142, 81);
+            this.cbEncrypted.Location = new System.Drawing.Point(248, 73);
             this.cbEncrypted.Name = "cbEncrypted";
-            this.cbEncrypted.Size = new System.Drawing.Size(112, 17);
+            this.cbEncrypted.Size = new System.Drawing.Size(118, 17);
             this.cbEncrypted.TabIndex = 2;
-            this.cbEncrypted.Text = "Include Encrypted";
+            this.cbEncrypted.Text = "Encrypted/Blocked";
             this.cbEncrypted.UseVisualStyleBackColor = true;
             // 
             // cbEnabled
             // 
             this.cbEnabled.AutoSize = true;
-            this.cbEnabled.Location = new System.Drawing.Point(260, 81);
+            this.cbEnabled.Location = new System.Drawing.Point(57, 96);
             this.cbEnabled.Name = "cbEnabled";
             this.cbEnabled.Size = new System.Drawing.Size(136, 17);
             this.cbEnabled.TabIndex = 3;
@@ -136,6 +138,8 @@ namespace epg123Client
             // 
             // groupBox2
             // 
+            this.groupBox2.Controls.Add(this.label4);
+            this.groupBox2.Controls.Add(this.cbData);
             this.groupBox2.Controls.Add(this.label2);
             this.groupBox2.Controls.Add(this.btnCreateDefault);
             this.groupBox2.Controls.Add(this.cbRadio);
@@ -143,10 +147,29 @@ namespace epg123Client
             this.groupBox2.Controls.Add(this.cbEncrypted);
             this.groupBox2.Location = new System.Drawing.Point(12, 150);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(483, 107);
+            this.groupBox2.Size = new System.Drawing.Size(483, 124);
             this.groupBox2.TabIndex = 8;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Create Custom DefaultSatellites MXF File";
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(6, 74);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(45, 13);
+            this.label4.TabIndex = 6;
+            this.label4.Text = "Include:";
+            // 
+            // cbData
+            // 
+            this.cbData.AutoSize = true;
+            this.cbData.Location = new System.Drawing.Point(117, 73);
+            this.cbData.Name = "cbData";
+            this.cbData.Size = new System.Drawing.Size(125, 17);
+            this.cbData.TabIndex = 5;
+            this.cbData.Text = "Interactive TV (Data)";
+            this.cbData.UseVisualStyleBackColor = true;
             // 
             // label2
             // 
@@ -160,7 +183,7 @@ namespace epg123Client
             // 
             this.groupBox3.Controls.Add(this.btnImport);
             this.groupBox3.Controls.Add(this.label3);
-            this.groupBox3.Location = new System.Drawing.Point(12, 263);
+            this.groupBox3.Location = new System.Drawing.Point(12, 280);
             this.groupBox3.Name = "groupBox3";
             this.groupBox3.Size = new System.Drawing.Size(483, 98);
             this.groupBox3.TabIndex = 9;
@@ -189,7 +212,7 @@ namespace epg123Client
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(508, 372);
+            this.ClientSize = new System.Drawing.Size(508, 390);
             this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
@@ -223,5 +246,7 @@ namespace epg123Client
         private System.Windows.Forms.GroupBox groupBox3;
         private System.Windows.Forms.Button btnImport;
         private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.CheckBox cbData;
     }
 }

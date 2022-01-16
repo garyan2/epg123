@@ -107,6 +107,7 @@ namespace epg123
             this.lvCustom.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.LvLineupSort);
             this.lvCustom.DragDrop += new System.Windows.Forms.DragEventHandler(this.lvCustom_DragDrop);
             this.lvCustom.DragEnter += new System.Windows.Forms.DragEventHandler(this.lvCustom_DragEnter);
+            this.lvCustom.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.lvCustom_MouseDoubleClick);
             // 
             // ccCallSign
             // 
@@ -202,6 +203,7 @@ namespace epg123
             this.MinimumSize = new System.Drawing.Size(480, 39);
             this.Name = "frmCustomLineup";
             this.Text = "frmCustomLineup";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.frmCustomLineup_FormClosing);
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel1.PerformLayout();
             this.splitContainer1.Panel2.ResumeLayout(false);

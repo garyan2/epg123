@@ -602,7 +602,7 @@ namespace epg123Client
                     }
                     mergedChannel.AddChannelListings(listings);
                 }
-                mergedChannel.UserBlockedState = listings == null ? UserBlockedState.Blocked : UserBlockedState.Enabled;
+                SetChannelEnableState(mergedChannelId, listings != null);
                 mergedChannel.Update();
             }
             catch (Exception ex)
@@ -621,30 +621,17 @@ namespace epg123Client
             try
             {
                 if (!(WmcObjectStore.Fetch(mergedChannelId) is MergedChannel mergedChannel)) return;
-                //if (mergedChannel.IsSuggestedBlocked)
-                //{
-                //    foreach (TuningInfo tuningInfo in mergedChannel.TuningInfos)
-                //    {
-                //        var infoOverride = tuningInfo.GetOverride(mergedChannel);
-                //        if (infoOverride == null)
-                //        {
-                //            infoOverride = new TuningInfoOverride(mergedChannel, tuningInfo, true)
-                //            {
-                //                PreferredOrder = int.MaxValue,
-                //                UserBlockedState = enable ? UserBlockedState.Enabled : UserBlockedState.Blocked
-                //            };
-                //            tuningInfo.ObjectStore.Add(infoOverride);
-                //        }
-                //        else
-                //        {
-                //            infoOverride.Refresh();
-                //            infoOverride.UserBlockedState = enable ? UserBlockedState.Enabled : UserBlockedState.Blocked;
-                //            infoOverride.Update();
-                //        }
-                //    }
-                //}
+                foreach (TuningInfo tuningInfo in mergedChannel.TuningInfos)
+                {
+                    var infoOverride = tuningInfo.GetOverride(mergedChannel);
+                    if (!infoOverride?.IsUserOverride ?? true) continue;
+                    infoOverride.UserBlockedState = tuningInfo.IsSuggestedBlocked ? UserBlockedState.Blocked : UserBlockedState.Enabled;
+                    infoOverride.Update();
+                    tuningInfo.Update();
+                }
                 mergedChannel.UserBlockedState = enable ? UserBlockedState.Enabled : UserBlockedState.Blocked;
                 mergedChannel.Update();
+                mergedChannel.Lineup.NotifyChannelUpdated(mergedChannel);
             }
             catch (Exception ex)
             {
@@ -748,7 +735,7 @@ namespace epg123Client
             }
             catch (Exception ex)
             {
-                Logger.WriteInformation($"Exception thrown during GetLineupChannelTags(). {ex.Message}\n{ex.StackTrace}");
+                Logger.WriteInformation($"Exception thrown during GetLineupChannels(). {ex.Message}\n{ex.StackTrace}");
             }
             return ret;
         }
@@ -842,7 +829,36 @@ namespace epg123Client
         private MergedChannel MergedChannel { get; set; }
         public bool IsEncrypted => MergedChannel.IsEncrypted;
         public bool IsSuggestedBlocked => MergedChannel.IsSuggestedBlocked;
-        public bool IsRadio => MergedChannel.Service.ServiceType == 2;
+        public bool IsUnknown { get; private set; }
+        public bool IsTV { get; private set; }
+        public bool IsRadio { get; private set; }
+        public bool IsInteractiveTV { get; private set; }
+
+        private void SetServiceTypeFlags()
+        {
+            var channel = (MergedChannel.PrimaryChannel.ChannelType == ChannelType.Scanned || MergedChannel.PrimaryChannel.ChannelType == ChannelType.CalculatedScanned) && MergedChannel.PrimaryChannel.Lineup != null
+                ? MergedChannel.PrimaryChannel
+                : MergedChannel.SecondaryChannels.FirstOrDefault(arg => (arg.ChannelType == ChannelType.Scanned || arg.ChannelType == ChannelType.CalculatedScanned) && arg.Lineup != null);
+
+            IsUnknown = IsTV = IsRadio = IsInteractiveTV = false;
+            if (channel == null) return;
+            switch (channel.Service.ServiceType)
+            {
+                case 0:
+                    if (channel.ChannelType == ChannelType.Scanned) IsUnknown = true;
+                    else IsInteractiveTV = true;
+                    break;
+                case 1:
+                    IsTV = true;
+                    break;
+                case 2:
+                    IsRadio = true;
+                    break;
+                case 3:
+                    IsInteractiveTV = true;
+                    break;
+            }
+        }
 
         public myChannelLvi(MergedChannel channel) : base(new string[7])
         {
@@ -897,6 +913,7 @@ namespace epg123Client
         public void PopulateMergedChannelItems()
         {
             MergedChannel.Refresh();
+            SetServiceTypeFlags();
             var scanned = MergedChannel.PrimaryChannel.Lineup?.Name?.StartsWith("Scanned") ?? false;
 
             // set callsign and backcolor

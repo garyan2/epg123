@@ -1358,6 +1358,7 @@ namespace epg123
         {
             //var frm = new frmCustomLineup(_allAvailableStations.Select(station => _allStations[station]).ToList());
             //frm.ShowDialog();
+            //BuildCustomListViewChannels();
 
             MessageBox.Show($"This feature is not yet implemented. You can manually edit the custom lineup file \"{Helper.Epg123CustomLineupsXmlPath}\".",
                 "Not Implemented", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -1710,7 +1711,7 @@ public class myStation
 {
     public override string ToString()
     {
-        return $"{Callsign} - {Name}";
+        return $"{Callsign} - {Name} - ({StationId})";
     }
 
     private bool _include;

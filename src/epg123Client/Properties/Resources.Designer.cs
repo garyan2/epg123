@@ -61,6 +61,36 @@ namespace epg123Client.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap antenna_with_bars {
+            get {
+                object obj = ResourceManager.GetObject("antenna_with_bars", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap circled_information_source {
+            get {
+                object obj = ResourceManager.GetObject("circled_information_source", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap circled_information_source_highlight {
+            get {
+                object obj = ResourceManager.GetObject("circled_information_source_highlight", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
         /// </summary>
         public static System.Drawing.Icon EPG123 {
@@ -96,6 +126,26 @@ namespace epg123Client.Properties {
         public static System.Drawing.Bitmap music_highlight {
             get {
                 object obj = ResourceManager.GetObject("music_highlight", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap no_entry_sign {
+            get {
+                object obj = ResourceManager.GetObject("no_entry_sign", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap no_entry_sign_highlight {
+            get {
+                object obj = ResourceManager.GetObject("no_entry_sign_highlight", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
