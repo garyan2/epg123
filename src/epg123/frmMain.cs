@@ -643,6 +643,10 @@ namespace epg123
                     // 4dtv has channels starting with 2 character satellite identifier
                     number = int.Parse(map.Channel.Substring(2));
                 }
+                else if (Regex.Match(map.Channel, @"[A-Za-z0-9.]\.[A-Za-z]{2}").Length > 0)
+                {
+                    return map.Channel;
+                }
                 else if (!int.TryParse(Regex.Replace(map.Channel, "[^0-9.]", ""), out number))
                 {
                     // if channel number is not a whole number, must be a decimal number

@@ -435,7 +435,7 @@ namespace epg123Client
                                     tuningInfos.Add($"C{channelTuningInfo.PhysicalNumber}");
                                     break;
                                 case "{adb10da8-5286-4318-9ccb-cbedc854f0dc}":
-                                    tuningInfos.Add($"IR {channelTuningInfo.PhysicalNumber}{((channelTuningInfo.SubNumber > 0) ? "." + channelTuningInfo.SubNumber : null)}");
+                                    tuningInfos.Add($"IR {channelTuningInfo.PhysicalNumber}{(channelTuningInfo.SubNumber > 0 ? $".{channelTuningInfo.SubNumber}" : null)}");
                                     break;
                                 case "AuxIn1":
                                 case "Antenna":
@@ -845,7 +845,7 @@ namespace epg123Client
             switch (channel.Service.ServiceType)
             {
                 case 0:
-                    if (channel.ChannelType == ChannelType.Scanned) IsUnknown = true;
+                    if (channel.ChannelType == ChannelType.Scanned || channel.ChannelType == ChannelType.CalculatedScanned) IsUnknown = true;
                     else IsInteractiveTV = true;
                     break;
                 case 1:

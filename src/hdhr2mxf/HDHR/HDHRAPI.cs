@@ -28,6 +28,8 @@ namespace hdhr2mxf.HDHR
             var request = (HttpWebRequest)WebRequest.Create(url);
             request.UserAgent = UserAgent;
             request.AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip;
+            ServicePointManager.Expect100Continue = true;
+            ServicePointManager.SecurityProtocol |= (SecurityProtocolType) 3072;
             if (timeout > 0)
             {
                 request.Timeout = timeout;

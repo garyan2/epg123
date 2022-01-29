@@ -10,6 +10,7 @@ namespace epg123
     public static class Logger
     {
         private static bool firstEntry = true;
+        private static bool registered = false;
 
         private static void CreateEventLogSource(string source)
         {
@@ -20,6 +21,7 @@ namespace epg123
                 if (EventLog.SourceExists(source)) return;
                 var sourceData = new EventSourceCreationData(source, "Media Center");
                 EventLog.CreateEventSource(sourceData);
+                registered = true;
             }
             catch (Exception ex)
             {
@@ -214,6 +216,7 @@ namespace epg123
                     return;
             }
 
+            if (!registered) return;
             var msg = $"{time:T} - {message}\n";
             if (SingleEventLogEntries)
             {
