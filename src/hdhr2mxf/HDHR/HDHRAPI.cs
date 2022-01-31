@@ -22,6 +22,7 @@ namespace hdhr2mxf.HDHR
         }
 
         private const string BaseUrl = "http://api.hdhomerun.com";
+        private const string BaseUrlSecure = "https://api.hdhomerun.com";
 
         private static StreamReader GetRequestResponse(string url, int timeout = 0)
         {
@@ -117,7 +118,7 @@ namespace hdhr2mxf.HDHR
         {
             try
             {
-                var url = BaseUrl + "/api/guide.php?DeviceAuth=";
+                var url = BaseUrlSecure + "/api/guide.php?DeviceAuth=";
                 url += Uri.EscapeDataString(deviceAuth) + "&Channel=" + channel + ((startTime > 0) ? "&Start=" + startTime : string.Empty);
 
                 using (var sr = GetRequestResponse(url))
@@ -146,7 +147,7 @@ namespace hdhr2mxf.HDHR
             try
             {
                 if (deviceAuth == null) return null;
-                using (var sr = GetRequestResponse(BaseUrl + "/api/xmltv.php?DeviceAuth=" + Uri.EscapeDataString(deviceAuth)))
+                using (var sr = GetRequestResponse(BaseUrlSecure + "/api/xmltv.php?DeviceAuth=" + Uri.EscapeDataString(deviceAuth)))
                 {
                     var serializer = new XmlSerializer(typeof(xmltv));
                     var firstLine = sr.ReadLine();
@@ -184,7 +185,7 @@ namespace hdhr2mxf.HDHR
             try
             {
                 if (deviceAuth == null) return false;
-                using (var sr = GetRequestResponse(BaseUrl + "/api/account?DeviceAuth=" + Uri.EscapeDataString(deviceAuth)))
+                using (var sr = GetRequestResponse(BaseUrlSecure + "/api/account?DeviceAuth=" + Uri.EscapeDataString(deviceAuth)))
                 {
                     var account = JsonConvert.DeserializeObject<hdhrAccount>(sr.ReadToEnd());
                     return account.DvrActive;
