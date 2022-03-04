@@ -273,7 +273,6 @@ namespace epgTray
                     else if (line.StartsWith("Download Complete"))
                     {
                         _nextUpdate = DateTime.Now + TimeSpan.FromSeconds(10);
-                        //TrayIcon.Icon = epgTray.Properties.Resources.statusUnknown;
                     }
                     else if (line.StartsWith("Importing"))
                     {

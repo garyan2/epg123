@@ -30,7 +30,7 @@ namespace epg123.SchedulesDirect
         }
     }
 
-    public class ProgramMetadata
+    public class ProgramMetadata : BaseResponse
     {
         [JsonProperty("programID")]
         public string ProgramId { get; set; }

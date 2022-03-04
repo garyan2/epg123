@@ -139,7 +139,7 @@ namespace epg123.sdJson2mxf
                 ++processedObjects; ReportProgress();
                 var uid = response.ProgramId;
 
-                if (response.Data == null) continue;
+                if (response.Data == null || response.Code != 0) continue;
                 MxfSeriesInfo series = null;
                 if (response.ProgramId.StartsWith("SP"))
                 {

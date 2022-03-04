@@ -18,20 +18,26 @@ namespace epg123.SchedulesDirect
             try
             {
                 var ret = JsonConvert.DeserializeObject<UserStatus>(sr, jSettings);
-                if (ret.Code == 0)
+                switch (ret.Code)
                 {
-                    Logger.WriteVerbose($"Status request successful. account expires: {ret.Account.Expires:s}Z , lineups: {ret.Lineups.Count}/{ret.Account.MaxLineups} , lastDataUpdate: {ret.LastDataUpdate:s}Z");
-                    Logger.WriteVerbose($"system status: {ret.SystemStatus[0].Status} , message: {ret.SystemStatus[0].Message}");
-                    MaxLineups = ret.Account.MaxLineups;
+                    case 0:
+                        Logger.WriteVerbose($"Status request successful. account expires: {ret.Account.Expires:s}Z , lineups: {ret.Lineups.Count}/{ret.Account.MaxLineups} , lastDataUpdate: {ret.LastDataUpdate:s}Z");
+                        Logger.WriteVerbose($"system status: {ret.SystemStatus[0].Status} , message: {ret.SystemStatus[0].Message}");
+                        MaxLineups = ret.Account.MaxLineups;
 
-                    var expires = ret.Account.Expires - DateTime.UtcNow;
-                    if (expires < TimeSpan.FromDays(7.0))
-                    {
+                        var expires = ret.Account.Expires - DateTime.UtcNow;
+                        if (expires >= TimeSpan.FromDays(7.0)) return ret;
                         Logger.WriteWarning($"Your Schedules Direct account expires in {expires.Days:D2} days {expires.Hours:D2} hours {expires.Minutes:D2} minutes.");
-                    }
-                    return ret;
+                        Logger.WriteInformation("*** Renew your Schedules Direct membership at https://schedulesdirect.org. ***");
+                        return ret;
+                    case 4001:
+                        Logger.WriteWarning("Your Schedules Direct account has expired.");
+                        Logger.WriteInformation("*** Renew your Schedules Direct membership at https://schedulesdirect.org. ***");
+                        return ret;
+                    default:
+                        Logger.WriteError($"Failed to get account status. code: {ret.Code} , message: {ret.Message}");
+                        break;
                 }
-                Logger.WriteError($"Failed to get account status. code: {ret.Code} , message: {ret.Message}");
             }
             catch (Exception ex)
             {

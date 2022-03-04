@@ -117,7 +117,7 @@ namespace epg123.SchedulesDirect
                                 {
                                     ErrorString = $"Message: {err.Message ?? string.Empty} Response: {err.Response ?? string.Empty}";
                                     Logger.WriteVerbose($"SD responded with error code: {err.Code} , message: {err.Message ?? err.Response} , serverID: {err.ServerId} , datetime: {err.Datetime:s}Z");
-                                    if (err.Code == 4003) // invalid user or token expired
+                                    if (err.Code == 4003 || err.Code == 4006) // invalid user or token expired
                                     {
                                         return null;
                                     }

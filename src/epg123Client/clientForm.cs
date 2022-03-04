@@ -1861,26 +1861,32 @@ namespace epg123Client
 
             // collect all the enabled tuners that exist in the registry
             var registryTuners = new List<tunerRecorders>();
-            using (var tunerGroupKey = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Media Center\Service\Video\Tuners\{71985F48-1CA1-11D3-9CC8-00C04F7971E0}", false))
+            using (var tunersKey = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Media Center\Service\Video\Tuners", false))
             {
-                if (tunerGroupKey != null)
+                if (tunersKey != null)
                 {
-                    foreach (var tunerKey in tunerGroupKey.GetSubKeyNames())
+                    foreach (var tunerGroupName in tunersKey.GetSubKeyNames().Where(arg => !arg.Equals("DVR")))
                     {
-                        using (var tuner = tunerGroupKey.OpenSubKey(tunerKey))
+                        using (var tunerGroupKey = tunersKey.OpenSubKey(tunerGroupName))
                         {
-                            using (var usrSetting = tuner.OpenSubKey("UserSettings"))
+                            foreach (var tunerKey in tunerGroupKey.GetSubKeyNames())
                             {
-                                if (usrSetting == null || (int)usrSetting.GetValue("EnabledForMCE", 0) == 0) continue;
+                                using (var tuner = tunerGroupKey.OpenSubKey(tunerKey))
+                                {
+                                    using (var usrSetting = tuner.OpenSubKey("UserSettings"))
+                                    {
+                                        if (usrSetting == null || (int)usrSetting.GetValue("EnabledForMCE", 0) == 0) continue;
+                                    }
+                                    registryTuners.Add(new tunerRecorders
+                                    {
+                                        recorderId = tunerKey.Substring(1, 36).ToLower(),
+                                        devName = (string)tuner.GetValue("DevName"),
+                                        rootDevice = (string)tuner.GetValue("RootDevice"),
+                                        instanceId = (string)tuner.GetValue("TunerInstanceId"),
+                                        devInstance = (int)tuner.GetValue("DevInstance")
+                                    });
+                                }
                             }
-                            registryTuners.Add(new tunerRecorders
-                            {
-                                recorderId = tunerKey.Substring(1, 36).ToLower(),
-                                devName = (string)tuner.GetValue("DevName"),
-                                rootDevice = (string)tuner.GetValue("RootDevice"),
-                                instanceId = (string)tuner.GetValue("TunerInstanceId"),
-                                devInstance = (int)tuner.GetValue("DevInstance")
-                            });
                         }
                     }
                 }

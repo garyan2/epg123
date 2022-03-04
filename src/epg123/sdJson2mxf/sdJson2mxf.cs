@@ -50,7 +50,7 @@ namespace epg123.sdJson2mxf
                 // check server status
                 var susr = SdApi.GetUserStatus();
                 if (susr == null) return;
-                else if (susr.SystemStatus[0].Status.ToLower().Equals("offline"))
+                if (susr.SystemStatus[0].Status.ToLower().Equals("offline"))
                 {
                     Logger.WriteError("Schedules Direct server is offline. Aborting update.");
                     return;
@@ -130,7 +130,6 @@ namespace epg123.sdJson2mxf
             }
             SdMxf = null;
             GC.Collect();
-            Helper.SendPipeMessage("Download Complete");
         }
 
         private static void AddBrandLogoToMxf()

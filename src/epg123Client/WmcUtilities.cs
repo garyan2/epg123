@@ -7,6 +7,7 @@ using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Serialization;
 using Microsoft.Win32;
@@ -519,10 +520,11 @@ namespace epg123Client
             if (e.Data == null) return;
             var data = e.Data;
             if (data.Length <= 0) return;
-            if (data.StartsWith("Loading... "))
+            var m = Regex.Match(data, @"[0-9]{1,3}%");
+            if (m.Success)
             {
                 Helper.SendPipeMessage($"Importing|{data}");
-                BackgroundWorker?.ReportProgress(int.Parse(data.Substring(11).TrimEnd('%')));
+                BackgroundWorker?.ReportProgress(int.Parse(m.Value.TrimEnd('%')));
             }
             else
             {

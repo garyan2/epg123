@@ -277,7 +277,7 @@ namespace epg123Client
             // disable usage tracking
             using (var key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Media Center\Settings\ProgramGuide", true))
             {
-                if (key != null && (int)key.GetValue("fPrivacyLevel", 2) != 0) key.SetValue("fPrivacyLevel", 0);
+                if (key != null && (int)key.GetValue("fPrivacyLevel", 2) != 1) key.SetValue("fPrivacyLevel", 1);
                 if (key != null && (int)key.GetValue("fUsageTracking", 1) != 0) key.SetValue("fUsageTracking", 0);
             }
         }
@@ -357,7 +357,7 @@ namespace epg123Client
                 var startInfo = new ProcessStartInfo()
                 {
                     FileName = Helper.EhshellExeFilePath,
-                    Arguments = "/nostartupanimation /homepage:Options.Video.TvSignal.xml"
+                    Arguments = "/nostartupanimation /homepage:Options.SetupMediaCenter.xml"
                 };
                 _procWmc = Process.Start(startInfo);
                 _procWmc?.WaitForInputIdle(30000);

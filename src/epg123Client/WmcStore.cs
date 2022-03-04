@@ -602,8 +602,8 @@ namespace epg123Client
                     }
                     mergedChannel.AddChannelListings(listings);
                 }
-                SetChannelEnableState(mergedChannelId, listings != null);
                 mergedChannel.Update();
+                SetChannelEnableState(mergedChannelId, listings != null);
             }
             catch (Exception ex)
             {

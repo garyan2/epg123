@@ -160,6 +160,7 @@ namespace epg123
             _selectedBox.Image = null;
             _selectedBox.Update();
             _selectedBox.BackColor = SystemColors.Control;
+            _selectedBox = null;
 
             try
             {

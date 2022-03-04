@@ -335,7 +335,7 @@ namespace epg123.sdJson2mxf
                     IsDvs = Helper.TableContains(scheduleProgram.AudioProperties, "dvs"),
                     IsEnhanced = Helper.TableContains(scheduleProgram.VideoProperties, "enhanced"),
                     IsFinale = Helper.StringContains(scheduleProgram.IsPremiereOrFinale, "finale"),
-                    IsHdtv = CheckHdOverride(schedule.StationId) || !CheckSdOverride(schedule.StationId) && Helper.TableContains(scheduleProgram.VideoProperties, "hdtv"),
+                    IsHdtv = CheckHdOverride(schedule.StationId) || !CheckSdOverride(schedule.StationId) && Helper.TableContains(scheduleProgram.VideoProperties, "hd"),
                     //IsHdtvSimulCast = null,
                     IsInProgress = scheduleProgram.JoinedInProgress,
                     IsLetterbox = Helper.TableContains(scheduleProgram.VideoProperties, "letterbox"),

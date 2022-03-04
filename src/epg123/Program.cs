@@ -156,6 +156,7 @@ namespace epg123
                         Logger.WriteError("Failed to create MXF file. Exiting.");
                     }
                 }
+                Helper.SendPipeMessage("Download Complete");
 
                 // close the logger and restore power/sleep settings
                 Logger.WriteVerbose($"epg123 update execution time was {DateTime.UtcNow - startTime}.");

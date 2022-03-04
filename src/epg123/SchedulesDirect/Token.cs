@@ -14,7 +14,7 @@ namespace epg123.SchedulesDirect
                 {
                     if (key != null)
                     {
-                        var expires = DateTime.Parse((string) key.GetValue("tokenExpires", DateTime.MinValue.ToString()));
+                        DateTime.TryParse((string) key.GetValue("tokenExpires"), out var expires);
                         myToken = (string)key.GetValue("token", "");
                         if (expires.ToLocalTime() - DateTime.Now > TimeSpan.FromHours(1.0))
                         {
@@ -51,7 +51,7 @@ namespace epg123.SchedulesDirect
                                 if (key != null)
                                 {
                                     key.SetValue("token", ret.Token);
-                                    key.SetValue("tokenExpires", $"{ret.Datetime.AddDays(1):R}");
+                                    key.SetValue("tokenExpires", $"{ret.Datetime.AddDays(1):O}");
                                 }
                             }
                         }
