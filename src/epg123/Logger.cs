@@ -17,10 +17,12 @@ namespace epg123
             try
             {
                 var key = Registry.LocalMachine.OpenSubKey($@"SYSTEM\CurrentControlSet\services\eventlog\Media Center\{source}");
-                if (key != null) return;
-                if (EventLog.SourceExists(source)) return;
-                var sourceData = new EventSourceCreationData(source, "Media Center");
-                EventLog.CreateEventSource(sourceData);
+                if (key == null)
+                {
+                    if (EventLog.SourceExists(source)) return;
+                    var sourceData = new EventSourceCreationData(source, "Media Center");
+                    EventLog.CreateEventSource(sourceData);
+                }
                 registered = true;
             }
             catch (Exception ex)

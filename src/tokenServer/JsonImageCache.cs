@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
@@ -68,26 +67,25 @@ namespace tokenServer
             var location = $"{Helper.Epg123ImageCache}\\{filename.Substring(0, 1)}\\{filename}";
             lock (_cacheLock)
             {
+                var fi = new FileInfo(location);
                 if (ImageCache.ContainsKey(filename))
                 {
-                    if (File.Exists(location))
+                    if (fi.Exists)
                     {
                         ImageCache[filename].LastUsed = DateTime.Now;
-                        return new FileInfo(location);
+                        if (ImageCache[filename].ByteSize == 0) ImageCache[filename].ByteSize = fi.Length;
+                        return fi;
                     }
                     ImageCache.Remove(filename);
                 }
 
-                if (File.Exists(location))
-                {
-                    ImageCache.Add(filename, new CacheImage { LastUsed = DateTime.Now });
-                    return new FileInfo(location);
-                }
-                return null;
+                if (!fi.Exists) return null;
+                ImageCache.Add(filename, new CacheImage { LastUsed = DateTime.Now, ByteSize = fi.Length});
+                return fi;
             }
         }
 
-        public static void AddImageToCache(string filename, DateTime lastModified)
+        public static void AddImageToCache(string filename, DateTime lastModified, long size)
         {
             lock (_cacheLock)
             {
@@ -95,8 +93,32 @@ namespace tokenServer
                 {
                     ImageCache[filename].LastUsed = DateTime.Now;
                     ImageCache[filename].LastModified = lastModified;
+                    ImageCache[filename].ByteSize = size;
                 }
-                else ImageCache.Add(filename, new CacheImage { LastUsed = DateTime.Now, LastModified = lastModified});
+                else ImageCache.Add(filename, new CacheImage { LastUsed = DateTime.Now, LastModified = lastModified, ByteSize = size});
+            }
+        }
+
+        public static void GetAllImageSizes()
+        {
+            foreach (var image in ImageCache.Where(arg => arg.Value.ByteSize == 0))
+            {
+                var fi = new FileInfo($"{Helper.Epg123ImageCache}\\{image.Key.Substring(0, 1)}\\{image.Key}");
+                if (fi.Exists)
+                {
+                    image.Value.ByteSize = fi.Length;
+                }
+            }
+        }
+
+        public static void AddImagesMissingInCacheFile()
+        {
+            var files = Directory.GetFiles($"{Helper.Epg123ImageCache}", "*.*", SearchOption.AllDirectories);
+            foreach (var file in files.Where(arg => arg.EndsWith("jpg") || arg.EndsWith("png")))
+            {
+                var fi = new FileInfo(file);
+                if (ImageCache.ContainsKey(fi.Name)) continue;
+                AddImageToCache(fi.Name, fi.LastWriteTime, fi.Length);
             }
         }
 
@@ -127,5 +149,8 @@ namespace tokenServer
 
         [JsonProperty("LastModified")]
         public DateTime LastModified { get; set; }
+
+        [JsonProperty("byteSize")]
+        public long ByteSize { get; set; }
     }
 }

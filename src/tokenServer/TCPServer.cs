@@ -214,7 +214,7 @@ namespace tokenServer
                             fStream.Flush();
                         }
                         File.SetLastWriteTimeUtc(location, response.LastModified);
-                        JsonImageCache.AddImageToCache(filename, response.LastModified);
+                        JsonImageCache.AddImageToCache(filename, response.LastModified, memStream.Length);
                         return;
                     }
 

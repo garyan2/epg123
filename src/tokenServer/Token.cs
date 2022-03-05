@@ -53,7 +53,7 @@ namespace tokenServer
                         if (key != null)
                         {
                             key.SetValue("token", ret.Token);
-                            key.SetValue("tokenExpires", $"{ret.Datetime.AddDays(1):R}");
+                            key.SetValue("tokenExpires", $"{ret.Datetime.AddDays(1):O}");
                             Helper.WriteLogEntry("Refreshed token upon receiving an UNKNOWN_USER (5004) error code.");
                             lastRefresh = DateTime.Now;
                             return GoodToken = true;

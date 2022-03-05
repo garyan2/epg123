@@ -22,6 +22,8 @@ namespace tokenServer
             Helper.DeleteLogFile();
             StartRegistryWatcher();
             WebStats.StartTime = DateTime.Now;
+            JsonImageCache.GetAllImageSizes();
+            JsonImageCache.AddImagesMissingInCacheFile();
 
             new Thread(() =>
             {

@@ -1,4 +1,6 @@
 ﻿using System;
+using System.IO;
+using System.Linq;
 
 namespace tokenServer
 {
@@ -38,15 +40,19 @@ namespace tokenServer
         {
             get
             {
+                var fiMxf = new FileInfo(Helper.Epg123MxfPath);
+                var fiXmltv = new FileInfo(Helper.Epg123XmltvPath);
                 var uptime = DateTime.Now - StartTime;
                 return $"<html><title>{Environment.MachineName} Server Status</title><body>" +
                        $"<h1>Status</h1><p>" +
                        $"Uptime: <font color=\"blue\">{uptime.Days:D2}</font> days, <font color=\"blue\">{uptime.Hours:D2}</font> hours, <font color=\"blue\">{uptime.Minutes:D2}</font> minutes, <font color=\"blue\">{uptime.Seconds:D2}</font> seconds<br>" +
                        $"Registry watcher running: <font color=\"{(RegWatcherRunning ? "blue" : "red")}\">{RegWatcherRunning}</font><br>" +
-                       $"Number of cached images: <font color=\"blue\">{JsonImageCache.ImageCache.Count}</font><br>" +
+                       $"Number of cached images: <font color=\"blue\">{JsonImageCache.ImageCache.Count} ({JsonImageCache.ImageCache.Select(x => x.Value.ByteSize).Sum():N0} bytes)</font><br>" +
                        $"Download limit exceeded: <font color=\"{(LimitLocked ? "red" : "blue")}\">{LimitLocked}</font><br>" +
                        $"Number of token refreshes: <font color=\"blue\">{tokenRefresh}</font><br>" +
-                       $"Valid token: <font color=\"{(TokenService.GoodToken ? "blue" : "red")}\">{TokenService.GoodToken}</font></p>" +
+                       $"Valid token: <font color=\"{(TokenService.GoodToken ? "blue" : "red")}\">{TokenService.GoodToken}</font></p><p>" +
+                       $"MXF file date/size: {(fiMxf.Exists ? $"<font color=\"{(DateTime.Now - fiMxf.LastWriteTime > TimeSpan.FromDays(1) ? "red" : "blue")}\">{fiMxf.LastWriteTime} ({fiMxf.Length:N0} bytes)</font>" : "")}<br>" +
+                       $"XMLTV file date/size: {(fiXmltv.Exists ? $"<font color=\"{(DateTime.Now - fiXmltv.LastWriteTime > TimeSpan.FromDays(1) ? "red" : "blue")}\">{fiXmltv.LastWriteTime} ({fiXmltv.Length:N0} bytes)</font>" : "")}</p>" +
 
                        $"<h1>Configuration</h1><p>" +
                        $"Automatic token refresh: <font color=\"blue\">{TokenService.RefreshToken}</font><br>" +
