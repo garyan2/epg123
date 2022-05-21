@@ -13,7 +13,6 @@ namespace epg123.Github
 
         public Release GetLatestReleaseInfo()
         {
-            ServicePointManager.SecurityProtocol |= (SecurityProtocolType) 3072;
             var url = $"{apiBase}/releases/latest";
             var req = (HttpWebRequest)WebRequest.Create(url);
             req.UserAgent = $"EPG123/{Helper.Epg123Version}";
@@ -27,7 +26,6 @@ namespace epg123.Github
 
         public List<Release> GetAllReleasesInfo()
         {
-            ServicePointManager.SecurityProtocol |= (SecurityProtocolType) 3072;
             var url = $"{apiBase}/releases";
             var req = (HttpWebRequest)WebRequest.Create(url);
             req.UserAgent = $"EPG123/{Helper.Epg123Version}";

@@ -49,8 +49,7 @@ namespace epg123.sdJson2mxf
             {
                 // check server status
                 var susr = SdApi.GetUserStatus();
-                if (susr == null) return;
-                if (susr.SystemStatus[0].Status.ToLower().Equals("offline"))
+                if (susr != null && susr.SystemStatus[0].Status.ToLower().Equals("offline"))
                 {
                     Logger.WriteError("Schedules Direct server is offline. Aborting update.");
                     return;

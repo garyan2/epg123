@@ -35,6 +35,9 @@ namespace tokenServer
 
         public void StartTcpListener()
         {
+            ServicePointManager.Expect100Continue = true;
+            ServicePointManager.SecurityProtocol |= (SecurityProtocolType)3072; // Tls12
+            
             _tcpListener = new TcpListener(IPAddress.Any, Helper.TcpPort);
             _tcpListener.Start(200);
 
@@ -170,6 +173,9 @@ namespace tokenServer
                 request.IfModifiedSince = new[] {ifModifiedSince.ToUniversalTime(), fileInfo?.LastWriteTimeUtc ?? DateTime.MinValue}.Max();
             }
 
+            // don't try to download from SD if token is invalid
+            if (!TokenService.GoodToken) goto NoToken;
+
             try
             {
                 // update web stats
@@ -242,7 +248,8 @@ namespace tokenServer
                 Helper.WriteLogEntry($"{asset}\nWebException: {e.Status} - {e.Message}");
             }
 
-            // fallback for failed connection
+            NoToken:
+            // fallback for failed connection or no token
             if (Send304OrImageFromCache(stream, ifModifiedSince, fileInfo)) return;
 
             // nothing to give the client
@@ -392,11 +399,12 @@ namespace tokenServer
                     switch (err.Code)
                     {
                         case 5000: // IMAGE_NOT_FOUND
+                        case 5001: // IMAGE_QUEUED
                             statusCode = 404;
                             statusDescription = "Not Found";
                             break;
                         case 5002: // MAX_IMAGE_DOWNLOADS
-                            lock (_limitLock) _limitExceeded = WebStats.LimitLocked = true;
+                        case 5003: // MAX_IMAGE_DOWNLOADS_TRIAL
                             statusCode = 429;
                             statusDescription = "Too Many Requests";
                             break;
@@ -436,12 +444,18 @@ namespace tokenServer
                         break;
                     default:
                         WebStats.IncrementOtherResponse();
+                        if (statusCode == 200)
+                        {
+                            statusCode = 418;
+                            statusDescription = "I'm a teapot";
+                        }
                         break;
                 }
 
                 // log the error response
-                if (!(err.Code == 5002 && _limitExceeded) && !(err.Code == 5004 && !TokenService.GoodToken))
+                if (!(statusCode == 429 && _limitExceeded) && !(statusCode == 401 && !TokenService.GoodToken))
                 {
+                    if (statusCode == 429) {lock (_limitLock) _limitExceeded = WebStats.LimitLocked = true;}
                     Helper.WriteLogEntry($"{asset}: {statusCode} {statusDescription}{(!string.IsNullOrEmpty(resp) ? $"\n{resp}" : "")}");
                 }
 

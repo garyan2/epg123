@@ -546,9 +546,30 @@ namespace epg123Client
                 }
             }
 
+            var removedStations = new Channels(objectStore).Where(arg => (arg.Lineup?.Name.StartsWith("EPG123") ?? false) || 
+                                                                         (arg.Lineup?.Name.StartsWith("HDHR2MXF") ?? false))
+                                                           .Where(arg => ChannelIsOrphaned(epg123Channels, arg)).ToList();
+            foreach (var station in removedStations)
+            {
+                var lineup = station.Lineup;
+                Logger.WriteVerbose($"Channel {station.ChannelNumber} {station.CallSign} was removed from lineup {station.Lineup.Name}.");
+                lineup.RemoveChannel(station);
+                lineup.NotifyChannelRemoved(station);
+                lineup.Update();
+            }
+
             // finish it
             WmcMergedLineup.FullMerge(false);
             WmcMergedLineup.Update();
+        }
+
+        private static bool ChannelIsOrphaned(List<Channel> channels, Channel channel)
+        {
+            foreach (Channel c in channels)
+            {
+                if (c.IsSameAs(channel)) return false;
+            }
+            return true;
         }
 
         /// <summary>
@@ -600,6 +621,7 @@ namespace epg123Client
                             mergedChannel.SecondaryChannels.RemoveAllMatching(secondary);
                         }
                     }
+                    mergedChannel.Refresh(true);
                     mergedChannel.AddChannelListings(listings);
                 }
                 mergedChannel.Update();
@@ -836,16 +858,16 @@ namespace epg123Client
 
         private void SetServiceTypeFlags()
         {
-            var channel = (MergedChannel.PrimaryChannel.ChannelType == ChannelType.Scanned || MergedChannel.PrimaryChannel.ChannelType == ChannelType.CalculatedScanned) && MergedChannel.PrimaryChannel.Lineup != null
+            var channel = (MergedChannel.PrimaryChannel.ChannelType == ChannelType.Scanned || MergedChannel.PrimaryChannel.ChannelType == ChannelType.CalculatedScanned || MergedChannel.PrimaryChannel.ChannelType == ChannelType.UserAdded) && MergedChannel.PrimaryChannel.Lineup != null
                 ? MergedChannel.PrimaryChannel
-                : MergedChannel.SecondaryChannels.FirstOrDefault(arg => (arg.ChannelType == ChannelType.Scanned || arg.ChannelType == ChannelType.CalculatedScanned) && arg.Lineup != null);
+                : MergedChannel.SecondaryChannels.FirstOrDefault(arg => (arg.ChannelType == ChannelType.Scanned || arg.ChannelType == ChannelType.CalculatedScanned || arg.ChannelType == ChannelType.UserAdded) && arg.Lineup != null);
 
             IsUnknown = IsTV = IsRadio = IsInteractiveTV = false;
             if (channel == null) return;
             switch (channel.Service.ServiceType)
             {
                 case 0:
-                    if (channel.ChannelType == ChannelType.Scanned || channel.ChannelType == ChannelType.CalculatedScanned) IsUnknown = true;
+                    if (channel.ChannelType == ChannelType.Scanned || channel.ChannelType == ChannelType.CalculatedScanned || channel.ChannelType == ChannelType.UserAdded) IsUnknown = true;
                     else IsInteractiveTV = true;
                     break;
                 case 1:

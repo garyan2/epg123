@@ -75,7 +75,7 @@ namespace hdhr2mxf.HDHR
             }
             catch (WebException wex)
             {
-                Logger.WriteError("ConnectDevice(): " + wex.Message);
+                Logger.WriteError($"ConnectDevice({url}): {wex.Message}");
                 if (wex.Response == null) return null;
                 using (var sr = new StreamReader(wex.Response.GetResponseStream(), Encoding.UTF8))
                 {
@@ -84,7 +84,7 @@ namespace hdhr2mxf.HDHR
             }
             catch (Exception e)
             {
-                Logger.WriteError("ConnectDevice(): " + e.Message);
+                Logger.WriteError($"ConnectDevice({url}): {e.Message}");
             }
             return null;
         }
@@ -93,14 +93,14 @@ namespace hdhr2mxf.HDHR
         {
             try
             {
-                using (var sr = GetRequestResponse(url + "?tuning"))
+                using (var sr = GetRequestResponse($"{url}?tuning"))
                 {
                     return JsonConvert.DeserializeObject<List<hdhrChannel>>(sr.ReadToEnd());
                 }
             }
             catch (WebException wex)
             {
-                Logger.WriteError("GetDeviceChannels(): " + wex.Message);
+                Logger.WriteError($"GetDeviceChannels({url}): {wex.Message}");
                 if (wex.Response == null) return null;
                 using (var sr = new StreamReader(wex.Response.GetResponseStream(), Encoding.UTF8))
                 {
@@ -109,7 +109,7 @@ namespace hdhr2mxf.HDHR
             }
             catch (Exception e)
             {
-                Logger.WriteError("GetDeviceChannels(): " + e.Message);
+                Logger.WriteError($"GetDeviceChannels({url}): {e.Message}");
             }
             return null;
         }

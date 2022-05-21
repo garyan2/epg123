@@ -217,8 +217,6 @@ namespace epg123
 
                 try
                 {
-                    ServicePointManager.Expect100Continue = true;
-                    ServicePointManager.SecurityProtocol = (SecurityProtocolType)3072;
                     using (var stream = new MemoryStream(new WebClient().DownloadData(link)))
                     {
                         imgBitmap = Image.FromStream(stream) as Bitmap;

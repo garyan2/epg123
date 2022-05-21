@@ -35,6 +35,9 @@ namespace epg123.SchedulesDirect
         public static void Initialize(string agent)
         {
             userAgent = agent;
+
+            ServicePointManager.Expect100Continue = true;
+            ServicePointManager.SecurityProtocol |= (SecurityProtocolType)3072; // Tls12
         }
 
         private static string GetRequestResponse(methods method, string uri, object jsonRequest = null, bool tkRequired = true)
@@ -48,7 +51,7 @@ namespace epg123.SchedulesDirect
             // send request and get response
             var maxTries = (uri.Equals("token") || uri.Equals("status")) ? 1 : 2;
             var cntTries = 0;
-            var timeout = (uri.Equals("token") || uri.Equals("status")) ? 3000 : 300000;
+            var timeout = (uri.Equals("token") || uri.Equals("status")) ? 30000 : 30000;
             do
             {
                 try
@@ -111,8 +114,8 @@ namespace epg123.SchedulesDirect
                             Logger.WriteVerbose($"SD API WebException Thrown. Message: {wex.Message} , Status: {wex.Status}");
                             try
                             {
-                                var sr = new StreamReader(wex.Response.GetResponseStream(), Encoding.UTF8);
-                                var err = JsonConvert.DeserializeObject<BaseResponse>(sr.ReadToEnd());
+                                var sr = new StreamReader(wex.Response?.GetResponseStream(), Encoding.UTF8);
+                                var err = JsonConvert.DeserializeObject<BaseResponse>(sr?.ReadToEnd());
                                 if (err != null)
                                 {
                                     ErrorString = $"Message: {err.Message ?? string.Empty} Response: {err.Response ?? string.Empty}";

@@ -134,7 +134,7 @@ namespace epg123Client
                 // restore recording requests if the tool is available
                 if (File.Exists("epg123Transfer.exe"))
                 {
-                    UpdateStatusText("Transferring recording requests...");
+                    UpdateStatusText("Transferring recording requests ...");
                     Logger.WriteVerbose("Opening recording request transfer tool and waiting for it to close ...");
                     var startInfo = new ProcessStartInfo()
                     {

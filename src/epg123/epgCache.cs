@@ -118,8 +118,7 @@ namespace epg123
         {
             if (!JsonFiles.ContainsKey(md5))
             {
-                Logger.WriteInformation($"Failed to update asset image for program with MD5 {md5}.");
-                return;
+                AddAsset(md5, null);
             }
 
             // reduce the size of the string by removing nulls and empty strings
@@ -135,8 +134,7 @@ namespace epg123
         {
             if (!JsonFiles.ContainsKey(md5))
             {
-                Logger.WriteInformation($"Failed to update asset json for program with MD5 {md5}.");
-                return;
+                AddAsset(md5, json);
             }
 
             // reduce the size of the string by removing nulls and empty strings

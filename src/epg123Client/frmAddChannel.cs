@@ -187,7 +187,8 @@ namespace epg123Client
                 service = new Service
                 {
                     CallSign = chnTiCallsign.Text,
-                    Name = chnTiCallsign.Text
+                    Name = chnTiCallsign.Text,
+                    ServiceType = ServiceType.TV
                 };
 
                 channel = new Channel

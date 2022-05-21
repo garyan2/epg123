@@ -69,7 +69,7 @@ namespace epg123.sdJson2mxf
                 ++processedObjects; ReportProgress();
                 ProcessMd5ScheduleEntry(md5);
             }
-            Logger.WriteInformation($"Processed {totalObjects} daily schedules for {SdMxf.With.Services.Count} stations.");
+            Logger.WriteInformation($"Processed {totalObjects} daily schedules for {SdMxf.With.Services.Count} stations for average of {totalObjects / SdMxf.With.Services.Count:N1} days per station.");
             Logger.WriteMessage("Exiting GetAllScheduleEntryMd5s(). SUCCESS.");
             GC.Collect();
             return true;
