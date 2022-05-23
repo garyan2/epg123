@@ -30,8 +30,10 @@ namespace tokenServer
     {
         private TcpListener _tcpListener;
         private bool _limitExceeded;
+        private bool _serviceUnavailable;
         private readonly object _limitLock = new object();
         private readonly object _tokenLock = new object();
+        private readonly object _serverLock = new object();
 
         public void StartTcpListener()
         {
@@ -398,6 +400,10 @@ namespace tokenServer
                     err = JsonConvert.DeserializeObject<BaseResponse>(resp);
                     switch (err.Code)
                     {
+                        case 3000: // SERVICE_OFFLINE
+                            statusCode = 503;
+                            statusDescription = "Service Unavailable";
+                            break;
                         case 5000: // IMAGE_NOT_FOUND
                         case 5001: // IMAGE_QUEUED
                             statusCode = 404;
@@ -408,6 +414,7 @@ namespace tokenServer
                             statusCode = 429;
                             statusDescription = "Too Many Requests";
                             break;
+                        case 4003: // INVALID_USER
                         case 5004: // UNKNOWN_USER
                             bool refresh;
                             lock (_tokenLock) refresh = TokenService.GoodToken && TokenService.RefreshToken && !retry && TokenService.RefreshTokenFromSD();
@@ -439,8 +446,14 @@ namespace tokenServer
                     case 429:
                         WebStats.Increment429Response();
                         break;
+                    case 500:
+                        WebStats.Increment500Response();
+                        break;
                     case 502:
                         WebStats.Increment502Response();
+                        break;
+                    case 503:
+                        WebStats.Increment503Response();
                         break;
                     default:
                         WebStats.IncrementOtherResponse();
@@ -456,7 +469,11 @@ namespace tokenServer
                 if (!(statusCode == 429 && _limitExceeded) && !(statusCode == 401 && !TokenService.GoodToken))
                 {
                     if (statusCode == 429) {lock (_limitLock) _limitExceeded = WebStats.LimitLocked = true;}
-                    Helper.WriteLogEntry($"{asset}: {statusCode} {statusDescription}{(!string.IsNullOrEmpty(resp) ? $"\n{resp}" : "")}");
+                    if (!(statusCode == 503 && _serviceUnavailable))
+                    {
+                        if (statusCode == 503) { lock (_serverLock) _serviceUnavailable = true;}
+                        Helper.WriteLogEntry($"{asset}: {statusCode} {statusDescription}{(!string.IsNullOrEmpty(resp) ? $"\n{resp}" : "")}");
+                    }
                 }
 
                 // send response header and body to client

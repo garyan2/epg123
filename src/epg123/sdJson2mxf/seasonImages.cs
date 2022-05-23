@@ -66,10 +66,9 @@ namespace epg123.sdJson2mxf
                 ProcessSeasonImageResponses();
                 if (processedObjects != totalObjects)
                 {
-                    Logger.WriteInformation("Problem occurred during GetAllSeasonImages(). Did not process all season image links.");
+                    Logger.WriteInformation($"Failed to download and process {SdMxf.With.Seasons.Count - processedObjects} season image links.");
                 }
             }
-            Logger.WriteInformation($"Processed {processedObjects} season image links.");
             Logger.WriteMessage("Exiting GetAllSeasonImages(). SUCCESS.");
             imageQueue = null; imageResponses = null;
             return true;

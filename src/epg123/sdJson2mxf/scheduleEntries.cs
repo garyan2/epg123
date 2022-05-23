@@ -32,14 +32,6 @@ namespace epg123.sdJson2mxf
             // build date array for requests
             var dt = DateTime.UtcNow;
 
-            // adjust number of days if currently within 0000 - 0400 UTC
-            if (dt.Hour < 4)
-            {
-                ++days;
-                dt -= TimeSpan.FromDays(1.0);
-                totalObjects += SdMxf.With.Services.Count;
-            }
-
             // build the date array to request
             var dates = new string[days];
             for (var i = 0; i < dates.Length; ++i)
@@ -288,6 +280,9 @@ namespace epg123.sdJson2mxf
             // process each program schedule entry
             foreach (var scheduleProgram in schedule.Programs)
             {
+                // limit requests to airing programs now or in the future
+                if (scheduleProgram.AirDateTime + TimeSpan.FromSeconds(scheduleProgram.Duration) < DateTime.Now) continue;
+
                 // prepopulate some of the program
                 var mxfProgram = SdMxf.GetProgram(scheduleProgram.ProgramId);
                 if (mxfProgram.extras.Count == 0)

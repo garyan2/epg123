@@ -31,7 +31,7 @@ namespace tokenServer
             req.Accept = "application/json";
             req.ContentLength = body.Length;
             req.AutomaticDecompression = DecompressionMethods.Deflate;
-            req.Timeout = 3000;
+            req.Timeout = 30000;
 
             // write the json username and password hash to the request stream
             var reqStream = req.GetRequestStream();

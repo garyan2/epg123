@@ -265,8 +265,7 @@ namespace epg123
 
                                 if (!File.Exists(filename))
                                 {
-                                    var err = $"File \"{filename}\" does not exist.";
-                                    Logger.WriteError(err);
+                                    Logger.WriteError($"File \"{filename}\" does not exist.");
                                     return -1;
                                 }
                                 filename = new FileInfo(filename).FullName.ToLower();

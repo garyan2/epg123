@@ -63,10 +63,9 @@ namespace epg123.sdJson2mxf
                 ProcessProgramResponses();
                 if (processedObjects != totalObjects)
                 {
-                    Logger.WriteWarning("Problem occurred during BuildAllProgramEntries(). Did not process all program description responses.");
+                    Logger.WriteWarning($"Failed to download and process {SdMxf.With.Programs.Count - processedObjects} program descriptions.");
                 }
             }
-            Logger.WriteInformation($"Processed {processedObjects} program descriptions.");
             Logger.WriteMessage("Exiting BuildAllProgramEntries(). SUCCESS.");
             programQueue = null; programResponses = null;
             return true;
@@ -312,7 +311,6 @@ namespace epg123.sdJson2mxf
 
             // queue up the sport event to get the event image
             if ((Helper.StringContains(sd.ShowType, "Sports event") || Helper.StringContains(sd.ShowType, "Team event")) && sd.HasSportsArtwork | sd.HasEpisodeArtwork)
-            //if ((Helper.StringContains(sd.EntityType, "Team Event") || Helper.StringContains(sd.EntityType, "Sport event")) && sd.HasSportsArtwork | sd.HasEpisodeArtwork)
             {
                 sportEvents.Add(prg);
             }

@@ -229,18 +229,19 @@
             this.cbOadOverride.Location = new System.Drawing.Point(6, 170);
             this.cbOadOverride.Name = "cbOadOverride";
             this.cbOadOverride.Size = new System.Drawing.Size(232, 17);
-            this.cbOadOverride.TabIndex = 41;
+            this.cbOadOverride.TabIndex = 9;
             this.cbOadOverride.Text = "Allow NEW flag to override Original Air Date";
             this.cbOadOverride.UseVisualStyleBackColor = true;
             this.cbOadOverride.CheckedChanged += new System.EventHandler(this.configs_Changed);
             // 
             // cbSeriesWsArt
             // 
+            this.cbSeriesWsArt.AccessibleName = "use 16 by 9 posters for series images instead of 4 by 3";
             this.cbSeriesWsArt.AutoSize = true;
             this.cbSeriesWsArt.Location = new System.Drawing.Point(6, 216);
             this.cbSeriesWsArt.Name = "cbSeriesWsArt";
             this.cbSeriesWsArt.Size = new System.Drawing.Size(258, 17);
-            this.cbSeriesWsArt.TabIndex = 40;
+            this.cbSeriesWsArt.TabIndex = 11;
             this.cbSeriesWsArt.Text = "Use 16x9 posters for series images instead of 4x3";
             this.cbSeriesWsArt.UseVisualStyleBackColor = true;
             this.cbSeriesWsArt.CheckedChanged += new System.EventHandler(this.imageConfigs_Changed);
@@ -267,11 +268,12 @@
             // 
             // cbNoCastCrew
             // 
+            this.cbNoCastCrew.AccessibleName = "do not include cast and crew";
             this.cbNoCastCrew.AutoSize = true;
             this.cbNoCastCrew.Location = new System.Drawing.Point(6, 359);
             this.cbNoCastCrew.Name = "cbNoCastCrew";
             this.cbNoCastCrew.Size = new System.Drawing.Size(247, 17);
-            this.cbNoCastCrew.TabIndex = 38;
+            this.cbNoCastCrew.TabIndex = 17;
             this.cbNoCastCrew.Text = "Slim MXF/XMLTV - do not include Cast && Crew";
             this.cbNoCastCrew.UseVisualStyleBackColor = true;
             this.cbNoCastCrew.CheckedChanged += new System.EventHandler(this.configs_Changed);
@@ -283,7 +285,7 @@
             this.cbAlternateSEFormat.Location = new System.Drawing.Point(6, 101);
             this.cbAlternateSEFormat.Name = "cbAlternateSEFormat";
             this.cbAlternateSEFormat.Size = new System.Drawing.Size(295, 17);
-            this.cbAlternateSEFormat.TabIndex = 36;
+            this.cbAlternateSEFormat.TabIndex = 6;
             this.cbAlternateSEFormat.Text = "Use season/episode format \"S1:E2\" instead of \"s01e02\"";
             this.cbAlternateSEFormat.UseVisualStyleBackColor = true;
             this.cbAlternateSEFormat.CheckedChanged += new System.EventHandler(this.configs_Changed);
@@ -299,6 +301,7 @@
             // 
             // cmbPreferredLogos
             // 
+            this.cmbPreferredLogos.AccessibleName = "perferred schedules direct logos";
             this.cmbPreferredLogos.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cmbPreferredLogos.FormattingEnabled = true;
             this.cmbPreferredLogos.Items.AddRange(new object[] {
@@ -310,38 +313,41 @@
             this.cmbPreferredLogos.Location = new System.Drawing.Point(119, 308);
             this.cmbPreferredLogos.Name = "cmbPreferredLogos";
             this.cmbPreferredLogos.Size = new System.Drawing.Size(160, 21);
-            this.cmbPreferredLogos.TabIndex = 31;
+            this.cmbPreferredLogos.TabIndex = 15;
             this.cmbPreferredLogos.SelectedIndexChanged += new System.EventHandler(this.imageConfigs_Changed);
             // 
             // cbSeriesPosterArt
             // 
+            this.cbSeriesPosterArt.AccessibleName = "use 2 by 3 posters for series images instead of 4 by 3";
             this.cbSeriesPosterArt.AutoSize = true;
             this.cbSeriesPosterArt.Location = new System.Drawing.Point(6, 193);
             this.cbSeriesPosterArt.Name = "cbSeriesPosterArt";
             this.cbSeriesPosterArt.Size = new System.Drawing.Size(252, 17);
-            this.cbSeriesPosterArt.TabIndex = 30;
+            this.cbSeriesPosterArt.TabIndex = 10;
             this.cbSeriesPosterArt.Text = "Use 2x3 posters for series images instead of 4x3";
             this.cbSeriesPosterArt.UseVisualStyleBackColor = true;
             this.cbSeriesPosterArt.CheckedChanged += new System.EventHandler(this.imageConfigs_Changed);
             // 
             // cbTMDb
             // 
+            this.cbTMDb.AccessibleName = "use the movie db dot org for missing movie cover art";
             this.cbTMDb.AutoSize = true;
             this.cbTMDb.Location = new System.Drawing.Point(6, 262);
             this.cbTMDb.Name = "cbTMDb";
             this.cbTMDb.Size = new System.Drawing.Size(249, 17);
-            this.cbTMDb.TabIndex = 28;
+            this.cbTMDb.TabIndex = 13;
             this.cbTMDb.Text = "Use themoviedb.org for missing movie cover art";
             this.cbTMDb.UseVisualStyleBackColor = true;
             this.cbTMDb.CheckedChanged += new System.EventHandler(this.imageConfigs_Changed);
             // 
             // cbSdLogos
             // 
+            this.cbSdLogos.AccessibleName = "include station logos in local logos folder";
             this.cbSdLogos.AutoSize = true;
             this.cbSdLogos.Location = new System.Drawing.Point(6, 285);
             this.cbSdLogos.Name = "cbSdLogos";
             this.cbSdLogos.Size = new System.Drawing.Size(199, 17);
-            this.cbSdLogos.TabIndex = 29;
+            this.cbSdLogos.TabIndex = 14;
             this.cbSdLogos.Text = "Include station logos in .\\logos folder";
             this.cbSdLogos.UseVisualStyleBackColor = true;
             this.cbSdLogos.CheckedChanged += new System.EventHandler(this.imageConfigs_Changed);
@@ -352,7 +358,7 @@
             this.cbTVDB.Location = new System.Drawing.Point(6, 32);
             this.cbTVDB.Name = "cbTVDB";
             this.cbTVDB.Size = new System.Drawing.Size(289, 17);
-            this.cbTVDB.TabIndex = 27;
+            this.cbTVDB.TabIndex = 3;
             this.cbTVDB.Text = "Use TheTVDB season and episode numbers if provided";
             this.cbTVDB.UseVisualStyleBackColor = true;
             this.cbTVDB.CheckedChanged += new System.EventHandler(this.configs_Changed);
@@ -363,19 +369,20 @@
             this.cbPrefixTitle.Location = new System.Drawing.Point(6, 55);
             this.cbPrefixTitle.Name = "cbPrefixTitle";
             this.cbPrefixTitle.Size = new System.Drawing.Size(274, 17);
-            this.cbPrefixTitle.TabIndex = 24;
+            this.cbPrefixTitle.TabIndex = 4;
             this.cbPrefixTitle.Text = "Prefix episode title with season and episode numbers";
             this.cbPrefixTitle.UseVisualStyleBackColor = true;
             this.cbPrefixTitle.CheckedChanged += new System.EventHandler(this.configs_Changed);
             // 
             // cbPrefixDescription
             // 
+            this.cbPrefixDescription.AccessibleName = "prefix episode description with season and episode numbers";
             this.cbPrefixDescription.AutoSize = true;
             this.cbPrefixDescription.CheckAlign = System.Drawing.ContentAlignment.TopLeft;
             this.cbPrefixDescription.Location = new System.Drawing.Point(6, 78);
             this.cbPrefixDescription.Name = "cbPrefixDescription";
             this.cbPrefixDescription.Size = new System.Drawing.Size(281, 17);
-            this.cbPrefixDescription.TabIndex = 26;
+            this.cbPrefixDescription.TabIndex = 5;
             this.cbPrefixDescription.Text = "Prefix episode desc with season and episode numbers";
             this.cbPrefixDescription.TextAlign = System.Drawing.ContentAlignment.TopLeft;
             this.cbPrefixDescription.UseVisualStyleBackColor = true;
@@ -383,12 +390,13 @@
             // 
             // cbAppendDescription
             // 
+            this.cbAppendDescription.AccessibleName = "append episode description with season and episode numbers";
             this.cbAppendDescription.AutoSize = true;
             this.cbAppendDescription.CheckAlign = System.Drawing.ContentAlignment.TopLeft;
             this.cbAppendDescription.Location = new System.Drawing.Point(6, 124);
             this.cbAppendDescription.Name = "cbAppendDescription";
             this.cbAppendDescription.Size = new System.Drawing.Size(292, 17);
-            this.cbAppendDescription.TabIndex = 25;
+            this.cbAppendDescription.TabIndex = 7;
             this.cbAppendDescription.Text = "Append episode desc with season and episode numbers";
             this.cbAppendDescription.TextAlign = System.Drawing.ContentAlignment.TopLeft;
             this.cbAppendDescription.UseVisualStyleBackColor = true;
@@ -400,13 +408,15 @@
             this.cbModernMedia.Location = new System.Drawing.Point(6, 335);
             this.cbModernMedia.Name = "cbModernMedia";
             this.cbModernMedia.Size = new System.Drawing.Size(199, 17);
-            this.cbModernMedia.TabIndex = 23;
+            this.cbModernMedia.TabIndex = 16;
             this.cbModernMedia.Text = "Create ModernMedia UI+ support file";
             this.cbModernMedia.UseVisualStyleBackColor = true;
             this.cbModernMedia.CheckedChanged += new System.EventHandler(this.configs_Changed);
             // 
             // numDays
             // 
+            this.numDays.AccessibleDescription = "";
+            this.numDays.AccessibleName = "days to download";
             this.numDays.Location = new System.Drawing.Point(6, 6);
             this.numDays.Maximum = new decimal(new int[] {
             21,
@@ -444,7 +454,7 @@
             this.cbAddNewStations.Location = new System.Drawing.Point(6, 147);
             this.cbAddNewStations.Name = "cbAddNewStations";
             this.cbAddNewStations.Size = new System.Drawing.Size(246, 17);
-            this.cbAddNewStations.TabIndex = 13;
+            this.cbAddNewStations.TabIndex = 8;
             this.cbAddNewStations.Text = "Automatically download new stations in lineups";
             this.cbAddNewStations.UseVisualStyleBackColor = true;
             this.cbAddNewStations.CheckedChanged += new System.EventHandler(this.configs_Changed);
@@ -476,11 +486,12 @@
             // 
             // cbXmltvSingleImage
             // 
+            this.cbXmltvSingleImage.AccessibleName = "do not include additional image formats";
             this.cbXmltvSingleImage.AutoSize = true;
             this.cbXmltvSingleImage.Location = new System.Drawing.Point(6, 245);
             this.cbXmltvSingleImage.Name = "cbXmltvSingleImage";
             this.cbXmltvSingleImage.Size = new System.Drawing.Size(277, 17);
-            this.cbXmltvSingleImage.TabIndex = 30;
+            this.cbXmltvSingleImage.TabIndex = 9;
             this.cbXmltvSingleImage.Text = "Trim XMLTV - do not include additional image formats";
             this.cbXmltvSingleImage.UseVisualStyleBackColor = true;
             this.cbXmltvSingleImage.CheckedChanged += new System.EventHandler(this.ckXmltvConfigs_Changed);
@@ -491,7 +502,7 @@
             this.ckXmltvExtendedInfo.Location = new System.Drawing.Point(6, 222);
             this.ckXmltvExtendedInfo.Name = "ckXmltvExtendedInfo";
             this.ckXmltvExtendedInfo.Size = new System.Drawing.Size(199, 17);
-            this.ckXmltvExtendedInfo.TabIndex = 29;
+            this.ckXmltvExtendedInfo.TabIndex = 8;
             this.ckXmltvExtendedInfo.Text = "Add extended info before description\r\n";
             this.ckXmltvExtendedInfo.UseVisualStyleBackColor = true;
             this.ckXmltvExtendedInfo.CheckedChanged += new System.EventHandler(this.ckXmltvConfigs_Changed);
@@ -517,32 +528,35 @@
             // 
             // btnXmltvOutput
             // 
+            this.btnXmltvOutput.AccessibleDescription = "";
+            this.btnXmltvOutput.AccessibleName = "change xmltv file location and or name";
             this.btnXmltvOutput.Location = new System.Drawing.Point(280, 330);
             this.btnXmltvOutput.Name = "btnXmltvOutput";
             this.btnXmltvOutput.Size = new System.Drawing.Size(26, 22);
-            this.btnXmltvOutput.TabIndex = 26;
+            this.btnXmltvOutput.TabIndex = 11;
             this.btnXmltvOutput.Text = "...";
             this.btnXmltvOutput.UseVisualStyleBackColor = true;
             this.btnXmltvOutput.Click += new System.EventHandler(this.btnXmltvOutput_Click);
             // 
             // tbXmltvOutput
             // 
+            this.tbXmltvOutput.AccessibleName = "xmltv output file location and name";
             this.tbXmltvOutput.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.tbXmltvOutput.Cursor = System.Windows.Forms.Cursors.Default;
             this.tbXmltvOutput.Location = new System.Drawing.Point(6, 331);
             this.tbXmltvOutput.Name = "tbXmltvOutput";
             this.tbXmltvOutput.ReadOnly = true;
             this.tbXmltvOutput.Size = new System.Drawing.Size(268, 20);
-            this.tbXmltvOutput.TabIndex = 25;
-            this.tbXmltvOutput.TabStop = false;
+            this.tbXmltvOutput.TabIndex = 10;
             // 
             // rtbFillerDescription
             // 
+            this.rtbFillerDescription.AccessibleName = "filler program description edit";
             this.rtbFillerDescription.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.rtbFillerDescription.Location = new System.Drawing.Point(23, 170);
             this.rtbFillerDescription.Name = "rtbFillerDescription";
             this.rtbFillerDescription.Size = new System.Drawing.Size(280, 46);
-            this.rtbFillerDescription.TabIndex = 24;
+            this.rtbFillerDescription.TabIndex = 7;
             this.rtbFillerDescription.Text = "This program was generated by EPG123 to provide filler data for stations that did" +
     " not receive any guide listings from the upstream source.";
             this.rtbFillerDescription.TextChanged += new System.EventHandler(this.ckXmltvConfigs_Changed);
@@ -558,6 +572,7 @@
             // 
             // numFillerDuration
             // 
+            this.numFillerDuration.AccessibleName = "hour duration of filler programs";
             this.numFillerDuration.Location = new System.Drawing.Point(24, 144);
             this.numFillerDuration.Maximum = new decimal(new int[] {
             24,
@@ -571,7 +586,7 @@
             0});
             this.numFillerDuration.Name = "numFillerDuration";
             this.numFillerDuration.Size = new System.Drawing.Size(35, 20);
-            this.numFillerDuration.TabIndex = 21;
+            this.numFillerDuration.TabIndex = 6;
             this.numFillerDuration.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             this.numFillerDuration.Value = new decimal(new int[] {
             4,
@@ -590,7 +605,7 @@
             this.ckXmltvFillerData.Location = new System.Drawing.Point(6, 121);
             this.ckXmltvFillerData.Name = "ckXmltvFillerData";
             this.ckXmltvFillerData.Size = new System.Drawing.Size(294, 17);
-            this.ckXmltvFillerData.TabIndex = 13;
+            this.ckXmltvFillerData.TabIndex = 5;
             this.ckXmltvFillerData.Text = "Create filler programs for stations that have no guide data";
             this.ckXmltvFillerData.UseVisualStyleBackColor = true;
             this.ckXmltvFillerData.CheckedChanged += new System.EventHandler(this.ckXmltvConfigs_Changed);
@@ -603,19 +618,20 @@
             this.cbXmltv.Location = new System.Drawing.Point(6, 6);
             this.cbXmltv.Name = "cbXmltv";
             this.cbXmltv.Size = new System.Drawing.Size(112, 17);
-            this.cbXmltv.TabIndex = 20;
+            this.cbXmltv.TabIndex = 0;
             this.cbXmltv.Text = "Create XMLTV file";
             this.cbXmltv.UseVisualStyleBackColor = true;
             this.cbXmltv.CheckedChanged += new System.EventHandler(this.ckXmltvConfigs_Changed);
             // 
             // ckLocalLogos
             // 
+            this.ckLocalLogos.AccessibleName = "use local images from local logos folder";
             this.ckLocalLogos.AutoSize = true;
             this.ckLocalLogos.Location = new System.Drawing.Point(24, 98);
             this.ckLocalLogos.Margin = new System.Windows.Forms.Padding(20, 3, 3, 3);
             this.ckLocalLogos.Name = "ckLocalLogos";
             this.ckLocalLogos.Size = new System.Drawing.Size(194, 17);
-            this.ckLocalLogos.TabIndex = 10;
+            this.ckLocalLogos.TabIndex = 4;
             this.ckLocalLogos.Text = "Use local images from .\\logos folder";
             this.ckLocalLogos.UseVisualStyleBackColor = true;
             this.ckLocalLogos.CheckedChanged += new System.EventHandler(this.ckXmltvConfigs_Changed);
@@ -627,7 +643,7 @@
             this.ckUrlLogos.Margin = new System.Windows.Forms.Padding(20, 3, 3, 3);
             this.ckUrlLogos.Name = "ckUrlLogos";
             this.ckUrlLogos.Size = new System.Drawing.Size(219, 17);
-            this.ckUrlLogos.TabIndex = 9;
+            this.ckUrlLogos.TabIndex = 3;
             this.ckUrlLogos.Text = "Use linked images from Schedules Direct";
             this.ckUrlLogos.UseVisualStyleBackColor = true;
             this.ckUrlLogos.CheckedChanged += new System.EventHandler(this.ckXmltvConfigs_Changed);
@@ -640,7 +656,7 @@
             this.ckChannelLogos.Location = new System.Drawing.Point(6, 52);
             this.ckChannelLogos.Name = "ckChannelLogos";
             this.ckChannelLogos.Size = new System.Drawing.Size(134, 17);
-            this.ckChannelLogos.TabIndex = 8;
+            this.ckChannelLogos.TabIndex = 2;
             this.ckChannelLogos.Text = "Include channel logos*";
             this.ckChannelLogos.UseVisualStyleBackColor = true;
             this.ckChannelLogos.CheckedChanged += new System.EventHandler(this.ckXmltvConfigs_Changed);
@@ -651,7 +667,7 @@
             this.ckChannelNumbers.Location = new System.Drawing.Point(6, 29);
             this.ckChannelNumbers.Name = "ckChannelNumbers";
             this.ckChannelNumbers.Size = new System.Drawing.Size(145, 17);
-            this.ckChannelNumbers.TabIndex = 7;
+            this.ckChannelNumbers.TabIndex = 1;
             this.ckChannelNumbers.Text = "Include channel numbers";
             this.ckChannelNumbers.UseVisualStyleBackColor = true;
             this.ckChannelNumbers.CheckedChanged += new System.EventHandler(this.ckXmltvConfigs_Changed);
@@ -680,7 +696,7 @@
             this.cbAutomatch.Location = new System.Drawing.Point(21, 51);
             this.cbAutomatch.Name = "cbAutomatch";
             this.cbAutomatch.Size = new System.Drawing.Size(217, 17);
-            this.cbAutomatch.TabIndex = 23;
+            this.cbAutomatch.TabIndex = 3;
             this.cbAutomatch.Text = "Automatically match stations to channels";
             this.cbAutomatch.UseVisualStyleBackColor = true;
             this.cbAutomatch.CheckedChanged += new System.EventHandler(this.configTask_Changed);
@@ -701,28 +717,30 @@
             this.cbImport.Location = new System.Drawing.Point(6, 30);
             this.cbImport.Name = "cbImport";
             this.cbImport.Size = new System.Drawing.Size(222, 17);
-            this.cbImport.TabIndex = 22;
+            this.cbImport.TabIndex = 2;
             this.cbImport.Text = "Automatically import guide data into WMC";
             this.cbImport.UseVisualStyleBackColor = true;
             this.cbImport.CheckedChanged += new System.EventHandler(this.configTask_Changed);
             // 
             // cbTaskWake
             // 
+            this.cbTaskWake.AccessibleName = "wake computer to run update task";
             this.cbTaskWake.AutoSize = true;
             this.cbTaskWake.Location = new System.Drawing.Point(175, 8);
             this.cbTaskWake.Name = "cbTaskWake";
             this.cbTaskWake.Size = new System.Drawing.Size(55, 17);
-            this.cbTaskWake.TabIndex = 20;
+            this.cbTaskWake.TabIndex = 1;
             this.cbTaskWake.Text = "Wake";
             this.cbTaskWake.UseVisualStyleBackColor = true;
             // 
             // tbSchedTime
             // 
+            this.tbSchedTime.AccessibleName = "scheduled update time";
             this.tbSchedTime.Location = new System.Drawing.Point(131, 6);
             this.tbSchedTime.Mask = "00:00";
             this.tbSchedTime.Name = "tbSchedTime";
             this.tbSchedTime.Size = new System.Drawing.Size(38, 20);
-            this.tbSchedTime.TabIndex = 19;
+            this.tbSchedTime.TabIndex = 0;
             this.tbSchedTime.TabStop = false;
             this.tbSchedTime.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             this.tbSchedTime.ValidatingType = typeof(System.DateTime);
@@ -761,7 +779,7 @@
             this.linkLabel2.Location = new System.Drawing.Point(6, 140);
             this.linkLabel2.Name = "linkLabel2";
             this.linkLabel2.Size = new System.Drawing.Size(90, 13);
-            this.linkLabel2.TabIndex = 8;
+            this.linkLabel2.TabIndex = 5;
             this.linkLabel2.TabStop = true;
             this.linkLabel2.Text = "View Service Log";
             this.linkLabel2.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel2_LinkClicked);
@@ -800,7 +818,7 @@
             this.cbCacheRetention.Location = new System.Drawing.Point(142, 58);
             this.cbCacheRetention.Name = "cbCacheRetention";
             this.cbCacheRetention.Size = new System.Drawing.Size(78, 21);
-            this.cbCacheRetention.TabIndex = 5;
+            this.cbCacheRetention.TabIndex = 3;
             this.cbCacheRetention.SelectedIndexChanged += new System.EventHandler(this.cbCacheRetention_SelectedIndexChanged);
             // 
             // label1
@@ -817,7 +835,7 @@
             this.btnServiceStart.Location = new System.Drawing.Point(147, 6);
             this.btnServiceStart.Name = "btnServiceStart";
             this.btnServiceStart.Size = new System.Drawing.Size(75, 23);
-            this.btnServiceStart.TabIndex = 3;
+            this.btnServiceStart.TabIndex = 0;
             this.btnServiceStart.Text = "Start";
             this.btnServiceStart.UseVisualStyleBackColor = true;
             this.btnServiceStart.Click += new System.EventHandler(this.btnServiceStartStop_Click);
@@ -827,7 +845,7 @@
             this.btnServiceStop.Location = new System.Drawing.Point(228, 6);
             this.btnServiceStop.Name = "btnServiceStop";
             this.btnServiceStop.Size = new System.Drawing.Size(75, 23);
-            this.btnServiceStop.TabIndex = 2;
+            this.btnServiceStop.TabIndex = 1;
             this.btnServiceStop.Text = "Stop";
             this.btnServiceStop.UseVisualStyleBackColor = true;
             this.btnServiceStop.Click += new System.EventHandler(this.btnServiceStartStop_Click);
@@ -838,7 +856,7 @@
             this.cbRefreshToken.Location = new System.Drawing.Point(6, 106);
             this.cbRefreshToken.Name = "cbRefreshToken";
             this.cbRefreshToken.Size = new System.Drawing.Size(200, 17);
-            this.cbRefreshToken.TabIndex = 1;
+            this.cbRefreshToken.TabIndex = 4;
             this.cbRefreshToken.Text = "Automatically refresh token if needed";
             this.cbRefreshToken.UseVisualStyleBackColor = true;
             this.cbRefreshToken.CheckedChanged += new System.EventHandler(this.cbRefreshToken_CheckedChanged);
@@ -849,7 +867,7 @@
             this.cbCacheImages.Location = new System.Drawing.Point(6, 35);
             this.cbCacheImages.Name = "cbCacheImages";
             this.cbCacheImages.Size = new System.Drawing.Size(224, 17);
-            this.cbCacheImages.TabIndex = 0;
+            this.cbCacheImages.TabIndex = 2;
             this.cbCacheImages.Text = "Enable image caching for servicing clients";
             this.cbCacheImages.UseVisualStyleBackColor = true;
             this.cbCacheImages.CheckedChanged += new System.EventHandler(this.cbCacheImages_CheckedChanged);
@@ -877,19 +895,20 @@
             this.btnClientLineups.Location = new System.Drawing.Point(236, 67);
             this.btnClientLineups.Name = "btnClientLineups";
             this.btnClientLineups.Size = new System.Drawing.Size(75, 23);
-            this.btnClientLineups.TabIndex = 7;
+            this.btnClientLineups.TabIndex = 4;
             this.btnClientLineups.Text = "Lineups";
             this.btnClientLineups.UseVisualStyleBackColor = true;
             this.btnClientLineups.Click += new System.EventHandler(this.btnClientConfig_Click);
             // 
             // txtAcctExpires
             // 
+            this.txtAcctExpires.AccessibleName = "account expires";
             this.txtAcctExpires.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.txtAcctExpires.Location = new System.Drawing.Point(80, 72);
             this.txtAcctExpires.Name = "txtAcctExpires";
             this.txtAcctExpires.ReadOnly = true;
             this.txtAcctExpires.Size = new System.Drawing.Size(150, 13);
-            this.txtAcctExpires.TabIndex = 6;
+            this.txtAcctExpires.TabIndex = 10;
             this.txtAcctExpires.TabStop = false;
             // 
             // lblExpiration
@@ -906,7 +925,7 @@
             this.btnLogin.Location = new System.Drawing.Point(236, 17);
             this.btnLogin.Name = "btnLogin";
             this.btnLogin.Size = new System.Drawing.Size(75, 46);
-            this.btnLogin.TabIndex = 4;
+            this.btnLogin.TabIndex = 2;
             this.btnLogin.Text = "Login";
             this.btnLogin.UseVisualStyleBackColor = true;
             this.btnLogin.Click += new System.EventHandler(this.btnLogin_Click);
@@ -931,6 +950,7 @@
             // 
             // txtPassword
             // 
+            this.txtPassword.AccessibleName = "login password";
             this.txtPassword.Location = new System.Drawing.Point(80, 43);
             this.txtPassword.Name = "txtPassword";
             this.txtPassword.Size = new System.Drawing.Size(150, 20);
@@ -941,6 +961,7 @@
             // 
             // txtLoginName
             // 
+            this.txtLoginName.AccessibleName = "login username";
             this.txtLoginName.Location = new System.Drawing.Point(80, 17);
             this.txtLoginName.Name = "txtLoginName";
             this.txtLoginName.Size = new System.Drawing.Size(150, 20);
@@ -1050,7 +1071,7 @@
             this.toolStrip6.MaximumSize = new System.Drawing.Size(0, 46);
             this.toolStrip6.MinimumSize = new System.Drawing.Size(0, 46);
             this.toolStrip6.Name = "toolStrip6";
-            this.toolStrip6.Size = new System.Drawing.Size(0, 46);
+            this.toolStrip6.Size = new System.Drawing.Size(432, 46);
             this.toolStrip6.Stretch = true;
             this.toolStrip6.TabIndex = 2;
             this.toolStrip6.Text = "toolStrip6";
@@ -1338,7 +1359,7 @@
             this.btnTask.Location = new System.Drawing.Point(228, 87);
             this.btnTask.Name = "btnTask";
             this.btnTask.Size = new System.Drawing.Size(75, 23);
-            this.btnTask.TabIndex = 21;
+            this.btnTask.TabIndex = 4;
             this.btnTask.Text = "Create";
             this.btnTask.UseVisualStyleBackColor = true;
             this.btnTask.Click += new System.EventHandler(this.btnTask_Click);

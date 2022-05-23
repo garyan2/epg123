@@ -138,6 +138,12 @@
     <Compile Include="frmProgress.Designer.cs">
       <DependentUpon>frmProgress.cs</DependentUpon>
     </Compile>
+    <Compile Include="frmViewLog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmViewLog.Designer.cs">
+      <DependentUpon>frmViewLog.cs</DependentUpon>
+    </Compile>
     <Compile Include="Github\GithubApi.cs" />
     <Compile Include="Helper.cs" />
     <Compile Include="ListViewSorter.cs" />
@@ -260,6 +266,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="frmProgress.resx">
       <DependentUpon>frmProgress.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmViewLog.resx">
+      <DependentUpon>frmViewLog.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

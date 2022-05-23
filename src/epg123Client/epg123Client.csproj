@@ -108,6 +108,14 @@
       <Link>ElevatedButton.cs</Link>
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="..\epg123\frmViewLog.cs">
+      <Link>frmViewLog.cs</Link>
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="..\epg123\frmViewLog.designer.cs">
+      <Link>frmViewLog.designer.cs</Link>
+      <DependentUpon>frmViewLog.cs</DependentUpon>
+    </Compile>
     <Compile Include="..\epg123\Helper.cs">
       <Link>Helper.cs</Link>
     </Compile>
@@ -219,6 +227,10 @@
     <None Include="App.config">
       <SubType>Designer</SubType>
     </None>
+    <EmbeddedResource Include="..\epg123\frmViewLog.resx">
+      <Link>frmViewLog.resx</Link>
+      <DependentUpon>frmViewLog.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="EPG.MCML" />
     <EmbeddedResource Include="EPGCELLS.MCML" />
     <EmbeddedResource Include="EPGCOMMON.MCML" />

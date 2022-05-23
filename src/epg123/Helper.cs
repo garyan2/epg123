@@ -365,20 +365,8 @@ namespace epg123
         public static void ViewLogFile()
         {
             if (!File.Exists(Epg123TraceLogPath)) return;
-            try
-            {
-                Process.Start(Epg123TraceLogPath);
-            }
-            catch
-            {
-                var notepad = Environment.ExpandEnvironmentVariables(@"%WINDIR%\notepad.exe");
-                if (!File.Exists(notepad)) return;
-                Process.Start(new ProcessStartInfo
-                {
-                    FileName = notepad,
-                    Arguments = Epg123TraceLogPath
-                });
-            }
+            var frm = new frmViewLog();
+            frm.Show();
         }
 
         #region ========== Folder and File Paths ==========

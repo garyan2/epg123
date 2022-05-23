@@ -88,10 +88,9 @@ namespace epg123.sdJson2mxf
                 ProcessSeriesDescriptionsResponses();
                 if (processedObjects != totalObjects)
                 {
-                    Logger.WriteInformation("Problem occurred during BuildGenericSeriesInfoDescriptions(). Did not process all series descriptions.");
+                    Logger.WriteInformation($"Failed to download and process {SdMxf.With.SeriesInfos.Count - processedObjects} series descriptions.");
                 }
             }
-            Logger.WriteInformation($"Processed {processedObjects} series descriptions.");
             Logger.WriteMessage("Exiting BuildAllGenericSeriesInfoDescriptions(). SUCCESS.");
             seriesDescriptionQueue = null; seriesDescriptionResponses = null;
             return true;
@@ -220,11 +219,10 @@ namespace epg123.sdJson2mxf
                 for (var i = 0; i < seriesDescriptionQueue.Count; i += MaxQueries)
                 {
                     if (GetExtendedSeriesDataForUiPlus(i)) continue;
-                    Logger.WriteInformation("Problem occurred during BuildAllExtendedSeriesDataForUiPlus(). Exiting.");
+                    Logger.WriteInformation($"Failed to download and process {SdMxf.With.SeriesInfos.Count - processedObjects} extended series descriptions.");
                     return true;
                 }
             }
-            Logger.WriteInformation($"Processed {processedObjects} extended series descriptions.");
             Logger.WriteMessage("Exiting BuildAllExtendedSeriesDataForUiPlus(). SUCCESS.");
             return true;
         }

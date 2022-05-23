@@ -24,7 +24,9 @@ namespace tokenServer
         private static int resp401;
         private static int resp404;
         private static int resp429;
+        private static int resp500;
         private static int resp502;
+        private static int resp503;
         private static int respOther;
 
         private static int sdDownloadCnt;
@@ -68,7 +70,7 @@ namespace tokenServer
                        $"<u><strong>Requests sent to Schedules Direct (<font color=\"blue\">{reqSent + condReqSent}</font>):</strong></u><br>" +
                        $"Image requests: <font color=\"blue\">{reqSent}</font><br>" +
                        $"Conditional requests: <font color=\"blue\">{condReqSent}</font><br><br>" +
-                       $"<u><strong>Responses to clients (<font color=\"blue\">{resp304 + sdDownloadCnt + cacheDownloadCnt + logoCnt + fileCnt + resp401 + resp404 + resp429 + resp502}</font>):</strong></u><br>" +
+                       $"<u><strong>Responses to clients (<font color=\"blue\">{resp304 + sdDownloadCnt + cacheDownloadCnt + logoCnt + fileCnt + resp401 + resp404 + resp429 + resp500 + resp502 + resp503}</font>):</strong></u><br>" +
                        $"Images downloaded from Schedules Direct: <font color=\"blue\">{sdDownloadCnt} ({sdDownloadSz:N0} bytes)</font><br>" +
                        $"Images provided by service cache: <font color=\"blue\">{cacheDownloadCnt} ({cacheDownloadSz:N0} bytes)</font><br>" +
                        $"Station logos provided by service: <font color=\"blue\">{logoCnt} ({logoSz:N0} bytes)</font><br>" +
@@ -77,7 +79,9 @@ namespace tokenServer
                        $"401 Unauthorized: <font color=\"{(resp401 > 0 ? "red" : "blue")}\">{resp401}</font><br>" +
                        $"404 Not Found: <font color=\"{(resp404 > 0 ? "red" : "blue")}\">{resp404}</font><br>" +
                        $"429 Too Many Requests: <font color=\"{(resp429 > 0 ? "red" : "blue")}\">{resp429}</font><br>" +
+                       $"500 Internal Server Error: <font color=\"{(resp500 > 0 ? "red" : "blue")}\">{resp500}</font><br>" +
                        $"502 Bad Gateway: <font color=\"{(resp502 > 0 ? "red" : "blue")}\">{resp502}</font><br>" +
+                       $"503 Service Unavailable: <font color=\"{(resp503 > 0 ? "red" : "blue")}\">{resp503}</font><br>" +
                        $"Other (see log): <font color=\"{(respOther > 0 ? "red" : "blue")}\">{respOther}</font></p>" +
 
                        $"<h1>Logs</h1><p>" +
@@ -173,9 +177,19 @@ namespace tokenServer
             lock (StatLock) ++resp429;
         }
 
+        public static void Increment500Response()
+        {
+            lock (StatLock) ++resp500;
+        }
+
         public static void Increment502Response()
         {
             lock (StatLock) ++resp502;
+        }
+
+        public static void Increment503Response()
+        {
+            lock (StatLock) ++resp503;
         }
 
         public static void IncrementOtherResponse()

@@ -52,6 +52,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\epg123\frmViewLog.cs">
+      <Link>frmViewLog.cs</Link>
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="..\epg123\frmViewLog.designer.cs">
+      <Link>frmViewLog.designer.cs</Link>
+      <DependentUpon>frmViewLog.cs</DependentUpon>
+    </Compile>
     <Compile Include="..\epg123\Helper.cs">
       <Link>Helper.cs</Link>
     </Compile>
@@ -102,6 +110,12 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="hdhr123.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="..\epg123\frmViewLog.resx">
+      <Link>frmViewLog.resx</Link>
+      <DependentUpon>frmViewLog.cs</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

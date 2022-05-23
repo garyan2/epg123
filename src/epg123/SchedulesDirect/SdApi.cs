@@ -51,7 +51,7 @@ namespace epg123.SchedulesDirect
             // send request and get response
             var maxTries = (uri.Equals("token") || uri.Equals("status")) ? 1 : 2;
             var cntTries = 0;
-            var timeout = (uri.Equals("token") || uri.Equals("status")) ? 30000 : 30000;
+            var timeout = (uri.Equals("token") || uri.Equals("status")) ? 30000 : 300000;
             do
             {
                 try
