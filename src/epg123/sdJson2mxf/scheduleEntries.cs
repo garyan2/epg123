@@ -281,7 +281,7 @@ namespace epg123.sdJson2mxf
             foreach (var scheduleProgram in schedule.Programs)
             {
                 // limit requests to airing programs now or in the future
-                if (scheduleProgram.AirDateTime + TimeSpan.FromSeconds(scheduleProgram.Duration) < DateTime.Now) continue;
+                if (scheduleProgram.AirDateTime + TimeSpan.FromSeconds(scheduleProgram.Duration) < DateTime.UtcNow) continue;
 
                 // prepopulate some of the program
                 var mxfProgram = SdMxf.GetProgram(scheduleProgram.ProgramId);

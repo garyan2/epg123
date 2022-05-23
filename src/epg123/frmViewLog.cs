@@ -21,6 +21,7 @@ namespace epg123
                 {
                     line = sr.ReadLine();
                     if (line == null) break;
+                    if (line.Length < 2) continue;
 
                     // determine if within last 24 hours
                     DateTime dt = DateTime.MinValue;
