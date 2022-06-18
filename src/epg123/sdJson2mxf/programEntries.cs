@@ -615,7 +615,7 @@ namespace epg123.sdJson2mxf
             prg.WriterRole = GetPersons(sd.Crew, new[] { "Writer", "Story" }); // "Screenwriter", "Writer", "Co-Writer"
         }
 
-        private static List<MxfPersonRank> GetPersons(List<sdProgramPerson> persons, string[] roles)
+        private static List<MxfPersonRank> GetPersons(List<ProgramPerson> persons, string[] roles)
         {
             if (persons == null) return null;
             var personName = new List<string>();

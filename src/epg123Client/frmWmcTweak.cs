@@ -1198,9 +1198,9 @@ namespace epg123
 
         private static XDocument GetFileResource(string filePath, string resourceName, uint resType = 23)
         {
-            var resourceSize = 0;
             IntPtr hModule, hResource, resourceData, memoryPointer;
 
+            int resourceSize;
             if (((hModule = LoadLibrary(filePath)) != IntPtr.Zero) &&
                 ((hResource = FindResource(hModule, resourceName, resType)) != IntPtr.Zero) &&
                 ((resourceData = LoadResource(hModule, hResource)) != IntPtr.Zero) &&

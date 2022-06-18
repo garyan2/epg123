@@ -195,7 +195,7 @@ namespace epg123
                     {
                         result = mutex.WaitOne(0, false);
                     }
-                    catch (AbandonedMutexException e)
+                    catch (AbandonedMutexException)
                     {
                         result = true;
                     }
@@ -365,8 +365,11 @@ namespace epg123
         public static void ViewLogFile()
         {
             if (!File.Exists(Epg123TraceLogPath)) return;
-            var frm = new frmViewLog();
-            frm.Show();
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = LogViewer,
+                Arguments = Epg123TraceLogPath
+            });
         }
 
         #region ========== Folder and File Paths ==========
@@ -397,9 +400,14 @@ namespace epg123
         public static string Epg123TransferExePath => ExecutablePath + "\\epg123Transfer.exe";
 
         /// <summary>
-        /// 
+        /// The file path for the epg123Server.exe executable
         /// </summary>
         public static string TokenServer => ExecutablePath + "\\epg123Server.exe";
+
+        /// <summary>
+        /// The file path for the logViewer.exe executable
+        /// </summary>
+        public static string LogViewer => ExecutablePath + "\\logViewer.exe";
 
         /// <summary>
         /// The folder for all user writable files are based from

@@ -77,7 +77,7 @@ Name: "desktopicon"; Description: "Create desktop shortcut(s)"; GroupDescription
 Name: "startmenu"; Description: "Create start menu icons"; GroupDescription: "{cm:AdditionalIcons}"
 
 [Files]
-Source: "misc\dotNetFx40_Full_setup.exe"; DestDir: "{tmp}"; Flags: dontcopy
+Source: "misc\dotNetFx45_Full_setup.exe"; DestDir: "{tmp}"; Flags: dontcopy
 Source: "..\..\bin\Release\epg123.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: main1
 Source: "..\..\bin\Release\epg123.exe.config"; DestDir: "{app}"; Flags: ignoreversion; Attribs: hidden; Components: main1
 Source: "..\..\bin\Release\epg123Server.exe"; DestDir: "{app}"; BeforeInstall: TaskKill('epg123Server.exe'); Flags: ignoreversion signonce; Components: main1
@@ -89,6 +89,8 @@ Source: "..\..\bin\Release\epg123Transfer.exe"; DestDir: "{app}"; Flags: ignorev
 Source: "..\..\bin\Release\epg123Transfer.exe.config"; DestDir: "{app}"; Flags: ignoreversion; Attribs: hidden; MinVersion: 6.1; OnlyBelowVersion: 6.2; Components: main2
 Source: "..\..\bin\Release\epgTray.exe"; DestDir: "{app}"; BeforeInstall: TaskKill('epgTray.exe'); Flags: ignoreversion signonce; Components: main2\tray
 Source: "..\..\bin\Release\epgTray.exe.config"; DestDir: "{app}"; Flags: ignoreversion; Attribs: hidden; Components: main2\tray
+Source: "..\..\bin\Release\logViewer.exe"; DestDir: "{app}"; Flags: ignoreversion signonce;
+Source: "..\..\bin\Release\logViewer.exe.config"; DestDir: "{app}"; Flags: ignoreversion; Attribs: hidden;
 Source: "docs\license.rtf"; DestDir: "{app}"; Flags: ignoreversion
 Source: "docs\customLineup.xml.example"; DestDir: "{app}"; Flags: ignoreversion; Components: main1
 Source: "links\EPG123 Online.url"; DestDir: "{commonprograms}\{#MyAppName}"; Tasks: startmenu; Flags: ignoreversion
@@ -99,6 +101,7 @@ Name: "{commonprograms}\{#MyAppName}\{#MyClientName}"; Filename: "{app}\{#MyClie
 Name: "{commonprograms}\{#MyAppName}\EPG123 Transfer Tool"; Filename: "{app}\epg123Transfer.exe"; Tasks: startmenu; Components: main2
 Name: "{commonprograms}\{#MyAppName}\HDHR2MXF Update"; Filename: "{app}\hdhr2mxf.exe"; Parameters: "-update -import"; Tasks: startmenu; Components: hdhr
 Name: "{commonprograms}\{#MyAppName}\EPG123 Tray"; Filename: "{app}\epgTray.exe"; Tasks: startmenu; Components: main2\tray
+Name: "{commonprograms}\{#MyAppName}\Log Viewer"; Filename: "{app}\logViewer.exe"; Tasks: startmenu;
 Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon; Components: main1
 Name: "{commondesktop}\{#MyClientName}"; Filename: "{app}\{#MyClientExeName}"; Tasks: desktopicon; Components: main2
 Name: "{commonstartup}\EPG123 Tray"; Filename: "{app}\epgTray.exe"; Components: main2\tray
@@ -137,6 +140,8 @@ Type: files; Name: "{app}\epg123Transfer.exe.config"; Components: not main2
 Type: files; Name: "{app}\customLineup.xml.example"; Components: not main1
 Type: files; Name: "{app}\epgTray.exe"; BeforeInstall: TaskKill('epgTray.exe'); Components: not main2\tray
 Type: files; Name: "{app}\epgTray.exe.config"; Components: not main2\tray
+Type: files; Name: "{app}\logViewer.exe";
+Type: files; Name: "{app}\logViewer.exe.config";
 Type: filesandordirs; Name: "{commonprograms}\{#MyAppName}"
 Type: files; Name: "{commondesktop}\{#MyAppName}.lnk"
 Type: files; Name: "{commondesktop}\{#MyClientName}.lnk"
@@ -157,8 +162,8 @@ var
     success: boolean;
     install: cardinal;
 begin
-    success := RegQueryDWordValue(HKLM, 'SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full', 'Install', install);
-    result := success and (install = 1);
+    success := RegQueryDWordValue(HKLM, 'SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full', 'Release', install);
+    result := success and (install > 378388);
 end;
 
 // install .NET Framework
@@ -169,10 +174,10 @@ begin
     // check if minimum framework is installed
     if not Framework4IsInstalled() then begin
         // prompt user to install if not suppressed
-        if SuppressibleMsgBox('The minimum .NET Framework is not installed. Do you wish to install .NET Framework 4.0 Client and Extended software now?', mbConfirmation, MB_YESNO, IDNO) = IDYES then begin
+        if SuppressibleMsgBox('The minimum .NET Framework is not installed. Do you wish to install .NET Framework 4.5 Client software now?', mbConfirmation, MB_YESNO, IDNO) = IDYES then begin
             // extract web bootstrap and execute
-            ExtractTemporaryFile('dotNetFx40_Full_setup.exe');
-            if not Exec(ExpandConstant('{tmp}\dotNetFx40_Full_setup.exe'), '/passive /norestart', '', SW_SHOW, ewWaitUntilTerminated, ResultCode) then begin
+            ExtractTemporaryFile('dotNetFx45_Full_setup.exe');
+            if not Exec(ExpandConstant('{tmp}\dotNetFx45_Full_setup.exe'), '/passive /norestart', '', SW_SHOW, ewWaitUntilTerminated, ResultCode) then begin
                 MsgBox('.NET installation failed with code: ' + IntToStr(ResultCode) + '.', mbError, MB_OK);
             end;
         end;

@@ -91,9 +91,7 @@ namespace epg123Client
                 Logger.WriteInformation($"Exception thrown while trying to dispose of ObjectStore. {ex.Message}\n{ex.StackTrace}");
             }
             objectStore = null;
-            GC.Collect();
             GC.WaitForPendingFinalizers();
-            GC.Collect();
         }
 
         /// <summary>

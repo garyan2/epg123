@@ -6,7 +6,7 @@ namespace epg123Client
 {
     public partial class frmImport : Form
     {
-        private bool notify;
+        private readonly bool notify;
         public bool Success;
 
         public frmImport(string filepath, bool notifyComplete = true)

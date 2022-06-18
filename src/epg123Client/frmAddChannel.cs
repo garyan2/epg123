@@ -205,10 +205,12 @@ namespace epg123Client
             }
             else if (sender.Equals(btnAddDvbChannel))
             {
-                if (!int.TryParse(dvbFreq.Text, out var i1) || !int.TryParse(dvbOnid.Text, out var i2) ||
-                    !int.TryParse(dvbNid.Text, out var i3) || !int.TryParse(dvbTsid.Text, out var i4) ||
-                    !int.TryParse(dvbSid.Text, out var i5) || !int.TryParse(dvbLcn.Text, out var i6))
+                if (!int.TryParse(dvbFreq.Text, out _) || !int.TryParse(dvbOnid.Text, out _) ||
+                    !int.TryParse(dvbNid.Text, out _) || !int.TryParse(dvbTsid.Text, out _) ||
+                    !int.TryParse(dvbSid.Text, out _) || !int.TryParse(dvbLcn.Text, out _))
+                {
                     return;
+                }
 
                 service = new Service
                 {

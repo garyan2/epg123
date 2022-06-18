@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Web;
 using Newtonsoft.Json;
 
@@ -39,15 +40,17 @@ namespace tokenServer
         {
             ServicePointManager.Expect100Continue = true;
             ServicePointManager.SecurityProtocol |= (SecurityProtocolType)3072; // Tls12
+            ServicePointManager.DefaultConnectionLimit = 10;
             
             _tcpListener = new TcpListener(IPAddress.Any, Helper.TcpPort);
-            _tcpListener.Start(200);
+            _tcpListener.Start(20);
 
             try
             {
                 while (true)
                 {
-                    new Thread(HandleDevice).Start(_tcpListener.AcceptTcpClient());
+                    var client = _tcpListener.AcceptTcpClient();
+                    _ = Task.Run(() => HandleDevice(client));
                 }
             }
             catch (SocketException e)

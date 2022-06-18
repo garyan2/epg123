@@ -6,7 +6,7 @@ namespace epg123
 {
     public partial class frmCustomChannel : Form
     {
-        private CustomStation _station;
+        private readonly CustomStation _station;
 
         public frmCustomChannel(CustomStation station, List<myStation> stations)
         {

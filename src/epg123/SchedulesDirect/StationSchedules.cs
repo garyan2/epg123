@@ -9,45 +9,19 @@ namespace epg123.SchedulesDirect
         public static Dictionary<string, Dictionary<string, ScheduleMd5Response>> GetScheduleMd5s(ScheduleRequest[] request)
         {
             var dtStart = DateTime.Now;
-            var sr = GetRequestResponse(methods.POST, "schedules/md5", request);
-            if (sr == null)
-            {
-                Logger.WriteError($"Did not receive a response from Schedules Direct for Md5s of {request.Length,3} station's daily schedules. ({GetStringTimeAndByteLength(DateTime.Now - dtStart)})");
-                return null;
-            }
-
-            try
-            {
-                Logger.WriteVerbose($"Successfully retrieved Md5s for {request.Length,3} station's daily schedules. ({GetStringTimeAndByteLength(DateTime.Now - dtStart, sr.Length)})");
-                return JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, ScheduleMd5Response>>>(sr.Replace("[]", "{}"), jSettings);
-            }
-            catch (Exception ex)
-            {
-                Logger.WriteError($"GetScheduleMd5s() Unknown exception thrown. Message: {ex.Message}");
-            }
-            return null;
+            var ret = GetSdApiResponse<Dictionary<string, Dictionary<string, ScheduleMd5Response>>>("POST", "schedules/md5", request);
+            if (ret != null) Logger.WriteVerbose($"Successfully retrieved Md5s for {request.Length,3} stations' daily schedules. ({(DateTime.Now - dtStart):G})");
+            else Logger.WriteError($"Did not receive a response from Schedules Direct for Md5s of {request.Length,3} stations' daily schedules. ({(DateTime.Now - dtStart):G})");
+            return ret;
         }
 
         public static List<ScheduleResponse> GetScheduleListings(ScheduleRequest[] request)
         {
             var dtStart = DateTime.Now;
-            var sr = GetRequestResponse(methods.POST, "schedules", request);
-            if (sr == null)
-            {
-                Logger.WriteError($"Did not receive a response from Schedules Direct for {request.Length,3} station's daily schedules. ({GetStringTimeAndByteLength(DateTime.Now - dtStart)})");
-                return null;
-            }
-
-            try
-            {
-                Logger.WriteVerbose($"Successfully retrieved {request.Length,3} station's daily schedules.          ({GetStringTimeAndByteLength(DateTime.Now - dtStart, sr.Length)})");
-                return JsonConvert.DeserializeObject<List<ScheduleResponse>>(sr);
-            }
-            catch (Exception ex)
-            {
-                Logger.WriteError($"GetScheduleListings() Unknown exception thrown. Message: {ex.Message}");
-            }
-            return null;
+            var ret = GetSdApiResponse<List<ScheduleResponse>>("POST", "schedules", request);
+            if (ret != null) Logger.WriteVerbose($"Successfully retrieved {request.Length,3} stations' daily schedules.          ({(DateTime.Now - dtStart):G})");
+            else Logger.WriteError($"Did not receive a response from Schedules Direct for {request.Length,3} stations' daily schedules. ({(DateTime.Now - dtStart):G})");
+            return ret;
         }
     }
 

@@ -1,5 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 
 namespace epg123.SchedulesDirect
@@ -8,23 +8,10 @@ namespace epg123.SchedulesDirect
     {
         public static StationChannelMap GetStationChannelMap(string lineup)
         {
-            var sr = GetRequestResponse(methods.GETVERBOSEMAP, $"lineups/{lineup}");
-            if (sr == null)
-            {
-                Logger.WriteError($"Did not receive a response from Schedules Direct for retrieval of lineup {lineup}.");
-                return null;
-            }
-
-            try
-            {
-                Logger.WriteVerbose($"Successfully retrieved the station mapping for lineup {lineup}.");
-                return JsonConvert.DeserializeObject<StationChannelMap>(sr.Replace("[],", string.Empty), jSettings);
-            }
-            catch (Exception ex)
-            {
-                Logger.WriteError($"GetStationChannelMap() Unknown exception thrown. Message: {ex.Message}");
-            }
-            return null;
+            var ret = GetSdApiResponse<StationChannelMap>("GET", $"lineups/{lineup}");
+            if (ret != null) Logger.WriteVerbose($"Successfully retrieved the station mapping for lineup {lineup}.");
+            else Logger.WriteError($"Did not receive a response from Schedules Direct for retrieval of lineup {lineup}.");
+            return ret;
         }
     }
 
@@ -44,20 +31,61 @@ namespace epg123.SchedulesDirect
 
     public class LineupChannel
     {
+        public int myChannelNumber
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(Channel)) return ChannelMajor ?? AtscMajor ?? UhfVhf ?? -1;
+                if (Regex.Match(Channel, @"[A-Za-z]{1}[\d]{4}").Length > 0) return int.Parse(Channel.Substring(2));
+                if (Regex.Match(Channel, @"[A-Za-z0-9.]\.[A-Za-z]{2}").Length > 0) return -1;
+                if (!int.TryParse(Regex.Replace(Channel, "[^0-9.]", ""), out _))
+                {
+                    // if channel number is not a whole number, must be a decimal number
+                    var numbers = Regex.Replace(Channel, "[^0-9.]", "").Replace('_', '.').Replace('-', '.').Split('.');
+                    if (numbers.Length == 2)
+                    {
+                        return int.Parse(numbers[0]);
+                    }
+                }
+                return -1;
+            }
+        }
+
+        public int myChannelSubnumber
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(Channel)) return ChannelMinor ?? AtscMinor ?? 0;
+                if (!int.TryParse(Regex.Replace(Channel, "[^0-9.]", ""), out _))
+                {
+                    // if channel number is not a whole number, must be a decimal number
+                    var numbers = Regex.Replace(Channel, "[^0-9.]", "").Replace('_', '.').Replace('-', '.').Split('.');
+                    if (numbers.Length == 2)
+                    {
+                        return int.Parse(numbers[1]);
+                    }
+                }
+                return 0;
+            }
+        }
+
+        [JsonIgnore]
+        public string MatchName { get; set; }
+
         [JsonProperty("stationID")]
         public string StationId { get; set; }
 
         [JsonProperty("uhfVhf")]
-        public int UhfVhf { get; set; }
+        public int? UhfVhf { get; set; }
 
         [JsonProperty("atscMajor")]
-        public int AtscMajor { get; set; }
+        public int? AtscMajor { get; set; }
 
         [JsonProperty("atscMinor")]
-        public int AtscMinor { get; set; }
+        public int? AtscMinor { get; set; }
 
         [JsonProperty("frequencyHz")]
-        public long FrequencyHz { get; set; }
+        public long? FrequencyHz { get; set; }
 
         [JsonProperty("polarization")]
         public string Polarization { get; set; }
@@ -69,19 +97,19 @@ namespace epg123.SchedulesDirect
         public string ModulationSystem { get; set; }
 
         [JsonProperty("symbolrate")]
-        public int Symbolrate { get; set; }
+        public int? Symbolrate { get; set; }
 
         [JsonProperty("fec")]
         public string Fec { get; set; }
 
         [JsonProperty("serviceID")]
-        public int ServiceId { get; set; }
+        public int? ServiceId { get; set; }
 
         [JsonProperty("networkID")]
-        public int NetworkId { get; set; }
+        public int? NetworkId { get; set; }
 
         [JsonProperty("transportID")]
-        public int TransportId { get; set; }
+        public int? TransportId { get; set; }
 
         [JsonProperty("channel")]
         public string Channel { get; set; }
@@ -90,10 +118,10 @@ namespace epg123.SchedulesDirect
         public string VirtualChannel { get; set; }
 
         [JsonProperty("channelMajor")]
-        public int ChannelMajor { get; set; }
+        public int? ChannelMajor { get; set; }
 
         [JsonProperty("channelMinor")]
-        public int ChannelMinor { get; set; }
+        public int? ChannelMinor { get; set; }
 
         [JsonProperty("providerChannel")]
         public string ProviderChannel { get; set; }
@@ -106,9 +134,6 @@ namespace epg123.SchedulesDirect
 
         [JsonProperty("matchType")]
         public string MatchType { get; set; }
-
-        [JsonIgnore]
-        public string MatchName { get; set; }
     }
 
     public class LineupStation
@@ -137,7 +162,7 @@ namespace epg123.SchedulesDirect
         public StationBroadcaster Broadcaster { get; set; }
 
         [JsonProperty("isCommercialFree")]
-        public bool IsCommercialFree { get; set; }
+        public bool? IsCommercialFree { get; set; }
 
         [JsonProperty("stationLogo")]
         [JsonConverter(typeof(SingleOrListConverter<StationImage>))]

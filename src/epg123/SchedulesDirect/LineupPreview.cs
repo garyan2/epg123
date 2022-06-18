@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace epg123.SchedulesDirect
@@ -8,23 +7,10 @@ namespace epg123.SchedulesDirect
     {
         public static List<LineupPreviewChannel> GetLineupPreviewChannels(string lineup)
         {
-            var sr = GetRequestResponse(methods.GET, $"lineups/preview/{lineup}");
-            if (sr == null)
-            {
-                Logger.WriteError($"Did not receive a response from Schedules Direct for retrieval of lineup {lineup} for preview.");
-                return null;
-            }
-
-            try
-            {
-                Logger.WriteVerbose($"Successfully retrieved the channels in lineup {lineup} for preview.");
-                return JsonConvert.DeserializeObject<List<LineupPreviewChannel>>(sr.Replace("[],", string.Empty), jSettings);
-            }
-            catch (Exception ex)
-            {
-                Logger.WriteError($"GetLineupPreviewChannels() Unknown exception thrown. Message: {ex.Message}");
-            }
-            return null;
+            var ret = GetSdApiResponse<List<LineupPreviewChannel>>("GET", $"lineups/preview/{lineup}");
+            if (ret != null) Logger.WriteVerbose($"Successfully retrieved the channels in lineup {lineup} for preview.");
+            else Logger.WriteError($"Did not receive a response from Schedules Direct for retrieval of lineup {lineup} for preview.");
+            return ret;
         }
     }
 

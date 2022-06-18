@@ -8,42 +8,20 @@ namespace epg123.SchedulesDirect
     {
         public static UserStatus GetUserStatus()
         {
-            var sr = GetRequestResponse(methods.GET, "status");
-            if (sr == null)
+            var ret = GetSdApiResponse<UserStatus>("GET", "status");
+            if (ret != null)
             {
-                Logger.WriteError("Did not receive a response from Schedules Direct for a status request.");
-                return null;
-            }
+                Logger.WriteVerbose($"Status request successful. account expires: {ret.Account.Expires:s}Z , lineups: {ret.Lineups.Count}/{ret.Account.MaxLineups} , lastDataUpdate: {ret.LastDataUpdate:s}Z");
+                Logger.WriteVerbose($"System status: {ret.SystemStatus[0].Status} , message: {ret.SystemStatus[0].Message}");
+                MaxLineups = ret.Account.MaxLineups;
 
-            try
-            {
-                var ret = JsonConvert.DeserializeObject<UserStatus>(sr, jSettings);
-                switch (ret.Code)
-                {
-                    case 0:
-                        Logger.WriteVerbose($"Status request successful. account expires: {ret.Account.Expires:s}Z , lineups: {ret.Lineups.Count}/{ret.Account.MaxLineups} , lastDataUpdate: {ret.LastDataUpdate:s}Z");
-                        Logger.WriteVerbose($"system status: {ret.SystemStatus[0].Status} , message: {ret.SystemStatus[0].Message}");
-                        MaxLineups = ret.Account.MaxLineups;
-
-                        var expires = ret.Account.Expires - DateTime.UtcNow;
-                        if (expires >= TimeSpan.FromDays(7.0)) return ret;
-                        Logger.WriteWarning($"Your Schedules Direct account expires in {expires.Days:D2} days {expires.Hours:D2} hours {expires.Minutes:D2} minutes.");
-                        Logger.WriteInformation("*** Renew your Schedules Direct membership at https://schedulesdirect.org. ***");
-                        return ret;
-                    case 4001:
-                        Logger.WriteWarning("Your Schedules Direct account has expired.");
-                        Logger.WriteInformation("*** Renew your Schedules Direct membership at https://schedulesdirect.org. ***");
-                        return ret;
-                    default:
-                        Logger.WriteError($"Failed to get account status. code: {ret.Code} , message: {ret.Message}");
-                        break;
-                }
+                var expires = ret.Account.Expires - DateTime.UtcNow;
+                if (expires >= TimeSpan.FromDays(7.0)) return ret;
+                Logger.WriteWarning($"Your Schedules Direct account expires in {expires.Days:D2} days {expires.Hours:D2} hours {expires.Minutes:D2} minutes.");
+                Logger.WriteInformation("*** Renew your Schedules Direct membership at https://schedulesdirect.org. ***");
             }
-            catch (Exception ex)
-            {
-                Logger.WriteError($"GetUserStatus() Unknown exception thrown. Message: {ex.Message}");
-            }
-            return null;
+            else Logger.WriteError("Did not receive a response from Schedules Direct for a status request.");
+            return ret;
         }
     }
 

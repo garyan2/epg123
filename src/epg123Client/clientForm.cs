@@ -208,7 +208,7 @@ namespace epg123Client
 
             // save the windows size and locations
             SaveFormWindowParameters();
-            IsolateEpgDatabase(!_forceExit);
+            IsolateEpgDatabase();
         }
 
         private void SaveFormWindowParameters()
@@ -235,7 +235,7 @@ namespace epg123Client
             }
         }
 
-        private void IsolateEpgDatabase(bool disposeStore = false)
+        private void IsolateEpgDatabase()
         {
             // clear the merged channels and lineup combobox
             mergedChannelListView.BeginUpdate();
@@ -1425,7 +1425,7 @@ namespace epg123Client
         private void btnStoreExplorer_Click(object sender, EventArgs e)
         {
             // close the store
-            IsolateEpgDatabase(true);
+            IsolateEpgDatabase();
 
             // used code by glugalug (glugglug) and modified for epg123
             // https://github.com/glugalug/GuideEditingMisc/tree/master/StoreExplorer
@@ -1503,7 +1503,7 @@ namespace epg123Client
             var frm = new frmClientSetup {ShouldBackup = WmcStore.WmcObjectStore != null};
 
             // clear everything out
-            IsolateEpgDatabase(true);
+            IsolateEpgDatabase();
 
             // make sure mcupdate task is enabled to better complete TV Setup
             var proc = Process.Start(new ProcessStartInfo

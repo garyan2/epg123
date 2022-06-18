@@ -22,7 +22,7 @@ namespace epg123.sdJson2mxf
                     SourceInfoUrl = "http://schedulesdirect.org",
                     SourceInfoName = "Schedules Direct",
                     GeneratorInfoName = "EPG123",
-                    GeneratorInfoUrl = "http://epg123.garyan2.net",
+                    GeneratorInfoUrl = "https://garyan2.github.io/",
                     Channels = new List<XmltvChannel>(),
                     Programs = new List<XmltvProgramme>()
                 };

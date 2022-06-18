@@ -11,7 +11,7 @@ namespace epg123.sdJson2mxf
 {
     internal static partial class sdJson2Mxf
     {
-        private static List<MxfProgram> sportEvents = new List<MxfProgram>();
+        private static readonly List<MxfProgram> sportEvents = new List<MxfProgram>();
 
         private static bool GetAllSportsImages()
         {

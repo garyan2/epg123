@@ -9,23 +9,10 @@ namespace epg123.SchedulesDirect
         public static Dictionary<string, GenericDescription> GetGenericDescriptions(string[] request)
         {
             var dtStart = DateTime.Now;
-            var sr = GetRequestResponse(methods.POST, "metadata/description", request);
-            if (sr == null)
-            {
-                Logger.WriteInformation($"Did not receive a response from Schedules Direct for {request.Length,3} generic program descriptions. ({GetStringTimeAndByteLength(DateTime.Now - dtStart)})");
-                return null;
-            }
-
-            try
-            {
-                Logger.WriteVerbose($"Successfully retrieved {request.Length,3} generic program descriptions. ({GetStringTimeAndByteLength(DateTime.Now - dtStart, sr.Length)})");
-                return JsonConvert.DeserializeObject<Dictionary<string, GenericDescription>>(sr, jSettings);
-            }
-            catch (Exception ex)
-            {
-                Logger.WriteInformation($"GetGenericDescriptions() Unknown exception thrown. Message: {ex.Message}");
-            }
-            return null;
+            var ret = GetSdApiResponse<Dictionary<string, GenericDescription>>("POST", "metadata/description", request);
+            if (ret != null) Logger.WriteVerbose($"Successfully retrieved {request.Length,3} generic program descriptions. ({(DateTime.Now - dtStart):G})");
+            else Logger.WriteInformation($"Did not receive a response from Schedules Direct for {request.Length,3} generic program descriptions. ({(DateTime.Now - dtStart):G})");
+            return ret;
         }
     }
 

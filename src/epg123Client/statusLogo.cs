@@ -96,7 +96,7 @@ namespace epg123Client
                         Logger.WriteWarning("There was a WARNING generated during the MXF file creation.");
                         break;
                     case EPG123STATUS.ERROR:
-                        Logger.WriteWarning("There was an ERROR generated during the MXF file creation.");
+                        Logger.WriteError("There was an ERROR generated during the MXF file creation.");
                         break;
                 }
                 return ret;

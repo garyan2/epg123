@@ -1,171 +1,108 @@
 ﻿using System;
 using System.IO;
 using System.Net;
+using System.Net.Http;
 using System.Text;
-using System.Threading;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 
 namespace epg123.SchedulesDirect
 {
     public static partial class SdApi
     {
-        enum methods
-        {
-            GET,
-            GETVERBOSEMAP,
-            POST,
-            PUT,
-            DELETE
-        };
-
-        private static string userAgent;
-        public static string myToken;
-        private static long totalBytes;
-
-        private static readonly JsonSerializerSettings jSettings = new JsonSerializerSettings
-            {NullValueHandling = NullValueHandling.Ignore};
-
         public static string JsonBaseUrl = @"https://json.schedulesdirect.org";
         public static string JsonApi = @"/20141201/";
+        public static string uiMessage = null;
+        public static int MaxLineups;
 
-        public static string ErrorString { get; set; }
-        public static int MaxLineups { get; set; }
-        public static string TotalDownloadBytes => GetStringByteLength(totalBytes);
-
-        public static void Initialize(string agent)
+        private static readonly HttpClient _httpClient = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.Deflate })
         {
-            userAgent = agent;
+            BaseAddress = new Uri($"{JsonBaseUrl}{JsonApi}"),
+            Timeout = TimeSpan.FromMinutes(5)
+        };
 
-            ServicePointManager.Expect100Continue = true;
+        public static void Initialize(string UserAgent)
+        {
             ServicePointManager.SecurityProtocol |= (SecurityProtocolType)3072; // Tls12
+            ServicePointManager.DefaultConnectionLimit = 4;
+
+            // set http client headers
+            _httpClient.DefaultRequestHeaders.UserAgent.TryParseAdd(UserAgent);
+            _httpClient.DefaultRequestHeaders.Accept.TryParseAdd("application/json");
         }
 
-        private static string GetRequestResponse(methods method, string uri, object jsonRequest = null, bool tkRequired = true)
+        public static T GetSdApiResponse<T>(string method, string uri, object jsonRequest = null)
         {
-            // clear errorstring
-            ErrorString = string.Empty;
-
-            // build url
-            var url = $"{JsonBaseUrl}{JsonApi}{uri}";
-
-            // send request and get response
-            var maxTries = (uri.Equals("token") || uri.Equals("status")) ? 1 : 2;
-            var cntTries = 0;
-            var timeout = (uri.Equals("token") || uri.Equals("status")) ? 30000 : 300000;
-            do
+            uiMessage = null;
+            try
             {
-                try
+                switch (method)
                 {
-                    // create the request with defaults
-                    var req = (HttpWebRequest)WebRequest.Create(url);
-                    req.UserAgent = userAgent;
-                    req.AutomaticDecompression = DecompressionMethods.Deflate;
-                    req.Timeout = timeout; ++cntTries;
-
-                    // add token if it is required
-                    if (!string.IsNullOrEmpty(myToken) && tkRequired)
-                    {
-                        req.Headers.Add("token", myToken);
-                    }
-
-                    // setup request
-                    switch (method)
-                    {
-                        case methods.GET:
-                            req.Method = "GET";
-                            break;
-                        case methods.GETVERBOSEMAP:
-                            req.Method = "GET";
-                            req.Headers["verboseMap"] = "true";
-                            break;
-                        case methods.PUT:
-                            req.Method = "PUT";
-                            break;
-                        case methods.DELETE:
-                            req.Method = "DELETE";
-                            break;
-                        case methods.POST:
-                            var body = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(jsonRequest));
-                            req.Method = "POST";
-                            req.ContentType = "application/json";
-                            req.Accept = "application/json";
-                            req.ContentLength = body.Length;
-
-                            var reqStream = req.GetRequestStream();
-                            reqStream.Write(body, 0, body.Length);
-                            reqStream.Close();
-                            break;
-                    }
-
-                    var resp = req.GetResponse();
-                    return new StreamReader(resp.GetResponseStream(), Encoding.UTF8).ReadToEnd();
-                }
-                catch (WebException wex)
-                {
-                    switch (wex.Status)
-                    {
-                        case WebExceptionStatus.Timeout:
-                            if ((wex.Status == WebExceptionStatus.Timeout) && (cntTries <= maxTries))
-                            {
-                                Logger.WriteVerbose($"SD API WebException Thrown. Message: {wex.Message} , Status: {wex.Status} . Trying again.");
-                            }
-                            break;
-                        default:
-                            Logger.WriteVerbose($"SD API WebException Thrown. Message: {wex.Message} , Status: {wex.Status}");
-                            try
-                            {
-                                var sr = new StreamReader(wex.Response?.GetResponseStream(), Encoding.UTF8);
-                                var err = JsonConvert.DeserializeObject<BaseResponse>(sr?.ReadToEnd());
-                                if (err != null)
-                                {
-                                    ErrorString = $"Message: {err.Message ?? string.Empty} Response: {err.Response ?? string.Empty}";
-                                    Logger.WriteVerbose($"SD responded with error code: {err.Code} , message: {err.Message ?? err.Response} , serverID: {err.ServerId} , datetime: {err.Datetime:s}Z");
-                                    if (err.Code == 4003 || err.Code == 4006) // invalid user or token expired
-                                    {
-                                        return null;
-                                    }
-                                }
-                            }
-                            catch
-                            {
-                                // ignored
-                            }
-
-                            break; // try again until maxTries
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Logger.WriteVerbose($"SD API Unknown exception thrown. Message: {ex.Message}");
-                }
-            } while (cntTries < maxTries);
-
-            // failed miserably
-            Logger.WriteVerbose("Failed to complete request. Exiting");
-            return null;
-        }
-
-        private static string GetStringTimeAndByteLength(TimeSpan span, long length = 0)
-        {
-            var ret = span.ToString("G");
-            if (length == 0) return ret;
-
-            Interlocked.Add(ref totalBytes, length);
-            return $"{ret} / {GetStringByteLength(length)}";
-        }
-
-        private static string GetStringByteLength(long length)
-        {
-            string[] units = { "", "K", "M", "G", "T" };
-            for (var i = 0; i < units.Length; ++i)
-            {
-                double calc;
-                if ((calc = length / Math.Pow(1024, i)) < 1024)
-                {
-                    return $"{calc,9:N3} {units[i]}B";
+                    case "GET":
+                        return GetHttpResponse<T>(HttpMethod.Get, uri).Result;
+                    case "POST":
+                        return GetHttpResponse<T>(HttpMethod.Post, uri, jsonRequest).Result;
+                    case "PUT":
+                        return GetHttpResponse<T>(HttpMethod.Put, uri).Result;
+                    case "DELETE":
+                        return GetHttpResponse<T>(HttpMethod.Delete, uri).Result;
                 }
             }
-            return string.Empty;
+            catch (Exception e)
+            {
+                var messages = $"{e.Message} {e.InnerException?.Message} {e.InnerException?.InnerException?.Message}";
+                Logger.WriteVerbose($"HTTP {method} request exception thrown. Messages: {messages}");
+            }
+            return default;
+        }
+
+        private static async Task<T> GetHttpResponse<T>(HttpMethod method, string uri, object content = null)
+        {
+            var message = new HttpRequestMessage { Method = method, RequestUri = new Uri($"{JsonBaseUrl}{JsonApi}{uri}") };
+            if (method == HttpMethod.Post) message.Content = new StringContent(JsonConvert.SerializeObject(content), Encoding.UTF8, "application/json");
+            var response = await _httpClient.SendAsync(message, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
+            
+            if (!response.IsSuccessStatusCode) return HandleHttpResponseError<T>(response, await response.Content.ReadAsStringAsync());
+            using (var stream = response.Content.ReadAsStreamAsync().Result)
+            using (var sr = new StreamReader(stream))
+            using (var jr = new JsonTextReader(sr))
+            {
+                var serializer = new JsonSerializer();
+                return serializer.Deserialize<T>(jr);
+            }
+        }
+
+        private static T HandleHttpResponseError<T>(HttpResponseMessage response, string content)
+        {
+            if (string.IsNullOrEmpty(content)) Logger.WriteVerbose($"HTTP request failed with status code \"{(int)response.StatusCode} {response.ReasonPhrase}\"");
+            else
+            {
+                var err = JsonConvert.DeserializeObject<BaseResponse>(content);
+                Logger.WriteVerbose($"SD responded with error code: {err.Code} , message: {err.Message ?? err.Response} , serverID: {err.ServerId} , datetime: {err.Datetime:s}Z");
+                uiMessage = $"{err.Response}: {err.Message}";
+                switch (err.Code)
+                {
+                    case 3000: // SERVICE_OFFLINE
+                        Logger.WriteVerbose("***** Schedules Direct servers are offline. Try again later. *****");
+                        break;
+                    case 4001: // ACCOUNT_EXPIRED
+                        Logger.WriteVerbose("***** Renew your Schedules Direct membership at https://schedulesdirect.org. *****");
+                        break;
+                    case 4003: // INVALID_USER
+                        //Logger.WriteVerbose("***** Verify your Schedules Direct membership at https://schedulesdirect.org. *****");
+                        break;
+                    case 4004: // ACCOUNT_LOCKOUT
+                        Logger.WriteVerbose("***** Account is locked out due to too many login attempts. Try again later. *****");
+                        break;
+                    case 4100: // MAX_LINEUP_CHANGES_REACHED
+                        Logger.WriteVerbose("***** You have reached the maximum number of lineup additions to this account for today. Try again tomorrow. *****");
+                        break;
+                    case 4101: // MAX_LINEUPS
+                        Logger.WriteVerbose("***** You must remove a lineup in your account to add another lineup. *****");
+                        break;
+                }
+            }
+            return default;
         }
     }
 }

@@ -8,7 +8,7 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>hdhr2mxf</RootNamespace>
     <AssemblyName>hdhr2mxf</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
     <TargetFrameworkProfile />
@@ -38,8 +38,8 @@
     <ApplicationIcon>hdhr123.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.10.0.3\lib\net40\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.13.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -52,14 +52,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\epg123\frmViewLog.cs">
-      <Link>frmViewLog.cs</Link>
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="..\epg123\frmViewLog.designer.cs">
-      <Link>frmViewLog.designer.cs</Link>
-      <DependentUpon>frmViewLog.cs</DependentUpon>
-    </Compile>
     <Compile Include="..\epg123\Helper.cs">
       <Link>Helper.cs</Link>
     </Compile>
@@ -110,12 +102,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="hdhr123.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="..\epg123\frmViewLog.resx">
-      <Link>frmViewLog.resx</Link>
-      <DependentUpon>frmViewLog.cs</DependentUpon>
-    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

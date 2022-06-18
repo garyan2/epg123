@@ -20,8 +20,7 @@ namespace epg123.SchedulesDirect
         public string Message { get; set; }
 
         [JsonProperty("datetime")]
-        public DateTime Datetime { get; set; } = DateTime.MinValue;
-        public bool ShouldSerializeDatetime() { return Datetime != DateTime.MinValue; }
+        public DateTime Datetime { get; set; }
 
         [JsonProperty("uuid")]
         public string Uuid { get; set; }

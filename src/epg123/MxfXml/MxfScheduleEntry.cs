@@ -260,7 +260,7 @@ namespace epg123.MxfXml
                 {
                     foreach (KeyValuePair<string, string> rating in extras["ratings"])
                     {
-                        if (!ratings.TryGetValue(rating.Key, out var dummy))
+                        if (!ratings.TryGetValue(rating.Key, out _))
                         {
                             ratings.Add(rating.Key, rating.Value);
                         }
@@ -271,7 +271,7 @@ namespace epg123.MxfXml
                 {
                     foreach (KeyValuePair<string, string> rating in mxfProgram.extras["ratings"])
                     {
-                        if (!ratings.TryGetValue(rating.Key, out var dummy))
+                        if (!ratings.TryGetValue(rating.Key, out _))
                         {
                             ratings.Add(rating.Key, rating.Value);
                         }

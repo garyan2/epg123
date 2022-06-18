@@ -19,7 +19,7 @@ namespace epg123
             if (!IsElevated()) ShowShield();
         }
 
-        private uint BCM_SETSHIELD = 0x0000160C;
+        private readonly uint BCM_SETSHIELD = 0x0000160C;
 
         private bool IsElevated()
         {

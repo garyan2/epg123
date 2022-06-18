@@ -17,7 +17,7 @@ namespace epg123.Github
             var req = (HttpWebRequest)WebRequest.Create(url);
             req.UserAgent = $"EPG123/{Helper.Epg123Version}";
             req.Accept = "application/vnd.github.v3+json";
-            req.Timeout = 1000;
+            req.Timeout = 10000;
             req.Method = "GET";
 
             var sr = new StreamReader(req.GetResponse().GetResponseStream(), Encoding.UTF8).ReadToEnd();
@@ -30,7 +30,7 @@ namespace epg123.Github
             var req = (HttpWebRequest)WebRequest.Create(url);
             req.UserAgent = $"EPG123/{Helper.Epg123Version}";
             req.Accept = "application/vnd.github.v3+json";
-            req.Timeout = 1000;
+            req.Timeout = 10000;
             req.Method = "GET";
 
             var sr = new StreamReader(req.GetResponse().GetResponseStream(), Encoding.UTF8).ReadToEnd();

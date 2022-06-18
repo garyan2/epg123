@@ -33,7 +33,7 @@ namespace epgTray
         private readonly Thread _serverThread;
         private int _lastStatus;
         private DateTime _nextUpdate = DateTime.MinValue;
-        private string _version = $"EPG123 v{Helper.Epg123Version}";
+        private readonly string _version = $"EPG123 v{Helper.Epg123Version}";
 
         public trayApplication()
         {

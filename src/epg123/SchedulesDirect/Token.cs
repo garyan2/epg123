@@ -6,8 +6,9 @@ namespace epg123.SchedulesDirect
 {
     public static partial class SdApi
     {
-        public static bool GetToken(string username, string passwordHash, ref string errorString)
+        public static bool GetToken(string username, string passwordHash)
         {
+            _ = _httpClient.DefaultRequestHeaders.Remove("token");
             if (!Helper.Standalone)
             {
                 using (var key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\GaRyan2\epg123", false))
@@ -15,70 +16,49 @@ namespace epg123.SchedulesDirect
                     if (key != null)
                     {
                         DateTime.TryParse((string) key.GetValue("tokenExpires"), out var expires);
-                        myToken = (string)key.GetValue("token", "");
                         if (expires.ToLocalTime() - DateTime.Now > TimeSpan.FromHours(1.0))
                         {
+                            _httpClient.DefaultRequestHeaders.Add("token", (string)key.GetValue("token", ""));
                             if (ValidateToken()) return true;
                             Logger.WriteVerbose("Validation of cached token failed. Requesting new token.");
+                            _ = _httpClient.DefaultRequestHeaders.Remove("token");
                         }
                     }
                 }
             }
 
-            var sr = GetRequestResponse(methods.POST, "token", new TokenRequest { Username = username, PasswordHash = passwordHash }, false);
-            if (sr == null)
+            var ret = GetSdApiResponse<TokenResponse>("POST", "token", new TokenRequest { Username = username, PasswordHash = passwordHash });
+            if (ret != null)
             {
-                if (string.IsNullOrEmpty(ErrorString))
+                _httpClient.DefaultRequestHeaders.Add("token", ret.Token);
+                Logger.WriteVerbose($"Token request successful. serverID: {ret.ServerId} , datetime: {ret.Datetime:s}Z");
+                try
                 {
-                    ErrorString = "Did not receive a response from Schedules Direct for a token request.";
-                }
-                Logger.WriteError(errorString = ErrorString);
-                return false;
-            }
-
-            try
-            {
-                var ret = JsonConvert.DeserializeObject<TokenResponse>(sr, jSettings);
-                if (ret.Code == 0)
-                {
-                    Logger.WriteVerbose($"Token request successful. serverID: {ret.ServerId} , datetime: {ret.Datetime:s}Z");
-                    try
+                    if (!Helper.Standalone)
                     {
-                        if (!Helper.Standalone)
+                        using (var key = Registry.LocalMachine.CreateSubKey(@"SOFTWARE\GaRyan2\epg123", RegistryKeyPermissionCheck.ReadWriteSubTree))
                         {
-                            using (var key = Registry.LocalMachine.CreateSubKey(@"SOFTWARE\GaRyan2\epg123", RegistryKeyPermissionCheck.ReadWriteSubTree))
+                            if (key != null)
                             {
-                                if (key != null)
-                                {
-                                    key.SetValue("token", ret.Token);
-                                    key.SetValue("tokenExpires", $"{ret.Datetime.AddDays(1):O}");
-                                }
+                                key.SetValue("token", ret.Token);
+                                key.SetValue("tokenExpires", $"{ret.Datetime.AddDays(1):O}");
                             }
                         }
-                        myToken = ret.Token;
-                        return true;
-                    }
-                    catch
-                    {
-                        Logger.WriteError("Failed to update token information in registry. Image downloads may be unsuccessful until registry is created. Open the configuration GUI as administrator to fix.");
                     }
                 }
-                errorString = $"Failed token request. code: {ret.Code} , message: {ret.Message} , datetime: {ret.Datetime:s}Z";
+                catch
+                {
+                    Logger.WriteError("Failed to update token information in registry. Image downloads may be unsuccessful until registry is created. Open the configuration GUI as administrator to fix.");
+                }
             }
-            catch (Exception ex)
-            {
-                errorString = $"GetToken() Unknown exception thrown. Message: {ex.Message}";
-            }
-            Logger.WriteError(errorString);
-            return false;
+            else Logger.WriteError("Did not receive a response from Schedules Direct for a token request.");
+            return ret != null;
         }
 
         private static bool ValidateToken()
         {
-            var sr = GetRequestResponse(methods.GET, "status");
-            if (sr == null) return false;
-
-            var ret = JsonConvert.DeserializeObject<UserStatus>(sr, jSettings);
+            var ret = GetSdApiResponse<LineupResponse>("GET", "lineups");
+            if (ret == null) return false;
             return ret.Code == 0;
         }
     }

@@ -86,7 +86,7 @@ namespace epg123
                     Logger.Close();
                     if (!cfgForm.Execute)
                     {
-                        mutex.ReleaseMutex(); GC.Collect();
+                        mutex.ReleaseMutex();
                         if (!cfgForm.RestartAsAdmin) return 0;
                         var startInfo = new ProcessStartInfo
                         {
@@ -127,7 +127,7 @@ namespace epg123
                         Logger.WriteError($"Failed to open configuration file during initialization due to IO exception. message: {ex.Message}");
                         Logger.Close();
                         NativeMethods.SetThreadExecutionState(prevThreadState | (uint)ExecutionFlags.ES_CONTINUOUS);
-                        mutex.ReleaseMutex(); GC.Collect();
+                        mutex.ReleaseMutex();
                         return -1;
                     }
                     catch (Exception ex)
@@ -135,7 +135,7 @@ namespace epg123
                         Logger.WriteError($"Failed to open configuration file during initialization with unknown exception. message: {ex.Message}");
                         Logger.Close();
                         NativeMethods.SetThreadExecutionState(prevThreadState | (uint)ExecutionFlags.ES_CONTINUOUS);
-                        mutex.ReleaseMutex(); GC.Collect();
+                        mutex.ReleaseMutex();
                         return -1;
                     }
                 }
@@ -170,7 +170,7 @@ namespace epg123
                     // verify output file exists
                     if (!File.Exists(Helper.Epg123MxfPath) || !File.Exists(Helper.Epg123ClientExePath))
                     {
-                        mutex.ReleaseMutex(); GC.Collect();
+                        mutex.ReleaseMutex();
                         return -1;
                     }
 

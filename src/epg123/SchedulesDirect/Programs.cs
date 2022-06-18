@@ -9,23 +9,10 @@ namespace epg123.SchedulesDirect
         public static List<Program> GetPrograms(string[] request)
         {
             var dtStart = DateTime.Now;
-            var sr = GetRequestResponse(methods.POST, "programs", request);
-            if (sr == null)
-            {
-                Logger.WriteError($"Did not receive a response from Schedules Direct for {request.Length,4} program descriptions. ({GetStringTimeAndByteLength(DateTime.Now - dtStart)})");
-                return null;
-            }
-
-            try
-            {
-                Logger.WriteVerbose($"Successfully retrieved {request.Length,4} program descriptions. ({GetStringTimeAndByteLength(DateTime.Now - dtStart, sr.Length)})");
-                return JsonConvert.DeserializeObject<List<Program>>(sr, jSettings);
-            }
-            catch (Exception ex)
-            {
-                Logger.WriteError($"GetPrograms() Unknown exception thrown. Message: {ex.Message}");
-            }
-            return null;
+            var ret = GetSdApiResponse<List<Program>>("POST", "programs", request);
+            if (ret != null) Logger.WriteVerbose($"Successfully retrieved {request.Length,4} program descriptions. ({(DateTime.Now - dtStart):G})");
+            else Logger.WriteError($"Did not receive a response from Schedules Direct for {request.Length,4} program descriptions. ({(DateTime.Now - dtStart):G})");
+            return ret;
         }
     }
 
@@ -85,12 +72,12 @@ namespace epg123.SchedulesDirect
         public string[] ContentAdvisory { get; set; }
 
         [JsonProperty("cast")]
-        [JsonConverter(typeof(SingleOrListConverter<sdProgramPerson>))]
-        public List<sdProgramPerson> Cast { get; set; }
+        [JsonConverter(typeof(SingleOrListConverter<ProgramPerson>))]
+        public List<ProgramPerson> Cast { get; set; }
 
         [JsonProperty("crew")]
-        [JsonConverter(typeof(SingleOrListConverter<sdProgramPerson>))]
-        public List<sdProgramPerson> Crew { get; set; }
+        [JsonConverter(typeof(SingleOrListConverter<ProgramPerson>))]
+        public List<ProgramPerson> Crew { get; set; }
 
         [JsonProperty("entityType")]
         public string EntityType { get; set; }
@@ -102,8 +89,8 @@ namespace epg123.SchedulesDirect
         public string EpisodeImage { get; set; }
 
         [JsonProperty("recommendations")]
-        [JsonConverter(typeof(SingleOrListConverter<sdProgramRecommendation>))]
-        public List<sdProgramRecommendation> Recommendations { get; set; }
+        [JsonConverter(typeof(SingleOrListConverter<ProgramRecommendation>))]
+        public List<ProgramRecommendation> Recommendations { get; set; }
         public bool ShouldSerializeRecommendations() { return false; }
 
         [JsonProperty("hasImageArtwork")]
@@ -297,7 +284,7 @@ namespace epg123.SchedulesDirect
         public string Increment { get; set; }
     }
 
-    public class sdProgramPerson
+    public class ProgramPerson
     {
         [JsonProperty("billingOrder")]
         public string BillingOrder { get; set; }
@@ -318,7 +305,7 @@ namespace epg123.SchedulesDirect
         public string CharacterName { get; set; }
     }
 
-    public class sdProgramRecommendation
+    public class ProgramRecommendation
     {
         [JsonProperty("programID")]
         public string ProgramId { get; set; }

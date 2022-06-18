@@ -73,7 +73,7 @@ namespace epg123
                         System.Threading.Thread.Sleep(100);
                     }
                 }
-                Logger.WriteInformation("Update was aborted by the user.");
+                Logger.WriteInformation("***** Update was aborted by the user. *****");
             }
             else
             {

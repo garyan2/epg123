@@ -252,7 +252,6 @@ namespace epg123
             imgBitmap.Dispose();
             image.Dispose();
 
-            GC.Collect();
             LoadLocalImages();
         }
 

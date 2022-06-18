@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace epg123.SchedulesDirect
@@ -8,23 +7,10 @@ namespace epg123.SchedulesDirect
     {
         public static List<Headend> GetHeadends(string country, string postalcode)
         {
-            var sr = GetRequestResponse(methods.GET, $"headends?country={country}&postalcode={postalcode}");
-            if (sr == null)
-            {
-                Logger.WriteError($"Failed to get a response from Schedules Direct for the headends of {country} and postal code {postalcode}.");
-                return null;
-            }
-
-            try
-            {
-                Logger.WriteVerbose($"Successfully retrieved the headends for {country} and postal code {postalcode}.");
-                return JsonConvert.DeserializeObject<List<Headend>>(sr, jSettings);
-            }
-            catch (Exception ex)
-            {
-                Logger.WriteError($"GetHeadends() Unknown exception thrown. Message: {ex.Message}");
-            }
-            return null;
+            var ret = GetSdApiResponse<List<Headend>>("GET", $"headends?country={country}&postalcode={postalcode}");
+            if (ret != null) Logger.WriteVerbose($"Successfully retrieved the headends for {country} and postal code {postalcode}.");
+            else Logger.WriteError($"Failed to get a response from Schedules Direct for the headends of {country} and postal code {postalcode}.");
+            return ret;
         }
     }
 

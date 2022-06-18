@@ -88,7 +88,7 @@ namespace epg123
             }
 
             // initialize the schedules direct api
-            SdApi.Initialize("EPG123");
+            SdApi.Initialize($"EPG123/{Helper.Epg123Version}");
 
             // complete the title bar label with version number
             Text += $" v{Helper.Epg123Version}{(Helper.Standalone ? " (portable)" : "")}";
@@ -412,8 +412,7 @@ namespace epg123
         private bool LoginUser()
         {
             bool ret;
-            var errorString = string.Empty;
-            if (ret = SdApi.GetToken(Config.UserAccount.LoginName, Config.UserAccount.PasswordHash, ref errorString))
+            if (ret = SdApi.GetToken(Config.UserAccount.LoginName, Config.UserAccount.PasswordHash))
             {
                 // get membership expiration
                 GetUserStatus();
@@ -501,7 +500,7 @@ namespace epg123
             }
             else
             {
-                MessageBox.Show(errorString, "Login Failed");
+                MessageBox.Show(SdApi.uiMessage ?? "Did not receive a response from Schedules Direct for a token request.", "Login Failed");
             }
 
             return ret;
@@ -613,53 +612,9 @@ namespace epg123
         }
         public string GetChannelNumber(LineupChannel map)
         {
-            var number = -1;
-            var subnumber = 0;
-
-            // QAM
-            if (map.ChannelMajor > 0)
-            {
-                number = map.ChannelMajor;
-                subnumber = map.ChannelMinor;
-            }
-
-            // ATSC or NTSC
-            else if (map.AtscMajor > 0)
-            {
-                number = map.AtscMajor;
-                subnumber = map.AtscMinor;
-            }
-            else if (map.UhfVhf > 0)
-            {
-                number = map.UhfVhf;
-            }
-
-            // Cable or Satellite
-            else if (!string.IsNullOrEmpty(map.Channel))
-            {
-                // subnumber = 0;
-                if (Regex.Match(map.Channel, @"[A-Za-z]{1}[\d]{4}").Length > 0)
-                {
-                    // 4dtv has channels starting with 2 character satellite identifier
-                    number = int.Parse(map.Channel.Substring(2));
-                }
-                else if (Regex.Match(map.Channel, @"[A-Za-z0-9.]\.[A-Za-z]{2}").Length > 0)
-                {
-                    return map.Channel;
-                }
-                else if (!int.TryParse(Regex.Replace(map.Channel, "[^0-9.]", ""), out number))
-                {
-                    // if channel number is not a whole number, must be a decimal number
-                    var numbers = Regex.Replace(map.Channel, "[^0-9.]", "").Replace('_', '.').Replace("-", ".").Split('.');
-                    if (numbers.Length == 2)
-                    {
-                        number = int.Parse(numbers[0]);
-                        subnumber = int.Parse(numbers[1]);
-                    }
-                }
-            }
-
-            return number + (subnumber > 0 ? "." + subnumber : null);
+            var number = map.myChannelNumber;
+            var subnumber = map.myChannelSubnumber;
+            return $"{number}{(subnumber > 0 ? $".{subnumber}" : "")}";
         }
         private void BuildCustomListViewChannels()
         {
@@ -1194,7 +1149,6 @@ namespace epg123
 
             // free up the file for edit
             source.Dispose();
-            GC.Collect();
 
             return new Bitmap(retBitmap, 48, 16);
         }

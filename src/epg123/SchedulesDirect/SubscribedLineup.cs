@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace epg123.SchedulesDirect
@@ -8,28 +7,10 @@ namespace epg123.SchedulesDirect
     {
         public static LineupResponse GetSubscribedLineups()
         {
-            var sr = GetRequestResponse(methods.GET, "lineups");
-            if (sr == null)
-            {
-                Logger.WriteError("Did not receive a response from Schedules Direct for list of subscribed lineups.");
-                return null;
-            }
-
-            try
-            {
-                var ret = JsonConvert.DeserializeObject<LineupResponse>(sr, jSettings);
-                if (ret.Code == 0)
-                {
-                    Logger.WriteVerbose("Successfully requested listing of subscribed lineups from Schedules Direct.");
-                    return ret;
-                }
-                Logger.WriteError($"Failed request for listing of subscribed lineups. code: {ret.Code} , message: {ret.Message}");
-            }
-            catch (Exception ex)
-            {
-                Logger.WriteError($"GetSubscribedLineups() Unknown exception thrown. Message: {ex.Message}");
-            }
-            return null;
+            var ret = GetSdApiResponse<LineupResponse>("GET", "lineups");
+            if (ret != null) Logger.WriteVerbose("Successfully requested listing of subscribed lineups from Schedules Direct.");
+            else Logger.WriteError("Did not receive a response from Schedules Direct for list of subscribed lineups.");
+            return ret;
         }
     }
 

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace epg123.SchedulesDirect
 {
@@ -10,23 +9,10 @@ namespace epg123.SchedulesDirect
         public static List<ProgramMetadata> GetArtwork(string[] request)
         {
             var dtStart = DateTime.Now;
-            var sr = GetRequestResponse(methods.POST, "metadata/programs", request, false);
-            if (sr == null)
-            {
-                Logger.WriteInformation($"Did not receive a response from Schedules Direct for artwork info of {request.Length,3} programs. ({GetStringTimeAndByteLength(DateTime.Now - dtStart)})");
-                return null;
-            }
-
-            try
-            {
-                Logger.WriteVerbose($"Successfully retrieved artwork info for {request.Length,3} programs. ({GetStringTimeAndByteLength(DateTime.Now - dtStart, sr.Length)})");
-                return JsonConvert.DeserializeObject<List<ProgramMetadata>>(sr, jSettings);
-            }
-            catch (Exception ex)
-            {
-                Logger.WriteInformation($"GetArtwork() Unknown exception thrown. Message: {ex.Message}");
-            }
-            return null;
+            var ret = GetSdApiResponse<List<ProgramMetadata>>("POST", "metadata/programs", request);
+            if (ret != null) Logger.WriteVerbose($"Successfully retrieved artwork info for {request.Length,3} programs. ({DateTime.Now - dtStart:G})");
+            else Logger.WriteInformation($"Did not receive a response from Schedules Direct for artwork info of {request.Length,3} programs. ({DateTime.Now - dtStart:G})");
+            return ret;
         }
     }
 

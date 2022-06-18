@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29424.173
+# Visual Studio Version 17
+VisualStudioVersion = 17.2.32526.322
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "epg123", "epg123\epg123.csproj", "{8885750E-6175-4115-8CE0-50FBCE5EF888}"
 EndProject
@@ -20,6 +20,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "epgTray", "epgTray\epgTray.csproj", "{E64F38BD-CFD5-436E-AB2D-986830DE03F2}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "epg123Server", "tokenServer\epg123Server.csproj", "{F0C26296-5147-4F6B-8D7E-92E03B23B773}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "logViewer", "logViewer\logViewer.csproj", "{054F4FF2-74F7-4257-B20B-E858ABD06F58}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -75,6 +77,14 @@ Global
 		{F0C26296-5147-4F6B-8D7E-92E03B23B773}.Release|Any CPU.Build.0 = Release|Any CPU
 		{F0C26296-5147-4F6B-8D7E-92E03B23B773}.Release|x86.ActiveCfg = Release|Any CPU
 		{F0C26296-5147-4F6B-8D7E-92E03B23B773}.Release|x86.Build.0 = Release|Any CPU
+		{054F4FF2-74F7-4257-B20B-E858ABD06F58}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{054F4FF2-74F7-4257-B20B-E858ABD06F58}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{054F4FF2-74F7-4257-B20B-E858ABD06F58}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{054F4FF2-74F7-4257-B20B-E858ABD06F58}.Debug|x86.Build.0 = Debug|Any CPU
+		{054F4FF2-74F7-4257-B20B-E858ABD06F58}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{054F4FF2-74F7-4257-B20B-E858ABD06F58}.Release|Any CPU.Build.0 = Release|Any CPU
+		{054F4FF2-74F7-4257-B20B-E858ABD06F58}.Release|x86.ActiveCfg = Release|Any CPU
+		{054F4FF2-74F7-4257-B20B-E858ABD06F58}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

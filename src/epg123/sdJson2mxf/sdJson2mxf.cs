@@ -28,10 +28,8 @@ namespace epg123.sdJson2mxf
 
         public static void Build(epgConfig configuration)
         {
-            var errString = string.Empty;
-
             // initialize schedules direct API
-            SdApi.Initialize("EPG123");
+            SdApi.Initialize($"EPG123/{Helper.Epg123Version}");
             SdMxf.InitializeMxf();
 
             // copy configuration to local variable
@@ -45,7 +43,7 @@ namespace epg123.sdJson2mxf
             suppressedPrefixes = new List<string>(config.SuppressStationEmptyWarnings.Split(','));
 
             // login to Schedules Direct and build the mxf file
-            if (SdApi.GetToken(config.UserAccount.LoginName, config.UserAccount.PasswordHash, ref errString))
+            if (SdApi.GetToken(config.UserAccount.LoginName, config.UserAccount.PasswordHash))
             {
                 // check server status
                 var susr = SdApi.GetUserStatus();
@@ -118,17 +116,12 @@ namespace epg123.sdJson2mxf
                     CleanCacheFolder();
                     epgCache.WriteCache();
 
-                    Logger.WriteVerbose($"Downloaded and processed {SdApi.TotalDownloadBytes} of data from Schedules Direct.");
+                    //Logger.WriteVerbose($"Downloaded and processed {SdApi.TotalDownloadBytes} of data from Schedules Direct.");
                     Logger.WriteVerbose($"Generated .mxf file contains {SdMxf.With.Services.Count - 1} services, {SdMxf.With.SeriesInfos.Count} series, {SdMxf.With.Seasons.Count} seasons, {SdMxf.With.Programs.Count} programs, {SdMxf.With.ScheduleEntries.Sum(x => x.ScheduleEntry.Count)} schedule entries, and {SdMxf.With.People.Count} people with {SdMxf.With.GuideImages.Count} image links.");
                     Logger.WriteInformation("Completed EPG123 update execution. SUCCESS.");
                 }
             }
-            else
-            {
-                Logger.WriteError($"Failed to retrieve token from Schedules Direct. message: {errString}");
-            }
             SdMxf = null;
-            GC.Collect();
         }
 
         private static void AddBrandLogoToMxf()

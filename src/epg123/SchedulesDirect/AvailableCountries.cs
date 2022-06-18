@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace epg123.SchedulesDirect
@@ -8,23 +7,10 @@ namespace epg123.SchedulesDirect
     {
         public static Dictionary<string, List<Country>> GetAvailableCountries()
         {
-            var sr = GetRequestResponse(methods.GET, "available/countries", null, false);
-            if (sr == null)
-            {
-                Logger.WriteError("Did not receive a response from Schedules Direct for a list of available countries.");
-                return null;
-            }
-
-            try
-            {
-                Logger.WriteVerbose("Successfully retrieved list of available countries from Schedules Direct.");
-                return JsonConvert.DeserializeObject<Dictionary<string, List<Country>>>(sr, jSettings);
-            }
-            catch (Exception ex)
-            {
-                Logger.WriteError($"GetAvailableCountries() Unknown exception thrown. Message: {ex.Message}");
-            }
-            return null;
+            var ret = GetSdApiResponse<Dictionary<string, List<Country>>>("GET", "available/countries");
+            if (ret != null) Logger.WriteVerbose("Successfully retrieved list of available countries from Schedules Direct.");
+            else Logger.WriteError("Did not receive a response from Schedules Direct for a list of available countries.");
+            return ret;
         }
     }
 

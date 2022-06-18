@@ -333,7 +333,6 @@ namespace epg123
                 {
                     var client = new clientForm(advanced);
                     client.ShowDialog();
-                    GC.Collect();
 
                     if (client.RestartClientForm)
                     {

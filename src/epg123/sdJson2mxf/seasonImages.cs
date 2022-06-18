@@ -11,7 +11,7 @@ namespace epg123.sdJson2mxf
 {
     internal static partial class sdJson2Mxf
     {
-        private static List<MxfSeason> seasons = new List<MxfSeason>();
+        private static readonly List<MxfSeason> seasons = new List<MxfSeason>();
 
         private static bool GetAllSeasonImages()
         {

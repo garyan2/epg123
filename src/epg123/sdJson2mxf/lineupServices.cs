@@ -283,52 +283,9 @@ namespace epg123.sdJson2mxf
                     // match station with mapping for lineup number and subnumbers
                     foreach (var map in lineupMap.Map)
                     {
-                        var number = -1;
-                        var subnumber = 0;
                         if (!map.StationId.Equals(station.StationId)) continue;
-
-                        // QAM
-                        if (map.ChannelMajor != 0)
-                        {
-                            number = map.ChannelMajor;
-                            subnumber = map.ChannelMinor;
-                        }
-
-                        // ATSC (and CUSTOM) or NTSC
-                        else if (map.AtscMajor != 0)
-                        {
-                            number = map.AtscMajor;
-                            subnumber = map.AtscMinor;
-                        }
-                        else if (map.UhfVhf != 0)
-                        {
-                            number = map.UhfVhf;
-                        }
-
-                        // Cable or Satellite
-                        else if (!string.IsNullOrEmpty(map.Channel))
-                        {
-                            subnumber = 0;
-                            if (Regex.Match(map.Channel, @"[A-Za-z]{1}[\d]{4}").Length > 0)
-                            {
-                                // 4dtv has channels starting with 2 character satellite identifier
-                                number = int.Parse(map.Channel.Substring(2));
-                            }
-                            else if (Regex.Match(map.Channel, @"[A-Za-z0-9.]\.[A-Za-z]{2}").Length > 0)
-                            {
-                                number = -1;
-                            }
-                            else if (!int.TryParse(Regex.Replace(map.Channel, "[^0-9.]", ""), out number))
-                            {
-                                // if channel number is not a whole number, must be a decimal number
-                                var numbers = Regex.Replace(map.Channel, "[^0-9.]", "").Replace('_', '.').Replace('-', '.').Split('.');
-                                if (numbers.Length == 2)
-                                {
-                                    number = int.Parse(numbers[0]);
-                                    subnumber = int.Parse(numbers[1]);
-                                }
-                            }
-                        }
+                        var number = map.myChannelNumber;
+                        var subnumber = map.myChannelSubnumber;
 
                         string matchName = null;
                         switch (clientLineup.Transport)

@@ -11,7 +11,7 @@ namespace epg123
 {
     public partial class frmCustomLineup : Form
     {
-        private List<myStation> availableStations;
+        private readonly List<myStation> availableStations;
 
         public frmCustomLineup(List<myStation> stations)
         {
@@ -177,8 +177,7 @@ namespace epg123
 
         private void lvCustom_MouseDoubleClick(object sender, MouseEventArgs e)
         {
-            var item = ((ListView) sender).HitTest(e.Location).Item as customChannel;
-            if (item == null) return;
+            if (!(((ListView)sender).HitTest(e.Location).Item is customChannel item)) return;
             _ = new frmCustomChannel(item?.Station, availableStations).ShowDialog();
             item.Refresh();
         }
