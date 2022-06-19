@@ -38,7 +38,8 @@ namespace epg123.SchedulesDirect
                 if (string.IsNullOrEmpty(Channel)) return ChannelMajor ?? AtscMajor ?? UhfVhf ?? -1;
                 if (Regex.Match(Channel, @"[A-Za-z]{1}[\d]{4}").Length > 0) return int.Parse(Channel.Substring(2));
                 if (Regex.Match(Channel, @"[A-Za-z0-9.]\.[A-Za-z]{2}").Length > 0) return -1;
-                if (!int.TryParse(Regex.Replace(Channel, "[^0-9.]", ""), out _))
+                if (int.TryParse(Regex.Replace(Channel, "[^0-9.]", ""), out int number)) return number;
+                else
                 {
                     // if channel number is not a whole number, must be a decimal number
                     var numbers = Regex.Replace(Channel, "[^0-9.]", "").Replace('_', '.').Replace('-', '.').Split('.');

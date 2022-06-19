@@ -202,7 +202,6 @@ namespace logViewer
     {
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         private static extern int SendMessage(IntPtr hWnd, int wMsg, IntPtr wParam, IntPtr lParam);
-        protected override bool DoubleBuffered { get => base.DoubleBuffered; set => base.DoubleBuffered = value; }
 
         //this message is sent to the control when we scroll using the mouse
         private const int WM_MOUSEWHEEL = 0x20A;
