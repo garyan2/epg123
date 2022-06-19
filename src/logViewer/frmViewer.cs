@@ -3,6 +3,7 @@ using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
 using epg123;
+using System.Runtime.InteropServices;
 
 namespace logViewer
 {
@@ -40,6 +41,9 @@ namespace logViewer
             richTextBox1.ZoomFactor = Properties.Settings.Default.ZoomFactor;
 
             Helper.EstablishFileFolderPaths();
+
+            typeof(Control).InvokeMember("DoubleBuffered", System.Reflection.BindingFlags.SetProperty | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic,
+                null, richTextBox1, new object[] { true });
         }
 
         private void OpenLogFileAndDisplay(string logFile)
@@ -68,7 +72,6 @@ namespace logViewer
                 using (var fs = new FileStream(logFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                 using (var sr = new StreamReader(fs))
                 {
-                    richTextBox1.SuspendLayout();
                     fs.Position = streamLocation;
 
                     // read the line
@@ -103,13 +106,12 @@ namespace logViewer
                         {
                             richTextBox1.SelectionColor = Color.ForestGreen;
                         }
-                        richTextBox1.AppendText($"{line}\n");
+
+                        richTextBox1.AppendText($"{line}\r\n");
                     }
                     while (line != null);
 
-                    if (streamLocation > 0) richTextBox1.ScrollToCaret();
                     streamLocation = fs.Position;
-                    richTextBox1.ResumeLayout();
                 }
             }
             catch { }
@@ -193,6 +195,36 @@ namespace logViewer
                 if (e.KeyCode == Keys.Subtract) { richTextBox1.ZoomFactor -= 0.1f; richTextBox1.ScrollToCaret(); }
             }
             e.Handled = true;
+        }
+    }
+
+    class myRichTextBox : RichTextBox
+    {
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        private static extern int SendMessage(IntPtr hWnd, int wMsg, IntPtr wParam, IntPtr lParam);
+        protected override bool DoubleBuffered { get => base.DoubleBuffered; set => base.DoubleBuffered = value; }
+
+        //this message is sent to the control when we scroll using the mouse
+        private const int WM_MOUSEWHEEL = 0x20A;
+
+        //and this one issues the control to perform scrolling
+        private const int WM_VSCROLL = 0x115;
+
+        protected override void WndProc(ref Message m)
+        {
+            if (m.Msg == WM_MOUSEWHEEL)
+            {
+                int scrollLines = SystemInformation.MouseWheelScrollLines;
+                for (int i = 0; i < scrollLines; i++)
+                {
+                    if ((int)m.WParam > 0) // when wParam is greater than 0
+                        SendMessage(this.Handle, WM_VSCROLL, (IntPtr)0, IntPtr.Zero); // scroll up 
+                    else
+                        SendMessage(this.Handle, WM_VSCROLL, (IntPtr)1, IntPtr.Zero); // else scroll down
+                }
+                return;
+            }
+            base.WndProc(ref m);
         }
     }
 }
