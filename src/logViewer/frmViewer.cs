@@ -12,6 +12,7 @@ namespace logViewer
         private long streamLocation;
         private string _filename;
         private string _lastPath;
+        private int _lines;
 
         public frmViewer(string filename = null)
         {
@@ -108,13 +109,20 @@ namespace logViewer
                         }
 
                         richTextBox1.AppendText($"{line}\r\n");
+                        ++_lines;
                     }
                     while (line != null);
 
                     streamLocation = fs.Position;
+                    UpdateStatusBar();
                 }
             }
             catch { }
+        }
+
+        private void UpdateStatusBar()
+        {
+            toolStripStatusLabel1.Text = $"[ length : {streamLocation:N0}  lines : {_lines} ] [ zoom : {(100 * richTextBox1.ZoomFactor):N0}% ]";
         }
 
         private void copyToolStripMenuItem_Click(object sender, EventArgs e)
@@ -189,12 +197,24 @@ namespace logViewer
 
         private void richTextBox1_KeyDown(object sender, KeyEventArgs e)
         {
-            if (Control.ModifierKeys == Keys.Control)
+            if (Control.ModifierKeys == Keys.Control && (e.KeyCode == Keys.Add || e.KeyCode == Keys.Subtract || e.KeyCode == Keys.Oemplus || e.KeyCode == Keys.OemMinus))
             {
-                if (e.KeyCode == Keys.Add) { richTextBox1.ZoomFactor += 0.1f; richTextBox1.ScrollToCaret(); }
-                if (e.KeyCode == Keys.Subtract) { richTextBox1.ZoomFactor -= 0.1f; richTextBox1.ScrollToCaret(); }
+                var dir = 1;
+                if (e.KeyCode == Keys.Subtract || e.KeyCode == Keys.OemMinus) dir = -1;
+                var zoom = Math.Min(Math.Max(richTextBox1.ZoomFactor + dir * 0.10f, 0.1f), 63.9f);
+                if (zoom >= 0.91 && zoom <= 1.09) zoom = 1.0f;
+                richTextBox1.ZoomFactor = zoom;
+                richTextBox1.ScrollToCaret();
+                e.Handled = true;
+                UpdateStatusBar();
             }
-            e.Handled = true;
+            else if (Control.ModifierKeys == Keys.Control && e.KeyCode == Keys.Divide)
+            {
+                richTextBox1.ZoomFactor = 1.0f;
+                richTextBox1.ScrollToCaret();
+                e.Handled = true;
+                UpdateStatusBar();
+            }
         }
     }
 
@@ -204,6 +224,7 @@ namespace logViewer
         private static extern int SendMessage(IntPtr hWnd, int wMsg, IntPtr wParam, IntPtr lParam);
 
         //this message is sent to the control when we scroll using the mouse
+        private const int MK_CONTROL = 0x0008;
         private const int WM_MOUSEWHEEL = 0x20A;
 
         //and this one issues the control to perform scrolling
@@ -213,6 +234,13 @@ namespace logViewer
         {
             if (m.Msg == WM_MOUSEWHEEL)
             {
+                if (((int)m.WParam & MK_CONTROL) == MK_CONTROL)
+                {
+                    if ((int)m.WParam > 0) SendKeys.Send("{ADD}");
+                    else SendKeys.Send("{SUBTRACT}");
+                    return;
+                }
+
                 int scrollLines = SystemInformation.MouseWheelScrollLines;
                 for (int i = 0; i < scrollLines; i++)
                 {
