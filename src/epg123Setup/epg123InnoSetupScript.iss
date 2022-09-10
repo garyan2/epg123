@@ -77,7 +77,7 @@ Name: "desktopicon"; Description: "Create desktop shortcut(s)"; GroupDescription
 Name: "startmenu"; Description: "Create start menu icons"; GroupDescription: "{cm:AdditionalIcons}"
 
 [Files]
-Source: "misc\dotNetFx45_Full_setup.exe"; DestDir: "{tmp}"; Flags: dontcopy
+Source: "misc\ndp462-kb3151802-web.exe"; DestDir: "{tmp}"; Flags: dontcopy
 Source: "..\..\bin\Release\epg123.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: main1
 Source: "..\..\bin\Release\epg123.exe.config"; DestDir: "{app}"; Flags: ignoreversion; Attribs: hidden; Components: main1
 Source: "..\..\bin\Release\epg123Server.exe"; DestDir: "{app}"; BeforeInstall: TaskKill('epg123Server.exe'); Flags: ignoreversion signonce; Components: main1
@@ -85,11 +85,11 @@ Source: "..\..\bin\Release\hdhr2mxf.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\bin\Release\Newtonsoft.Json.dll"; DestDir: "{app}"; Flags: ignoreversion; Components: main1 hdhr
 Source: "..\..\bin\Release\epg123Client.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: main2
 Source: "..\..\bin\Release\epg123Client.exe.config"; DestDir: "{app}"; Flags: ignoreversion; Attribs: hidden; MinVersion: 6.1; OnlyBelowVersion: 6.2; Components: main2
-Source: "..\..\bin\Release\epg123Transfer.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: main2
+Source: "..\..\bin\Release\epg123Transfer.exe"; DestDir: "{app}"; BeforeInstall: TaskKill('epg123Transfer.exe'); Flags: ignoreversion signonce; Components: main2
 Source: "..\..\bin\Release\epg123Transfer.exe.config"; DestDir: "{app}"; Flags: ignoreversion; Attribs: hidden; MinVersion: 6.1; OnlyBelowVersion: 6.2; Components: main2
 Source: "..\..\bin\Release\epgTray.exe"; DestDir: "{app}"; BeforeInstall: TaskKill('epgTray.exe'); Flags: ignoreversion signonce; Components: main2\tray
 Source: "..\..\bin\Release\epgTray.exe.config"; DestDir: "{app}"; Flags: ignoreversion; Attribs: hidden; Components: main2\tray
-Source: "..\..\bin\Release\logViewer.exe"; DestDir: "{app}"; Flags: ignoreversion signonce;
+Source: "..\..\bin\Release\logViewer.exe"; DestDir: "{app}"; BeforeInstall: TaskKill('logViewer.exe'); Flags: ignoreversion signonce;
 Source: "..\..\bin\Release\logViewer.exe.config"; DestDir: "{app}"; Flags: ignoreversion; Attribs: hidden;
 Source: "docs\license.rtf"; DestDir: "{app}"; Flags: ignoreversion
 Source: "docs\customLineup.xml.example"; DestDir: "{app}"; Flags: ignoreversion; Components: main1
@@ -156,14 +156,14 @@ Filename: "{sys}\sc.exe"; Parameters: "delete epg123Client" ; Flags: runhidden; 
 Filename: "{sys}\netsh.exe"; Parameters: "firewall delete allowedprogram ""{app}\epg123Client.exe"""; Flags: runhidden; StatusMsg: "Removing firewall rule..."
 
 [Code]
-// determine whether .NET Framework is installed
+// determine whether .NET Framework 4.6.2 is installed
 function Framework4IsInstalled(): Boolean;
 var
     success: boolean;
     install: cardinal;
 begin
     success := RegQueryDWordValue(HKLM, 'SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full', 'Release', install);
-    result := success and (install > 378388);
+    result := success and (install > 394801);
 end;
 
 // install .NET Framework
@@ -174,11 +174,15 @@ begin
     // check if minimum framework is installed
     if not Framework4IsInstalled() then begin
         // prompt user to install if not suppressed
-        if SuppressibleMsgBox('The minimum .NET Framework is not installed. Do you wish to install .NET Framework 4.5 Client software now?', mbConfirmation, MB_YESNO, IDNO) = IDYES then begin
+        if SuppressibleMsgBox('The minimum .NET Framework is not installed. Do you wish to install .NET Framework 4.6.2 Client software now?', mbConfirmation, MB_YESNO, IDNO) = IDYES then begin
             // extract web bootstrap and execute
-            ExtractTemporaryFile('dotNetFx45_Full_setup.exe');
-            if not Exec(ExpandConstant('{tmp}\dotNetFx45_Full_setup.exe'), '/passive /norestart', '', SW_SHOW, ewWaitUntilTerminated, ResultCode) then begin
+            ExtractTemporaryFile('ndp462-kb3151802-web.exe');
+            if not Exec(ExpandConstant('{tmp}\ndp462-kb3151802-web.exe'), '/passive /norestart', '', SW_SHOW, ewWaitUntilTerminated, ResultCode) then begin
                 MsgBox('.NET installation failed with code: ' + IntToStr(ResultCode) + '.', mbError, MB_OK);
+            end
+            else begin
+                Result := 'You need to restart your machine to complete .NET Framework 4.6.2.'
+                NeedsRestart := True;
             end;
         end;
     end;

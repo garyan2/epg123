@@ -145,8 +145,8 @@
             // 
             this.toolStripStatusLabel1.BackColor = System.Drawing.Color.Transparent;
             this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
-            this.toolStripStatusLabel1.Size = new System.Drawing.Size(115, 17);
-            this.toolStripStatusLabel1.Text = "[ length : 0   lines: 0 ]";
+            this.toolStripStatusLabel1.Size = new System.Drawing.Size(196, 17);
+            this.toolStripStatusLabel1.Text = "[ length : 0   lines: 0 ] [zoom : 100% ]";
             // 
             // frmViewer
             // 

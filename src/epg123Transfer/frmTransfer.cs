@@ -5,7 +5,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Net;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
@@ -31,6 +31,8 @@ namespace epg123Transfer
         {
             _oldWmcFile = file;
             InitializeComponent();
+            AssignColumnSorter(lvMxfRecordings);
+            AssignColumnSorter(lvWmcRecordings);
 
             ImportBinFile();
             BuildListViews();
@@ -92,42 +94,28 @@ namespace epg123Transfer
             }
 
             PopulateWmcRecordings();
-            PopulateOldWmcRecordings();
-            AdjustColumnWidths(lvMxfRecordings);
+            LvLineupSort(lvWmcRecordings, null);
             AdjustColumnWidths(lvWmcRecordings);
+
+            PopulateOldWmcRecordings();
+            LvLineupSort(lvMxfRecordings, null);
+            AdjustColumnWidths(lvMxfRecordings);
         }
 
         #region ========= Binary Table File ==========
         readonly Dictionary<string, string> _idTable = new Dictionary<string, string>();
         private void ImportBinFile()
         {
-            const string url = @"http://garyan2.github.io/downloads/seriesXfer.bin";
-
-            try
+            using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("epg123Transfer.seriesXfer.bin"))
+            using (var reader = new BinaryReader(stream))
             {
-                using (var memoryStream = new MemoryStream())
+                var timestamp = DateTime.FromBinary(reader.ReadInt64());
+                lblDateTime.Text += timestamp.ToLocalTime().ToString();
+
+                while (stream.Position < stream.Length)
                 {
-                    ServicePointManager.SecurityProtocol |= (SecurityProtocolType)3072;
-                    CopyStream(WebRequest.Create(url).GetResponse().GetResponseStream(), memoryStream);
-                    memoryStream.Position = 0;
-
-                    using (var reader = new BinaryReader(memoryStream))
-                    {
-                        var timestamp = DateTime.FromBinary(reader.ReadInt64());
-                        lblDateTime.Text += timestamp.ToLocalTime().ToString();
-
-                        while (memoryStream.Position < memoryStream.Length)
-                        {
-                            _idTable.Add($"!MCSeries!{reader.ReadInt32()}", $"!Series!{reader.ReadInt32():D8}");
-                        }
-                    }
+                    _idTable.Add($"!MCSeries!{reader.ReadInt32()}", $"!Series!{reader.ReadInt32():D8}");
                 }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("There was an error trying to download the series ID cross-reference tables from the EPG123 website.\n\n" + ex.Message,
-                                "Fatal Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                lblDateTime.Text += "ERROR";
             }
         }
 
@@ -146,7 +134,6 @@ namespace epg123Transfer
         #region ========== Previous WMC Recordings ==========
         private void PopulateOldWmcRecordings()
         {
-            AssignColumnSorter(lvMxfRecordings);
             var listViewItems = new List<ListViewItem>();
             var keywords = new Dictionary<string, string>();
             var services = new Dictionary<string, string>();
@@ -201,6 +188,10 @@ namespace epg123Transfer
                     if (!string.IsNullOrEmpty(request.SeriesAttribute)) request.SeriesAttribute = epgSeries;
                     else request.SeriesElement.Uid = epgSeries;
                     background = Color.LightGreen;
+                }
+                else if (series.StartsWith("!GenericSeries!"))
+                {
+                    background = Color.MediumSeaGreen;
                 }
 
                 // make sure we get the service id
@@ -265,9 +256,12 @@ namespace epg123Transfer
                 var service = request.PrototypicalService;
                 if (request.Channel != null && request.PrototypicalService == null) services.TryGetValue(request.Channel, out service);
 
-                var epg123 = service.StartsWith("!Service!EPG123");
+                var epg123 = request.PrototypicalProgram.StartsWith("!Program!EP") ||
+                             request.PrototypicalProgram.StartsWith("!Program!SH") ||
+                             request.PrototypicalProgram.StartsWith("!Program!MV") ||
+                             request.PrototypicalProgram.StartsWith("!Program!SP");
                 var title = $"{request.PrototypicalTitle ?? request.Title}{EpisodeTitle(request.PrototypicalProgram)} [{request.PrototypicalChannelNumber}{ServiceCallsign(service)}, {request.PrototypicalStartTime.ToLocalTime()}]";
-                var background = ProgramExistsInDatabase(request.PrototypicalProgram) ? Color.LightGreen : Color.MediumSeaGreen;
+                var background = request.PrototypicalStartTime > DateTime.UtcNow ? Color.LightGreen : Color.MediumSeaGreen;
 
                 var dupe = listViewItems.SingleOrDefault(arg => arg.SubItems[1].Text == title);
                 if (dupe != null) continue;
@@ -280,7 +274,7 @@ namespace epg123Transfer
                     })
                 {
                     BackColor = epg123 ? background : Color.LightPink,
-                    Checked = epg123,
+                    Checked = request.PrototypicalStartTime > DateTime.UtcNow,
                     Tag = request
                 });
             }
@@ -345,7 +339,7 @@ namespace epg123Transfer
             {
                 e.NewValue = e.CurrentValue;
             }
-            else if (((ListView)sender).Items[e.Index].BackColor != Color.LightGreen)
+            else if (((ListView)sender).Items[e.Index].BackColor == Color.LightPink)
             {
                 e.NewValue = CheckState.Unchecked;
             }
@@ -364,7 +358,6 @@ namespace epg123Transfer
         private HashSet<string> _wmcRecording = new HashSet<string>();
         private void PopulateWmcRecordings()
         {
-            AssignColumnSorter(lvWmcRecordings);
             var listViewItems = new List<ListViewItem>();
             foreach (SeriesRequest request in new SeriesRequests(WmcStore.WmcObjectStore))
             {
@@ -526,7 +519,11 @@ namespace epg123Transfer
             var lvcs = (ListViewColumnSorter)((ListView)sender).ListViewItemSorter;
 
             // Determine if clicked column is already the column that is being sorted
-            if (e.Column == lvcs.SortColumn)
+            if (e == null)
+            {
+                e = new ColumnClickEventArgs(lvcs.SortColumn);
+            }
+            else if (e.Column == lvcs.SortColumn)
             {
                 // Reverse the current sort direction for this column
                 lvcs.Order = (lvcs.Order == SortOrder.Ascending) ? SortOrder.Descending : SortOrder.Ascending;

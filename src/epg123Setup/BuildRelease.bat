@@ -3,7 +3,7 @@ CLS
 
 REM Enable command extensions
 SETLOCAL ENABLEEXTENSIONS
-SET VER="1.7.1.11"
+SET VER="1.7.1.12"
 SET COMPILER=C:\Program Files (x86)\Inno Setup 5\compil32.exe
 SET BASE=..\..\bin\output
 SET PORTABLE=%BASE%\portable
@@ -35,6 +35,9 @@ REM COPY /Y "%RELEASE%\epgTray.exe.config" "%PORTABLE%"
 
 COPY /Y "%RELEASE%\epg123Transfer.exe" "%PORTABLE%"
 COPY /Y "%RELEASE%\epg123Transfer.exe.config" "%PORTABLE%"
+
+COPY /Y "%RELEASE%\logViewer.exe" "%PORTABLE%"
+COPY /Y "%RELEASE%\logViewer.exe.config" "%PORTABLE%"
 
 COPY /Y "docs\license.rtf" "%PORTABLE%"
 

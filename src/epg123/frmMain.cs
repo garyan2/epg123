@@ -11,7 +11,6 @@ using System.Linq;
 using System.Reflection;
 using System.ServiceProcess;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 using System.Xml.Serialization;
@@ -349,7 +348,7 @@ namespace epg123
             {
                 _task.DeleteTask();
             }
-            else
+            else if (sender == null)
             {
                 _task.ImportTask();
             }
@@ -607,6 +606,7 @@ namespace epg123
             }
 
             labelLineupCounts.Text = $"subscribed to {comboLineups.Items.Count} out of {SdApi.MaxLineups} allowed lineups";
+            labelLineupCounts.Width = toolStrip6.Bounds.Width - toolStripSeparator1.Bounds.Right - 5;
 
             if (comboLineups.Items.Count > 0) comboLineups.SelectedIndex = 0;
         }

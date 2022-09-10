@@ -434,7 +434,7 @@ namespace epg123Client
             {
                 _task.DeleteTask();
             }
-            else
+            else if (sender == null)
             {
                 _task.ImportTask();
             }
@@ -1407,6 +1407,7 @@ namespace epg123Client
                 channel.RemoveDelegate();
                 _allMergedChannels.Remove(channel);
                 WmcStore.DeleteChannel(channel.ChannelId);
+                Logger.WriteInformation($"Deleted channel {channel.Number}{(!string.IsNullOrEmpty(channel.Callsign) ? $" {channel.Callsign}" : string.Empty)} from {channel.SubItems[4].Text}");
             }
             WmcStore.WmcMergedLineup.FullMerge(false);
             _allMergedChannels.TrimExcess();

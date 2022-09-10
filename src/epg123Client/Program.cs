@@ -208,7 +208,7 @@ namespace epg123
                     var ts = new epgTaskScheduler();
                     while (true)
                     {
-                        // looks like WMC may have a 30000 ms timeout for the update action
+                        // looks like WMC may have a 300000 ms timeout for the update action
                         // no reason to continue with the mcupdate run if it is going to be ignored
                         if (DateTime.Now - startTime > TimeSpan.FromMinutes(5.0)) return 0;
 

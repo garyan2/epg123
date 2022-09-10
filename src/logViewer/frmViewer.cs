@@ -42,9 +42,6 @@ namespace logViewer
             richTextBox1.ZoomFactor = Properties.Settings.Default.ZoomFactor;
 
             Helper.EstablishFileFolderPaths();
-
-            typeof(Control).InvokeMember("DoubleBuffered", System.Reflection.BindingFlags.SetProperty | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic,
-                null, richTextBox1, new object[] { true });
         }
 
         private void OpenLogFileAndDisplay(string logFile)
@@ -91,7 +88,7 @@ namespace logViewer
                         {
                             richTextBox1.SelectionColor = Color.Red;
                         }
-                        else if (line.Contains("[WARNG]") || line.ToLower().Contains("failed") || line.Contains("SD API WebException") || line.Contains("exception thrown") || line.Contains("SD responded") || line.Contains("Did not receive") || line.Contains("Problem occurred") || line.Contains("*****"))
+                        else if (line.Contains("[WARNG]") || line.ToLower().Contains("failed") || line.Contains("SD API WebException") || line.Contains("exception thrown") || line.Contains("SD responded") || line.Contains("Did not receive") || line.Contains("Problem occurred") || line.Contains("*****") || line.Contains("no tuners"))
                         {
                             richTextBox1.SelectionColor = Color.Yellow;
                         }
@@ -107,7 +104,7 @@ namespace logViewer
                         {
                             richTextBox1.SelectionColor = Color.ForestGreen;
                         }
-
+                        
                         richTextBox1.AppendText($"{line}\r\n");
                         ++_lines;
                     }

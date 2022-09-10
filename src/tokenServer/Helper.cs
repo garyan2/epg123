@@ -8,7 +8,6 @@ namespace tokenServer
     {
         public const int TcpPort = 9009;
         public const int UdpPort = 9010;
-        public const string SdBaseName = @"https://json.schedulesdirect.org/20141201";
         private static readonly object logLock = new object();
 
         public static string Epg123Version => Assembly.GetEntryAssembly()?.GetName().Version.ToString();
@@ -20,6 +19,7 @@ namespace tokenServer
                 using (var writer = new StreamWriter(Epg123ServerLogPath, true))
                 {
                     writer.WriteLine($"[{DateTime.Now:G}] {message}");
+                    writer.Flush();
                 }
             }
         }

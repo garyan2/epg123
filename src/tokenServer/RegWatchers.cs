@@ -23,7 +23,7 @@ namespace tokenServer
                     JsonImageCache.cacheImages = (int) key.GetValue("cacheImages", 0) > 0;
                     JsonImageCache.cacheRetention = (int) key.GetValue("cacheRetention", 30);
 
-                    Helper.WriteLogEntry($"version {Helper.Epg123Version} : token={TokenService.Token} , autoRefreshToken={TokenService.RefreshToken} , cacheImages={JsonImageCache.cacheImages} , cacheRetention={JsonImageCache.cacheRetention}");
+                    Helper.WriteLogEntry($"version {Helper.Epg123Version} : autoRefreshToken={TokenService.RefreshToken} , cacheImages={JsonImageCache.cacheImages} , cacheRetention={JsonImageCache.cacheRetention}");
                 }
                 else
                 {
@@ -55,7 +55,7 @@ namespace tokenServer
                     var regToken = (string)key.GetValue("token", "");
                     if (regToken != TokenService.Token)
                     {
-                        Helper.WriteLogEntry($"New token detected in registry. token={regToken}");
+                        Helper.WriteLogEntry($"New token detected in registry.");
                         TokenService.Token = regToken;
                         TokenService.GoodToken = true;
                         JsonImageCache.Save(); // seems like a good time to save

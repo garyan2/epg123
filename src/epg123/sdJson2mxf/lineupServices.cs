@@ -287,7 +287,7 @@ namespace epg123.sdJson2mxf
                         var number = map.myChannelNumber;
                         var subnumber = map.myChannelSubnumber;
 
-                        string matchName = null;
+                        string matchName = map.ProviderCallsign;
                         switch (clientLineup.Transport)
                         {
                             case "CUSTOM":

@@ -24,7 +24,7 @@ namespace epg123.SchedulesDirect
         public static void Initialize(string UserAgent)
         {
             ServicePointManager.SecurityProtocol |= (SecurityProtocolType)3072; // Tls12
-            ServicePointManager.DefaultConnectionLimit = 4;
+            ServicePointManager.DefaultConnectionLimit = 6;
 
             // set http client headers
             _httpClient.DefaultRequestHeaders.UserAgent.TryParseAdd(UserAgent);

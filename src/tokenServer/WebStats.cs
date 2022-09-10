@@ -22,6 +22,7 @@ namespace tokenServer
 
         private static int resp304;
         private static int resp401;
+        private static int resp403;
         private static int resp404;
         private static int resp429;
         private static int resp500;
@@ -77,6 +78,7 @@ namespace tokenServer
                        $"Files provided by service: <font color=\"blue\">{fileCnt} ({fileSz:N0} bytes)</font><br>" +
                        $"304 Not Modified: <font color=\"blue\">{resp304}</font><br>" +
                        $"401 Unauthorized: <font color=\"{(resp401 > 0 ? "red" : "blue")}\">{resp401}</font><br>" +
+                       $"403 Forbidden: <font color=\"{(resp403 > 0 ? "red" : "blue")}\">{resp403}</font><br>" +
                        $"404 Not Found: <font color=\"{(resp404 > 0 ? "red" : "blue")}\">{resp404}</font><br>" +
                        $"429 Too Many Requests: <font color=\"{(resp429 > 0 ? "red" : "blue")}\">{resp429}</font><br>" +
                        $"500 Internal Server Error: <font color=\"{(resp500 > 0 ? "red" : "blue")}\">{resp500}</font><br>" +
@@ -122,6 +124,45 @@ namespace tokenServer
             }
         }
 
+        public static void DecrementHttpStat(int stat = 0)
+        {
+            lock (StatLock)
+            {
+                switch (stat)
+                {
+                    case 401: // Unauthorized
+                        break;
+                }
+            }
+        }
+
+        public static void IncrementHttpStat(int stat = 0)
+        {
+            lock (StatLock)
+            {
+                switch (stat)
+                {
+                    case 304: // Not Modified
+                        ++resp304; break;
+                    case 401: // Unauthorized
+                        ++resp401; break;
+                    case 403: // Forbidden
+                        ++resp403; break;
+                    case 404: // Not Found
+                        ++resp404; break;
+                    case 429: // Too Many Requests
+                        ++resp429; break;
+                    case 500: // Internal Server Error
+                        ++resp500; break;
+                    case 502: // Bad Gateway
+                        ++resp502; break;
+                    case 503: // Service Unavailable
+                        ++resp503; break;
+                    default:
+                        ++respOther; break;
+                }
+            }
+        }
         public static void IncrementRequestReceived()
         {
             lock (StatLock) ++reqRcvd;
@@ -155,46 +196,6 @@ namespace tokenServer
         public static void IncrementTokenRefresh()
         {
             lock (StatLock) ++tokenRefresh;
-        }
-
-        public static void Increment304Response()
-        {
-            lock (StatLock) ++resp304;
-        }
-
-        public static void Increment401Response()
-        {
-            lock (StatLock) ++resp401;
-        }
-
-        public static void Increment404Response()
-        {
-            lock (StatLock) ++resp404;
-        }
-
-        public static void Increment429Response()
-        {
-            lock (StatLock) ++resp429;
-        }
-
-        public static void Increment500Response()
-        {
-            lock (StatLock) ++resp500;
-        }
-
-        public static void Increment502Response()
-        {
-            lock (StatLock) ++resp502;
-        }
-
-        public static void Increment503Response()
-        {
-            lock (StatLock) ++resp503;
-        }
-
-        public static void IncrementOtherResponse()
-        {
-            lock (StatLock) ++respOther;
         }
 
         public static void AddLogoDownload(long size)

@@ -7,26 +7,10 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
-using Newtonsoft.Json;
+using epg123.SchedulesDirect;
 
 namespace tokenServer
 {
-    public static class WebRequestExtensions
-    {
-        public static WebResponse GetResponseWithoutException(this WebRequest request)
-        {
-            try
-            {
-                return request.GetResponse();
-            }
-            catch (WebException e)
-            {
-                if (e.Response == null) throw e;
-                return e.Response;
-            }
-        }
-    }
-
     public partial class Server
     {
         private TcpListener _tcpListener;
@@ -38,10 +22,8 @@ namespace tokenServer
 
         public void StartTcpListener()
         {
-            ServicePointManager.Expect100Continue = true;
-            ServicePointManager.SecurityProtocol |= (SecurityProtocolType)3072; // Tls12
-            ServicePointManager.DefaultConnectionLimit = 10;
-            
+            SdApi.Initialize($"EPG123/{Helper.Epg123Version}");
+
             _tcpListener = new TcpListener(IPAddress.Any, Helper.TcpPort);
             _tcpListener.Start(20);
 
@@ -133,7 +115,7 @@ namespace tokenServer
                 }
                 catch (Exception e)
                 {
-                    Helper.WriteLogEntry($"{asset}\nHandleDevice() - {e.Message}");
+                    Helper.WriteLogEntry($"{asset} HandleDevice() Exception: {e.Message}\n{e.StackTrace}");
                 }
             }
         }
@@ -145,7 +127,8 @@ namespace tokenServer
             if (fileInfo.Exists && Send304OrImageFromCache(stream, ifModifiedSince, fileInfo, true)) return;
 
             // nothing to give the client
-            WebStats.Increment404Response();
+            WebStats.IncrementHttpStat(404);
+            Helper.WriteLogEntry($"{asset} 404 Not Found");
             var messageBytes = Encoding.UTF8.GetBytes($"HTTP/1.1 404 Not Found\r\nDate: {DateTime.UtcNow:R}\r\n\r\n");
             stream.Write(messageBytes, 0, messageBytes.Length);
         }
@@ -154,66 +137,88 @@ namespace tokenServer
         private void ProcessImageRequest(Stream stream, string asset, DateTime ifModifiedSince, bool retry = false)
         {
             // update web stats
-            if (ifModifiedSince == DateTime.MinValue) WebStats.IncrementRequestReceived();
-            else WebStats.IncrementConditionalRequestReceived();
-
-            // throttle refreshing images that have already been checked recently
-            if (JsonImageCache.cacheImages && JsonImageCache.IsImageRecent(asset.Substring(7), ifModifiedSince))
+            if (!retry)
             {
-                if (Send304OrImageFromCache(stream, ifModifiedSince, JsonImageCache.GetCachedImage(asset)))
-                    return;
+                if (ifModifiedSince == DateTime.MinValue) WebStats.IncrementRequestReceived();
+                else WebStats.IncrementConditionalRequestReceived();
             }
 
-            // build url for Schedules Direct with token
-            var url = $"{Helper.SdBaseName}{asset}";
-            if (!string.IsNullOrEmpty(TokenService.Token)) url += $"?token={TokenService.Token}";
-
-            // create web request
-            var request = (HttpWebRequest)WebRequest.Create(url);
-
-            // add if-modified-since as needed
+            // throttle refreshing images that have already been checked recently
             var fileInfo = JsonImageCache.cacheImages ? JsonImageCache.GetCachedImage(asset) : null;
-            if (ifModifiedSince != DateTime.MinValue || fileInfo != null)
+            if (JsonImageCache.cacheImages && JsonImageCache.IsImageRecent(asset.Substring(7), ifModifiedSince))
             {
-                request.IfModifiedSince = new[] {ifModifiedSince.ToUniversalTime(), fileInfo?.LastWriteTimeUtc ?? DateTime.MinValue}.Max();
+                if (Send304OrImageFromCache(stream, ifModifiedSince, fileInfo))
+                    return;
             }
 
             // don't try to download from SD if token is invalid
             if (!TokenService.GoodToken) goto NoToken;
 
+            // add if-modified-since as needed
+            if (ifModifiedSince != DateTime.MinValue || fileInfo != null)
+            {
+                ifModifiedSince = new[] {ifModifiedSince.ToUniversalTime(), fileInfo?.LastWriteTimeUtc ?? DateTime.MinValue}.Max();
+            }
+
             try
             {
-                // update web stats
-                if (request.IfModifiedSince == DateTime.MinValue) WebStats.IncrementRequestSent();
-                else WebStats.IncrementConditionalRequestSent();
-
-                // get response
-                using (var response = request.GetResponseWithoutException() as HttpWebResponse)
+                using (var response = SdApi.GetSdImage(asset, ifModifiedSince).Result)
                 using (var memStream = new MemoryStream())
                 {
-                    response.GetResponseStream().CopyTo(memStream);
+                    if (response == null) goto NoToken;
+                    response.Content.ReadAsStreamAsync()?.Result?.CopyTo(memStream);
                     memStream.Position = 0;
 
-                    // if image is included
-                    if (memStream.Length > 0 && response.ContentType.StartsWith("image"))
+                    switch (response.StatusCode)
                     {
-                        // update web stats
-                        WebStats.AddSdDownload(memStream.Length);
+                        case HttpStatusCode.OK:
+                            WebStats.AddSdDownload(memStream.Length);
+                            if (_limitExceeded) lock (_limitLock) { _limitExceeded = WebStats.LimitLocked = false; }
+                            if (_serviceUnavailable) { lock (_serverLock) _serviceUnavailable = false; }
+                            break;
+                        case HttpStatusCode.ServiceUnavailable:
+                            if (!_serviceUnavailable) { lock (_serverLock) _serviceUnavailable = true; }
+                            break;
+                        case HttpStatusCode.Unauthorized:
+                            lock (_tokenLock)
+                            {
+                                if (!TokenService.GoodToken || !TokenService.RefreshToken) break;
+                                if (TokenService.RefreshTokenFromSD())
+                                {
+                                    ProcessImageRequest(stream, asset, ifModifiedSince, true);
+                                    WebStats.DecrementHttpStat(401);
+                                    return;
+                                }
+                            }
+                            break;
+                        case (HttpStatusCode)429:
+                            if (!_limitExceeded) { lock (_limitLock) _limitExceeded = WebStats.LimitLocked = true; }
+                            break;
+                    }
 
-                        // success implies limit has not been exceeded
-                        lock (_limitLock) {_limitExceeded = WebStats.LimitLocked = false;}
-
-                        // send response to client
-                        var message = $"HTTP/1.1 {(int) response.StatusCode} {response.StatusDescription}\r\n";
-                        for (var i = 0; i < response.Headers.Count; ++i)
+                    // send response to client
+                    var message = $"HTTP/1.1 {(int)response.StatusCode} {response.ReasonPhrase}\r\n";
+                    foreach (var header in response.Headers)
+                    {
+                        foreach (var hdrValue in header.Value)
                         {
-                            message += $"{response.Headers.Keys[i]}: {response.Headers[i]}\r\n";
+                            message += $"{header.Key}: {hdrValue}\r\n";
                         }
-                        var messageBytes = Encoding.UTF8.GetBytes($"{message}\r\n");
-                        stream.Write(messageBytes, 0, messageBytes.Length);
-                        memStream.CopyTo(stream);
-                        if (!JsonImageCache.cacheImages) return;
+                    }
+                    foreach (var header in response.Content.Headers)
+                    {
+                        foreach (var hdrValue in header.Value)
+                        {
+                            message += $"{header.Key}: {hdrValue}\r\n";
+                        }
+                    }
+                    var messageBytes = Encoding.UTF8.GetBytes($"{message}\r\n");
+                    stream.Write(messageBytes, 0, messageBytes.Length);
+                    if (memStream.Length > 0) memStream.CopyTo(stream);
+                    if (!JsonImageCache.cacheImages) return;
 
+                    if (response.StatusCode == HttpStatusCode.OK)
+                    {
                         // save image to cache if enabled
                         memStream.Position = 0;
                         var filename = asset.Substring(7);
@@ -224,33 +229,15 @@ namespace tokenServer
                             memStream.CopyTo(fStream);
                             fStream.Flush();
                         }
-                        File.SetLastWriteTimeUtc(location, response.LastModified);
-                        JsonImageCache.AddImageToCache(filename, response.LastModified, memStream.Length);
+                        File.SetLastWriteTimeUtc(location, response.Content.Headers.LastModified.Value.DateTime);
+                        JsonImageCache.AddImageToCache(filename, response.Content.Headers.LastModified.Value.DateTime, memStream.Length);
                         return;
                     }
-
-                    // handle any 304 or 404 responses by providing either a 304 response or the cached image if available
-                    if (Send304OrImageFromCache(stream, ifModifiedSince, fileInfo)) return;
-
-                    // reject a 200 response that has no content
-                    if (response.StatusCode == HttpStatusCode.OK && memStream.Length == 0)
-                    {
-                        WebStats.Increment502Response();
-                        var message = "HTTP/1.1 502 Bad Gateway\r\n" +
-                                      $"Date: {DateTime.UtcNow:R}\r\n";
-                        var messageBytes = Encoding.UTF8.GetBytes($"{message}\r\n");
-                        stream.Write(messageBytes, 0, messageBytes.Length);
-                        return;
-                    }
-
-                    // handle any errors from SD
-                    HandleRequestError(stream, asset, response, ifModifiedSince, memStream, retry); // 200 for exceeded image limit or unknown user
-                    return;
                 }
             }
-            catch (WebException e)
+            catch (Exception e)
             {
-                Helper.WriteLogEntry($"{asset}\nWebException: {e.Status} - {e.Message}");
+                Helper.WriteLogEntry($"{asset} ProcessImageRequest() Exception: {e.Message}\n{e.StackTrace}");
             }
 
             NoToken:
@@ -258,7 +245,8 @@ namespace tokenServer
             if (Send304OrImageFromCache(stream, ifModifiedSince, fileInfo)) return;
 
             // nothing to give the client
-            WebStats.Increment404Response();
+            WebStats.IncrementHttpStat(404);
+            Helper.WriteLogEntry($"{asset} 404 Not Found");
             var messageBytes2 = Encoding.UTF8.GetBytes($"HTTP/1.1 404 Not Found\r\nDate: {DateTime.UtcNow:R}\r\n\r\n");
             stream.Write(messageBytes2, 0, messageBytes2.Length);
         }
@@ -267,7 +255,7 @@ namespace tokenServer
         {
             if (ifModifiedSince != DateTime.MinValue && ifModifiedSince.ToUniversalTime() + TimeSpan.FromSeconds(1) > (fileInfo?.LastWriteTimeUtc ?? DateTime.MinValue))
             {
-                WebStats.Increment304Response();
+                WebStats.IncrementHttpStat(304);
                 var message = "HTTP/1.1 304 Not Modified\r\n" +
                               $"Date: {DateTime.UtcNow:R}\r\n" +
                               $"Last-Modified: {ifModifiedSince.ToUniversalTime() - TimeSpan.FromSeconds(1):R}\r\n";
@@ -276,7 +264,7 @@ namespace tokenServer
                 return true;
             }
 
-            if (fileInfo == null) return false;
+            if (fileInfo == null || !fileInfo.Exists) return false;
             if (!logo) WebStats.AddCacheDownload(fileInfo.Length);
             else WebStats.AddLogoDownload(fileInfo.Length);
             SendImage(stream, fileInfo);
@@ -285,34 +273,25 @@ namespace tokenServer
 
         private static void SendImage(Stream stream, FileInfo fileInfo)
         {
-            if (fileInfo != null && fileInfo.Exists)
-            {
-                var ext = fileInfo.Extension.ToLower().Substring(1);
-                var messageBytes = Encoding.UTF8.GetBytes("HTTP/1.1 200 OK\r\n" +
-                                                          "Accept-Ranges: bytes\r\n" +
-                                                          $"Content-Length: {fileInfo.Length}\r\n" +
-                                                          $"Content-Type: image/{ext}\r\n" +
-                                                          $"Date: {DateTime.UtcNow:R}\r\n" +
-                                                          $"Last-Modified: {fileInfo.LastWriteTimeUtc:R}\r\n\r\n");
-                stream.Write(messageBytes, 0, messageBytes.Length);
+            var ext = fileInfo.Extension.ToLower().Substring(1);
+            var messageBytes = Encoding.UTF8.GetBytes("HTTP/1.1 200 OK\r\n" +
+                                                        "Accept-Ranges: bytes\r\n" +
+                                                        $"Content-Length: {fileInfo.Length}\r\n" +
+                                                        $"Content-Type: image/{ext}\r\n" +
+                                                        $"Date: {DateTime.UtcNow:R}\r\n" +
+                                                        $"Last-Modified: {fileInfo.LastWriteTimeUtc:R}\r\n\r\n");
+            stream.Write(messageBytes, 0, messageBytes.Length);
 
-                try
+            try
+            {
+                using (var fs = new FileStream(fileInfo.FullName, FileMode.Open, FileAccess.Read, FileShare.Read))
                 {
-                    using (var fs = new FileStream(fileInfo.FullName, FileMode.Open, FileAccess.Read, FileShare.Read))
-                    {
-                        fs.CopyTo(stream);
-                    }
-                }
-                catch (Exception e)
-                {
-                    Helper.WriteLogEntry($"{fileInfo.FullName}\n{e.Message}");
+                    fs.CopyTo(stream);
                 }
             }
-            else
+            catch (Exception e)
             {
-                WebStats.Increment404Response();
-                var messageBytes = Encoding.UTF8.GetBytes($"HTTP/1.1 404 Not Found\r\nDate: {DateTime.UtcNow:R}\r\n\r\n");
-                stream.Write(messageBytes, 0, messageBytes.Length);
+                Helper.WriteLogEntry($"{fileInfo.FullName} SendImage() Exception: {e.Message}\n{e.StackTrace}");
             }
         }
         #endregion
@@ -348,6 +327,7 @@ namespace tokenServer
             }
             else
             {
+                Helper.WriteLogEntry($"{asset} 404 Not Found");
                 var messageBytes = Encoding.UTF8.GetBytes($"HTTP/1.1 404 Not Found\r\nDate: {DateTime.UtcNow:R}\r\n\r\n");
                 stream.Write(messageBytes, 0, messageBytes.Length);
             }
@@ -357,6 +337,7 @@ namespace tokenServer
         {
             if (fileInfo.Exists)
             {
+                WebStats.AddFileDownload(fileInfo.Length);
                 var messageBytes = Encoding.UTF8.GetBytes("HTTP/1.1 200 OK\r\n" +
                                                           $"Date: {DateTime.UtcNow:R}\r\n" +
                                                           $"Content-Type: {contentType}\r\n" +
@@ -368,7 +349,6 @@ namespace tokenServer
 
                 try
                 {
-                    WebStats.AddFileDownload(fileInfo.Length);
                     using (var fs = new FileStream(fileInfo.FullName, FileMode.Open, FileAccess.Read, FileShare.Read))
                     {
                         fs.CopyTo(stream);
@@ -376,122 +356,16 @@ namespace tokenServer
                 }
                 catch (Exception e)
                 {
-                    Helper.WriteLogEntry($"{fileInfo.FullName}\n{e.Message}");
+                    Helper.WriteLogEntry($"{fileInfo.FullName} SendFile() Exception: {e.Message}\n{e.StackTrace}");
                 }
             }
             else
             {
-                WebStats.Increment404Response();
+                WebStats.IncrementHttpStat(404);
                 var messageBytes = Encoding.UTF8.GetBytes($"HTTP/1.1 404 Not Found\r\nDate: {DateTime.UtcNow:R}\r\n\r\n");
                 stream.Write(messageBytes, 0, messageBytes.Length);
             }
         }
         #endregion
-
-        private void HandleRequestError(Stream stream, string asset, WebResponse webResponse, DateTime ifModifiedSince, MemoryStream memStream, bool retry)
-        {
-            using (var sr = new StreamReader(memStream, Encoding.UTF8))
-            using (var response = webResponse as HttpWebResponse)
-            {
-                var statusCode = (int) response.StatusCode;
-                var statusDescription = response.StatusDescription;
-
-                var resp = sr.ReadToEnd();
-                var err = new BaseResponse();
-                try
-                {
-                    err = JsonConvert.DeserializeObject<BaseResponse>(resp);
-                    switch (err.Code)
-                    {
-                        case 3000: // SERVICE_OFFLINE
-                            statusCode = 503;
-                            statusDescription = "Service Unavailable";
-                            break;
-                        case 5000: // IMAGE_NOT_FOUND
-                        case 5001: // IMAGE_QUEUED
-                            statusCode = 404;
-                            statusDescription = "Not Found";
-                            break;
-                        case 5002: // MAX_IMAGE_DOWNLOADS
-                        case 5003: // MAX_IMAGE_DOWNLOADS_TRIAL
-                            statusCode = 429;
-                            statusDescription = "Too Many Requests";
-                            break;
-                        case 4003: // INVALID_USER
-                        case 5004: // UNKNOWN_USER
-                            bool refresh;
-                            lock (_tokenLock) refresh = TokenService.GoodToken && TokenService.RefreshToken && !retry && TokenService.RefreshTokenFromSD();
-
-                            if (refresh)
-                            {
-                                WebStats.AddSdDownload(0);
-                                ProcessImageRequest(stream, asset, ifModifiedSince, true);
-                                return;
-                            }
-                            statusCode = 401;
-                            statusDescription = "Unauthorized";
-                            break;
-                    }
-                }
-                catch
-                {
-                    // do nothing
-                }
-
-                switch (statusCode)
-                {
-                    case 401:
-                        WebStats.Increment401Response();
-                        break;
-                    case 404:
-                        WebStats.Increment404Response();
-                        break;
-                    case 429:
-                        WebStats.Increment429Response();
-                        break;
-                    case 500:
-                        WebStats.Increment500Response();
-                        break;
-                    case 502:
-                        WebStats.Increment502Response();
-                        break;
-                    case 503:
-                        WebStats.Increment503Response();
-                        break;
-                    default:
-                        WebStats.IncrementOtherResponse();
-                        if (statusCode == 200)
-                        {
-                            statusCode = 418;
-                            statusDescription = "I'm a teapot";
-                        }
-                        break;
-                }
-
-                // log the error response
-                if (!(statusCode == 429 && _limitExceeded) && !(statusCode == 401 && !TokenService.GoodToken))
-                {
-                    if (statusCode == 429) {lock (_limitLock) _limitExceeded = WebStats.LimitLocked = true;}
-                    if (!(statusCode == 503 && _serviceUnavailable))
-                    {
-                        if (statusCode == 503) { lock (_serverLock) _serviceUnavailable = true;}
-                        Helper.WriteLogEntry($"{asset}: {statusCode} {statusDescription}{(!string.IsNullOrEmpty(resp) ? $"\n{resp}" : "")}");
-                    }
-                }
-
-                // send response header and body to client
-                var message = $"HTTP/1.1 {statusCode} {statusDescription}\r\n";
-                for (var i = 0; i < response.Headers.Count; ++i)
-                {
-                    message += $"{response.Headers.Keys[i]}: {response.Headers[i]}\r\n";
-                }
-                var messageBytes = Encoding.UTF8.GetBytes($"{message}\r\n");
-                stream.Write(messageBytes, 0, messageBytes.Length);
-
-                if (string.IsNullOrEmpty(resp)) return;
-                var body = Encoding.UTF8.GetBytes(resp);
-                stream.Write(body, 0, body.Length);
-            }
-        }
     }
 }

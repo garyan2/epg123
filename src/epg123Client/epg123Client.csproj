@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>epg123Client</RootNamespace>
     <AssemblyName>epg123Client</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <IsWebBootstrapper>false</IsWebBootstrapper>
@@ -115,9 +115,6 @@
     </Compile>
     <Compile Include="..\epg123\Logger.cs">
       <Link>Logger.cs</Link>
-    </Compile>
-    <Compile Include="..\epg123\Task\ScheduledTask.cs">
-      <Link>Task\ScheduledTask.cs</Link>
     </Compile>
     <Compile Include="..\epg123\Task\taskScheduler.cs">
       <Link>Task\taskScheduler.cs</Link>
@@ -321,7 +318,17 @@
     <Content Include="Resources\updateAvailable.png" />
     <EmbeddedResource Include="satellites.xml" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <COMReference Include="TaskScheduler">
+      <Guid>{E34CB9F1-C7F7-424C-BE29-027DCC09363A}</Guid>
+      <VersionMajor>1</VersionMajor>
+      <VersionMinor>0</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>tlbimp</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </COMReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>

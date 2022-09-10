@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>epg123</RootNamespace>
     <AssemblyName>epg123</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <TargetFrameworkProfile>
@@ -184,7 +184,6 @@
     <Compile Include="brandLogo.cs" />
     <Compile Include="sdJson2mxf\seasonImages.cs" />
     <Compile Include="sdJson2mxf\sportsImages.cs" />
-    <Compile Include="Task\ScheduledTask.cs" />
     <Compile Include="SchedulesDirect\SdApi.cs" />
     <Compile Include="SchedulesDirect\Artwork.cs" />
     <Compile Include="SchedulesDirect\Headends.cs" />
@@ -307,6 +306,17 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\EPG123_download.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <COMReference Include="TaskScheduler">
+      <Guid>{E34CB9F1-C7F7-424C-BE29-027DCC09363A}</Guid>
+      <VersionMajor>1</VersionMajor>
+      <VersionMinor>0</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>tlbimp</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </COMReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

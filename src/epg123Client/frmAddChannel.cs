@@ -201,7 +201,7 @@ namespace epg123Client
                     ChannelType = ChannelType.UserAdded
                 };
 
-                msg = $"{channel.ChannelNumber}{(chnTiPhysicalNumber.Value > 0 ? $" ({chnTiPhysicalNumber.Value})" : string.Empty)} {channel.CallSign}";
+                msg = $"{channel.ChannelNumber}{(chnTiPhysicalNumber.Value > 0 ? $" ({chnTiPhysicalNumber.Value})" : string.Empty)}{(!string.IsNullOrEmpty(channel.CallSign) ? $" {channel.CallSign}" : string.Empty)}";
             }
             else if (sender.Equals(btnAddDvbChannel))
             {
@@ -228,7 +228,7 @@ namespace epg123Client
                     ChannelType = ChannelType.UserAdded
                 };
 
-                msg = $"{channel.ChannelNumber} {channel.CallSign} ({int.Parse(dvbFreq.Text) / 1000.0:n3} MHz, {int.Parse(dvbOnid.Text)}:{int.Parse(dvbTsid.Text)}:{int.Parse(dvbSid.Text)})";
+                msg = $"{channel.ChannelNumber}{(!string.IsNullOrEmpty(channel.CallSign) ? $" {channel.CallSign}" : string.Empty)} ({int.Parse(dvbFreq.Text) / 1000.0:n3} MHz, {int.Parse(dvbOnid.Text)}:{int.Parse(dvbTsid.Text)}:{int.Parse(dvbSid.Text)})";
             }
             else return;
 
@@ -271,7 +271,8 @@ namespace epg123Client
 
             // add the channel
             WmcStore.AddUserChannel(scannedLineup, service, channel, tuningInfos);
-            rtbChannelAddHistory.Text += $"Adding channel {msg} to {scannedLineup.Name}\n\n";
+            msg = $"Adding channel {msg} to {scannedLineup.Name}";
+            rtbChannelAddHistory.Text += $"{msg}\n\n";
             Logger.WriteInformation(msg);
             ChannelAdded = true;
         }
