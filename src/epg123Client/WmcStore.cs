@@ -492,20 +492,66 @@ namespace epg123Client
             return ret;
         }
 
-        public static void AutoMapChannels()
+        public static void AutoMapChannels(bool mapChannels = false)
         {
-            // get all active channels in lineup(s) from EPG123
+            // get all active channels in lineup(s) from EPG123/HDHR2MXF
             var epg123Channels = GetEpg123LineupChannels();
             if (epg123Channels.Count == 0)
             {
-                Logger.WriteError("There are no EPG123 listings in the database to perform any mappings.");
+                Logger.WriteError("There are no EPG123/HDHR2MXF listings in the database to perform any mappings.");
                 return;
             }
 
+            // get all stations that have been removed from EPG123/HDHR2MXF lineups
+            var removedStations = new Channels(WmcObjectStore).Where(arg => (arg.Lineup?.Name.StartsWith("EPG123") ?? false) ||
+                                                                            (arg.Lineup?.Name.StartsWith("HDHR2MXF") ?? false))
+                                                              .Where(arg => ChannelIsOrphaned(epg123Channels, arg))
+                                                              .OrderBy(arg => arg.Number).ThenBy(arg => arg.SubNumber).ToList();
+
+            // remove orphaned stations from epg123/hdhr2mxf lineup(s)
+            if (removedStations.Count > 0)
+            {
+                foreach (var station in removedStations)
+                {
+                    var lineup = station.Lineup;
+                    Logger.WriteVerbose($"Channel '{station}' was removed from lineup '{lineup}'");
+                    foreach (MergedChannel mergedChannel in station.ReferencingPrimaryChannels.Where(arg => arg.ChannelType != ChannelType.UserHidden))
+                    {
+                        Logger.WriteVerbose($"Removing '{station.CallSign} - {lineup}' from merged channel '{mergedChannel}'.");
+                        SubscribeLineupChannel(0, mergedChannel.Id);
+                    }
+                    lineup.RemoveChannel(station);
+                    lineup.NotifyChannelRemoved(station);
+                    lineup.Update();
+                }
+                WmcMergedLineup.FullMerge(false);
+                WmcMergedLineup.Update();
+            }
+
+            // restore any orphaned merged channels due to removed station(s) in download/import
+            foreach (var mergedChannel in new MergedChannels(WmcObjectStore).Where(arg => arg.Lineup == null &&
+                                                                                          arg.HasUserMappedListings &&
+                                                                                          arg.TuningInfos.Empty))
+            {
+                var scannedChannel = mergedChannel.PrimaryChannel;
+                var scannedLineup = scannedChannel.Lineup;
+                scannedLineup.NotifyChannelAdded(scannedChannel);
+                mergedChannel.HasUserMappedListings = false;
+                mergedChannel.Update();
+                Logger.WriteVerbose($"Orphaned tuner channel {scannedChannel.ChannelNumber} {scannedChannel.CallSign} has been restored.");
+            }
+            Logger.WriteVerbose($"Completed channel cleanup as needed after MXF file import.");
+
+            // stop here if mapping channels is false
+            if (!mapChannels) goto Finish;
+
             // get all merged channels
-            var mergedChannels = (from MergedChannel mergedChannel in WmcMergedLineup.GetChannels()
-                                  where !mergedChannel.TuningInfos?.Empty ?? false
-                                  select mergedChannel).ToList();
+            var mergedChannels = (from MergedChannel mergedChannel in WmcMergedLineup.UncachedChannels
+                                  where !(mergedChannel.TuningInfos?.Empty ?? true) &&
+                                         mergedChannel.ChannelType != ChannelType.UserHidden &&
+                                         mergedChannel.ChannelType != ChannelType.WmisBroadband
+                                  select mergedChannel)
+                                  .OrderBy(arg => arg.Number).ThenBy(arg => arg.SubNumber).ToList();
             if (mergedChannels.Count == 0)
             {
                 Logger.WriteError("There are no merged channels in the database to perform any mappings.");
@@ -516,45 +562,29 @@ namespace epg123Client
             foreach (var mergedChannel in mergedChannels)
             {
                 var originalChannelNumber = $"{mergedChannel.OriginalNumber}{(mergedChannel.OriginalSubNumber > 0 ? $".{mergedChannel.OriginalSubNumber}" : "")}";
-                var epg123Channel = epg123Channels
-                    .Where(arg => arg.ChannelNumber.Number == mergedChannel.OriginalNumber)
-                    .FirstOrDefault(arg => arg.ChannelNumber.SubNumber == mergedChannel.OriginalSubNumber);
+                var epg123Channel = epg123Channels.Where(arg => arg.ChannelNumber.Number == mergedChannel.OriginalNumber)
+                                                  .FirstOrDefault(arg => arg.ChannelNumber.SubNumber == mergedChannel.OriginalSubNumber);
                 if (epg123Channel != null)
                 {
                     if (mergedChannel.PrimaryChannel.Id == epg123Channel.Id) continue;
                     if (mergedChannel.PrimaryChannel.Lineup.Name.StartsWith("Scanned") || mergedChannel.PrimaryChannel.Lineup.Name.StartsWith("ZZZ123"))
                     {
-                        Logger.WriteVerbose($"Matching {epg123Channel.CallSign} to channel {originalChannelNumber} ({mergedChannel.ChannelNumber})");
+                        Logger.WriteVerbose($"Mapping '{epg123Channel.CallSign} - {epg123Channel.Lineup.Name}' to merged channel '{mergedChannel}'");
                         SubscribeLineupChannel(epg123Channel.Id, mergedChannel.Id);
                     }
-                    else
+                    else if (mergedChannel.ChannelNumber.ToString() != epg123Channel.ChannelNumber.ToString())
                     {
-                        Logger.WriteVerbose($"Skipped matching {epg123Channel.CallSign} to channel {originalChannelNumber} ({mergedChannel.ChannelNumber}) due to channel already having an assigned listing.");
+                        Logger.WriteVerbose($"Skipped matching '{epg123Channel.CallSign} - {epg123Channel.Lineup.Name}' to merged channel '{mergedChannel}' due to having channel '{mergedChannel.PrimaryChannel.CallSign} - {mergedChannel.PrimaryChannel.Lineup?.Name ?? "<<NULL>>"}' already assigned.");
                     }
-                }
-                else if (mergedChannel.PrimaryChannel.Lineup.Name.StartsWith("EPG123") && !epg123Channels.Contains(mergedChannel.PrimaryChannel))
-                {
-                    Logger.WriteVerbose($"Removing {mergedChannel.PrimaryChannel.CallSign} from channel {originalChannelNumber} ({mergedChannel.ChannelNumber}).");
-                    SubscribeLineupChannel(0, mergedChannel.Id);
                 }
                 else if (mergedChannel.PrimaryChannel.Lineup.Name.StartsWith("Scanned") && mergedChannel.UserBlockedState < UserBlockedState.Blocked)
                 {
                     SetChannelEnableState(mergedChannel.Id, false);
                 }
             }
+            Logger.WriteInformation("Completed the automatic mapping of lineup stations to tuner channels.");
 
-            var removedStations = new Channels(objectStore).Where(arg => (arg.Lineup?.Name.StartsWith("EPG123") ?? false) ||
-                                                                         (arg.Lineup?.Name.StartsWith("HDHR2MXF") ?? false))
-                                                           .Where(arg => ChannelIsOrphaned(epg123Channels, arg)).ToList();
-            foreach (var station in removedStations)
-            {
-                var lineup = station.Lineup;
-                Logger.WriteVerbose($"Channel {station.ChannelNumber} {station.CallSign} was removed from lineup {station.Lineup.Name}.");
-                lineup.RemoveChannel(station);
-                lineup.NotifyChannelRemoved(station);
-                lineup.Update();
-            }
-
+        Finish:
             // finish it
             WmcMergedLineup.FullMerge(false);
             WmcMergedLineup.Update();
@@ -587,7 +617,7 @@ namespace epg123Client
                     if (listings == null) return;
 
                     // add this channel lineup to the device group if necessary
-                    foreach (Device device in mergedChannel.Lineup.DeviceGroup.Devices.Cast<Device>())
+                    foreach (Device device in mergedChannel.Lineup.DeviceGroup.Devices)
                     {
                         try
                         {
@@ -611,12 +641,12 @@ namespace epg123Client
                 }
                 else
                 {
-                    //foreach (var secondary in mergedChannel.SecondaryChannels.Where(secondary => secondary.Lineup == null))
-                    //{
-                    //    mergedChannel.SecondaryChannels.RemoveAllMatching(secondary);
-                    //}
+                    foreach (var secondary in mergedChannel.SecondaryChannels.Where(secondary => secondary.Lineup == null))
+                    {
+                        mergedChannel.SecondaryChannels.RemoveAllMatching(secondary);
+                    }
 
-                    //mergedChannel.Refresh(true);
+                    mergedChannel.Refresh(true);
                     mergedChannel.AddChannelListings(listings);
                 }
                 mergedChannel.Update();
@@ -770,7 +800,7 @@ namespace epg123Client
                     where myLineup.Name.StartsWith("EPG123") || myLineup.Name.StartsWith("HDHR2MXF")
                     select WmcObjectStore.Fetch(myLineup.LineupId) as Lineup)
                 {
-                    ret.AddRange(lineup.UncachedChannels.ToList());
+                    ret.AddRange(lineup.UncachedChannels);
                 }
             }
             catch (Exception ex)

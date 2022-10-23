@@ -52,7 +52,7 @@ namespace logViewer
             richTextBox1.Clear();
             richTextBox1.ZoomFactor = 1.0f;
             richTextBox1.ZoomFactor = zoom;
-            streamLocation = 0;
+            streamLocation = _lines = 0;
             DisplayLogFile(logFile);
             richTextBox1.Show();
             this.Cursor = Cursors.Default;
@@ -60,8 +60,8 @@ namespace logViewer
 
         private void DisplayLogFile(string logFile)
         {
+            this.Text = $"EPG123 Log Viewer - {logFile}";
             var fi = new FileInfo(logFile);
-            if (!fi.Exists) return;
             _lastPath = fileSystemWatcher1.Path = fi.DirectoryName;
             fileSystemWatcher1.Filter = fi.Name;
 
@@ -70,7 +70,8 @@ namespace logViewer
                 using (var fs = new FileStream(logFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                 using (var sr = new StreamReader(fs))
                 {
-                    fs.Position = streamLocation;
+                    if (fs.Length < streamLocation) streamLocation = 0;
+                    else fs.Position = streamLocation;
 
                     // read the line
                     string line = null;
@@ -84,6 +85,7 @@ namespace logViewer
                         if (!DateTime.TryParse(line.Substring(1, Math.Max(line.IndexOf(']') - 1, 0)), out DateTime dt) && richTextBox1.Text.Length == 0) continue;
 
                         // add line with color
+                        richTextBox1.SelectionStart = richTextBox1.TextLength;
                         if (line.Contains("[ERROR]") || dt == DateTime.MinValue)
                         {
                             richTextBox1.SelectionColor = Color.Red;
@@ -104,7 +106,7 @@ namespace logViewer
                         {
                             richTextBox1.SelectionColor = Color.ForestGreen;
                         }
-                        
+
                         richTextBox1.AppendText($"{line}\r\n");
                         ++_lines;
                     }
@@ -145,7 +147,6 @@ namespace logViewer
         {
             openFileDialog1 = new OpenFileDialog()
             {
-                FileName = "trace.log",
                 Filter = "Log File|*.log",
                 Title = "Select a log file to view",
                 Multiselect = false,

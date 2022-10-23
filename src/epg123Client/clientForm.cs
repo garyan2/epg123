@@ -831,9 +831,8 @@ namespace epg123Client
                 subChannels.Add(mergedChannel.PrimaryChannel);
             }
 
-            foreach (Channel channel in mergedChannel.SecondaryChannels)
+            foreach (Channel channel in mergedChannel.SecondaryChannels.Where(arg => arg.ChannelType != ChannelType.Wmis))
             {
-                if (channel.ChannelType == ChannelType.Wmis) continue;
                 subChannels.Add(channel);
             }
 
@@ -848,6 +847,8 @@ namespace epg123Client
 
         private void mergeMenuItem_Click(object sender, EventArgs e)
         {
+            // WMC will create a new mergedchannel with the usermappedlistings and tuners
+            // it will then change the channeltype to userhidden of the merging mergedchannels
             Cursor = Cursors.WaitCursor;
             if (mergedChannelListView.SelectedIndices.Count > 5)
             {
@@ -1650,6 +1651,7 @@ namespace epg123Client
             // kick off the reindex
             if (importForm.Success)
             {
+                WmcStore.AutoMapChannels();
                 BuildLineupChannelListView();
                 WmcUtilities.ReindexDatabase();
             }
@@ -1831,6 +1833,7 @@ namespace epg123Client
             }
 
             public bool matched;
+            public bool singleTunerGroup;
             public string recorderId;
             public string devName;
             public string rootDevice;
@@ -1917,7 +1920,13 @@ namespace epg123Client
                 if (tuner.hwOccurence != 0) continue;
 
                 var matches = registryTuners.Where(arg => arg.devName == tuner.devName).ToList();
-                if (matches.Count <= 1) continue;
+                if (matches.Count == 0) continue;
+                if (matches.Count == 1)
+                {
+                    matches[0].singleTunerGroup = true;
+                    continue;
+                }
+
                 var i = 1;
                 foreach (var match in matches)
                 {
@@ -1930,6 +1939,7 @@ namespace epg123Client
             foreach (var device in devices)
             {
                 var regTuner = registryTuners.FirstOrDefault(arg => !arg.matched && device.Attribute("name").Value.Equals(arg.ToString()));
+                if (regTuner == null) regTuner = registryTuners.FirstOrDefault(arg => !arg.matched && arg.singleTunerGroup && device.Attribute("name").Value.Equals($"{arg} #1"));
                 if (regTuner != null)
                 {
                     regTuner.matched = true;

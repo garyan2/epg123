@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Drawing.Design;
 using System.Net;
 using epg123.SchedulesDirect;
 using Microsoft.Win32;

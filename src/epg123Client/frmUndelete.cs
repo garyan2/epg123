@@ -62,7 +62,7 @@ namespace epg123Client
                 // scan through the referencing primary channels
                 foreach (MergedChannel channel in scannedChannel.ReferencingPrimaryChannels)
                 {
-                    if (channel.Lineup == null) continue;
+                    if (channel.Lineup == null || channel.ChannelType == ChannelType.UserHidden) continue;
                     orphaned = false;
                     break;
                 }
@@ -72,7 +72,7 @@ namespace epg123Client
                 {
                     foreach (MergedChannel channel in scannedChannel.ReferencingSecondaryChannels)
                     {
-                        if (channel.Lineup == null) continue;
+                        if (channel.Lineup == null || channel.ChannelType == ChannelType.UserHidden) continue;
                         orphaned = false;
                         break;
                     }

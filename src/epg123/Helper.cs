@@ -372,6 +372,20 @@ namespace epg123
             });
         }
 
+        public static string BytesToString(long bytes)
+        {
+            string[] unit = { "", "K", "M", "G", "T" };
+            for (var i = 0; i < unit.Length; ++i)
+            {
+                double calc;
+                if ((calc = bytes / Math.Pow(1024, i)) < 1024)
+                {
+                    return $"{calc:N3} {unit[i]}B";
+                }
+            }
+            return "0 bytes";
+        }
+
         #region ========== Folder and File Paths ==========
 
         /// <summary>

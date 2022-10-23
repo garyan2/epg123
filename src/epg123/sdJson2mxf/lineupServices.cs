@@ -15,6 +15,7 @@ namespace epg123.sdJson2mxf
     {
         private static readonly HashSet<string> IncludedStations = new HashSet<string>();
         private static readonly HashSet<string> ExcludedStations = new HashSet<string>();
+        public static int AddedStations;
         public static int MissingStations;
         private static StationChannelMap customMap;
 
@@ -355,6 +356,12 @@ namespace epg123.sdJson2mxf
                 {
                     MissingStations = missing.Count;
                     Logger.WriteInformation($"Stations no longer available since last configuration save are: {string.Join(", ", missing)}");
+                }
+                var extras = SdMxf.With.Services.Where(arg => !IncludedStations.Contains(arg.StationId)).ToList();
+                if (extras.Count > 0)
+                {
+                    AddedStations = extras.Count;
+                    Logger.WriteInformation($"Stations added for download since last configuration save are: {string.Join(", ", extras.Select(e => e.CallSign))}");
                 }
 
                 Logger.WriteMessage("Exiting BuildLineupServices(). SUCCESS.");

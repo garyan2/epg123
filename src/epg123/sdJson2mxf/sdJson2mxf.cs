@@ -116,8 +116,6 @@ namespace epg123.sdJson2mxf
                     CleanCacheFolder();
                     epgCache.WriteCache();
 
-                    //Logger.WriteVerbose($"Downloaded and processed {SdApi.TotalDownloadBytes} of data from Schedules Direct.");
-                    Logger.WriteVerbose($"Generated .mxf file contains {SdMxf.With.Services.Count - 1} services, {SdMxf.With.SeriesInfos.Count} series, {SdMxf.With.Seasons.Count} seasons, {SdMxf.With.Programs.Count} programs, {SdMxf.With.ScheduleEntries.Sum(x => x.ScheduleEntry.Count)} schedule entries, and {SdMxf.With.People.Count} people with {SdMxf.With.GuideImages.Count} image links.");
                     Logger.WriteInformation("Completed EPG123 update execution. SUCCESS.");
                 }
             }
@@ -135,13 +133,15 @@ namespace epg123.sdJson2mxf
 
         private static bool ServiceCountSafetyCheck()
         {
-            if (!(config.ExpectedServicecount - MissingStations < config.ExpectedServicecount * 0.95)) return true;
-            Logger.WriteError($"The expected number of stations to download is {config.ExpectedServicecount} but there are only {SdMxf.With.Services.Count} stations available from Schedules Direct. Aborting update for review by user.");
+            if (config.ExpectedServicecount > 20 && !(config.ExpectedServicecount - MissingStations < config.ExpectedServicecount * 0.95)) return true;
+            Logger.WriteError($"Of the expected {config.ExpectedServicecount} stations to download, there are only {SdMxf.With.Services.Count - AddedStations} stations available from Schedules Direct. Aborting update for review by user.");
             return false;
         }
 
         private static bool WriteMxf()
         {
+            Logger.WriteVerbose($"Downloaded and processed {SdApi.DownloadedBytes} of data from Schedules Direct.");
+
             // add dummy lineup with dummy channel
             var service = SdMxf.GetService("DUMMY");
             service.CallSign = "DUMMY";
@@ -195,7 +195,9 @@ namespace epg123.sdJson2mxf
                     }
                 }
 
-                Logger.WriteInformation($"Completed save of the MXF file to \"{Helper.Epg123MxfPath}\".");
+                var fi = new FileInfo(Helper.Epg123MxfPath);
+                Logger.WriteInformation($"Completed save of the MXF file to \"{Helper.Epg123MxfPath}\". ({Helper.BytesToString(fi.Length)})");
+                Logger.WriteVerbose($"Generated .mxf file contains {SdMxf.With.Services.Count - 1} services, {SdMxf.With.SeriesInfos.Count} series, {SdMxf.With.Seasons.Count} seasons, {SdMxf.With.Programs.Count} programs, {SdMxf.With.ScheduleEntries.Sum(x => x.ScheduleEntry.Count)} schedule entries, and {SdMxf.With.People.Count} people with {SdMxf.With.GuideImages.Count} image links.");
                 ++processedObjects; ReportProgress();
                 return true;
             }
@@ -244,7 +246,10 @@ namespace epg123.sdJson2mxf
                         serializer.Serialize(writer, xmltv, ns);
                     }
                 }
-                Logger.WriteInformation($"Completed save of the XMLTV file to \"{config.XmltvOutputFile}\".");
+
+                var fi = new FileInfo(config.XmltvOutputFile);
+                Logger.WriteInformation($"Completed save of the XMLTV file to \"{config.XmltvOutputFile}\". ({Helper.BytesToString(fi.Length)})");
+                Logger.WriteVerbose($"Generated .xmltv file contains {xmltv.Channels.Count} channels and {xmltv.Programs.Count} programs.");
             }
             catch (Exception ex)
             {

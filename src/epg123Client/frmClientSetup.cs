@@ -7,7 +7,6 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
 using epg123;
-using epg123Client.MxfXml;
 using Microsoft.Win32;
 
 namespace epg123Client

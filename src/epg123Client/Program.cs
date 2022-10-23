@@ -401,18 +401,17 @@ namespace epg123
                         WmcStore.ClearLineupChannelLogos();
                     }
 
-                    // perform automatch
-                    if (match)
+                    // perform post mxf import cleanup and automatch
+                    if (match || import)
                     {
                         try
                         {
-                            WmcStore.AutoMapChannels();
-                            Logger.WriteInformation("Completed the automatch of lineup stations to tuner channels.");
+                            WmcStore.AutoMapChannels(match);
                         }
                         catch (Exception ex)
                         {
                             Logger.WriteError($"{ex.Message}");
-                            Logger.WriteError("Failed to perform the automatch of lineup stations to tuner channels task.");
+                            Logger.WriteError("Failed to complete the automatic mapping of lineup stations to tuner channels.");
                         }
                     }
 

@@ -17,13 +17,13 @@ namespace epg123.SchedulesDirect
         private static readonly HttpClient _httpClient = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.Deflate })
         {
             BaseAddress = new Uri($"{SdBaseAddr}{SdApiNode}"),
-            Timeout = TimeSpan.FromSeconds(10)
+            Timeout = TimeSpan.FromSeconds(120)
         };
 
         public static void Initialize(string UserAgent)
         {
             ServicePointManager.SecurityProtocol |= (SecurityProtocolType)3072; // Tls12
-            ServicePointManager.DefaultConnectionLimit = 6;
+            ServicePointManager.DefaultConnectionLimit = 10;
 
             // set http client headers
             _httpClient.DefaultRequestHeaders.UserAgent.TryParseAdd(UserAgent);
@@ -39,7 +39,12 @@ namespace epg123.SchedulesDirect
 
             try
             {
-                var message = new HttpRequestMessage { Method = HttpMethod.Get, RequestUri = new Uri($"{SdBaseAddr}{SdApiNode}{uri}?token={TokenService.Token}") };
+                var message = new HttpRequestMessage
+                {
+                    Method = HttpMethod.Get,
+                    RequestUri = new Uri($"{SdBaseAddr}{SdApiNode}{uri}")
+                };
+                message.Headers.Add("token", TokenService.Token);
                 if (ifModifiedSince > DateTime.MinValue) message.Headers.IfModifiedSince = ifModifiedSince;
                 var response = await _httpClient.SendAsync(message, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
 
@@ -100,6 +105,7 @@ namespace epg123.SchedulesDirect
                         break;
                     case 4001: // ACCOUNT_EXPIRED
                     case 4005: // ACCOUNT_DISABLED
+                    case 4007: // APPLICATION_DISABLED
                         response.StatusCode = HttpStatusCode.Forbidden; // 403
                         response.ReasonPhrase = "Forbidden";
                         break;
@@ -119,7 +125,6 @@ namespace epg123.SchedulesDirect
                         break;
                     case 4003: // INVALID_USER
                     case 4006: // TOKEN_EXPIRED
-                    case 4007: // TOKEN_INVALID
                     case 4008: // TOKEN_DUPLICATED
                     case 5004: // UNKNOWN_USER
                         response.StatusCode = HttpStatusCode.Unauthorized; // 401

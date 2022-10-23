@@ -65,7 +65,7 @@ namespace epg123
                 {
                     FullName = "Manual lineup input...",
                     OnePostalCode = false,
-                    PostalCode = "/[A-Z]+-[A-Z0-9]+-[A-Z0-9]+",
+                    PostalCode = "/[A-Z]+-[A-Z0-9.]+-[A-Z0-9]+",
                     PostalCodeExample = "USA-CA00053-DEFAULT",
                     ShortName = "EPG123"
                 });

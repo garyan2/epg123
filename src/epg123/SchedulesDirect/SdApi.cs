@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -14,6 +15,9 @@ namespace epg123.SchedulesDirect
         public static string JsonApi = @"/20141201/";
         public static string uiMessage = null;
         public static int MaxLineups;
+
+        private static long _downloadedBytes;
+        public static string DownloadedBytes => Helper.BytesToString(_downloadedBytes);
 
         private static readonly HttpClient _httpClient = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.Deflate })
         {
@@ -60,13 +64,26 @@ namespace epg123.SchedulesDirect
         {
             var message = new HttpRequestMessage { Method = method, RequestUri = new Uri($"{JsonBaseUrl}{JsonApi}{uri}") };
             if (method == HttpMethod.Post) message.Content = new StringContent(JsonConvert.SerializeObject(content), Encoding.UTF8, "application/json");
-            var response = await _httpClient.SendAsync(message, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
+            var response = await _httpClient.SendAsync(message).ConfigureAwait(false);
+            _downloadedBytes += response.Content.Headers.ContentLength ?? 0;
             
             if (!response.IsSuccessStatusCode) return HandleHttpResponseError<T>(response, await response.Content.ReadAsStringAsync());
             using (var stream = response.Content.ReadAsStreamAsync().Result)
             using (var sr = new StreamReader(stream))
             using (var jr = new JsonTextReader(sr))
             {
+                if (typeof(T) == typeof(List<LineupPreviewChannel>))
+                {
+                    return JsonConvert.DeserializeObject<T>(sr.ReadToEnd().Replace("[],", ""));
+                }
+                if (typeof(T) == typeof(StationChannelMap))
+                {
+                    return JsonConvert.DeserializeObject<T>(sr.ReadToEnd().Replace("[],", ""));
+                }
+                if (typeof(T) == typeof(Dictionary<string, Dictionary<string, ScheduleMd5Response>>))
+                {
+                    return JsonConvert.DeserializeObject<T>(sr.ReadToEnd().Replace("[]", "{}"));
+                }
                 var serializer = new JsonSerializer();
                 return serializer.Deserialize<T>(jr);
             }

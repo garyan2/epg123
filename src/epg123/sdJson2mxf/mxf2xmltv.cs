@@ -29,6 +29,7 @@ namespace epg123.sdJson2mxf
 
                 foreach (var service in SdMxf.With.Services)
                 {
+                    if (service.StationId == "DUMMY" && !config.XmltvAddFillerData) continue;
                     xmltv.Channels.Add(BuildXmltvChannel(service));
 
                     if (service.MxfScheduleEntries.ScheduleEntry.Count == 0 && config.XmltvAddFillerData)

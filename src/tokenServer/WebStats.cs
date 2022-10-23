@@ -71,7 +71,7 @@ namespace tokenServer
                        $"<u><strong>Requests sent to Schedules Direct (<font color=\"blue\">{reqSent + condReqSent}</font>):</strong></u><br>" +
                        $"Image requests: <font color=\"blue\">{reqSent}</font><br>" +
                        $"Conditional requests: <font color=\"blue\">{condReqSent}</font><br><br>" +
-                       $"<u><strong>Responses to clients (<font color=\"blue\">{resp304 + sdDownloadCnt + cacheDownloadCnt + logoCnt + fileCnt + resp401 + resp404 + resp429 + resp500 + resp502 + resp503}</font>):</strong></u><br>" +
+                       $"<u><strong>Responses to clients (<font color=\"blue\">{resp304 + sdDownloadCnt + cacheDownloadCnt + logoCnt + fileCnt + resp401 + resp404 + resp429 + resp500 + resp502 + resp503 + respOther}</font>):</strong></u><br>" +
                        $"Images downloaded from Schedules Direct: <font color=\"blue\">{sdDownloadCnt} ({sdDownloadSz:N0} bytes)</font><br>" +
                        $"Images provided by service cache: <font color=\"blue\">{cacheDownloadCnt} ({cacheDownloadSz:N0} bytes)</font><br>" +
                        $"Station logos provided by service: <font color=\"blue\">{logoCnt} ({logoSz:N0} bytes)</font><br>" +
@@ -130,8 +130,22 @@ namespace tokenServer
             {
                 switch (stat)
                 {
+                    case 304: // Not Modified
+                        --resp304; break;
                     case 401: // Unauthorized
-                        break;
+                        --resp401; break;
+                    case 403: // Forbidden
+                        --resp403; break;
+                    case 404: // Not Found
+                        --resp404; break;
+                    case 429: // Too Many Requests
+                        --resp429; break;
+                    case 500: // Internal Server Error
+                        --resp500; break;
+                    case 502: // Bad Gateway
+                        --resp502; break;
+                    case 503: // Service Unavailable
+                        --resp503; break;
                 }
             }
         }
