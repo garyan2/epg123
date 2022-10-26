@@ -133,7 +133,7 @@ namespace epg123.sdJson2mxf
 
         private static bool ServiceCountSafetyCheck()
         {
-            if (config.ExpectedServicecount > 20 && !(config.ExpectedServicecount - MissingStations < config.ExpectedServicecount * 0.95)) return true;
+            if (config.ExpectedServicecount < 20 || !(config.ExpectedServicecount - MissingStations < config.ExpectedServicecount * 0.95)) return true;
             Logger.WriteError($"Of the expected {config.ExpectedServicecount} stations to download, there are only {SdMxf.With.Services.Count - AddedStations} stations available from Schedules Direct. Aborting update for review by user.");
             return false;
         }
