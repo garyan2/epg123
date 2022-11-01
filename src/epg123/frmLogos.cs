@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Windows.Forms;
 using epg123.SchedulesDirect;
@@ -45,7 +47,7 @@ namespace epg123
         {
             Refresh();
             LoadLocalImages();
-            LoadRemoteImages(_station);
+            LoadRemoteImages();
         }
 
         private void DeleteToRecycle(string file)
@@ -66,55 +68,50 @@ namespace epg123
             {
                 pbCustomLocal.BackColor = Color.FromArgb(255, 6, 15, 30);
                 pbCustomLocal.Image = Image.FromFile($"{Helper.Epg123LogosFolder}\\{_callsign}_c.png");
+                pbCustomLocal.Tag = $"{Helper.Epg123LogosFolder}\\{_callsign}_c.png";
                 pbCustomLocal.Refresh();
             }
 
-            if (File.Exists($"{Helper.Epg123LogosFolder}\\{_callsign}_d.png") && pbDarkLocal.Image == null)
+            var categories = new string[] { "dark", "white", "light", "gray" };
+            var pictureBoxes = new PictureBox[] { pbDarkLocal, pbWhiteLocal, pbLightLocal, pbGrayLocal };
+            var backColors = new Color[] { Color.FromArgb(255, 6, 15, 30), Color.FromArgb(255, 6, 15, 30), Color.White, Color.White };
+            for (int i = 0; i < categories.Length; ++i)
             {
-                pbDarkLocal.BackColor = Color.FromArgb(255, 6, 15, 30); ;
-                pbDarkLocal.Image = Image.FromFile($"{Helper.Epg123LogosFolder}\\{_callsign}_d.png");
-                pbDarkLocal.Refresh();
+                var stationLogo = _station.StationLogos.FirstOrDefault(arg => arg.Category != null && arg.Category.Equals(categories[i], StringComparison.OrdinalIgnoreCase));
+                if (stationLogo == null) continue;
+                var logoFilepath = $"{Helper.Epg123LogosFolder}\\{Path.GetFileName(new Uri(stationLogo.Url).AbsolutePath)}";
+                if (File.Exists(logoFilepath) && pictureBoxes[i].Image == null)
+                {
+                    pictureBoxes[i].BackColor = backColors[i];
+                    pictureBoxes[i].Image = Image.FromFile(logoFilepath);
+                    pictureBoxes[i].Tag = logoFilepath;
+                    pictureBoxes[i].Refresh();
+                }
             }
 
-            if (File.Exists($"{Helper.Epg123LogosFolder}\\{_callsign}_w.png") && pbWhiteLocal.Image == null)
+            if (_station.Logo?.Url != null)
             {
-                pbWhiteLocal.BackColor = Color.FromArgb(255, 6, 15, 30); ;
-                pbWhiteLocal.Image = Image.FromFile($"{Helper.Epg123LogosFolder}\\{_callsign}_w.png");
-                pbWhiteLocal.Refresh();
-            }
-
-            if (File.Exists($"{Helper.Epg123LogosFolder}\\{_callsign}_l.png") && pbLightLocal.Image == null)
-            {
-                pbLightLocal.BackColor = Color.White;
-                pbLightLocal.Image = Image.FromFile($"{Helper.Epg123LogosFolder}\\{_callsign}_l.png");
-                pbLightLocal.Refresh();
-            }
-
-            if (File.Exists($"{Helper.Epg123LogosFolder}\\{_callsign}_g.png") && pbGrayLocal.Image == null)
-            {
-                pbGrayLocal.BackColor = Color.White;
-                pbGrayLocal.Image = Image.FromFile($"{Helper.Epg123LogosFolder}\\{_callsign}_g.png");
-                pbGrayLocal.Refresh();
-            }
-
-            if (File.Exists($"{Helper.Epg123LogosFolder}\\{_callsign}.png") && pbDefaultLocal.Image == null)
-            {
-                pbDefaultLocal.BackColor = Color.FromArgb(255, 6, 15, 30);
-                pbDefaultLocal.Image = Image.FromFile($"{Helper.Epg123LogosFolder}\\{_callsign}.png");
-                pbDefaultLocal.Refresh();
+                var logoFilepath = $"{Helper.Epg123LogosFolder}\\{Path.GetFileName(new Uri(_station.Logo.Url).AbsolutePath)}";
+                if (File.Exists(logoFilepath) && pbDefaultLocal.Image == null)
+                {
+                    pbDefaultLocal.BackColor = Color.FromArgb(255, 6, 15, 30);
+                    pbDefaultLocal.Image = Image.FromFile(logoFilepath);
+                    pbDefaultLocal.Tag = logoFilepath;
+                    pbDefaultLocal.Refresh();
+                }
             }
         }
 
-        private void LoadRemoteImages(LineupStation station)
+        private void LoadRemoteImages()
         {
-            if (station.Logo != null)
+            if (_station.Logo != null)
             {
-                pbDefaultRemote.BackColor = Color.FromArgb(255, 6, 15, 30); ;
-                pbDefaultRemote.Load(station.Logo.Url);
+                pbDefaultRemote.BackColor = Color.FromArgb(255, 6, 15, 30);
+                pbDefaultRemote.Load(_station.Logo.Url);
             }
 
-            if (station.StationLogos == null) return;
-            foreach (var image in station.StationLogos)
+            if (_station.StationLogos == null) return;
+            foreach (var image in _station.StationLogos)
             {
                 switch (image.Category)
                 {
@@ -148,19 +145,17 @@ namespace epg123
 
         private void menuDeleteLocal_Click(object sender, EventArgs e)
         {
-            var path = $"{Helper.Epg123LogosFolder}\\{_callsign}";
-            if (_selectedBox == pbCustomLocal) path += "_c.png";
-            if (_selectedBox == pbDarkLocal) path += "_d.png";
-            if (_selectedBox == pbWhiteLocal) path += "_w.png";
-            if (_selectedBox == pbLightLocal) path += "_l.png";
-            if (_selectedBox == pbGrayLocal) path += "_g.png";
-            if (_selectedBox == pbDefaultLocal) path += ".png";
-
-            _selectedBox.Image.Dispose();
-            _selectedBox.Image = null;
-            _selectedBox.Update();
-            _selectedBox.BackColor = SystemColors.Control;
-            _selectedBox = null;
+            var path = (string)_selectedBox.Tag;
+            List<PictureBox> pictureBoxes = new List<PictureBox> { pbCustomLocal, pbDarkLocal, pbDefaultLocal, pbGrayLocal, pbLightLocal, pbWhiteLocal };
+            for (int i = 0; i < pictureBoxes.Count; ++i)
+            {
+                if (pictureBoxes[i].Tag == null || (string)pictureBoxes[i].Tag != path) continue;
+                pictureBoxes[i].Image.Dispose();
+                pictureBoxes[i].Image = null;
+                pictureBoxes[i].Update();
+                pictureBoxes[i].BackColor = SystemColors.Control;
+                pictureBoxes[i] = null;
+            }
 
             try
             {

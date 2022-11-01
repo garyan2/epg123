@@ -529,17 +529,17 @@ namespace epg123Client
             }
 
             // restore any orphaned merged channels due to removed station(s) in download/import
-            foreach (var mergedChannel in new MergedChannels(WmcObjectStore).Where(arg => arg.Lineup == null &&
-                                                                                          arg.HasUserMappedListings &&
-                                                                                          arg.TuningInfos.Empty))
-            {
-                var scannedChannel = mergedChannel.PrimaryChannel;
-                var scannedLineup = scannedChannel.Lineup;
-                scannedLineup.NotifyChannelAdded(scannedChannel);
-                mergedChannel.HasUserMappedListings = false;
-                mergedChannel.Update();
-                Logger.WriteVerbose($"Orphaned tuner channel {scannedChannel.ChannelNumber} {scannedChannel.CallSign} has been restored.");
-            }
+            //foreach (var mergedChannel in new MergedChannels(WmcObjectStore).Where(arg => arg.Lineup == null &&
+            //                                                                              arg.HasUserMappedListings &&
+            //                                                                              arg.TuningInfos.Empty))
+            //{
+            //    var scannedChannel = mergedChannel.PrimaryChannel;
+            //    var scannedLineup = scannedChannel.Lineup;
+            //    scannedLineup.NotifyChannelAdded(scannedChannel);
+            //    mergedChannel.HasUserMappedListings = false;
+            //    mergedChannel.Update();
+            //    Logger.WriteVerbose($"Orphaned tuner channel {scannedChannel.ChannelNumber} {scannedChannel.CallSign} has been restored.");
+            //}
             Logger.WriteVerbose($"Completed channel cleanup as needed after MXF file import.");
 
             // stop here if mapping channels is false

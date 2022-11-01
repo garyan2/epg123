@@ -361,7 +361,7 @@ namespace epg123.sdJson2mxf
                 artwork = mxfProgram.mxfSeriesInfo.extras["artwork"];
             }
 
-            return artwork.Count == 0 ? null : artwork.Select(image => new XmltvIcon { Src = Helper.Standalone ? image.Uri : $"{image.Uri.Replace($"{SdApi.JsonBaseUrl}{SdApi.JsonApi}", $"http://{Environment.MachineName}:{Helper.TcpPort}/")}", Height = image.Height, Width = image.Width }).ToList();
+            return artwork.Count == 0 ? null : artwork.Select(image => new XmltvIcon { Src = Helper.Standalone ? image.Uri : $"{image.Uri.Replace($"{SdApi.JsonBaseUrl}{SdApi.JsonApi}", $"http://{HostAddress}:{Helper.TcpPort}/")}", Height = image.Height, Width = image.Width }).ToList();
         }
 
         private static XmltvText GrabSportEvent(MxfProgram program)

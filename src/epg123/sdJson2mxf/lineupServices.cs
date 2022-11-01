@@ -187,81 +187,47 @@ namespace epg123.sdJson2mxf
                             mxfService.mxfAffiliate = SdMxf.GetAffiliate(station.Affiliate);
                         }
 
-                        // add station logo if available and allowed
-                        var logoPath = $"{Helper.Epg123LogosFolder}\\{station.Callsign}.png";
-                        var urlLogoPath = logoPath.Replace($"{Helper.Epg123LogosFolder}\\", $"http://{Environment.MachineName}:{Helper.TcpPort}/logos/");
-                        var customPath = $"{Helper.Epg123LogosFolder}\\{station.Callsign}_c.png";
-                        if (config.IncludeSdLogos)
+                        // add station logo if available
+                        stationLogo = station.StationLogos?.FirstOrDefault(arg => arg.Category != null && arg.Category.Equals(config.PreferredLogoStyle, StringComparison.OrdinalIgnoreCase)) ??
+                                      station.StationLogos?.FirstOrDefault(arg => arg.Category != null && arg.Category.Equals(config.AlternateLogoStyle, StringComparison.OrdinalIgnoreCase)) ??
+                                      (!config.PreferredLogoStyle.Equals("none", StringComparison.OrdinalIgnoreCase) ? station.Logo : null);
+
+                        // initialize as custom logo
+                        var logoPath = string.Empty;
+                        var urlLogoPath = string.Empty;
+
+                        var logoFilename = $"{station.Callsign}_c.png";
+                        if (config.IncludeSdLogos && File.Exists($"{Helper.Epg123LogosFolder}\\{logoFilename}"))
                         {
-                            // make sure logos directory exists
-                            if (!Directory.Exists(Helper.Epg123LogosFolder))
-                            {
-                                Directory.CreateDirectory(Helper.Epg123LogosFolder);
-                            }
+                            logoPath = $"{Helper.Epg123LogosFolder}\\{logoFilename}";
+                            urlLogoPath = $"http://{HostAddress}:{Helper.TcpPort}/logos/{logoFilename}";
+                        }
+                        else if (stationLogo != null)
+                        {
+                            logoFilename = Path.GetFileName(new Uri(stationLogo.Url).AbsolutePath);
+                            logoPath = $"{Helper.Epg123LogosFolder}\\{logoFilename}";
+                            urlLogoPath = $"http://{HostAddress}:{Helper.TcpPort}/logos/{logoFilename}";
 
-                            if (station.StationLogos != null)
+                            if (config.IncludeSdLogos && !File.Exists(logoPath))
                             {
-                                stationLogo = station.StationLogos.FirstOrDefault(arg => arg.Category != null && arg.Category.Equals(config.PreferredLogoStyle, StringComparison.OrdinalIgnoreCase)) ??
-                                              station.StationLogos.FirstOrDefault(arg => arg.Category != null && arg.Category.Equals(config.AlternateLogoStyle, StringComparison.OrdinalIgnoreCase));
-
-                                if (stationLogo != null)
-                                {
-                                    switch (stationLogo.Category)
-                                    {
-                                        case "dark":
-                                            logoPath = logoPath.Replace(".png", "_d.png");
-                                            break;
-                                        case "gray":
-                                            logoPath = logoPath.Replace(".png", "_g.png");
-                                            break;
-                                        case "light":
-                                            logoPath = logoPath.Replace(".png", "_l.png");
-                                            break;
-                                        case "white":
-                                            logoPath = logoPath.Replace(".png", "_w.png");
-                                            break;
-                                    }
-                                }
+                                StationLogosToDownload.Add(new KeyValuePair<MxfService, string[]>(mxfService, new[] { logoPath, stationLogo.Url }));
                             }
-                            if (stationLogo == null && !config.PreferredLogoStyle.Equals("none", StringComparison.OrdinalIgnoreCase) && !config.AlternateLogoStyle.Equals("none", StringComparison.OrdinalIgnoreCase))
-                            {
-                                stationLogo = station.Logo;
-                            }
+                        }
 
-                            // download the logo from SD if not present in the .\logos folder
-                            if (stationLogo != null && !File.Exists(logoPath))
-                            {
-                                var url = stationLogo.Url;
-
-                                // download, crop & resize logo image, save and add
-                                if (!string.IsNullOrEmpty(url))
-                                {
-                                    StationLogosToDownload.Add(new KeyValuePair<MxfService, string[]>(mxfService, new[] { logoPath, url }));
-                                }
-                            }
-
-                            // add the existing logo; custom logo overrides downloaded logos
-                            if (File.Exists(customPath))
-                            {
-                                logoPath = customPath;
-                            }
-                            urlLogoPath = logoPath.Replace($"{Helper.Epg123LogosFolder}\\", $"http://{Environment.MachineName}:{Helper.TcpPort}/logos/");
-
-                            if (File.Exists(logoPath))
-                            {
-                                mxfService.mxfGuideImage = SdMxf.GetGuideImage(Helper.Standalone ? $"file://{logoPath}" : urlLogoPath, GetStringEncodedImage(logoPath));
-                            }
+                        // add to mxf guide images if file exists already
+                        if (config.IncludeSdLogos && !string.IsNullOrEmpty(logoPath) && File.Exists(logoPath))
+                        {
+                            mxfService.mxfGuideImage = SdMxf.GetGuideImage(Helper.Standalone ? $"file://{logoPath}" : urlLogoPath, GetStringEncodedImage(logoPath));
                         }
 
                         // handle xmltv logos
-                        if (config.XmltvIncludeChannelLogos.Equals("url"))
+                        if (config.XmltvIncludeChannelLogos.Equals("url") && stationLogo != null)
                         {
-                            if (stationLogo != null) mxfService.extras.Add("logo", stationLogo);
-                            else if (station.Logo?.Url != null) mxfService.extras.Add("logo", station.Logo);
+                            mxfService.extras.Add("logo", stationLogo);
                         }
-                        else if (config.XmltvIncludeChannelLogos.Equals("local") && config.IncludeSdLogos)
+                        else if (config.IncludeSdLogos)
                         {
-                            if (File.Exists(logoPath))
+                            if (!string.IsNullOrEmpty(logoPath) && File.Exists(logoPath))
                             {
                                 var image = Image.FromFile(logoPath);
                                 mxfService.extras.Add("logo", new StationImage

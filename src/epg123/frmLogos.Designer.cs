@@ -106,7 +106,6 @@
             this.pbDarkLocal.TabIndex = 1;
             this.pbDarkLocal.TabStop = false;
             this.pbDarkLocal.DragDrop += new System.Windows.Forms.DragEventHandler(this.pictureBox_DragDrop);
-            this.pbDarkLocal.DragEnter += new System.Windows.Forms.DragEventHandler(this.pictureBox_DragEnter);
             this.pbDarkLocal.MouseDown += new System.Windows.Forms.MouseEventHandler(this.picDragSource_MouseDown);
             // 
             // pbWhiteLocal
@@ -121,7 +120,6 @@
             this.pbWhiteLocal.TabIndex = 2;
             this.pbWhiteLocal.TabStop = false;
             this.pbWhiteLocal.DragDrop += new System.Windows.Forms.DragEventHandler(this.pictureBox_DragDrop);
-            this.pbWhiteLocal.DragEnter += new System.Windows.Forms.DragEventHandler(this.pictureBox_DragEnter);
             this.pbWhiteLocal.MouseDown += new System.Windows.Forms.MouseEventHandler(this.picDragSource_MouseDown);
             // 
             // pbLightLocal
@@ -136,7 +134,6 @@
             this.pbLightLocal.TabIndex = 3;
             this.pbLightLocal.TabStop = false;
             this.pbLightLocal.DragDrop += new System.Windows.Forms.DragEventHandler(this.pictureBox_DragDrop);
-            this.pbLightLocal.DragEnter += new System.Windows.Forms.DragEventHandler(this.pictureBox_DragEnter);
             this.pbLightLocal.MouseDown += new System.Windows.Forms.MouseEventHandler(this.picDragSource_MouseDown);
             // 
             // pbGrayLocal
@@ -151,7 +148,6 @@
             this.pbGrayLocal.TabIndex = 4;
             this.pbGrayLocal.TabStop = false;
             this.pbGrayLocal.DragDrop += new System.Windows.Forms.DragEventHandler(this.pictureBox_DragDrop);
-            this.pbGrayLocal.DragEnter += new System.Windows.Forms.DragEventHandler(this.pictureBox_DragEnter);
             this.pbGrayLocal.MouseDown += new System.Windows.Forms.MouseEventHandler(this.picDragSource_MouseDown);
             // 
             // pbDefaultLocal
@@ -166,7 +162,6 @@
             this.pbDefaultLocal.TabIndex = 5;
             this.pbDefaultLocal.TabStop = false;
             this.pbDefaultLocal.DragDrop += new System.Windows.Forms.DragEventHandler(this.pictureBox_DragDrop);
-            this.pbDefaultLocal.DragEnter += new System.Windows.Forms.DragEventHandler(this.pictureBox_DragEnter);
             this.pbDefaultLocal.MouseDown += new System.Windows.Forms.MouseEventHandler(this.picDragSource_MouseDown);
             // 
             // pbDarkRemote

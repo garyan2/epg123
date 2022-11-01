@@ -25,6 +25,7 @@ namespace epg123.sdJson2mxf
             author = "GaRyan2",
             dataSource = "Schedules Direct"
         };
+        private static string HostAddress => string.IsNullOrEmpty(config.UseIpAddress) ? Environment.MachineName : config.UseIpAddress;
 
         public static void Build(epgConfig configuration)
         {

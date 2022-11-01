@@ -50,6 +50,7 @@ namespace epg123
             XmltvExtendedInfoInTitleDescriptions = other.XmltvExtendedInfoInTitleDescriptions;
             XmltvSingleImage = other.XmltvSingleImage;
             XmltvOutputFile = other.XmltvOutputFile;
+            UseIpAddress = other.UseIpAddress;
             ModernMediaUiPlusSupport = other.ModernMediaUiPlusSupport;
             BrandLogoImage = other.BrandLogoImage;
             SuppressStationEmptyWarnings = other.SuppressStationEmptyWarnings;
@@ -121,6 +122,7 @@ namespace epg123
             if (!XmltvExtendedInfoInTitleDescriptions.Equals(other.XmltvExtendedInfoInTitleDescriptions)) return false;
             if (!XmltvSingleImage.Equals(other.XmltvSingleImage)) return false;
             if (!XmltvOutputFile.Equals(other.XmltvOutputFile)) return false;
+            if (!(UseIpAddress ?? "").Equals(other.UseIpAddress ?? "")) return false;
             if (!ModernMediaUiPlusSupport.Equals(other.ModernMediaUiPlusSupport)) return false;
             if (!BrandLogoImage.Equals(other.BrandLogoImage)) return false;
             if (!SuppressStationEmptyWarnings.Equals(other.SuppressStationEmptyWarnings)) return false;
@@ -229,6 +231,9 @@ namespace epg123
 
         [XmlElement("XmltvOutputFile")]
         public string XmltvOutputFile { get; set; } = Helper.Epg123XmltvPath;
+
+        [XmlElement("UseIpAddress")]
+        public string UseIpAddress { get; set; }
 
         [XmlElement("ModernMediaUiPlusSupport")]
         public bool ModernMediaUiPlusSupport { get; set; }

@@ -77,6 +77,8 @@
             this.tbSchedTime = new System.Windows.Forms.MaskedTextBox();
             this.lblUpdateTime = new System.Windows.Forms.Label();
             this.tabService = new System.Windows.Forms.TabPage();
+            this.cmbIpAddresses = new System.Windows.Forms.ComboBox();
+            this.ckIpAddress = new System.Windows.Forms.CheckBox();
             this.linkLabel2 = new System.Windows.Forms.LinkLabel();
             this.label3 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
@@ -309,7 +311,7 @@
             "gray logos",
             "logos for dark backgrounds",
             "logos for light backgrounds",
-            "do not use SD logos"});
+            "none (custom logos only)"});
             this.cmbPreferredLogos.Location = new System.Drawing.Point(119, 308);
             this.cmbPreferredLogos.Name = "cmbPreferredLogos";
             this.cmbPreferredLogos.Size = new System.Drawing.Size(160, 21);
@@ -514,8 +516,8 @@
             this.lblXmltvLogosNote.Name = "lblXmltvLogosNote";
             this.lblXmltvLogosNote.Size = new System.Drawing.Size(297, 30);
             this.lblXmltvLogosNote.TabIndex = 28;
-            this.lblXmltvLogosNote.Text = "* The option to \'Include station logos in .\\logos folder\' must be enabled to incl" +
-    "ude preferred and local logos.";
+            this.lblXmltvLogosNote.Text = "* The option to \'Include station logos in .\\logos folder\' must be enabled in the " +
+    "Configuration tab.";
             // 
             // lblXmltvOutput
             // 
@@ -630,9 +632,9 @@
             this.ckLocalLogos.Location = new System.Drawing.Point(24, 98);
             this.ckLocalLogos.Margin = new System.Windows.Forms.Padding(20, 3, 3, 3);
             this.ckLocalLogos.Name = "ckLocalLogos";
-            this.ckLocalLogos.Size = new System.Drawing.Size(194, 17);
+            this.ckLocalLogos.Size = new System.Drawing.Size(201, 17);
             this.ckLocalLogos.TabIndex = 4;
-            this.ckLocalLogos.Text = "Use local images from .\\logos folder";
+            this.ckLocalLogos.Text = "Use local images from .\\logos folder *";
             this.ckLocalLogos.UseVisualStyleBackColor = true;
             this.ckLocalLogos.CheckedChanged += new System.EventHandler(this.ckXmltvConfigs_Changed);
             // 
@@ -655,9 +657,9 @@
             this.ckChannelLogos.CheckState = System.Windows.Forms.CheckState.Checked;
             this.ckChannelLogos.Location = new System.Drawing.Point(6, 52);
             this.ckChannelLogos.Name = "ckChannelLogos";
-            this.ckChannelLogos.Size = new System.Drawing.Size(134, 17);
+            this.ckChannelLogos.Size = new System.Drawing.Size(130, 17);
             this.ckChannelLogos.TabIndex = 2;
-            this.ckChannelLogos.Text = "Include channel logos*";
+            this.ckChannelLogos.Text = "Include channel logos";
             this.ckChannelLogos.UseVisualStyleBackColor = true;
             this.ckChannelLogos.CheckedChanged += new System.EventHandler(this.ckXmltvConfigs_Changed);
             // 
@@ -768,6 +770,8 @@
             // tabService
             // 
             this.tabService.BackColor = System.Drawing.SystemColors.Control;
+            this.tabService.Controls.Add(this.cmbIpAddresses);
+            this.tabService.Controls.Add(this.ckIpAddress);
             this.tabService.Controls.Add(this.linkLabel2);
             this.tabService.Controls.Add(this.label3);
             this.tabService.Controls.Add(this.label2);
@@ -783,6 +787,29 @@
             this.tabService.Size = new System.Drawing.Size(309, 395);
             this.tabService.TabIndex = 5;
             this.tabService.Text = "Service";
+            // 
+            // cmbIpAddresses
+            // 
+            this.cmbIpAddresses.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbIpAddresses.FormattingEnabled = true;
+            this.cmbIpAddresses.Location = new System.Drawing.Point(26, 205);
+            this.cmbIpAddresses.Name = "cmbIpAddresses";
+            this.cmbIpAddresses.Size = new System.Drawing.Size(110, 21);
+            this.cmbIpAddresses.TabIndex = 9;
+            this.cmbIpAddresses.SelectedIndexChanged += new System.EventHandler(this.cbIpAddresses_SelectedIndexChanged);
+            // 
+            // ckIpAddress
+            // 
+            this.ckIpAddress.AutoSize = true;
+            this.ckIpAddress.Checked = true;
+            this.ckIpAddress.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.ckIpAddress.Location = new System.Drawing.Point(6, 182);
+            this.ckIpAddress.Name = "ckIpAddress";
+            this.ckIpAddress.Size = new System.Drawing.Size(270, 17);
+            this.ckIpAddress.TabIndex = 8;
+            this.ckIpAddress.Text = "Use IP address rather than host name in image links";
+            this.ckIpAddress.UseVisualStyleBackColor = true;
+            this.ckIpAddress.CheckedChanged += new System.EventHandler(this.cbIpAddress_CheckedChanged);
             // 
             // linkLabel2
             // 
@@ -1524,5 +1551,7 @@
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.LinkLabel linkLabel2;
         private System.Windows.Forms.CheckBox cbOadOverride;
+        private System.Windows.Forms.CheckBox ckIpAddress;
+        private System.Windows.Forms.ComboBox cmbIpAddresses;
     }
 }

@@ -18,6 +18,7 @@ using Microsoft.Win32;
 using epg123.Properties;
 using epg123.SchedulesDirect;
 using epg123.Task;
+using System.Net;
 
 namespace epg123
 {
@@ -116,6 +117,14 @@ namespace epg123
             if (Settings.Default.WindowMaximized)
             {
                 WindowState = FormWindowState.Maximized;
+            }
+
+            var addresses = Dns.GetHostAddresses(Dns.GetHostName())
+                .Where(arg => arg.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                .OrderBy(arg => arg.ToString());
+            foreach (var address in addresses)
+            {
+                cmbIpAddresses.Items.Add(address.ToString());
             }
         }
         private void frmMain_Shown(object sender, EventArgs e)
@@ -460,6 +469,8 @@ namespace epg123
                     cbNoCastCrew.Checked = Config.ExcludeCastAndCrew;
                     cbXmltvSingleImage.Checked = Config.XmltvSingleImage;
                     cbXmltv.Checked = Config.CreateXmltv;
+                    cmbIpAddresses.Text = Config.UseIpAddress;
+                    ckIpAddress.Checked = !string.IsNullOrEmpty(Config.UseIpAddress);
                 }
 
                 // get persistent cfg values
@@ -1032,7 +1043,7 @@ namespace epg123
                 var frm = new frmLogos(station.Station);
                 frm.FormClosed += (o, args) =>
                 {
-                    _allStations[station.StationId].ServiceLogo = GetServiceBitmap(station.Callsign);
+                    _allStations[station.StationId].ServiceLogo = GetServiceBitmap(station.Station);
                 };
                 frm.Show(this);
             }
@@ -1088,34 +1099,26 @@ namespace epg123
             }
         }
 
-        private Bitmap GetServiceBitmap(string callsign)
+        private Bitmap GetServiceBitmap(LineupStation station)
         {
             if (!Config.IncludeSdLogos) return null;
 
+            var path = $"{Helper.Epg123LogosFolder}\\{station.Callsign}_c.png";
             var custom = false;
-            var path = $"{Helper.Epg123LogosFolder}\\{callsign}";
-            if (File.Exists($"{path}_c.png"))
-            {
-                path += "_c.png";
-                custom = true;
-            }
-            else if (Config.PreferredLogoStyle.Equals("NONE", StringComparison.OrdinalIgnoreCase))
-            {
-                if (File.Exists($"{path}.png")) path += ".png";
-            }
-            else if (File.Exists($"{path}_{Config.PreferredLogoStyle.Substring(0, 1)}.png"))
-            {
-                path += $"_{Config.PreferredLogoStyle.Substring(0, 1)}.png";
-            }
-            else if (File.Exists($"{path}_{Config.AlternateLogoStyle.Substring(0, 1)}.png"))
-            {
-                path += $"_{Config.AlternateLogoStyle.Substring(0, 1)}.png";
-            }
-            else if (File.Exists($"{path}.png"))
-            {
-                path += ".png";
-            }
-            if (!path.EndsWith(".png")) return null;
+            var priLogo = station.StationLogos?.FirstOrDefault(arg => arg.Category.Equals(Config.PreferredLogoStyle.ToLower()))?.Url;
+            var altLogo = station.StationLogos?.FirstOrDefault(arg => arg.Category.Equals(Config.AlternateLogoStyle.ToLower()))?.Url;
+
+            // change logo uri's into file path
+            if (priLogo != null) priLogo = $"{Helper.Epg123LogosFolder}\\{Path.GetFileName(new Uri(priLogo).AbsolutePath)}";
+            if (altLogo != null) altLogo = $"{Helper.Epg123LogosFolder}\\{Path.GetFileName(new Uri(altLogo).AbsolutePath)}";
+            if (priLogo == null && altLogo == null && station.Logo != null) priLogo = $"{Helper.Epg123LogosFolder}\\{Path.GetFileName(new Uri(station.Logo?.Url).AbsolutePath)}";
+
+            // find which logo to display if any
+            if (File.Exists(path)) custom = true;
+            else if (Config.PreferredLogoStyle.Equals("none", StringComparison.OrdinalIgnoreCase)) return null;
+            else if (File.Exists(priLogo)) path = priLogo;
+            else if (File.Exists(altLogo)) path = altLogo;
+            else return null;
 
             var source = Image.FromFile(path) as Bitmap;
             var ratio = (double)source.Width / source.Height;
@@ -1170,7 +1173,7 @@ namespace epg123
                     if (!refresh && station.Value.ServiceLogo != null) continue;
                     try
                     {
-                        station.Value.ServiceLogo = GetServiceBitmap(station.Value.Callsign);
+                        station.Value.ServiceLogo = GetServiceBitmap(station.Value.Station);
                     }
                     catch
                     {
@@ -1432,7 +1435,7 @@ namespace epg123
             }
             else if (sender.Equals(cbSdLogos))
             {
-                Config.IncludeSdLogos = lblPreferredLogos.Enabled = cmbPreferredLogos.Enabled = cbSdLogos.Checked;
+                Config.IncludeSdLogos = cbSdLogos.Checked;
                 GetAllServiceLogos(true);
             }
             else if (sender.Equals(cmbPreferredLogos))
@@ -1619,7 +1622,7 @@ namespace epg123
         private void linkLabel2_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
             linkLabel2.LinkVisited = true;
-            Process.Start($"http://{Environment.MachineName}:{Helper.TcpPort}/");
+            Process.Start($"http://localhost:{Helper.TcpPort}/");
         }
         #endregion
         #endregion
@@ -1635,6 +1638,22 @@ namespace epg123
             textToAdd += "Call Sign\tChannel\tStationID\tName\r\n";
             textToAdd = lvLineupChannels.Items.Cast<ListViewItem>().Aggregate(textToAdd, (current, listViewItem) => current + $"{listViewItem.SubItems[0].Text}\t{listViewItem.SubItems[1].Text}\t{listViewItem.SubItems[2].Text}\t{listViewItem.SubItems[3].Text}\r\n");
             Clipboard.SetText(textToAdd);
+        }
+
+        private void cbIpAddress_CheckedChanged(object sender, EventArgs e)
+        {
+            cmbIpAddresses.Enabled = ckIpAddress.Checked;
+            if (ckIpAddress.Checked && cmbIpAddresses.SelectedIndex < 0 && cmbIpAddresses.Items.Count > 0)
+            {
+                cmbIpAddresses.SelectedIndex = 0;
+                Config.UseIpAddress = cmbIpAddresses.SelectedItem.ToString();
+            }
+            else Config.UseIpAddress = null;
+        }
+
+        private void cbIpAddresses_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            Config.UseIpAddress = cmbIpAddresses.SelectedItem.ToString();
         }
     }
 }
