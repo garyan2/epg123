@@ -189,7 +189,7 @@ namespace epg123
         {
             // give option to save if there were changes
             RefreshConfiguration();
-            if (!btnLogin.Enabled && !Config.Equals(_oldConfig) && DialogResult.Yes == MessageBox.Show("There have been changes made to your configuration. Do you wish to save changes before exiting?", "Configuration Change", MessageBoxButtons.YesNo, MessageBoxIcon.Question))
+            if (!btnLogin.Text.Equals("Login") && !Config.Equals(_oldConfig) && DialogResult.Yes == MessageBox.Show("There have been changes made to your configuration. Do you wish to save changes before exiting?", "Configuration Change", MessageBoxButtons.YesNo, MessageBoxIcon.Question))
             {
                 btnSave_Click(sender, null);
             }
@@ -377,9 +377,17 @@ namespace epg123
         }
         private void btnLogin_Click(object sender, EventArgs e)
         {
+            if (sender != null && ((Button)sender).Text == "Logout")
+            {
+                txtLoginName.Enabled = txtPassword.Enabled = true;
+                txtPassword.Text = "";
+                btnLogin.Text = "Login";
+                return;
+            }
+
             // disable input fields while trying to login
             Cursor = Cursors.WaitCursor;
-            txtLoginName.Enabled = txtPassword.Enabled = btnLogin.Enabled = false;
+            txtLoginName.Enabled = txtPassword.Enabled = false;
 
             if ((Config.UserAccount != null) && !string.IsNullOrEmpty(Config.UserAccount.LoginName) && !string.IsNullOrEmpty(Config.UserAccount.PasswordHash))
             {
@@ -414,7 +422,16 @@ namespace epg123
                 };
             }
 
-            txtLoginName.Enabled = txtPassword.Enabled = btnLogin.Enabled = !LoginUser();
+            if (LoginUser())
+            {
+                txtLoginName.Enabled = txtPassword.Enabled = false;
+                btnLogin.Text = "Logout";
+            }
+            else
+            {
+                txtLoginName.Enabled = txtPassword.Enabled = true;
+            }
+
             Cursor = Cursors.Arrow;
         }
         private bool LoginUser()
@@ -600,6 +617,7 @@ namespace epg123
                 _allLineups.Add(clientLineup.Lineup, new myLineup(clientLineup)
                 {
                     Include = (Config.IncludedLineup?.Contains(clientLineup.Lineup) ?? false),
+                    DiscardNumbers = (Config.DiscardChanNumbers?.Contains(clientLineup.Lineup) ?? false),
                     Channels = lineupMap.Map.ToList()
                 });
             }
@@ -611,6 +629,7 @@ namespace epg123
                 if (clientLineups.Lineups.SingleOrDefault(arg => arg.Lineup.Equals(lineup.Key)) == null)
                 {
                     lineup.Value.Include = false;
+                    lineup.Value.DiscardNumbers = false;
                     continue;
                 }
                 comboLineups.Items.Add(lineup.Value);
@@ -805,10 +824,12 @@ namespace epg123
 
             // reset included lineups and stations to repopulate
             Config.IncludedLineup = new List<string>();
+            Config.DiscardChanNumbers = new List<string>();
             Config.StationId = new List<SdChannelDownload>();
             foreach (var lineup in _allLineups.Where(lineup => lineup.Value.Include))
             {
                 Config.IncludedLineup.Add(lineup.Key);
+                if (lineup.Value.DiscardNumbers) Config.DiscardChanNumbers.Add(lineup.Key);
                 foreach (var station in lineup.Value.Channels)
                 {
                     if (_allAvailableStations.Contains(station.StationId) && _allStations[station.StationId].Include)
@@ -1216,6 +1237,12 @@ namespace epg123
             btnSelectAll.Enabled = btnSelectNone.Enabled = include;
         }
 
+        private void menuDiscardNumbers_Click(object sender, EventArgs e)
+        {
+            var selectedLineup = (myLineup)comboLineups.SelectedItem;
+            selectedLineup.DiscardNumbers = menuDiscardNumbers.Checked = !selectedLineup.DiscardNumbers;
+        }
+
         private void subscribedLineup_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (comboLineups.SelectedIndex == -1) return;
@@ -1226,6 +1253,7 @@ namespace epg123
             var selectedLineup = (myLineup)comboLineups.SelectedItem;
             menuInclude.Checked = lvLineupChannels.Enabled = btnSelectAll.Enabled = btnSelectNone.Enabled = selectedLineup.Include;
             menuExclude.Checked = !selectedLineup.Include;
+            menuDiscardNumbers.Checked = selectedLineup.DiscardNumbers;
             btnIncludeExclude.Image = selectedLineup.Include ? Resources.GreenLight.ToBitmap() : Resources.RedLight.ToBitmap();
             lvLineupChannels.ForeColor = selectedLineup.Include ? DefaultForeColor : Color.LightGray;
 
@@ -1675,6 +1703,7 @@ public class myLineup
     }
 
     public bool Include { get; set; }
+    public bool DiscardNumbers { get; set; }
     public SubscribedLineup Lineup { get; private set; }
     public List<LineupChannel> Channels { get; set; }
 

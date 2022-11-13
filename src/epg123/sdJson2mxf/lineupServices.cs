@@ -134,6 +134,10 @@ namespace epg123.sdJson2mxf
                     lineupMap = customMap;
                     Logger.WriteVerbose($"Successfully retrieved the station mapping for lineup {clientLineup.Lineup}.");
                 }
+                if (config.DiscardChanNumbers.Contains(clientLineup.Lineup))
+                {
+                    Logger.WriteVerbose($"Subscribed lineup {clientLineup.Lineup} will ignore all channel numbers.");
+                }
                 if (lineupMap == null) return false;
 
                 var lineupIndex = SdMxf.With.Lineups.Count;
@@ -285,6 +289,11 @@ namespace epg123.sdJson2mxf
                                     matchName = $"OC:{map.AtscMajor}:{map.AtscMinor}";
                                 }
                                 break;
+                        }
+
+                        if (config.DiscardChanNumbers.Contains(clientLineup.Lineup))
+                        {
+                            number = -1; subnumber = 0;
                         }
 
                         var channelNumber = $"{number}{(subnumber > 0 ? $".{subnumber}" : "")}";

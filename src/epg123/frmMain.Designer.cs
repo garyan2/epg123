@@ -110,6 +110,7 @@
             this.btnIncludeExclude = new System.Windows.Forms.ToolStripDropDownButton();
             this.menuInclude = new System.Windows.Forms.ToolStripMenuItem();
             this.menuExclude = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuDiscardNumbers = new System.Windows.Forms.ToolStripMenuItem();
             this.comboLineups = new System.Windows.Forms.ToolStripComboBox();
             this.btnSelectAll = new System.Windows.Forms.ToolStripButton();
             this.btnSelectNone = new System.Windows.Forms.ToolStripButton();
@@ -1120,7 +1121,8 @@
             this.btnIncludeExclude.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.btnIncludeExclude.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.menuInclude,
-            this.menuExclude});
+            this.menuExclude,
+            this.menuDiscardNumbers});
             this.btnIncludeExclude.Image = ((System.Drawing.Image)(resources.GetObject("btnIncludeExclude.Image")));
             this.btnIncludeExclude.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btnIncludeExclude.Name = "btnIncludeExclude";
@@ -1132,8 +1134,9 @@
             // 
             this.menuInclude.CheckOnClick = true;
             this.menuInclude.Name = "menuInclude";
-            this.menuInclude.Size = new System.Drawing.Size(115, 22);
+            this.menuInclude.Size = new System.Drawing.Size(180, 22);
             this.menuInclude.Text = "Include";
+            this.menuInclude.ToolTipText = "Include lineup in downloads.";
             this.menuInclude.Click += new System.EventHandler(this.menuIncludeExclude_Click);
             // 
             // menuExclude
@@ -1141,9 +1144,18 @@
             this.menuExclude.Checked = true;
             this.menuExclude.CheckState = System.Windows.Forms.CheckState.Checked;
             this.menuExclude.Name = "menuExclude";
-            this.menuExclude.Size = new System.Drawing.Size(115, 22);
+            this.menuExclude.Size = new System.Drawing.Size(180, 22);
             this.menuExclude.Text = "Exclude";
+            this.menuExclude.ToolTipText = "Exclude lineup from downloads.";
             this.menuExclude.Click += new System.EventHandler(this.menuIncludeExclude_Click);
+            // 
+            // menuDiscardNumbers
+            // 
+            this.menuDiscardNumbers.Name = "menuDiscardNumbers";
+            this.menuDiscardNumbers.Size = new System.Drawing.Size(180, 22);
+            this.menuDiscardNumbers.Text = "Discard Channel #\'s";
+            this.menuDiscardNumbers.ToolTipText = "Enable if you cannot use automatch with this lineup.";
+            this.menuDiscardNumbers.Click += new System.EventHandler(this.menuDiscardNumbers_Click);
             // 
             // comboLineups
             // 
@@ -1553,5 +1565,6 @@
         private System.Windows.Forms.CheckBox cbOadOverride;
         private System.Windows.Forms.CheckBox ckIpAddress;
         private System.Windows.Forms.ComboBox cmbIpAddresses;
+        private System.Windows.Forms.ToolStripMenuItem menuDiscardNumbers;
     }
 }

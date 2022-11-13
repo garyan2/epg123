@@ -63,6 +63,14 @@ namespace epg123
                     IncludedLineup.Add(lineup);
                 }
             }
+            if (other.DiscardChanNumbers != null)
+            {
+                DiscardChanNumbers = new List<string>();
+                foreach (var lineup in other.DiscardChanNumbers)
+                {
+                    DiscardChanNumbers.Add(lineup);
+                }
+            }
 
             ExpectedServicecount = other.ExpectedServicecount;
             if (other.StationId == null) return;
@@ -134,6 +142,13 @@ namespace epg123
                 if (other.IncludedLineup.Any(lineup => !IncludedLineup.Contains(lineup))) return false;
             }
             else if (IncludedLineup == null ^ other.IncludedLineup == null) return false;
+
+            if (DiscardChanNumbers != null && other.DiscardChanNumbers != null)
+            {
+                if (DiscardChanNumbers.Any(lineup => !other.DiscardChanNumbers.Contains(lineup))) return false;
+                if (other.DiscardChanNumbers.Any(lineup => !DiscardChanNumbers.Contains(lineup))) return false;
+            }
+            else if (DiscardChanNumbers == null ^ other.DiscardChanNumbers == null) return false;
 
             if (StationId == null || other.StationId == null) return !(StationId == null ^ other.StationId == null);
             var thisStationId = StationId.Select(stationId => stationId.StationId).ToList();
@@ -256,6 +271,9 @@ namespace epg123
         [XmlElement("IncludedLineup")]
         public List<string> IncludedLineup { get; set; }
 
+        [XmlElement("DiscardChanNumbers")]
+        public List<string> DiscardChanNumbers { get; set; }
+
         [XmlElement("ExpectedServiceCount")]
         public int ExpectedServicecount { get; set; }
 
@@ -316,15 +334,6 @@ namespace epg123
         {
             set => _passwordHash = HashPassword(value);
         }
-    }
-
-    public class sdLineupDownload
-    {
-        [XmlAttribute("Lineup")]
-        public string Lineup { get; set; }
-
-        [XmlText]
-        public string LineupId { get; set; }
     }
 
     public class SdChannelDownload
