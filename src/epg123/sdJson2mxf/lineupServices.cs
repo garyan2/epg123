@@ -366,7 +366,7 @@ namespace epg123.sdJson2mxf
             foreach (var serviceLogo in StationLogosToDownload)
             {
                 var logoPath = serviceLogo.Value[0];
-                if (DownloadSdLogo(serviceLogo.Value[1], logoPath) && string.IsNullOrEmpty(serviceLogo.Key.LogoImage))
+                if ((File.Exists(logoPath) || DownloadSdLogo(serviceLogo.Value[1], logoPath)) && string.IsNullOrEmpty(serviceLogo.Key.LogoImage))
                 {
                     serviceLogo.Key.mxfGuideImage = SdMxf.GetGuideImage("file://" + logoPath, GetStringEncodedImage(logoPath));
 
