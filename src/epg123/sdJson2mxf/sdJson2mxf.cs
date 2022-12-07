@@ -141,8 +141,6 @@ namespace epg123.sdJson2mxf
 
         private static bool WriteMxf()
         {
-            Logger.WriteVerbose($"Downloaded and processed {SdApi.DownloadedBytes} of data from Schedules Direct.");
-
             // add dummy lineup with dummy channel
             var service = SdMxf.GetService("DUMMY");
             service.CallSign = "DUMMY";

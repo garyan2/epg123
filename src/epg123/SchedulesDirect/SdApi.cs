@@ -16,9 +16,6 @@ namespace epg123.SchedulesDirect
         public static string uiMessage = null;
         public static int MaxLineups;
 
-        private static long _downloadedBytes;
-        public static string DownloadedBytes => Helper.BytesToString(_downloadedBytes);
-
         private static readonly HttpClient _httpClient = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.Deflate })
         {
             BaseAddress = new Uri($"{JsonBaseUrl}{JsonApi}"),
@@ -27,8 +24,8 @@ namespace epg123.SchedulesDirect
 
         public static void Initialize(string UserAgent)
         {
-            ServicePointManager.SecurityProtocol |= (SecurityProtocolType)3072; // Tls12
-            ServicePointManager.DefaultConnectionLimit = 6;
+            ServicePointManager.DefaultConnectionLimit = 10;
+            if (_httpClient.DefaultRequestHeaders.UserAgent.Count > 0) return;
 
             // set http client headers
             _httpClient.DefaultRequestHeaders.UserAgent.TryParseAdd(UserAgent);
@@ -62,10 +59,9 @@ namespace epg123.SchedulesDirect
 
         private static async Task<T> GetHttpResponse<T>(HttpMethod method, string uri, object content = null)
         {
-            var message = new HttpRequestMessage { Method = method, RequestUri = new Uri($"{JsonBaseUrl}{JsonApi}{uri}") };
+            var message = new HttpRequestMessage(method, uri);
             if (method == HttpMethod.Post) message.Content = new StringContent(JsonConvert.SerializeObject(content), Encoding.UTF8, "application/json");
-            var response = await _httpClient.SendAsync(message).ConfigureAwait(false);
-            _downloadedBytes += response.Content.Headers.ContentLength ?? 0;
+            var response = await _httpClient.SendAsync(message, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
             
             if (!response.IsSuccessStatusCode) return HandleHttpResponseError<T>(response, await response.Content.ReadAsStringAsync());
             using (var stream = response.Content.ReadAsStreamAsync().Result)
