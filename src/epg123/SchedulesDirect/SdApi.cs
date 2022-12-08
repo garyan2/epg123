@@ -52,7 +52,7 @@ namespace epg123.SchedulesDirect
             catch (Exception e)
             {
                 var messages = $"{e.Message} {e.InnerException?.Message} {e.InnerException?.InnerException?.Message}";
-                Logger.WriteVerbose($"HTTP {method} request exception thrown. Messages: {messages}");
+                Logger.WriteVerbose($"HTTP {method} request exception thrown. Messages: {messages}\n{e.StackTrace}");
             }
             return default;
         }
@@ -64,7 +64,7 @@ namespace epg123.SchedulesDirect
             var response = await _httpClient.SendAsync(message, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
             
             if (!response.IsSuccessStatusCode) return HandleHttpResponseError<T>(response, await response.Content.ReadAsStringAsync());
-            using (var stream = response.Content.ReadAsStreamAsync().Result)
+            using (var stream = await response.Content.ReadAsStreamAsync())
             using (var sr = new StreamReader(stream))
             using (var jr = new JsonTextReader(sr))
             {
