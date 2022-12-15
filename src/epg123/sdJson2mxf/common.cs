@@ -4,8 +4,8 @@ namespace epg123.sdJson2mxf
 {
     internal static partial class sdJson2Mxf
     {
-        private const int MaxQueries = 1000;
-        private const int MaxImgQueries = 100;
+        private const int MaxQueries = 1250;
+        private const int MaxImgQueries = 125;
         private const int MaxParallelDownloads = 4;
 
         private static List<string> suppressedPrefixes = new List<string>();

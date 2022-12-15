@@ -76,6 +76,7 @@ namespace epg123
                 Logger.WriteMessage($" {(showGui ? "Activating the epg123 configuration GUI." : "Beginning epg123 update execution.")} version {Helper.Epg123Version}");
                 Logger.WriteMessage("===============================================================================");
                 Logger.WriteMessage($"*** {Helper.GetOsDescription()} ***");
+                Logger.WriteMessage($"*** {Helper.GetDotNetDescription()} is intalled. ***");
                 Logger.WriteMessage($"*** {Helper.GetWmcDescription()} ***");
 
                 // open the configuration GUI if needed

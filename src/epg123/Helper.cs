@@ -74,6 +74,28 @@ namespace epg123
             return $"Windows Media Center [Version: {ehshell.ProductVersion}] is installed.";
         }
 
+        public static string GetDotNetDescription()
+        {
+            var ret = ".NET Framework ";
+            using (var ndpKey = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full\"))
+            {
+                if (ndpKey.GetValue("Version") != null) return $"{ret}{ndpKey.GetValue("Version")}";
+                var release = (int)ndpKey.GetValue("Release");
+                if (release >= 533325) return $"{ret}4.8.1";
+                if (release >= 528040) return $"{ret}4.8";
+                if (release >= 461808) return $"{ret}4.7.2";
+                if (release >= 461308) return $"{ret}4.7.1";
+                if (release >= 460798) return $"{ret}4.7";
+                if (release >= 394802) return $"{ret}4.6.2";
+                if (release >= 394254) return $"{ret}4.6.1";
+                if (release >= 393295) return $"{ret}4.6";
+                if (release >= 379893) return $"{ret}4.5.2";
+                if (release >= 378675) return $"{ret}4.5.1";
+                if (release >= 378389) return $"{ret}4.5";
+            }
+            return $"Unknown {ret}version";
+        }
+
         public static string BackupZipFile { get; set; }
         public static string OutputPathOverride { get; set; }
 

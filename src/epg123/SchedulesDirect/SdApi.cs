@@ -11,7 +11,7 @@ namespace epg123.SchedulesDirect
 {
     public static partial class SdApi
     {
-        public static string JsonBaseUrl = @"https://json.schedulesdirect.org";
+        public static string JsonBaseUrl = @"https://ipv4.json.schedulesdirect.org";
         public static string JsonApi = @"/20141201/";
         public static string uiMessage = null;
         public static int MaxLineups;

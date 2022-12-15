@@ -326,6 +326,7 @@ namespace epg123
                 Logger.WriteMessage($" {(showGui ? "Activating the epg123 client GUI." : "Beginning epg123 client execution.")} version {Helper.Epg123Version}");
                 Logger.WriteMessage("===============================================================================");
                 Logger.WriteMessage($"*** {Helper.GetOsDescription()} ***");
+                Logger.WriteMessage($"*** {Helper.GetDotNetDescription()} is intalled. ***");
                 Logger.WriteMessage($"*** {Helper.GetWmcDescription()} ***");
 
                 // show gui if needed
