@@ -180,7 +180,7 @@ namespace epg123.sdJson2mxf
                 aspects.Add(image.Aspect);
                 if (!image.Uri.ToLower().StartsWith("http"))
                 {
-                    image.Uri = $"{SdApi.JsonBaseUrl}{SdApi.JsonApi}image/{image.Uri.ToLower()}";
+                    image.Uri = $"{SdApi.JsonBaseUrl.Replace("ipv4.", "")}{SdApi.JsonApi}image/{image.Uri.ToLower()}";
                 }
             }
 
@@ -284,7 +284,7 @@ namespace epg123.sdJson2mxf
             {
                 image = artwork.SingleOrDefault(arg => arg.Aspect.ToLower().Equals("4x3"));
             }
-            return image != null ? SdMxf.GetGuideImage(Helper.Standalone ? image.Uri : image.Uri.Replace($"{SdApi.JsonBaseUrl}{SdApi.JsonApi}", $"http://{HostAddress}:{Helper.TcpPort}/")) : null;
+            return image != null ? SdMxf.GetGuideImage(Helper.Standalone ? image.Uri : image.Uri.Replace($"{SdApi.JsonBaseUrl.Replace("ipv4.", "")}{SdApi.JsonApi}", $"http://{HostAddress}:{Helper.TcpPort}/")) : null;
         }
     }
 }

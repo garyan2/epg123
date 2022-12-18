@@ -525,7 +525,8 @@ namespace epg123Client
             var mergedChannels = (from MergedChannel mergedChannel in WmcMergedLineup.UncachedChannels
                                   where !(mergedChannel.TuningInfos?.Empty ?? true) &&
                                          mergedChannel.ChannelType != ChannelType.UserHidden &&
-                                         mergedChannel.ChannelType != ChannelType.WmisBroadband
+                                         mergedChannel.ChannelType != ChannelType.WmisBroadband &&
+                                         mergedChannel.PrimaryChannel?.Lineup != null
                                   select mergedChannel)
                                   .OrderBy(arg => arg.Number).ThenBy(arg => arg.SubNumber).ToList();
             if (mergedChannels.Count == 0)
