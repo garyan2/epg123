@@ -3,6 +3,7 @@ using GaRyan2.MxfXml;
 using GaRyan2.Utilities;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using api = GaRyan2.SchedulesDirect;
@@ -79,6 +80,7 @@ namespace epg123.sdJson2mxf
             {
                 // save cache file and mxf file
                 epgCache.WriteCache();
+                AddBrandLogoToMxf();
                 CreateDummLineupChannel();
                 WaitForLogoDownloadsToComplete();
                 if (WriteMxf()) Success = true;
@@ -107,6 +109,16 @@ namespace epg123.sdJson2mxf
             if (config.ExpectedServicecount < 20 || !(config.ExpectedServicecount - MissingStations < config.ExpectedServicecount * 0.95)) return true;
             Logger.WriteError($"Of the expected {config.ExpectedServicecount} stations to download, there are only {config.ExpectedServicecount - MissingStations} stations available from Schedules Direct. Aborting update for review by user.");
             return false;
+        }
+
+        private static void AddBrandLogoToMxf()
+        {
+            Image bmp = new Bitmap(48, 55);
+            using (var ms = new MemoryStream())
+            {
+                bmp.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+                mxf.DeviceGroup.GuideImage.Image = Convert.ToBase64String(ms.ToArray());
+            }
         }
 
         private static void CreateDummLineupChannel()
