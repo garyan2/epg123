@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Runtime.InteropServices;
 
 // no way I thought of this code. totally stole it from https://stackoverflow.com/questions/1304/how-to-check-for-file-lock
-namespace epg123
+namespace epg123Client
 {
     internal static class FileUtil
     {
@@ -146,7 +145,6 @@ namespace epg123
             {
                 RmEndSession(handle);
             }
-
             return processes;
         }
     }

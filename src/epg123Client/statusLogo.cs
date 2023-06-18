@@ -6,7 +6,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Xml;
 using System.Xml.Linq;
-using epg123;
+using GaRyan2.Utilities;
 using Microsoft.Win32;
 
 namespace epg123Client
@@ -22,7 +22,7 @@ namespace epg123Client
             OTHERMXF = 0xFFFF
         }
 
-        public static string MxfFile { get; set; }
+        private static string _mxfFile { get; set; }
         public static bool UpdateAvailable { get; set; }
 
         private static EPG123STATUS MxfFileStatus
@@ -30,8 +30,12 @@ namespace epg123Client
             get
             {
                 // if mxf file doesn't exist, automatically an error
-                if (MxfFile.StartsWith("http")) MxfFile = Helper.Epg123MxfPath;
-                if (string.IsNullOrEmpty(MxfFile) || !File.Exists(MxfFile))
+                if (_mxfFile.StartsWith("http"))
+                {
+                    if (_mxfFile.Contains("epg123.mxf")) _mxfFile = Helper.Epg123MxfPath;
+                    else if (_mxfFile.Contains("hdhr2mxf.mxf")) _mxfFile = Helper.Hdhr2MxfMxfPath;
+                }
+                if (string.IsNullOrEmpty(_mxfFile) || !File.Exists(_mxfFile))
                 {
                     return EPG123STATUS.ERROR;
                 }
@@ -39,7 +43,7 @@ namespace epg123Client
                 // look at the status of the mxf file generated for warnings
                 XDocument providers = null;
                 XDocument deviceGroup = null;
-                using (var reader = XmlReader.Create(MxfFile))
+                using (var reader = XmlReader.Create(_mxfFile))
                 {
                     reader.MoveToContent();
                     while (reader.Read())
@@ -70,7 +74,7 @@ namespace epg123Client
                 }
                 else
                 {
-                    var fi = new FileInfo(MxfFile);
+                    var fi = new FileInfo(_mxfFile);
                     timestamp = fi.LastWriteTime;
                 }
                 var mxfFileAge = DateTime.Now - timestamp;
@@ -103,14 +107,15 @@ namespace epg123Client
             }
         }
 
-        public static void StatusImage()
+        public static void StatusImage(string mxfFile)
         {
+            _mxfFile = mxfFile;
             // don't update the status logo if the imported mxf was not from epg123
             var filestatus = (int) MxfFileStatus;
             if ((EPG123STATUS)filestatus == EPG123STATUS.OTHERMXF) return;
 
             // determine overall status
-            var status = (EPG123STATUS)(Math.Max(Logger.EventId, filestatus));
+            var status = (EPG123STATUS)(Math.Max(Logger.Status, filestatus));
 
             // enter datetime and status of this update run
             try
@@ -146,7 +151,7 @@ namespace epg123Client
             }
             catch (Exception ex)
             {
-                Logger.WriteInformation($"Could not read registry settings for OEMLogo. {ex.Message}\n{ex.StackTrace}");
+                Logger.WriteInformation($"Could not read registry settings for OEMLogo. {ex}");
             }
 
             // set up the base image; default for brandlogo is light

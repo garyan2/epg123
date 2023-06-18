@@ -70,7 +70,7 @@
             this.btnConfig.Name = "btnConfig";
             this.btnConfig.Size = new System.Drawing.Size(100, 40);
             this.btnConfig.TabIndex = 5;
-            this.btnConfig.Text = "Step 3:\r\nConfigure";
+            this.btnConfig.Text = "Step 3:\r\nImport MXF";
             this.btnConfig.UseVisualStyleBackColor = true;
             this.btnConfig.Click += new System.EventHandler(this.button_Click);
             // 
@@ -100,7 +100,7 @@
             this.lblConfig.Name = "lblConfig";
             this.lblConfig.Size = new System.Drawing.Size(154, 40);
             this.lblConfig.TabIndex = 9;
-            this.lblConfig.Text = "Configure EPG123";
+            this.lblConfig.Text = "Import MXF file from EPG123";
             this.lblConfig.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // statusStrip1

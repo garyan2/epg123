@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Xml.Serialization;
-using epg123;
-using epg123Client.MxfXml;
+﻿using GaRyan2.MxfXml;
+using GaRyan2.Utilities;
+using GaRyan2.WmcUtilities;
 using Microsoft.MediaCenter.Guide;
 using Microsoft.MediaCenter.Pvr;
-using Program = Microsoft.MediaCenter.Guide.Program;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace epg123Client
 {
@@ -17,16 +15,11 @@ namespace epg123Client
         {
             if (mxfFile.StartsWith("http")) mxfFile = Helper.Epg123MxfPath;
 
-            mxf mxf;
+            MXF mxf;
             Logger.WriteMessage("Entering VerifyLoad()");
             Helper.SendPipeMessage("Importing|Verifying MXF Load...");
-            using (var stream = new StreamReader(mxfFile))
-            {
-                var serializer = new XmlSerializer(typeof(mxf));
-                TextReader reader = new StringReader(stream.ReadToEnd());
-                mxf = (mxf) serializer.Deserialize(reader);
-                reader.Close();
-            }
+
+            mxf = Helper.ReadXmlFile(mxfFile, typeof(MXF));
             if (!(mxf.Providers[0]?.Name ?? string.Empty).Equals("EPG123") && !(mxf.Providers[0]?.Name ?? string.Empty).Equals("HDHR2MXF"))
             {
                 Logger.WriteInformation("The imported MXF file is not a guide listings file created by EPG123. Skipping schedule entry verifications.");
@@ -36,7 +29,7 @@ namespace epg123Client
 
             var entriesChecked = 0;
             var correctedCount = 0;
-            foreach (var mxfService in mxf.With[0].Services)
+            foreach (var mxfService in mxf.With.Services)
             {
                 // get wmcService that matches mxfService using the UId
                 Service wmcService = null;
@@ -56,7 +49,7 @@ namespace epg123Client
                 }
 
                 // get schedule entries for service
-                var mxfScheduleEntries = mxf.With[0].ScheduleEntries.FirstOrDefault(scheduleEntries =>
+                var mxfScheduleEntries = mxf.With.ScheduleEntries.FirstOrDefault(scheduleEntries =>
                     scheduleEntries.Service != null && scheduleEntries.Service.Equals(mxfService.Id));
                 if (mxfScheduleEntries == null || mxfScheduleEntries.ScheduleEntry.Count == 0) continue;
 
@@ -134,7 +127,7 @@ namespace epg123Client
                         }
 
                         // find the program in the MXF file for this schedule entry
-                        var mxfProgram = mxf.With[0].Programs[int.Parse(mxfScheduleEntry.Program) - 1];
+                        var mxfProgram = mxf.With.Programs[mxfScheduleEntry.Program - 1];
                         var mxfEndTime = mxfStartTime + TimeSpan.FromSeconds(mxfScheduleEntry.Duration);
 
                         // verify a schedule entry exists matching the MXF file and determine whether there needs to be intervention
@@ -158,7 +151,7 @@ namespace epg123Client
                             try
                             {
                                 if (verbose) Logger.WriteInformation($"Service {mxfService.CallSign}: Adding schedule entry from {mxfStartTime.ToLocalTime()} to {mxfEndTime.ToLocalTime()} for program [{mxfProgram.Uid.Substring(9)} - [{mxfProgram.Title}] - [{mxfProgram.EpisodeTitle}]].");
-                                var addProgram = WmcStore.WmcObjectStore.UIds[mxfProgram.Uid].Target as Program;
+                                var addProgram = WmcStore.WmcObjectStore.UIds[mxfProgram.Uid].Target as Microsoft.MediaCenter.Guide.Program;
                                 var addScheduleEntry = new ScheduleEntry(addProgram, wmcService, mxfStartTime, TimeSpan.FromSeconds(mxfScheduleEntry.Duration), mxfScheduleEntry.Part, mxfScheduleEntry.Parts);
                                 UpdateScheduleEntryTags(addScheduleEntry, mxfScheduleEntry);
                                 WmcStore.WmcObjectStore.Add(addScheduleEntry);
@@ -166,7 +159,7 @@ namespace epg123Client
                             }
                             catch (Exception e)
                             {
-                                Logger.WriteWarning($"Service {mxfService.CallSign}: Failed to add schedule entry from {mxfStartTime.ToLocalTime()} to {mxfEndTime.ToLocalTime()} for program [{mxfProgram.Uid.Substring(9)} - [{mxfProgram.Title}] - [{mxfProgram.EpisodeTitle}]].\nmessage {e.Message}\n{e.StackTrace}");
+                                Logger.WriteWarning($"Service {mxfService.CallSign}: Failed to add schedule entry from {mxfStartTime.ToLocalTime()} to {mxfEndTime.ToLocalTime()} for program [{mxfProgram.Uid.Substring(9)} - [{mxfProgram.Title}] - [{mxfProgram.EpisodeTitle}]].\nmessage {e}");
                                 break;
                             }
                         }
@@ -177,7 +170,7 @@ namespace epg123Client
                             UpdateScheduleEntryTags(wmcScheduleEntry, mxfScheduleEntry);
                             wmcScheduleEntry.Update(delegate
                             {
-                                wmcScheduleEntry.Program = WmcStore.WmcObjectStore.UIds[mxfProgram.Uid].Target as Program;
+                                wmcScheduleEntry.Program = WmcStore.WmcObjectStore.UIds[mxfProgram.Uid].Target as Microsoft.MediaCenter.Guide.Program;
                                 wmcScheduleEntry.EndTime = mxfEndTime;
                             });
                             ++correctedCount;
@@ -221,7 +214,7 @@ namespace epg123Client
                             }
                             catch (Exception e)
                             {
-                                Logger.WriteWarning($"Service {mxfService.CallSign} at {mxfStartTime.ToLocalTime()}: Failed to change end time of [{wmcScheduleEntry.Program.GetUIdValue().Substring(9)} - [{wmcScheduleEntry.Program.Title}]-[{wmcScheduleEntry.Program.EpisodeTitle}]] from {wmcScheduleEntry.EndTime.ToLocalTime()} to {mxfEndTime.ToLocalTime()}\nmessage {e.Message}\n{e.StackTrace}");
+                                Logger.WriteWarning($"Service {mxfService.CallSign} at {mxfStartTime.ToLocalTime()}: Failed to change end time of [{wmcScheduleEntry.Program.GetUIdValue().Substring(9)} - [{wmcScheduleEntry.Program.Title}]-[{wmcScheduleEntry.Program.EpisodeTitle}]] from {wmcScheduleEntry.EndTime.ToLocalTime()} to {mxfEndTime.ToLocalTime()}\nmessage {e}");
                                 break;
                             }
                         }
@@ -242,13 +235,13 @@ namespace epg123Client
                         }
                         catch (Exception e)
                         {
-                            if (verbose) Logger.WriteInformation($"Service {mxfService.CallSign} at {orphans.Value.StartTime.ToLocalTime()}: Failed to remove [{orphans.Value.Program.GetUIdValue().Replace("!Program!", "")} - [{orphans.Value.Program.Title}]-[{orphans.Value.Program.EpisodeTitle}]] due to being overlapped by another schedule entry.\nmessage {e.Message}\n{e.StackTrace}");
+                            if (verbose) Logger.WriteInformation($"Service {mxfService.CallSign} at {orphans.Value.StartTime.ToLocalTime()}: Failed to remove [{orphans.Value.Program.GetUIdValue().Replace("!Program!", "")} - [{orphans.Value.Program.Title}]-[{orphans.Value.Program.EpisodeTitle}]] due to being overlapped by another schedule entry.\nmessage {e}");
                         }
                     }
                 }
                 catch (Exception e)
                 {
-                    Logger.WriteInformation($"Exception caught for {mxfService.CallSign} at {mxfStartTime.ToLocalTime()}, message {e.Message}\n{e.StackTrace}");
+                    Logger.WriteInformation($"Exception caught for {mxfService.CallSign} at {mxfStartTime.ToLocalTime()}, message {e}");
                 }
             }
             Logger.WriteInformation($"Checked {entriesChecked} entries and corrected {correctedCount} of them.");
@@ -307,7 +300,7 @@ namespace epg123Client
             });
         }
 
-        private static bool IsSameSeries(Program wmc, MxfProgram mxf) // or close enough to same series
+        private static bool IsSameSeries(Microsoft.MediaCenter.Guide.Program wmc, MxfProgram mxf) // or close enough to same series
         {
             return wmc.GetUIdValue().Substring(11, 8).Equals(mxf.Uid.Substring(11, 8)) || wmc.Title.Equals(mxf.Title);
         }

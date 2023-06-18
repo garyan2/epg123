@@ -1,11 +1,12 @@
-﻿using System.Collections.Concurrent;
+﻿using GaRyan2.MxfXml;
+using GaRyan2.SchedulesDirectAPI;
+using GaRyan2.Utilities;
+using Newtonsoft.Json;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using epg123.MxfXml;
-using epg123.SchedulesDirect;
-using Newtonsoft.Json;
 
 namespace epg123.sdJson2mxf
 {
@@ -18,20 +19,18 @@ namespace epg123.sdJson2mxf
             // reset counters
             imageQueue = new List<string>();
             imageResponses = new ConcurrentBag<ProgramMetadata>();
-            processedObjects = 0;
-            ++processStage; ReportProgress();
+            IncrementNextStage(sportEvents.Count);
             if (!config.SeasonEventImages) return true;
+            if (Helper.Standalone) return true;
 
             // scan through each series in the mxf
-            Logger.WriteMessage($"Entering GetAllSportsImages() for {totalObjects = sportEvents.Count} sports events.");
+            Logger.WriteMessage($"Entering GetAllSportsImages() for {totalObjects} sports events.");
             foreach (var sportEvent in sportEvents)
             {
                 string md5 = sportEvent.extras["md5"];
                 if (epgCache.JsonFiles.ContainsKey(md5) && !string.IsNullOrEmpty(epgCache.JsonFiles[md5].Images))
                 {
-                    ++processedObjects; ReportProgress();
-                    if (string.IsNullOrEmpty(epgCache.JsonFiles[md5].Images)) continue;
-
+                    IncrementProgress();
                     List<ProgramArtwork> artwork;
                     using (var reader = new StringReader(epgCache.JsonFiles[md5].Images))
                     {
@@ -46,8 +45,6 @@ namespace epg123.sdJson2mxf
                 }
             }
             Logger.WriteVerbose($"Found {processedObjects} cached/unavailable sport event image links.");
-            totalObjects = processedObjects + imageQueue.Count;
-            ReportProgress();
 
             // maximum 500 queries at a time
             if (imageQueue.Count > 0)
@@ -64,16 +61,17 @@ namespace epg123.sdJson2mxf
                 }
             }
             Logger.WriteMessage("Exiting GetAllSportsImages(). SUCCESS.");
-            imageQueue = null; imageResponses = null;
+            imageQueue = null; imageResponses = null; sportEvents.Clear();
             return true;
         }
 
         private static void ProcessSportsImageResponses()
         {
             // process request response
+            if (imageResponses == null) return;
             foreach (var response in imageResponses)
             {
-                ++processedObjects; ReportProgress();
+                IncrementProgress();
                 if (response.Data == null) continue;
 
                 var mxfProgram = sportEvents.SingleOrDefault(arg => arg.ProgramId == response.ProgramId);

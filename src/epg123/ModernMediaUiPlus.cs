@@ -1,8 +1,9 @@
-﻿using System;
+﻿using GaRyan2.SchedulesDirectAPI;
+using GaRyan2.Utilities;
+using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.IO;
-using epg123.SchedulesDirect;
-using Newtonsoft.Json;
 
 namespace epg123
 {
@@ -28,7 +29,7 @@ namespace epg123
                 }
                 catch (Exception ex)
                 {
-                    Logger.WriteError($"Failed to save the ModernMedia UI+ JSON support file to \"{filepath}\". Message: {ex.Message}");
+                    Logger.WriteError($"Failed to save the ModernMedia UI+ JSON support file to \"{filepath}\". Message: {ex}");
                 }
             }
         }

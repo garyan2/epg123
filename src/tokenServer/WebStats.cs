@@ -1,4 +1,6 @@
-﻿using System;
+﻿using GaRyan2;
+using GaRyan2.Utilities;
+using System;
 using System.IO;
 using System.Linq;
 
@@ -11,7 +13,6 @@ namespace tokenServer
 
         private static int tokenRefresh;
         public static bool LimitLocked;
-        public static bool RegWatcherRunning;
 
         private static int reqRcvd;
         private static int condReqRcvd;
@@ -46,21 +47,17 @@ namespace tokenServer
                 var fiMxf = new FileInfo(Helper.Epg123MxfPath);
                 var fiXmltv = new FileInfo(Helper.Epg123XmltvPath);
                 var uptime = DateTime.Now - StartTime;
-                return $"<html><title>{Environment.MachineName} Server Status</title><body>" +
+                return PageHeader() +
+                       $"<html><title>{Environment.MachineName} Server Status</title><body>" +
                        $"<h1>Status</h1><p>" +
                        $"Uptime: <font color=\"blue\">{uptime.Days:D2}</font> days, <font color=\"blue\">{uptime.Hours:D2}</font> hours, <font color=\"blue\">{uptime.Minutes:D2}</font> minutes, <font color=\"blue\">{uptime.Seconds:D2}</font> seconds<br>" +
-                       $"Registry watcher running: <font color=\"{(RegWatcherRunning ? "blue" : "red")}\">{RegWatcherRunning}</font><br>" +
+                       $"Image cache enabled: <font color=\"blue\">{JsonImageCache.cacheImages}</font><br>" +
+                       $"Image retention: <font color=\"blue\">{JsonImageCache.cacheRetention} days</font> after last request<br>" +
                        $"Number of cached images: <font color=\"blue\">{JsonImageCache.ImageCache.Count} ({JsonImageCache.ImageCache.Select(x => x.Value.ByteSize).Sum():N0} bytes)</font><br>" +
                        $"Download limit exceeded: <font color=\"{(LimitLocked ? "red" : "blue")}\">{LimitLocked}</font><br>" +
-                       $"Number of token refreshes: <font color=\"blue\">{tokenRefresh}</font><br>" +
-                       $"Valid token: <font color=\"{(TokenService.GoodToken ? "blue" : "red")}\">{TokenService.GoodToken}</font></p><p>" +
-                       $"MXF file date/size: {(fiMxf.Exists ? $"<font color=\"{(DateTime.Now - fiMxf.LastWriteTime > TimeSpan.FromDays(1) ? "red" : "blue")}\">{fiMxf.LastWriteTime} ({fiMxf.Length:N0} bytes)</font>" : "")}<br>" +
-                       $"XMLTV file date/size: {(fiXmltv.Exists ? $"<font color=\"{(DateTime.Now - fiXmltv.LastWriteTime > TimeSpan.FromDays(1) ? "red" : "blue")}\">{fiXmltv.LastWriteTime} ({fiXmltv.Length:N0} bytes)</font>" : "")}</p>" +
-
-                       $"<h1>Configuration</h1><p>" +
-                       $"Automatic token refresh: <font color=\"blue\">{TokenService.RefreshToken}</font><br>" +
-                       $"Image cache enabled: <font color=\"blue\">{JsonImageCache.cacheImages}</font><br>" +
-                       $"Image retention: <font color=\"blue\">{JsonImageCache.cacheRetention} days</font> after last request</p>" +
+                       $"Number of token refreshes: <font color=\"blue\">{tokenRefresh - 1}</font><br>" +
+                       $"Valid token: <font color=\"{(SchedulesDirect.GoodToken ? "blue" : "red")}\">{SchedulesDirect.GoodToken}</font></p><p>" +
+                       BuildFileTable() +
 
                        $"<h1>Stats</h1><p>" +
                        $"<u><strong>Requests received by service (<font color=\"blue\">{reqRcvd + condReqRcvd + reqLogo + reqFile}</font>):</strong></u><br>" +
@@ -89,12 +86,65 @@ namespace tokenServer
                        $"<h1>Logs</h1><p>" +
                        $"<a href=\"trace.log\" target=\"_blank\">View EPG123 Log</a><br>" +
                        $"<a href=\"server.log\" target=\"_blank\">View Service Log</a><br>" +
-                       //$"<a href=\"output/epg123.mxf\">Download MXF file</a><br>" +
-                       //$"<a href=\"output/epg123.xmltv\">Download XMLTV file</a></p>" +
 
-                       $"<p><small><b><i>EPG123 Server v{Helper.Epg123Version}</i></b></small></p>" +
+                       $"<p><small><b><i>EPG123 Server v{Helper.Epg123Version}{(Github.UpdateAvailable() ? " <font color=\"red\">(<a href=\"https://garyan2.github.io/download.html\">Update Available</a>)</font>" : "")}</i></b></small></p>" +
                        $"</body></html>";
             }
+        }
+
+        private static string PageHeader()
+        {
+            var header = "<head><style>" +
+                "table, td, th { border: 1px solid #dddddd; text-align: center; }" +
+                "td, th { padding: 8px; }" +
+                "</style></head>";
+            return header;
+        }
+
+        private static string BuildFileTable()
+        {
+            var ret = "<table><tr><th>Source</th><th>M3U</th><th>MXF</th><th>XMLTV</th></tr>";
+            if (File.Exists(Helper.Epg123ExePath))
+            {
+                ret += $"<tr><td>EPG123</td>";
+                ret += "<td>N/A</td>";
+                ret += FileDetail(Helper.Epg123MxfPath);
+                ret += FileDetail(Helper.Epg123XmltvPath);
+                ret += "</tr>";
+            }
+            if (File.Exists(Helper.Hdhr2MxfExePath))
+            {
+                ret += $"<tr><td>HDHR2MXF</td>";
+                ret += FileDetail(Helper.Hdhr2MxfM3uPath);
+                ret += FileDetail(Helper.Hdhr2MxfMxfPath);
+                ret += FileDetail(Helper.Hdhr2mxfXmltvPath);
+                ret += "</tr>";
+            }
+            if (File.Exists(Helper.PlutoTvExePath))
+            {
+                ret += $"<tr><td>PlutoTV</td>";
+                ret += FileDetail(Helper.PlutoTvM3uPath);
+                ret += "<td>N/A</td>";
+                ret += FileDetail(Helper.PlutoTvXmltvPath);
+                ret += "</tr>";
+            }
+            if (File.Exists(Helper.StirrTvExePath))
+            {
+                ret += $"<tr><td>StirrTV</td>";
+                ret += FileDetail(Helper.StirrTvM3uPath);
+                ret += "<td>N/A</td>";
+                ret += FileDetail(Helper.StirrTvXmltvPath);
+                ret += "</tr>";
+            }
+            ret += "</table>";
+            ret += $"<p><small><b>Links to files above can be constructed from server address + \"/output/&lt;source&gt;.&lt;extension&gt;\"; ex. http://{Environment.MachineName}:9009/output/epg123.mxf</b></small></p>";
+            return ret;
+        }
+
+        private static string FileDetail(string path)
+        {
+            var file = new FileInfo(path);
+            return file.Exists ? $"<td>{file.LastWriteTime}<br>{file.Length:N0} bytes</td>" : "<td></td>";
         }
 
         public static void AddSdDownload(long size)
@@ -177,6 +227,7 @@ namespace tokenServer
                 }
             }
         }
+
         public static void IncrementRequestReceived()
         {
             lock (StatLock) ++reqRcvd;

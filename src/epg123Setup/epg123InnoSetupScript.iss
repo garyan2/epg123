@@ -3,12 +3,12 @@
 
 #define MyAppName "EPG123"
 #define SourcePath "..\..\bin\Release"
-#define MyAppExeName "epg123.exe"
+#define MyAppExeName "epg123_gui.exe"
 #define MyClientName "EPG123 Client"
 #define MyClientExeName "epg123Client.exe"
 
 #dim Version[4]
-#expr ParseVersion(AddBackslash(SourcePath) + MyAppExeName, Version[0], Version[1], Version[2], Version[3])
+#expr ParseVersion(AddBackslash(SourcePath) + MyClientExeName, Version[0], Version[1], Version[2], Version[3])
 #define MyAppVersion Str(Version[0]) + "." + Str(Version[1]) + "." + Str(Version[2]) + "." + Str(Version[3])
 
 #define MyAppPublisher "GaRyan2"
@@ -50,7 +50,7 @@ AppCopyright=2016
 VersionInfoVersion={#MyAppVersion}
 VersionInfoCompany={#MyAppPublisher}
 VersionInfoDescription=Media Center Electronic Program Guide in 1-2-3
-VersionInfoCopyright=2022
+VersionInfoCopyright=2023
 VersionInfoProductName={#MyAppName}
 VersionInfoProductVersion={#MyAppVersion}
 VersionInfoProductTextVersion={#MyAppVersion}
@@ -65,8 +65,11 @@ Name: "custom"; Description: "Custom Install"; Flags: IsCustom
 
 [Components]
 Name: "main1"; Description: "Server Files"; Types: full server; Flags: disablenouninstallwarning
-Name: "hdhr"; Description: "HDHR2MXF for SiliconDust HDHR DVR Service"; Types: custom; Flags: disablenouninstallwarning
-Name: "main2"; Description: "Client Files"; Types: full client; MinVersion: 6.1; Flags: disablenouninstallwarning
+Name: "main1\epg123"; Description: "EPG123 for Schedules Direct"; Types: full server; Flags: disablenouninstallwarning
+Name: "main1\hdhr"; Description: "HDHR2MXF for SiliconDust DVR Service"; Types: full server; Flags: disablenouninstallwarning; Check: (IsWin64 and FileExists(ExpandConstant('{pf64}\silicondust\hdhomerun\hdhomerun_config.exe'))) or FileExists(ExpandConstant('{pf32}\silicondust\hdhomerun\hdhomerun_config.exe')) 
+Name: "main1\plutotv"; Description: "IPTV PlutoTV M3U/XMLTV Generator"; Types: full server; Flags: disablenouninstallwarning
+Name: "main1\stirr"; Description: "IPTV Stirr M3U/XMLTV Generator"; Types: full server; Flags: disablenouninstallwarning
+Name: "main2"; Description: "Client Files"; Types: full client; MinVersion: 6.1; Flags: disablenouninstallwarning; Check: FileExists(ExpandConstant('{win}\ehome\ehshell.exe'))
 Name: "main2\tray"; Description: "Notification Tray Tool"; Types: full client; Flags: disablenouninstallwarning
 
 [Languages]
@@ -78,82 +81,98 @@ Name: "startmenu"; Description: "Create start menu icons"; GroupDescription: "{c
 
 [Files]
 Source: "misc\ndp462-kb3151802-web.exe"; DestDir: "{tmp}"; Flags: dontcopy
-Source: "..\..\bin\Release\epg123.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: main1
-Source: "..\..\bin\Release\epg123.exe.config"; DestDir: "{app}"; Flags: ignoreversion; Attribs: hidden; Components: main1
-Source: "..\..\bin\Release\epg123Server.exe"; DestDir: "{app}"; BeforeInstall: TaskKill('epg123Server.exe'); Flags: ignoreversion signonce; Components: main1
-Source: "..\..\bin\Release\hdhr2mxf.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: hdhr
-Source: "..\..\bin\Release\Newtonsoft.Json.dll"; DestDir: "{app}"; Flags: ignoreversion; Components: main1 hdhr
-Source: "..\..\bin\Release\epg123Client.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: main2
-Source: "..\..\bin\Release\epg123Client.exe.config"; DestDir: "{app}"; Flags: ignoreversion; Attribs: hidden; MinVersion: 6.1; OnlyBelowVersion: 6.2; Components: main2
-Source: "..\..\bin\Release\epg123Transfer.exe"; DestDir: "{app}"; BeforeInstall: TaskKill('epg123Transfer.exe'); Flags: ignoreversion signonce; Components: main2
-Source: "..\..\bin\Release\epg123Transfer.exe.config"; DestDir: "{app}"; Flags: ignoreversion; Attribs: hidden; MinVersion: 6.1; OnlyBelowVersion: 6.2; Components: main2
-Source: "..\..\bin\Release\epgTray.exe"; DestDir: "{app}"; BeforeInstall: TaskKill('epgTray.exe'); Flags: ignoreversion signonce; Components: main2\tray
-Source: "..\..\bin\Release\epgTray.exe.config"; DestDir: "{app}"; Flags: ignoreversion; Attribs: hidden; Components: main2\tray
-Source: "..\..\bin\Release\logViewer.exe"; DestDir: "{app}"; BeforeInstall: TaskKill('logViewer.exe'); Flags: ignoreversion signonce;
-Source: "..\..\bin\Release\logViewer.exe.config"; DestDir: "{app}"; Flags: ignoreversion; Attribs: hidden;
+Source: "{#SourcePath}\epg123.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: main1\epg123
+Source: "{#SourcePath}\epg123.exe.config"; DestDir: "{app}"; Flags: ignoreversion; Attribs: hidden; Components: main1\epg123
+Source: "{#SourcePath}\epg123_gui.exe"; DestDir: "{app}"; BeforeInstall: TaskKill('epg123_gui.exe'); Flags: ignoreversion signonce; Components: main1\epg123 main2
+Source: "{#SourcePath}\epg123_gui.exe.config"; DestDir: "{app}"; Flags: ignoreversion; Attribs: hidden; Components: main1\epg123 main2
+Source: "{#SourcePath}\epg123Server.exe"; DestDir: "{app}"; BeforeInstall: TaskKill('epg123Server.exe'); Flags: ignoreversion signonce; Components: main1\epg123 main1\hdhr main1\plutotv main1\stirr
+Source: "{#SourcePath}\hdhr2mxf.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: main1\hdhr
+Source: "{#SourcePath}\Newtonsoft.Json.dll"; DestDir: "{app}"; Flags: ignoreversion; Components: main1\epg123 main1\hdhr main1\plutotv main1\stirr main2
+Source: "{#SourcePath}\epg123Client.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: main2
+Source: "{#SourcePath}\epg123Client.exe.config"; DestDir: "{app}"; Flags: ignoreversion; Attribs: hidden; MinVersion: 6.1; OnlyBelowVersion: 6.2; Components: main2
+Source: "{#SourcePath}\epg123Transfer.exe"; DestDir: "{app}"; BeforeInstall: TaskKill('epg123Transfer.exe'); Flags: ignoreversion signonce; Components: main2
+Source: "{#SourcePath}\epg123Transfer.exe.config"; DestDir: "{app}"; Flags: ignoreversion; Attribs: hidden; MinVersion: 6.1; OnlyBelowVersion: 6.2; Components: main2
+Source: "{#SourcePath}\epgTray.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: main2\tray
+Source: "{#SourcePath}\epgTray.exe.config"; DestDir: "{app}"; Flags: ignoreversion; Attribs: hidden; Components: main2\tray
+Source: "{#SourcePath}\logViewer.exe"; DestDir: "{app}"; BeforeInstall: TaskKill('logViewer.exe'); Flags: ignoreversion signonce;
+Source: "{#SourcePath}\logViewer.exe.config"; DestDir: "{app}"; Flags: ignoreversion; Attribs: hidden;
+Source: "{#SourcePath}\plutotv.exe"; DestDir: "{app}"; Flags: ignoreversion; Components: main1\plutotv
+Source: "{#SourcePath}\stirrtv.exe"; DestDir: "{app}"; Flags: ignoreversion; Components: main1\stirr
+Source: "{#SourcePath}\GaRyan2.Github.dll"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: main1\epg123 main2
+Source: "{#SourcePath}\GaRyan2.MxfXmltvTools.dll"; DestDir: "{app}"; Flags: ignoreversion signonce;
+Source: "{#SourcePath}\GaRyan2.SchedulesDirect.dll"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: main1\epg123 main2
+Source: "{#SourcePath}\GaRyan2.Tmdb.dll"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: main1\epg123
+Source: "{#SourcePath}\GaRyan2.Utilities.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
+Source: "{#SourcePath}\GaRyan2.WmcUtilities.dll"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: main1\hdhr main2
 Source: "docs\license.rtf"; DestDir: "{app}"; Flags: ignoreversion
-Source: "docs\customLineup.xml.example"; DestDir: "{app}"; Flags: ignoreversion; Components: main1
 Source: "links\EPG123 Online.url"; DestDir: "{commonprograms}\{#MyAppName}"; Tasks: startmenu; Flags: ignoreversion
 
 [Icons]
-Name: "{commonprograms}\{#MyAppName}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: startmenu; Components: main1
+Name: "{commonprograms}\{#MyAppName}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: startmenu; Components: main1\epg123 main2
 Name: "{commonprograms}\{#MyAppName}\{#MyClientName}"; Filename: "{app}\{#MyClientExeName}"; Tasks: startmenu; Components: main2
 Name: "{commonprograms}\{#MyAppName}\EPG123 Transfer Tool"; Filename: "{app}\epg123Transfer.exe"; Tasks: startmenu; Components: main2
-Name: "{commonprograms}\{#MyAppName}\HDHR2MXF Update"; Filename: "{app}\hdhr2mxf.exe"; Parameters: "-update -import"; Tasks: startmenu; Components: hdhr
 Name: "{commonprograms}\{#MyAppName}\EPG123 Tray"; Filename: "{app}\epgTray.exe"; Tasks: startmenu; Components: main2\tray
 Name: "{commonprograms}\{#MyAppName}\Log Viewer"; Filename: "{app}\logViewer.exe"; Tasks: startmenu;
-Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon; Components: main1
+Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon; Components: main1\epg123 main2
 Name: "{commondesktop}\{#MyClientName}"; Filename: "{app}\{#MyClientExeName}"; Tasks: desktopicon; Components: main2
 Name: "{commonstartup}\EPG123 Tray"; Filename: "{app}\epgTray.exe"; Components: main2\tray
 
 [Registry]
-Root: HKLM; Subkey: "SYSTEM\CurrentControlSet\Services\EventLog\Media Center\EPG123"; ValueType: expandsz; ValueName: "EventMessageFile"; ValueData: "{win}\Microsoft.NET\Framework\v4.0.30319\EventLogMessages.dll;{win}\Microsoft.NET\Framework64\v4.0.30319\EventLogMessages.dll"; Flags: createvalueifdoesntexist noerror; Components: main1
-Root: HKLM; Subkey: "SYSTEM\CurrentControlSet\Services\EventLog\Media Center\EPG123Client"; ValueType: expandsz; ValueName: "EventMessageFile"; ValueData: "{win}\Microsoft.NET\Framework\v4.0.30319\EventLogMessages.dll;{win}\Microsoft.NET\Framework64\v4.0.30319\EventLogMessages.dll"; Flags: createvalueifdoesntexist noerror; Components: main2
-Root: HKLM; Subkey: "SOFTWARE\GaRyan2\"; Check: not IsWin64
-Root: HKLM; Subkey: "SOFTWARE\GaRyan2\epg123\"; Permissions: everyone-modify; Check: not IsWin64
-Root: HKLM64; Subkey: "SOFTWARE\GaRyan2\"; Check: IsWin64
-Root: HKLM64; Subkey: "SOFTWARE\GaRyan2\epg123\"; Permissions: everyone-modify; Check: IsWin64
 
 [Run]
-Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent runascurrentuser unchecked; Components: main1
+Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent runascurrentuser unchecked; Components: main1\epg123 main2
 Filename: "{app}\{#MyClientExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyClientName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent runascurrentuser unchecked; Components: main2
 Filename: "{app}\epgTray.exe"; Flags: nowait runasoriginaluser; Components: main2\tray
-Filename: "{sys}\sc.exe"; Parameters: "create epg123Server start= auto binPath= ""{app}\epg123Server.exe"" displayname= ""EPG123 Server"""; Flags: runhidden; Components: main1
-Filename: "{sys}\sc.exe"; Parameters: "description epg123Server ""Services image redirects adding token requirements and provides an endpoint to download output files."""; Flags: runhidden; Components: main1
-Filename: "{sys}\sc.exe"; Parameters: "start epg123Server"; Flags: runhidden; Components: main1
-Filename: "{sys}\netsh.exe"; Parameters: "firewall add allowedprogram ""{app}\epg123Server.exe"" ""EPG123 Server"" ENABLE ALL"; Flags: runhidden; Components: main1
-Filename: "{sys}\netsh.exe"; Parameters: "firewall add allowedprogram ""{app}\epg123Client.exe"" ""EPG123 Client"" ENABLE ALL"; Flags: runhidden; Components: main2
+
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""EPG123 Server"""; Flags: runhidden; StatusMsg: "Removing TCP firewall rule..."
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""EPG123 Client"""; Flags: runhidden; StatusMsg: "Removing UDP firewall rule..."
+
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall add rule name=""EPG123 Server"" dir=in action=allow profile=private,domain protocol=tcp localport=9009"; Flags: runhidden; Components: main1\epg123 main1\hdhr main1\plutotv main1\stirr; StatusMsg: "Adding TCP firewall rule..."
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall add rule name=""EPG123 Server"" dir=in action=allow profile=private,domain protocol=udp localport=9009"; Flags: runhidden; Components: main1\epg123 main1\hdhr main1\plutotv main1\stirr main2; StatusMsg: "Adding UDP firewall rule..."
+Filename: "{sys}\sc.exe"; Parameters: "create epg123Server start= delayed-auto binPath= ""{app}\epg123Server.exe"" displayname= ""EPG123 Server"""; Flags: runhidden; Components: main1\epg123 main1\hdhr main1\plutotv main1\stirr; StatusMsg: "Creating server service..."
+Filename: "{sys}\sc.exe"; Parameters: "description epg123Server ""Services image redirects adding token requirements and provides an endpoint to download output files."""; Flags: runhidden; Components: main1\epg123 main1\hdhr main1\plutotv main1\stirr
+Filename: "{sys}\sc.exe"; Parameters: "failure ""epg123Server"" reset= 86400 actions= restart/60000/restart/60000/restart/60000"; Flags: runhidden; Components: main1\epg123 main1\hdhr main1\plutotv main1\stirr
+Filename: "{sys}\sc.exe"; Parameters: "start epg123Server"; Flags: runhidden; Components: main1\epg123 main1\hdhr main1\plutotv main1\stirr; StatusMsg: "Starting server service..."
 
 [Dirs]
 Name: {code:GetRootDataFolder}; Permissions: everyone-full
 
 [InstallDelete]
-Type: files; Name: "{app}\Newtonsoft.json.dll"; Components: main1 main2 hdhr
-Type: files; Name: "{app}\epg123.exe"; Components: not main1
-Type: files; Name: "{app}\epg123.exe.config"; Components: not main1
-Type: files; Name: "{app}\epg123Server.exe"; Components: not main1
-Type: files; Name: "{app}\hdhr2mxf.exe"; Components: not hdhr
+Type: files; Name: "{app}\Newtonsoft.json.dll"; Components: not main1\epg123 main1\hdhr main1\plutotv main1\stirr
+Type: files; Name: "{app}\epg123.exe"; Components: not main1\epg123
+Type: files; Name: "{app}\epg123.exe.config"; Components: not main1\epg123
+Type: files; Name: "{app}\epg123_gui.exe"; Components: not main1\epg123 main2
+Type: files; Name: "{app}\epg123_gui.exe.config"; Components: not main1\epg123 main2
+Type: files; Name: "{app}\epg123Server.exe"; Components: not main1\epg123 main1\hdhr main1\plutotv main1\stirr
+Type: files; Name: "{app}\hdhr2mxf.exe"; Components: not main1\hdhr
 Type: files; Name: "{app}\epg123Client.exe"; Components: not main2
 Type: files; Name: "{app}\epg123Client.exe.config"; Components: not main2
 Type: files; Name: "{app}\epg123Transfer.exe"; Components: not main2
 Type: files; Name: "{app}\epg123Transfer.exe.config"; Components: not main2
-Type: files; Name: "{app}\customLineup.xml.example"; Components: not main1
+Type: files; Name: "{app}\customLineup.xml.example";
 Type: files; Name: "{app}\epgTray.exe"; BeforeInstall: TaskKill('epgTray.exe'); Components: not main2\tray
 Type: files; Name: "{app}\epgTray.exe.config"; Components: not main2\tray
 Type: files; Name: "{app}\logViewer.exe";
 Type: files; Name: "{app}\logViewer.exe.config";
+Type: files; Name: "{app}\plutotv.exe"; Components: not main1\plutotv
+Type: files; Name: "{app}\stirrtv.exe"; Components: not main1\stirr
+Type: files; Name: "{app}\GaRyan2.Github.dll"; Components: not main1\epg123
+Type: files; Name: "{app}\GaRyan2.MxfXmltvTools.dll"; Components: not main1\epg123 main1\hdhr main1\plutotv main1\stirr main2
+Type: files; Name: "{app}\GaRyan2.SchedulesDirect.dll"; Components: not main1\epg123
+Type: files; Name: "{app}\GaRyan2.Tmdb.dll"; Components: not main1\epg123
+Type: files; Name: "{app}\GaRyan2.Utilities.dll";
+Type: files; Name: "{app}\GaRyan2.WmcUtilities.dll"; Components: not main2 main1\hdhr
 Type: filesandordirs; Name: "{commonprograms}\{#MyAppName}"
 Type: files; Name: "{commondesktop}\{#MyAppName}.lnk"
 Type: files; Name: "{commondesktop}\{#MyClientName}.lnk"
 Type: files; Name: "{commonstartup}\EPG123 Tray.lnk"
 
 [UninstallRun]
-Filename: "taskkill"; Parameters: "/im ""epgTray.exe"" /f"; Flags: runhidden
+Filename: "{sys}\taskkill.exe"; Parameters: "/im ""epgTray.exe"" /f"; Flags: runhidden; StatusMsg: "Killing EPG123 Tray Application..."
 Filename: "{sys}\sc.exe"; Parameters: "stop epg123Server"; Flags: runhidden; StatusMsg: "Stopping EPG123 Server..."
-Filename: "{sys}\sc.exe"; Parameters: "delete epg123Server" ; Flags: runhidden; StatusMsg: "Deleting services..."
-Filename: "{sys}\netsh.exe"; Parameters: "firewall delete allowedprogram ""{app}\epg123Server.exe"""; Flags: runhidden; StatusMsg: "Removing firewall rule..."
-Filename: "{sys}\sc.exe"; Parameters: "delete epg123Client" ; Flags: runhidden; StatusMsg: "Deleting services..."
-Filename: "{sys}\netsh.exe"; Parameters: "firewall delete allowedprogram ""{app}\epg123Client.exe"""; Flags: runhidden; StatusMsg: "Removing firewall rule..."
+Filename: "{sys}\sc.exe"; Parameters: "delete epg123Server" ; Flags: runhidden; StatusMsg: "Deleting server service..."
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""EPG123 Server"""; Flags: runhidden; StatusMsg: "Removing firewall rules..."
+Filename: "{sys}\schtasks.exe"; Parameters: "/delete /tn ""epg123_update"" /f"; Flags: runhidden; StatusMsg: "Deleting scheduled task..."
 
 [Code]
 // determine whether .NET Framework 4.6.2 is installed
@@ -186,7 +205,13 @@ begin
             end;
         end;
     end;
-    Exec(ExpandConstant('net.exe'), 'stop epg123Server', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+    Exec(ExpandConstant('{sys}\sc.exe'), 'stop epg123Server', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+    Exec(ExpandConstant('{sys}\taskkill.exe'), '/f /im epg123Server.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+    Exec(ExpandConstant('{sys}\taskkill.exe'), '/f /im epgTray.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+    RegDeleteKeyIncludingSubkeys(HKLM, 'SOFTWARE\GaRyan2');
+    RegDeleteKeyIncludingSubkeys(HKLM64, 'SOFTWARE\GaRyan2');
+    RegDeleteKeyIncludingSubkeys(HKLM, 'SYSTEM\CurrentControlSet\Services\EventLog\Media Center\EPG123');
+    RegDeleteKeyIncludingSubkeys(HKLM, 'SYSTEM\CurrentControlSet\Services\EventLog\Media Center\EPG123Client');
 end;
 
 // check where the installation folder is located
@@ -205,5 +230,5 @@ procedure TaskKill(FileName: String);
 var
     ResultCode: Integer;
 begin
-    Exec(ExpandConstant('taskkill.exe'), '/f /im ' + '"' + FileName + '"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+    Exec(ExpandConstant('{sys}\taskkill.exe'), '/f /im ' + '"' + FileName + '"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
 end;

@@ -1,4 +1,7 @@
-﻿using System;
+﻿using GaRyan2.MxfXml;
+using GaRyan2.SchedulesDirectAPI;
+using GaRyan2.Utilities;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -6,8 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Serialization;
-using epg123.MxfXml;
-using epg123.SchedulesDirect;
+using api = GaRyan2.SchedulesDirect;
 
 namespace epg123.sdJson2mxf
 {
@@ -15,13 +17,10 @@ namespace epg123.sdJson2mxf
     {
         private static readonly HashSet<string> IncludedStations = new HashSet<string>();
         private static readonly HashSet<string> ExcludedStations = new HashSet<string>();
+        private static readonly Dictionary<string, LineupStation> AllStations = new Dictionary<string, LineupStation>();
+
         public static int AddedStations;
         public static int MissingStations;
-        private static StationChannelMap customMap;
-
-        private static CustomLineup customLineup;
-        private static readonly HashSet<string> CustomStations = new HashSet<string>();
-        private static readonly Dictionary<string, LineupStation> AllStations = new Dictionary<string, LineupStation>();
 
         public static System.ComponentModel.BackgroundWorker BackgroundDownloader;
         public static List<KeyValuePair<MxfService, string[]>> StationLogosToDownload = new List<KeyValuePair<MxfService, string[]>>();
@@ -29,44 +28,11 @@ namespace epg123.sdJson2mxf
 
         private static bool BuildLineupServices()
         {
+            PopulateIncludedExcludedStations(config.StationId);
+
             // query what lineups client is subscribed to
-            var clientLineups = SdApi.GetSubscribedLineups();
-            if (clientLineups == null) return false;
-
-            // determine if there are custom lineups to consider
-            if (File.Exists(Helper.Epg123CustomLineupsXmlPath))
-            {
-                CustomLineups customLineups;
-                using (var stream = new StreamReader(Helper.Epg123CustomLineupsXmlPath, Encoding.Default))
-                {
-                    var serializer = new XmlSerializer(typeof(CustomLineups));
-                    TextReader reader = new StringReader(stream.ReadToEnd());
-                    customLineups = (CustomLineups)serializer.Deserialize(reader);
-                    reader.Close();
-                }
-
-                foreach (var lineup in customLineups.CustomLineup.Where(lineup => config.IncludedLineup.Contains(lineup.Lineup)))
-                {
-                    customLineup = lineup;
-
-                    clientLineups.Lineups.Add(new SubscribedLineup
-                    {
-                        Lineup = lineup.Lineup,
-                        Name = lineup.Name,
-                        Transport = "CUSTOM",
-                        Location = lineup.Location,
-                        Uri = "CUSTOM",
-                        IsDeleted = false
-                    });
-
-                    customMap = new StationChannelMap
-                    {
-                        Map = new List<LineupChannel>(),
-                        Stations = new List<LineupStation>(),
-                        Metadata = new LineupMetadata {Lineup = lineup.Lineup}
-                    };
-                }
-            }
+            var clientLineups = api.GetSubscribedLineups();
+            if (clientLineups?.Lineups == null) return false;
 
             // reset counters
             processedObjects = 0; totalObjects = clientLineups.Lineups.Count;
@@ -83,7 +49,7 @@ namespace epg123.sdJson2mxf
                 StationChannelMap lineupMap = null;
                 if (!flagCustom)
                 {
-                    lineupMap = SdApi.GetStationChannelMap(clientLineup.Lineup);
+                    lineupMap = api.GetStationChannelMap(clientLineup.Lineup);
                     if (lineupMap == null) continue;
 
                     foreach (var station in lineupMap.Stations.Where(station => !AllStations.ContainsKey(station.StationId)))
@@ -102,51 +68,14 @@ namespace epg123.sdJson2mxf
                     Logger.WriteWarning($"Subscribed lineup {clientLineup.Lineup} has been DELETED at the headend.");
                     continue;
                 }
-                if (flagCustom)
-                {
-                    foreach (var station in customLineup.Station.Where(station => station.StationId != null))
-                    {
-                        if (AllStations.TryGetValue(station.StationId, out var lineupStation))
-                        {
-                            customMap.Map.Add(new LineupChannel
-                            {
-                                StationId = station.StationId,
-                                AtscMajor = station.Number,
-                                AtscMinor = station.Subnumber,
-                                MatchName = station.MatchName
-                            });
-                            CustomStations.Add(station.StationId);
-                            customMap.Stations.Add(lineupStation);
-                        }
-                        else if (!string.IsNullOrEmpty(station.Alternate) && AllStations.TryGetValue(station.Alternate, out lineupStation))
-                        {
-                            customMap.Map.Add(new LineupChannel
-                            {
-                                StationId = station.Alternate,
-                                AtscMajor = station.Number,
-                                AtscMinor = station.Subnumber,
-                                MatchName = station.MatchName
-                            });
-                            CustomStations.Add(station.Alternate);
-                            customMap.Stations.Add(lineupStation);
-                        }
-                    }
-                    lineupMap = customMap;
-                    Logger.WriteVerbose($"Successfully retrieved the station mapping for lineup {clientLineup.Lineup}.");
-                }
                 if (config.DiscardChanNumbers.Contains(clientLineup.Lineup))
                 {
                     Logger.WriteVerbose($"Subscribed lineup {clientLineup.Lineup} will ignore all channel numbers.");
                 }
                 if (lineupMap == null) return false;
 
-                var lineupIndex = SdMxf.With.Lineups.Count;
-                SdMxf.With.Lineups.Add(new MxfLineup
-                {
-                    Index = lineupIndex + 1,
-                    LineupId = clientLineup.Lineup,
-                    Name = $"EPG123 {clientLineup.Name} ({clientLineup.Location})"
-                });
+                // get/create lineup
+                var mxfLineup = mxf.FindOrCreateLineup(clientLineup.Lineup, $"EPG123 {clientLineup.Name} ({clientLineup.Location})");
 
                 // use hashset to make sure we don't duplicate channel entries for this station
                 var channelNumbers = new HashSet<string>();
@@ -155,23 +84,20 @@ namespace epg123.sdJson2mxf
                 foreach (var station in lineupMap.Stations)
                 {
                     // check if station should be downloaded and processed
-                    if (!flagCustom)
+                    if (station == null || ExcludedStations.Contains(station.StationId)) continue;
+                    if (!IncludedStations.Contains(station.StationId) && !config.AutoAddNew)
                     {
-                        if (station == null || (ExcludedStations.Contains(station.StationId) && !CustomStations.Contains(station.StationId))) continue;
-                        if (!IncludedStations.Contains(station.StationId) && !config.AutoAddNew)
-                        {
-                            Logger.WriteWarning($"**** Lineup {clientLineup.Name} ({clientLineup.Location}) has added station {station.StationId} ({station.Callsign}). ****");
-                            continue;
-                        }
+                        Logger.WriteWarning($"**** Lineup {clientLineup.Name} ({clientLineup.Location}) has added station {station.StationId} ({station.Callsign}). ****");
+                        continue;
                     }
 
                     // build the service if necessary
-                    var mxfService = SdMxf.GetService(station.StationId);
+                    var mxfService = mxf.FindOrCreateService(station.StationId);
                     if (string.IsNullOrEmpty(mxfService.CallSign))
                     {
                         // instantiate stationLogo and override uid
                         StationImage stationLogo = null;
-                        mxfService.UidOverride = $"EPG123_{station.StationId}";
+                        mxfService.UidOverride = $"!Service!EPG123_{station.StationId}";
 
                         // determine station name for ATSC stations
                         var atsc = false;
@@ -188,7 +114,7 @@ namespace epg123.sdJson2mxf
                         // add affiliate if available
                         if (!string.IsNullOrEmpty(station.Affiliate))
                         {
-                            mxfService.mxfAffiliate = SdMxf.GetAffiliate(station.Affiliate);
+                            mxfService.mxfAffiliate = mxf.FindOrCreateAffiliate(station.Affiliate);
                         }
 
                         // add station logo if available
@@ -199,18 +125,20 @@ namespace epg123.sdJson2mxf
                         // initialize as custom logo
                         var logoPath = string.Empty;
                         var urlLogoPath = string.Empty;
+                        string encodedLogo = null;
 
                         var logoFilename = $"{station.Callsign}_c.png";
-                        if (config.IncludeSdLogos && File.Exists($"{Helper.Epg123LogosFolder}\\{logoFilename}"))
+                        if (config.IncludeSdLogos && File.Exists($"{Helper.Epg123LogosFolder}{logoFilename}"))
                         {
-                            logoPath = $"{Helper.Epg123LogosFolder}\\{logoFilename}";
-                            urlLogoPath = $"http://{HostAddress}:{Helper.TcpPort}/logos/{logoFilename}";
+                            logoPath = $"{Helper.Epg123LogosFolder}{logoFilename}";
+                            urlLogoPath = $"http://{HostAddress}:{Helper.TcpUdpPort}/logos/{logoFilename}";
+                            encodedLogo = GetStringEncodedImage(logoPath);
                         }
                         else if (stationLogo != null)
                         {
-                            logoFilename = Path.GetFileName(new Uri(stationLogo.Url).AbsolutePath);
-                            logoPath = $"{Helper.Epg123LogosFolder}\\{logoFilename}";
-                            urlLogoPath = $"http://{HostAddress}:{Helper.TcpPort}/logos/{logoFilename}";
+                            logoFilename = $"{stationLogo.Md5}.png";
+                            logoPath = $"{Helper.Epg123LogosFolder}{logoFilename}";
+                            urlLogoPath = $"http://{HostAddress}:{Helper.TcpUdpPort}/logos/{logoFilename}";
 
                             if (config.IncludeSdLogos && !File.Exists(logoPath))
                             {
@@ -221,7 +149,7 @@ namespace epg123.sdJson2mxf
                         // add to mxf guide images if file exists already
                         if (config.IncludeSdLogos && !string.IsNullOrEmpty(logoPath) && File.Exists(logoPath))
                         {
-                            mxfService.mxfGuideImage = SdMxf.GetGuideImage(Helper.Standalone ? $"file://{logoPath}" : urlLogoPath, GetStringEncodedImage(logoPath));
+                            mxfService.mxfGuideImage = mxf.FindOrCreateGuideImage(Helper.Standalone ? $"file://{logoPath}" : urlLogoPath, encodedLogo);
                         }
 
                         // handle xmltv logos
@@ -261,9 +189,6 @@ namespace epg123.sdJson2mxf
                         string matchName = map.ProviderCallsign;
                         switch (clientLineup.Transport)
                         {
-                            case "CUSTOM":
-                                matchName = map.MatchName;
-                                break;
                             case "DVB-S":
                                 var m = Regex.Match(lineupMap.Metadata.Lineup, @"\d+\.\d+");
                                 if (m.Success && map.FrequencyHz > 0 && map.NetworkId > 0 && map.TransportId > 0 && map.ServiceId > 0)
@@ -299,12 +224,8 @@ namespace epg123.sdJson2mxf
                         var channelNumber = $"{number}{(subnumber > 0 ? $".{subnumber}" : "")}";
                         if (channelNumbers.Add($"{channelNumber}:{station.StationId}"))
                         {
-                            SdMxf.With.Lineups[lineupIndex].channels.Add(new MxfChannel
+                            mxfLineup.channels.Add(new MxfChannel(mxfLineup, mxfService, number, subnumber)
                             {
-                                mxfLineup = SdMxf.With.Lineups[lineupIndex],
-                                mxfService = mxfService,
-                                Number = number,
-                                SubNumber = subnumber,
                                 MatchName = matchName
                             });
                         }
@@ -314,6 +235,7 @@ namespace epg123.sdJson2mxf
 
             if (StationLogosToDownload.Count > 0)
             {
+                Directory.CreateDirectory(Helper.Epg123LogosFolder);
                 StationLogosDownloadComplete = false;
                 Logger.WriteInformation($"Kicking off background worker to download and process {StationLogosToDownload.Count} station logos.");
                 BackgroundDownloader = new System.ComponentModel.BackgroundWorker();
@@ -323,16 +245,16 @@ namespace epg123.sdJson2mxf
                 BackgroundDownloader.RunWorkerAsync();
             }
 
-            if (SdMxf.With.Services.Count > 0)
+            if (mxf.With.Services.Count > 0)
             {
                 // report specific stations that are no longer available
-                var missing = (from station in IncludedStations where SdMxf.With.Services.FirstOrDefault(arg => arg.StationId.Equals(station)) == null select config.StationId.Single(arg => arg.StationId.Equals(station)).CallSign).ToList();
+                var missing = (from station in IncludedStations where mxf.With.Services.FirstOrDefault(arg => arg.StationId.Equals(station)) == null select config.StationId.Single(arg => arg.StationId.Equals(station)).CallSign).ToList();
                 if (missing.Count > 0)
                 {
                     MissingStations = missing.Count;
                     Logger.WriteInformation($"Stations no longer available since last configuration save are: {string.Join(", ", missing)}");
                 }
-                var extras = SdMxf.With.Services.Where(arg => !IncludedStations.Contains(arg.StationId)).ToList();
+                var extras = mxf.With.Services.Where(arg => !IncludedStations.Contains(arg.StationId)).ToList();
                 if (extras.Count > 0)
                 {
                     AddedStations = extras.Count;
@@ -368,7 +290,7 @@ namespace epg123.sdJson2mxf
                 var logoPath = serviceLogo.Value[0];
                 if ((File.Exists(logoPath) || DownloadSdLogo(serviceLogo.Value[1], logoPath)) && string.IsNullOrEmpty(serviceLogo.Key.LogoImage))
                 {
-                    serviceLogo.Key.mxfGuideImage = SdMxf.GetGuideImage("file://" + logoPath, GetStringEncodedImage(logoPath));
+                    serviceLogo.Key.mxfGuideImage = mxf.FindOrCreateGuideImage(Helper.Standalone ? $"file://{logoPath}" : $"http://{HostAddress}:{Helper.TcpUdpPort}/logos/{Path.GetFileName(logoPath)}");
 
                     if (File.Exists(logoPath))
                     {
@@ -400,7 +322,7 @@ namespace epg123.sdJson2mxf
             }
             catch (Exception ex)
             {
-                Logger.WriteVerbose($"An exception occurred during downloadSDLogo(). {ex.Message}");
+                Logger.WriteVerbose($"An exception occurred during downloadSDLogo(). {ex}");
             }
             return false;
         }

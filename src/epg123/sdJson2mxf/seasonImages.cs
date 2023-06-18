@@ -1,11 +1,12 @@
-﻿using System.Collections.Concurrent;
+﻿using GaRyan2.MxfXml;
+using GaRyan2.SchedulesDirectAPI;
+using GaRyan2.Utilities;
+using Newtonsoft.Json;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using epg123.MxfXml;
-using epg123.SchedulesDirect;
-using Newtonsoft.Json;
 
 namespace epg123.sdJson2mxf
 {
@@ -18,19 +19,19 @@ namespace epg123.sdJson2mxf
             // reset counters
             imageQueue = new List<string>();
             imageResponses = new ConcurrentBag<ProgramMetadata>();
-            processedObjects = 0;
-            ++processStage; ReportProgress();
+            IncrementNextStage(mxf.SeasonsToProcess.Count);
             if (!config.SeasonEventImages) return true;
+            if (Helper.Standalone) return true;
 
             // scan through each series in the mxf
-            Logger.WriteMessage($"Entering GetAllSeasonImages() for {totalObjects = SdMxf.With.Seasons.Count} seasons.");
-            foreach (var season in SdMxf.With.Seasons)
+            Logger.WriteMessage($"Entering GetAllSeasonImages() for {totalObjects} seasons.");
+            foreach (var season in mxf.SeasonsToProcess)
             {
-                var uid = $"{season.mxfSeriesInfo.SeriesId}_{season.SeasonNumber}";
+                var uid = $"{season.SeriesId}_{season.SeasonNumber}";
                 if (epgCache.JsonFiles.ContainsKey(uid) && !string.IsNullOrEmpty(epgCache.JsonFiles[uid].Images))
                 {
                     epgCache.JsonFiles[uid].Current = true;
-                    ++processedObjects; ReportProgress();
+                    IncrementProgress();
                     if (string.IsNullOrEmpty(epgCache.JsonFiles[uid].Images)) continue;
 
                     List<ProgramArtwork> artwork;
@@ -48,12 +49,10 @@ namespace epg123.sdJson2mxf
                 }
                 else
                 {
-                    ++processedObjects; ReportProgress();
+                    IncrementProgress();
                 }
             }
             Logger.WriteVerbose($"Found {processedObjects} cached/unavailable season image links.");
-            totalObjects = processedObjects + imageQueue.Count;
-            ReportProgress();
 
             // maximum 500 queries at a time
             if (imageQueue.Count > 0)
@@ -66,11 +65,11 @@ namespace epg123.sdJson2mxf
                 ProcessSeasonImageResponses();
                 if (processedObjects != totalObjects)
                 {
-                    Logger.WriteInformation($"Failed to download and process {SdMxf.With.Seasons.Count - processedObjects} season image links.");
+                    Logger.WriteInformation($"Failed to download and process {seasons.Count - processedObjects} season image links.");
                 }
             }
             Logger.WriteMessage("Exiting GetAllSeasonImages(). SUCCESS.");
-            imageQueue = null; imageResponses = null;
+            imageQueue = null; imageResponses = null; seasons.Clear();
             return true;
         }
 
@@ -79,7 +78,7 @@ namespace epg123.sdJson2mxf
             // process request response
             foreach (var response in imageResponses)
             {
-                ++processedObjects; ReportProgress();
+                IncrementProgress();
                 if (response.Data == null) continue;
                 
                 var season = seasons.SingleOrDefault(arg => arg.ProtoTypicalProgram == response.ProgramId);
@@ -90,7 +89,7 @@ namespace epg123.sdJson2mxf
                 season.extras.Add("artwork", artwork = GetTieredImages(response.Data, new List<string> { "season" }));
 
                 // create a season entry in cache
-                var uid = $"{season.mxfSeriesInfo.SeriesId}_{season.SeasonNumber}";
+                var uid = $"{season.SeriesId}_{season.SeasonNumber}";
                 if (!epgCache.JsonFiles.ContainsKey(uid))
                 {
                     epgCache.AddAsset(uid, null);

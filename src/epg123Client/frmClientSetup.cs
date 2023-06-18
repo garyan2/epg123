@@ -1,4 +1,7 @@
-﻿using System;
+﻿using GaRyan2.Utilities;
+using GaRyan2.WmcUtilities;
+using Microsoft.Win32;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -6,8 +9,6 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
-using epg123;
-using Microsoft.Win32;
 
 namespace epg123Client
 {
@@ -34,7 +35,8 @@ namespace epg123Client
         private IntPtr _wmcPtr = IntPtr.Zero;
         private const string BYPASSED = "BACKUP_BYPASSED";
         private readonly bool _colossusInstalled;
-        private readonly bool _epg123Installed;
+        private readonly bool _epg123Installed = File.Exists(Helper.Epg123ExePath);
+        private readonly bool _hdhr2mxfInstalled = File.Exists(Helper.Hdhr2MxfExePath);
         private bool _taskWorking;
         private Process _procWmc;
         private bool TimeoutWmc => DateTime.Now > _procWmc.StartTime + TimeSpan.FromSeconds(60);
@@ -49,15 +51,13 @@ namespace epg123Client
             InitializeComponent();
 
             _colossusInstalled = IsColossusInstalled();
-            if (!(_epg123Installed = File.Exists(Helper.Epg123ExePath) || File.Exists(Helper.Hdhr2MxfExePath)))
+            if (Helper.InstallMethod == Helper.Installation.CLIENT)
             {
-                btnConfig.Text = "Step 3:\nImport MXF";
-                lblConfig.Text = "Import remote MXF file";
+                lblConfig.Text = "Import MXF file from remote server";
             }
-            else if (File.Exists(Helper.Hdhr2MxfExePath))
+            else if (_epg123Installed && _hdhr2mxfInstalled)
             {
-                btnConfig.Text = "Step 3:\nHDHR2MXF";
-                lblConfig.Text = "Run HDHR2MXF";
+                lblConfig.Text = "Import MXF file from either EPG123 or HDHR2MXF";
             }
 
             UpdateStatusText("Click the 'Step 1' button to begin.");
@@ -97,25 +97,17 @@ namespace epg123Client
             // STEP 2: WMC TV Setup
             else if (sender.Equals(btnTvSetup) && ConfigureHdPvrTuners() && OpenWmc() && ActivateGuide() && DisableBackgroundScanning())
             {
-                if (!IsTunerCountTweaked())
-                {
-                    TweakMediaCenterTunerCount(TUNERLIMIT);
-                }
-                else
-                {
-                    // disable tv setup button and enable configuration button
-                    btnTvSetup.Enabled = lblTvSetup.Enabled = false;
-                    btnTvSetup.BackColor = System.Drawing.Color.LightGreen;
+                // disable tv setup button and enable configuration button
+                btnTvSetup.Enabled = lblTvSetup.Enabled = false;
+                btnTvSetup.BackColor = System.Drawing.Color.LightGreen;
 
-                    // enable config button if epg123.exe is present
-                    btnConfig.Enabled = lblConfig.Enabled = true;
-                    UpdateStatusText("Click the 'Step 3' button to continue.");
-                }
+                // enable config button if epg123.exe is present
+                btnConfig.Enabled = lblConfig.Enabled = true;
+                UpdateStatusText("Click the 'Step 3' button to continue.");
             }
 
             // STEP 3: Configure EPG123
-            else if (sender.Equals(btnConfig) && _epg123Installed && OpenEpg123Configuration() ||
-                     sender.Equals(btnConfig) && ImportMxfFile())
+            else if (sender.Equals(btnConfig) && OpenEpg123Configuration())
             {
                 // disable config button
                 btnConfig.Enabled = lblConfig.Enabled = false;
@@ -194,7 +186,7 @@ namespace epg123Client
                         }
                         catch (Exception ex)
                         {
-                            Logger.WriteError(ex.Message);
+                            Logger.WriteError($"{ex}");
                         }
                     }
 
@@ -207,7 +199,7 @@ namespace epg123Client
                         }
                         catch (Exception ex)
                         {
-                            Logger.WriteError(ex.Message);
+                            Logger.WriteError($"{ex}");
                         }
                     }
                 }
@@ -535,14 +527,14 @@ namespace epg123Client
         {
             UpdateStatusText("Increasing tuner limits ...");
             Logger.WriteVerbose("Increasing tuner limits ...");
-            WmcUtilities.SetWmcTunerLimits(count);
+            WmcStore.SetWmcTunerLimits(count);
         }
 
         private void UpdateSatelliteTransponders()
         {
             UpdateStatusText("Updating satellite transponders ...");
             Logger.WriteVerbose("Updating satellite transponders ...");
-            WmcUtilities.UpdateDvbsTransponders(false);
+            SatMxf.UpdateDvbsTransponders(false);
         }
 
         private static bool IsTunerCountTweaked()
@@ -712,7 +704,7 @@ namespace epg123Client
             UpdateStatusText("Activating guide in registry ...");
             Logger.WriteVerbose("Activating guide in registry ...");
 
-            var ret = WmcRegistries.ActivateGuide();
+            var ret = WmcStore.ActivateGuide();
             UpdateStatusText(string.Empty);
             return ret;
         }
@@ -722,7 +714,7 @@ namespace epg123Client
             UpdateStatusText("Disabling background scanner ...");
             Logger.WriteVerbose("Disabling background scanner ...");
 
-            var ret = WmcRegistries.SetBackgroundScanning(false);
+            var ret = WmcStore.SetBackgroundScanning(false);
             UpdateStatusText(string.Empty);
             return ret;
         }
@@ -731,129 +723,81 @@ namespace epg123Client
         #region ========== EPG123 Configurator ==========
         private bool OpenEpg123Configuration()
         {
-            const string text = "You have both the EPG123 executable for guide listings from Schedules Direct and the HDHR2MXF executable for guide listings from SiliconDust.\n\nDo you wish to proceed with HDHR2MXF?";
-            const string caption = "Multiple Guide Sources";
-            if (File.Exists(Helper.Epg123ExePath) && File.Exists(Helper.Hdhr2MxfExePath) && DialogResult.Yes == MessageBox.Show(text, caption, MessageBoxButtons.YesNo, MessageBoxIcon.Question) ||
-                File.Exists(Helper.Hdhr2MxfExePath) && !File.Exists(Helper.Epg123ExePath))
+            var exeName = "EPG123";
+            var exePath = Helper.Epg123ExePath;
+            var exeArgs = "-p";
+            mxfImport = Helper.Epg123MxfPath;
+            if (Helper.InstallMethod == Helper.Installation.CLIENT)
             {
-                Hdhr2MxfSrv = true;
-                UpdateStatusText("Running HDHR2MXF to create the guide ...");
-                Logger.WriteVerbose("Running HDHR2MXF to create the guide ...");
-
-                var startInfo = new ProcessStartInfo()
+                var frmRemote = new frmRemoteServers();
+                frmRemote.ShowDialog();
+                mxfImport = frmRemote.mxfPath;
+                if (string.IsNullOrEmpty(mxfImport))
                 {
-                    FileName = Helper.Hdhr2MxfExePath,
-                    Arguments = "-update",
-                };
-                var hdhr2Mxf = Process.Start(startInfo);
-                hdhr2Mxf.WaitForExit();
-
-                Logger.EventId = 0;
-                statusLogo.MxfFile = Helper.Epg123MxfPath;
-                if (hdhr2Mxf.ExitCode == 0)
-                {
-                    // use the client to import the mxf file
-                    var importForm = new frmImport(Helper.Epg123MxfPath);
-                    importForm.ShowDialog();
-
-                    // kick off the reindex
-                    if (importForm.Success)
-                    {
-                        WmcStore.ActivateEpg123LineupsInStore();
-                        WmcRegistries.ActivateGuide();
-                        WmcStore.AutoMapChannels();
-                        WmcUtilities.ReindexDatabase();
-                    }
-                    else
-                    {
-                        MessageBox.Show("There was an error importing the MXF file.", "Import Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        UpdateStatusText("Click the 'Step 3' button to try again.");
-                        return cbAutostep.Checked = false;
-                    }
-                }
-                else
-                {
-                    MessageBox.Show("There was an error using HDHR2MXF to create the MXF file.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show($"No MXF files from a remote server was selected for import.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     UpdateStatusText("Click the 'Step 3' button to try again.");
                     return cbAutostep.Checked = false;
                 }
-                statusLogo.StatusImage();
-                Helper.SendPipeMessage("Import Complete");
-
-                return true;
             }
-
-            UpdateStatusText("Opening EPG123 Configuration GUI ...");
-            Logger.WriteVerbose("Opening EPG123 Configuration GUI ...");
-            Process procEpg123;
-            if (Epg123Running())
+            else if (!_epg123Installed && _hdhr2mxfInstalled)
             {
-                var processes = Process.GetProcessesByName("epg123");
-                procEpg123 = processes[0];
-                if (IsIconic(procEpg123.MainWindowHandle))
+                exeName = "HDHR2MXF";
+                exePath = Helper.Hdhr2MxfExePath;
+                exeArgs = "";
+                mxfImport = Helper.Hdhr2MxfMxfPath;
+                Hdhr2MxfSrv = true;
+            }
+            else if (_epg123Installed && _hdhr2mxfInstalled)
+            {
+                const string text = "You have both the EPG123 executable for guide listings from Schedules Direct and the HDHR2MXF executable for guide listings from SiliconDust.\n\nDo you wish to proceed with HDHR2MXF?";
+                const string caption = "Multiple Guide Sources";
+                if (DialogResult.Yes == MessageBox.Show(text, caption, MessageBoxButtons.YesNo, MessageBoxIcon.Question))
                 {
-                    ShowWindow(procEpg123.MainWindowHandle, SW_RESTORE);
+                    exeName = "HDHR2MXF";
+                    exePath = Helper.Hdhr2MxfExePath;
+                    exeArgs = "";
+                    mxfImport = Helper.Hdhr2MxfMxfPath;
+                    Hdhr2MxfSrv = true;
                 }
             }
-            else
+
+            if (Helper.InstallMethod != Helper.Installation.CLIENT)
             {
-                // start epg123 configuration GUI
-                procEpg123 = Process.Start(Helper.Epg123ExePath);
-                procEpg123?.WaitForInputIdle(10000);
+                var txt = $"Running {exeName} and importing MXF ...";
+                UpdateStatusText(txt);
+                Logger.WriteVerbose(txt);
+                var proc = Process.Start(exePath, exeArgs);
+                proc.WaitForExit();
+
+                if (proc.ExitCode != 0)
+                {
+                    MessageBox.Show($"There was an error using {exeName} to create the MXF file.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    UpdateStatusText("Click the 'Step 3' button to try again.");
+                    return cbAutostep.Checked = false;
+                }
             }
-            SetForegroundWindow(procEpg123.MainWindowHandle);
-            UpdateStatusText("Waiting for EPG123 to close ...");
-            Logger.WriteVerbose("Waiting for EPG123 to close ...");
 
-            do
-            {
-                Thread.Sleep(100);
-                Application.DoEvents();
-            } while (!procEpg123.HasExited);
-
-            UpdateStatusText(string.Empty);
-
-            return true;
-        }
-
-        private static bool Epg123Running()
-        {
-            return (Process.GetProcessesByName("epg123").Length > 0);
-        }
-        #endregion
-
-        #region ========== Import MXF file ==========
-
-        private bool ImportMxfFile()
-        {
-            var ret = true;
-            UpdateStatusText("Importing remote MXF file");
-            var frmRemote = new frmRemoteServers();
-            frmRemote.ShowDialog();
-            if (string.IsNullOrEmpty(frmRemote.mxfPath)) return ret;
-
-            Logger.EventId = 0;
-            mxfImport = statusLogo.MxfFile = frmRemote.mxfPath;
             var importForm = new frmImport(mxfImport);
             importForm.ShowDialog();
-
+            
+            // kick off the reindex
             if (importForm.Success)
             {
                 WmcStore.ActivateEpg123LineupsInStore();
-                WmcRegistries.ActivateGuide();
+                WmcStore.ActivateGuide();
                 WmcStore.AutoMapChannels();
-                WmcUtilities.ReindexDatabase();
+                WmcStore.ReindexDatabase();
+                statusLogo.StatusImage(mxfImport);
+                Helper.SendPipeMessage("Import Complete");
+
+                return true;
             }
             else
             {
                 MessageBox.Show("There was an error importing the MXF file.", "Import Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 UpdateStatusText("Click the 'Step 3' button to try again.");
-                ret = cbAutostep.Checked = false;
+                return cbAutostep.Checked = false;
             }
-            statusLogo.StatusImage();
-            Helper.SendPipeMessage("Import Complete");
-
-            return ret;
         }
         #endregion
     }

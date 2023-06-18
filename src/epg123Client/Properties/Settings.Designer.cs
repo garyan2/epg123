@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace epg123Client.Properties {
+namespace epg123.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]

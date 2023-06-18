@@ -1,11 +1,13 @@
-﻿using System;
+﻿using GaRyan2.MxfXml;
+using GaRyan2.SchedulesDirectAPI;
+using GaRyan2.Utilities;
+using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using epg123.MxfXml;
-using epg123.SchedulesDirect;
-using Newtonsoft.Json;
+using api = GaRyan2.SchedulesDirect;
 
 namespace epg123.sdJson2mxf
 {
@@ -14,19 +16,23 @@ namespace epg123.sdJson2mxf
         private static readonly Dictionary<string, string[]> ScheduleEntries = new Dictionary<string, string[]>();
         private static int cachedSchedules;
         private static int downloadedSchedules;
+        private static List<string> suppressedPrefixes = new List<string>();
 
         private static bool GetAllScheduleEntryMd5S(int days = 1)
         {
-            Logger.WriteMessage($"Entering GetAllScheduleEntryMd5s() for {days} days on {SdMxf.With.Services.Count} stations.");
+            Logger.WriteMessage($"Entering GetAllScheduleEntryMd5s() for {days} days on {mxf.With.Services.Count} stations.");
             if (days <= 0)
             {
                 Logger.WriteError("Invalid number of days to download. Exiting.");
                 return false;
             }
 
+            // populate station prefixes to suppress
+            suppressedPrefixes = new List<string>(config.SuppressStationEmptyWarnings.Split(','));
+
             // reset counter
             processedObjects = 0;
-            totalObjects = SdMxf.With.Services.Count * days;
+            totalObjects = mxf.With.Services.Count * days;
             ++processStage; ReportProgress();
 
             // build date array for requests
@@ -41,7 +47,7 @@ namespace epg123.sdJson2mxf
             }
 
             // maximum 5000 queries at a time
-            for (var i = 0; i < SdMxf.With.Services.Count; i += MaxQueries / dates.Length)
+            for (var i = 0; i < mxf.With.Services.Count; i += MaxQueries / dates.Length)
             {
                 if (GetMd5ScheduleEntries(dates, i)) continue;
                 Logger.WriteError("Problem occurred during GetMd5ScheduleEntries(). Exiting.");
@@ -61,7 +67,7 @@ namespace epg123.sdJson2mxf
                 ++processedObjects; ReportProgress();
                 ProcessMd5ScheduleEntry(md5);
             }
-            Logger.WriteInformation($"Processed {totalObjects} daily schedules for {SdMxf.With.Services.Count} stations for average of {totalObjects / SdMxf.With.Services.Count:N1} days per station.");
+            Logger.WriteInformation($"Processed {totalObjects} daily schedules for {mxf.With.Services.Count} stations for average of {totalObjects / mxf.With.Services.Count:N1} days per station.");
             Logger.WriteMessage("Exiting GetAllScheduleEntryMd5s(). SUCCESS.");
             return true;
         }
@@ -69,21 +75,21 @@ namespace epg123.sdJson2mxf
         private static bool GetMd5ScheduleEntries(string[] dates, int start)
         {
             // reject 0 requests
-            if (SdMxf.With.Services.Count - start < 1) return true;
+            if (mxf.With.Services.Count - start < 1) return true;
 
             // build request for station schedules
-            var requests = new ScheduleRequest[Math.Min(SdMxf.With.Services.Count - start, MaxQueries / dates.Length)];
+            var requests = new ScheduleRequest[Math.Min(mxf.With.Services.Count - start, MaxQueries / dates.Length)];
             for (var i = 0; i < requests.Length; ++i)
             {
                 requests[i] = new ScheduleRequest()
                 {
-                    StationId = SdMxf.With.Services[start + i].StationId,
+                    StationId = mxf.With.Services[start + i].StationId,
                     Date = dates
                 };
             }
 
             // request schedule md5s from Schedules Direct
-            var stationResponses = SdApi.GetScheduleMd5s(requests);
+            var stationResponses = api.GetScheduleMd5s(requests);
             if (stationResponses == null) return false;
 
             // build request of daily schedules not downloaded yet
@@ -91,7 +97,7 @@ namespace epg123.sdJson2mxf
             foreach (var request in requests)
             {
                 var requestErrors = new Dictionary<int, string>();
-                var mxfService = SdMxf.GetService(request.StationId);
+                var mxfService = mxf.FindOrCreateService(request.StationId);
                 if (stationResponses.TryGetValue(request.StationId, out var stationResponse))
                 {
                     // if the station return is empty, go to next station
@@ -117,16 +123,6 @@ namespace epg123.sdJson2mxf
                     {
                         if (stationResponse.TryGetValue(day, out var dayResponse) && (dayResponse.Code == 0) && !string.IsNullOrEmpty(dayResponse.Md5))
                         {
-                            var filepath = $"{Helper.Epg123CacheFolder}\\{SafeFilename(dayResponse.Md5)}";
-                            var file = new FileInfo(filepath);
-                            if (file.Exists && (file.Length > 0) && !epgCache.JsonFiles.ContainsKey(dayResponse.Md5))
-                            {
-                                using (var reader = File.OpenText(filepath))
-                                {
-                                    epgCache.AddAsset(dayResponse.Md5, reader.ReadToEnd());
-                                }
-                            }
-
                             if (epgCache.JsonFiles.ContainsKey(dayResponse.Md5))
                             {
                                 ++processedObjects; ReportProgress();
@@ -194,7 +190,7 @@ namespace epg123.sdJson2mxf
             if (newRequests.Count > 0)
             {
                 // request daily schedules from Schedules Direct
-                var responses = SdApi.GetScheduleListings(newRequests.ToArray());
+                var responses = api.GetScheduleListings(newRequests.ToArray());
                 if (responses == null) return false;
 
                 // process the responses
@@ -269,12 +265,12 @@ namespace epg123.sdJson2mxf
             }
             catch (Exception ex)
             {
-                Logger.WriteError("Error occurred when trying to read Md5Schedule file in cache directory. Message: " + ex.Message);
+                Logger.WriteError("Error occurred when trying to read Md5Schedule file in cache directory. Message: " + ex);
                 return;
             }
 
             // determine which service entry applies to
-            var mxfService = SdMxf.GetService(schedule.StationId);
+            var mxfService = mxf.FindOrCreateService(schedule.StationId);
 
             // process each program schedule entry
             foreach (var scheduleProgram in schedule.Programs)
@@ -283,10 +279,9 @@ namespace epg123.sdJson2mxf
                 if (scheduleProgram.AirDateTime + TimeSpan.FromSeconds(scheduleProgram.Duration) < DateTime.UtcNow) continue;
 
                 // prepopulate some of the program
-                var mxfProgram = SdMxf.GetProgram(scheduleProgram.ProgramId);
+                var mxfProgram = mxf.FindOrCreateProgram(scheduleProgram.ProgramId);
                 if (mxfProgram.extras.Count == 0)
                 {
-                    mxfProgram.ProgramId = scheduleProgram.ProgramId;
                     mxfProgram.UidOverride = $"{scheduleProgram.ProgramId.Substring(0, 10)}_{scheduleProgram.ProgramId.Substring(10)}";
                     mxfProgram.extras.Add("md5", scheduleProgram.Md5);
                     if (scheduleProgram.Multipart?.PartNumber > 0)

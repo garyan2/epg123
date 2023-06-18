@@ -75,14 +75,15 @@ namespace epg123Client
             // 
             this.label1.Location = new System.Drawing.Point(268, 12);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(230, 33);
+            this.label1.Size = new System.Drawing.Size(230, 71);
             this.label1.TabIndex = 1;
-            this.label1.Text = "Double-click the EPG123 Server on the left to import the MXF file from using HTTP" +
-    ".";
+            this.label1.Text = "Double-click the EPG123 Server on the left to import the MXF file using HTTP.\r\n\r\n" +
+    "If you don\'t see your desired server, make sure it is running and click \'Refresh" +
+    "\' below.";
             // 
             // label2
             // 
-            this.label2.Location = new System.Drawing.Point(268, 121);
+            this.label2.Location = new System.Drawing.Point(268, 148);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(230, 36);
             this.label2.TabIndex = 2;
@@ -90,7 +91,7 @@ namespace epg123Client
             // 
             // btnRefresh
             // 
-            this.btnRefresh.Location = new System.Drawing.Point(271, 48);
+            this.btnRefresh.Location = new System.Drawing.Point(268, 86);
             this.btnRefresh.Name = "btnRefresh";
             this.btnRefresh.Size = new System.Drawing.Size(75, 23);
             this.btnRefresh.TabIndex = 3;
@@ -100,7 +101,7 @@ namespace epg123Client
             // 
             // btnSearch
             // 
-            this.btnSearch.Location = new System.Drawing.Point(271, 160);
+            this.btnSearch.Location = new System.Drawing.Point(271, 187);
             this.btnSearch.Name = "btnSearch";
             this.btnSearch.Size = new System.Drawing.Size(75, 23);
             this.btnSearch.TabIndex = 4;
@@ -133,6 +134,7 @@ namespace epg123Client
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.listView1);
+            this.Cursor = System.Windows.Forms.Cursors.WaitCursor;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "frmRemoteServers";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;

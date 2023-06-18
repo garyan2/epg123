@@ -1,4 +1,7 @@
-﻿using System;
+﻿using epgTray.Properties;
+using GaRyan2.Utilities;
+using Microsoft.Win32;
+using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -8,9 +11,6 @@ using System.Security.AccessControl;
 using System.Security.Principal;
 using System.Threading;
 using System.Windows.Forms;
-using epg123;
-using epgTray.Properties;
-using Microsoft.Win32;
 using Timer = System.Threading.Timer;
 
 namespace epgTray
@@ -37,10 +37,6 @@ namespace epgTray
 
         public trayApplication()
         {
-            // set the base path and the working directory
-            Helper.ExecutablePath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            if (!string.IsNullOrEmpty(Helper.ExecutablePath)) Directory.SetCurrentDirectory(Helper.ExecutablePath);
-
             Application.ApplicationExit += OnApplicationExit;
             InitializeComponent();
 
@@ -112,7 +108,7 @@ namespace epgTray
             // 
             _openConfigMenuItem.Name = "_openConfigMenuItem";
             _openConfigMenuItem.Text = "Open Configuration GUI";
-            _openConfigMenuItem.Enabled = File.Exists(Helper.Epg123ExePath);
+            _openConfigMenuItem.Enabled = File.Exists(Helper.Epg123GuiPath);
             _openConfigMenuItem.Click += OpenFileMenuItem_Click;
             //
             // OpenTransferToolMenuItem
@@ -330,7 +326,7 @@ namespace epgTray
             switch (menuItem.Name)
             {
                 case "_openConfigMenuItem":
-                    filePath = Helper.Epg123ExePath;
+                    filePath = Helper.Epg123GuiPath;
                     break;
                 case "_openClientMenuItem":
                     filePath = Helper.Epg123ClientExePath;
@@ -352,7 +348,7 @@ namespace epgTray
 
         private void RunUpdateMenuItem_Click(object sender, EventArgs e)
         {
-            var nogcFile = File.Create($"{Helper.Epg123ProgramDataFolder}\\nogc.txt");
+            var nogcFile = File.Create($"{Helper.Epg123ProgramDataFolder}nogc.txt");
             nogcFile.Close();
 
             var startInfo = new ProcessStartInfo

@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
-using epg123;
 
 namespace epg123Transfer
 {
@@ -72,7 +71,6 @@ namespace epg123Transfer
         [STAThread]
         private static void Main(string[] args)
         {
-            EstablishFileFolderPaths();
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
@@ -90,13 +88,6 @@ namespace epg123Transfer
             {
                 // ignored
             }
-        }
-
-        private static void EstablishFileFolderPaths()
-        {
-            // set the base path and the working directory
-            Helper.ExecutablePath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            Directory.SetCurrentDirectory(Helper.ExecutablePath);
         }
     }
 }

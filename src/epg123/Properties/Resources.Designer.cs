@@ -59,44 +59,5 @@ namespace epg123.Properties {
                 resourceCulture = value;
             }
         }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
-        /// </summary>
-        internal static System.Drawing.Icon EPG1231 {
-            get {
-                object obj = ResourceManager.GetObject("EPG1231", resourceCulture);
-                return ((System.Drawing.Icon)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
-        /// </summary>
-        internal static System.Drawing.Icon GreenLight {
-            get {
-                object obj = ResourceManager.GetObject("GreenLight", resourceCulture);
-                return ((System.Drawing.Icon)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
-        /// </summary>
-        internal static System.Drawing.Icon RedLight {
-            get {
-                object obj = ResourceManager.GetObject("RedLight", resourceCulture);
-                return ((System.Drawing.Icon)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to 05c57e15f625338ad1c5aa8a2899e589.
-        /// </summary>
-        internal static string tmdbAPIKey {
-            get {
-                return ResourceManager.GetString("tmdbAPIKey", resourceCulture);
-            }
-        }
     }
 }

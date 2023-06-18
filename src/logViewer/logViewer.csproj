@@ -55,7 +55,6 @@
     <Compile Include="frmViewer.Designer.cs">
       <DependentUpon>frmViewer.cs</DependentUpon>
     </Compile>
-    <Compile Include="Helper.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="frmViewer.resx">
@@ -85,8 +84,13 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="EPG123.ico" />
     <Content Include="LogViewer.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\GaRyan2.Utilities\GaRyan2.Utilities.csproj">
+      <Project>{ccd05d81-0df1-45ff-9931-a50369526225}</Project>
+      <Name>GaRyan2.Utilities</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

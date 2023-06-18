@@ -1,32 +1,35 @@
-﻿using System;
+﻿using GaRyan2.SchedulesDirectAPI;
+using GaRyan2.Utilities;
+using Newtonsoft.Json;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using epg123.SchedulesDirect;
-using Newtonsoft.Json;
+using api = GaRyan2.SchedulesDirect;
 
 namespace epg123.sdJson2mxf
 {
     internal static partial class sdJson2Mxf
     {
-        private static List<string> seriesDescriptionQueue = new List<string>();
-        private static ConcurrentDictionary<string, GenericDescription> seriesDescriptionResponses = new ConcurrentDictionary<string, GenericDescription>();
+        private static List<string> seriesDescriptionQueue;
+        private static ConcurrentDictionary<string, GenericDescription> seriesDescriptionResponses;
 
         private static bool BuildAllGenericSeriesInfoDescriptions()
         {
             // reset counters
-            processedObjects = 0;
-            Logger.WriteMessage($"Entering BuildAllGenericSeriesInfoDescriptions() for {totalObjects = SdMxf.With.SeriesInfos.Count} series.");
-            ++processStage; ReportProgress();
+            seriesDescriptionQueue = new List<string>();
+            seriesDescriptionResponses = new ConcurrentDictionary<string, GenericDescription>();
+            IncrementNextStage(mxf.SeriesInfosToProcess.Count);
+            Logger.WriteMessage($"Entering BuildAllGenericSeriesInfoDescriptions() for {totalObjects} series.");
 
             // fill mxf programs with cached values and queue the rest
-            foreach (var series in SdMxf.With.SeriesInfos)
+            foreach (var series in mxf.SeriesInfosToProcess)
             {
                 // sports events will not have a generic description
                 if (series.SeriesId.StartsWith("SP"))
                 {
-                    ++processedObjects; ReportProgress();
+                    IncrementProgress();
                     continue;
                 }
 
@@ -50,7 +53,7 @@ namespace epg123.sdJson2mxf
                                 }
                             }
                         }
-                        ++processedObjects; ReportProgress();
+                        IncrementProgress();
                     }
                     catch
                     {
@@ -61,13 +64,13 @@ namespace epg123.sdJson2mxf
                         }
                         else
                         {
-                            ++processedObjects; ReportProgress();
+                            IncrementProgress();
                         }
                     }
                 }
                 else if (!int.TryParse(series.SeriesId, out var dummy) || series.ProtoTypicalProgram.StartsWith("SH"))
                 {
-                    ++processedObjects; ReportProgress();
+                    IncrementProgress();
                 }
                 else
                 {
@@ -88,7 +91,7 @@ namespace epg123.sdJson2mxf
                 ProcessSeriesDescriptionsResponses();
                 if (processedObjects != totalObjects)
                 {
-                    Logger.WriteInformation($"Failed to download and process {SdMxf.With.SeriesInfos.Count - processedObjects} series descriptions.");
+                    Logger.WriteInformation($"Failed to download and process {mxf.SeriesInfosToProcess.Count - processedObjects} series descriptions.");
                 }
             }
             Logger.WriteMessage("Exiting BuildAllGenericSeriesInfoDescriptions(). SUCCESS.");
@@ -109,7 +112,7 @@ namespace epg123.sdJson2mxf
             }
 
             // request descriptions from Schedules Direct
-            var responses = SdApi.GetGenericDescriptions(series);
+            var responses = api.GetGenericDescriptions(series);
             if (responses != null)
             {
                 Parallel.ForEach(responses, (response) =>
@@ -124,13 +127,13 @@ namespace epg123.sdJson2mxf
             // process request response
             foreach (var response in seriesDescriptionResponses)
             {
-                ++processedObjects; ReportProgress();
+                IncrementProgress();
 
                 var seriesId = response.Key;
                 var description = response.Value;
 
                 // determine which seriesInfo this belongs to
-                var mxfSeriesInfo = SdMxf.GetSeriesInfo(seriesId.Substring(2, 8));
+                var mxfSeriesInfo = mxf.FindOrCreateSeriesInfo(seriesId.Substring(2, 8));
 
                 // populate descriptions
                 mxfSeriesInfo.ShortDescription = description.Description100;
@@ -156,12 +159,11 @@ namespace epg123.sdJson2mxf
         private static bool BuildAllExtendedSeriesDataForUiPlus()
         {
             // reset counters
-            processedObjects = 0;
-            ++processStage; ReportProgress();
+            IncrementNextStage(mxf.With.SeriesInfos.Count);
             seriesDescriptionQueue = new List<string>();
 
             if (!config.ModernMediaUiPlusSupport) return true;
-            Logger.WriteMessage($"Entering BuildAllExtendedSeriesDataForUiPlus() for {totalObjects = SdMxf.With.SeriesInfos.Count} series.");
+            Logger.WriteMessage($"Entering BuildAllExtendedSeriesDataForUiPlus() for {totalObjects} series.");
 
             // read in cached ui+ extended information
             var oldPrograms = new Dictionary<string, ModernMediaUiPlusPrograms>();
@@ -174,12 +176,12 @@ namespace epg123.sdJson2mxf
             }
 
             // fill mxf programs with cached values and queue the rest
-            foreach (var series in SdMxf.With.SeriesInfos)
+            foreach (var series in mxf.With.SeriesInfos)
             {
                 // sports events will not have a generic description
                 if (!series.SeriesId.StartsWith("SH"))
                 {
-                    ++processedObjects; ReportProgress();
+                    IncrementProgress();
                     continue;
                 }
 
@@ -188,7 +190,7 @@ namespace epg123.sdJson2mxf
                 // generic series information already in support file array
                 if (ModernMediaUiPlus.Programs.ContainsKey(seriesId))
                 {
-                    ++processedObjects; ReportProgress();
+                    IncrementProgress();
                     if (ModernMediaUiPlus.Programs.TryGetValue(seriesId, out var program) && program.OriginalAirDate != null)
                     {
                         UpdateSeriesAirdate(seriesId, program.OriginalAirDate);
@@ -199,7 +201,7 @@ namespace epg123.sdJson2mxf
                 // extended information in current json file
                 if (oldPrograms.ContainsKey(seriesId))
                 {
-                    ++processedObjects; ReportProgress();
+                    IncrementProgress();
                     if (oldPrograms.TryGetValue(seriesId, out var program) && !string.IsNullOrEmpty(program.OriginalAirDate))
                     {
                         ModernMediaUiPlus.Programs.Add(seriesId, program);
@@ -219,11 +221,12 @@ namespace epg123.sdJson2mxf
                 for (var i = 0; i < seriesDescriptionQueue.Count; i += MaxQueries)
                 {
                     if (GetExtendedSeriesDataForUiPlus(i)) continue;
-                    Logger.WriteInformation($"Failed to download and process {SdMxf.With.SeriesInfos.Count - processedObjects} extended series descriptions.");
+                    Logger.WriteInformation($"Failed to download and process {mxf.With.SeriesInfos.Count - processedObjects} extended series descriptions.");
                     return true;
                 }
             }
             Logger.WriteMessage("Exiting BuildAllExtendedSeriesDataForUiPlus(). SUCCESS.");
+            seriesDescriptionQueue = null; seriesDescriptionResponses = null;
             return true;
         }
         private static bool GetExtendedSeriesDataForUiPlus(int start = 0)
@@ -236,7 +239,7 @@ namespace epg123.sdJson2mxf
             }
 
             // request programs from Schedules Direct
-            var responses = SdApi.GetPrograms(programs);
+            var responses = api.GetPrograms(programs);
             if (responses == null) return false;
 
             // process request response
@@ -248,7 +251,7 @@ namespace epg123.sdJson2mxf
                     Logger.WriteInformation($"Did not receive data for program {programs[idx++]}.");
                     continue;
                 }
-                ++idx; ++processedObjects; ReportProgress();
+                ++idx; IncrementProgress();
 
                 // add the series extended data to the file if not already present from program builds
                 if (!ModernMediaUiPlus.Programs.ContainsKey(response.ProgramId))
@@ -268,7 +271,7 @@ namespace epg123.sdJson2mxf
         private static void UpdateSeriesAirdate(string seriesId, DateTime airdate)
         {
             // write the mxf entry
-            SdMxf.GetSeriesInfo(seriesId.Substring(2, 8)).StartAirdate = airdate.ToString("yyyy-MM-dd");
+            mxf.FindOrCreateSeriesInfo(seriesId.Substring(2, 8)).StartAirdate = airdate.ToString("yyyy-MM-dd");
 
             // update cache if needed
             try

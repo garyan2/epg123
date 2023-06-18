@@ -1,13 +1,15 @@
-﻿using System;
+﻿using GaRyan2.MxfXml;
+using GaRyan2.SchedulesDirectAPI;
+using GaRyan2.Utilities;
+using Newtonsoft.Json;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using epg123.MxfXml;
-using epg123.SchedulesDirect;
-using Newtonsoft.Json;
+using api = GaRyan2.SchedulesDirect;
 
 namespace epg123.sdJson2mxf
 {
@@ -30,13 +32,13 @@ namespace epg123.sdJson2mxf
             // reset counters
             imageQueue = new List<string>();
             imageResponses = new ConcurrentBag<ProgramMetadata>();
-            processedObjects = 0;
-            Logger.WriteMessage($"Entering GetAllSeriesImages() for {totalObjects = SdMxf.With.SeriesInfos.Count} series.");
-            ++processStage; ReportProgress();
+            IncrementNextStage(mxf.SeriesInfosToProcess.Count);
+            if (Helper.Standalone) return true;
+            Logger.WriteMessage($"Entering GetAllSeriesImages() for {totalObjects} series.");
             var refreshing = 0;
 
             // scan through each series in the mxf
-            foreach (var series in SdMxf.With.SeriesInfos)
+            foreach (var series in mxf.SeriesInfosToProcess)
             {
                 string seriesId;
 
@@ -45,7 +47,7 @@ namespace epg123.sdJson2mxf
                 var refresh = false;
                 if (int.TryParse(series.SeriesId, out var digits))
                 {
-                    refresh = digits * config.ExpectedServicecount % DateTime.DaysInMonth(DateTime.Now.Year, DateTime.Now.Month) == DateTime.Now.Day + 1;
+                    refresh = digits * config.ExpectedServicecount % DateTime.DaysInMonth(DateTime.Now.Year, DateTime.Now.Month) + 1 == DateTime.Now.Day;
                     seriesId = $"SH{series.SeriesId}0000";
                 }
                 else
@@ -55,7 +57,7 @@ namespace epg123.sdJson2mxf
 
                 if (!refresh && epgCache.JsonFiles.ContainsKey(seriesId) && !string.IsNullOrEmpty(epgCache.JsonFiles[seriesId].Images))
                 {
-                    ++processedObjects; ReportProgress();
+                    IncrementProgress();
                     if (epgCache.JsonFiles[seriesId].Images == string.Empty) continue;
 
                     List<ProgramArtwork> artwork;
@@ -85,8 +87,6 @@ namespace epg123.sdJson2mxf
             {
                 Logger.WriteVerbose($"Refreshing {refreshing} series image links.");
             }
-            totalObjects = processedObjects + imageQueue.Count;
-            ReportProgress();
 
             // maximum 500 queries at a time
             if (imageQueue.Count > 0)
@@ -99,7 +99,7 @@ namespace epg123.sdJson2mxf
                 ProcessSeriesImageResponses();
                 if (processedObjects != totalObjects)
                 {
-                    Logger.WriteInformation($"Failed to download and process {SdMxf.With.SeriesInfos.Count - processedObjects} series image links.");
+                    Logger.WriteInformation($"Failed to download and process {mxf.SeriesInfosToProcess.Count - processedObjects} series image links.");
                 }
             }
             Logger.WriteMessage("Exiting GetAllSeriesImages(). SUCCESS.");
@@ -120,7 +120,7 @@ namespace epg123.sdJson2mxf
             }
 
             // request images from Schedules Direct
-            var responses = SdApi.GetArtwork(series);
+            var responses = api.GetArtwork(series);
             if (responses != null)
             {
                 Parallel.ForEach(responses, (response) =>
@@ -135,7 +135,7 @@ namespace epg123.sdJson2mxf
             // process request response
             foreach (var response in imageResponses)
             {
-                ++processedObjects; ReportProgress();
+                IncrementProgress();
                 var uid = response.ProgramId;
 
                 if (response.Data == null || response.Code != 0) continue;
@@ -145,13 +145,13 @@ namespace epg123.sdJson2mxf
                     foreach (var key in sportsSeries.AllKeys)
                     {
                         if (!sportsSeries.Get(key).Contains(response.ProgramId)) continue;
-                        series = SdMxf.GetSeriesInfo(key);
+                        series = mxf.FindOrCreateSeriesInfo(key);
                         uid = key;
                     }
                 }
                 else
                 {
-                    series = SdMxf.GetSeriesInfo(response.ProgramId.Substring(2, 8));
+                    series = mxf.FindOrCreateSeriesInfo(response.ProgramId.Substring(2, 8));
                 }
                 if (series == null || !string.IsNullOrEmpty(series.GuideImage) || series.extras.ContainsKey("artwork")) continue;
 
@@ -180,7 +180,7 @@ namespace epg123.sdJson2mxf
                 aspects.Add(image.Aspect);
                 if (!image.Uri.ToLower().StartsWith("http"))
                 {
-                    image.Uri = $"{SdApi.JsonBaseUrl.Replace("ipv4.", "")}{SdApi.JsonApi}image/{image.Uri.ToLower()}";
+                    image.Uri = $"{api.BaseArtworkAddress}image/{image.Uri.ToLower()}";
                 }
             }
 
@@ -284,7 +284,7 @@ namespace epg123.sdJson2mxf
             {
                 image = artwork.SingleOrDefault(arg => arg.Aspect.ToLower().Equals("4x3"));
             }
-            return image != null ? SdMxf.GetGuideImage(Helper.Standalone ? image.Uri : image.Uri.Replace($"{SdApi.JsonBaseUrl.Replace("ipv4.", "")}{SdApi.JsonApi}", $"http://{HostAddress}:{Helper.TcpPort}/")) : null;
+            return image != null ? mxf.FindOrCreateGuideImage(Helper.Standalone ? image.Uri : image.Uri.Replace($"{api.BaseArtworkAddress}", $"http://{HostAddress}:{Helper.TcpUdpPort}/")) : null;
         }
     }
 }

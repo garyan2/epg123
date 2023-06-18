@@ -1,4 +1,7 @@
-﻿using System;
+﻿using GaRyan2.Utilities;
+using GaRyan2.WmcUtilities;
+using Microsoft.Win32;
+using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -6,12 +9,10 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Xml.Linq;
 using System.Windows.Forms;
-using Microsoft.Win32;
-using epg123Client;
+using System.Xml.Linq;
 
-namespace epg123
+namespace epg123Client
 {
     public partial class frmWmcTweak : Form
     {
@@ -1171,9 +1172,7 @@ namespace epg123
             }
             catch (Exception ex)
             {
-                Logger.WriteError(ex.Message);
-                if (ex.InnerException != null) Logger.WriteError(ex.InnerException.Message);
-                Logger.WriteError(ex.StackTrace);
+                Logger.WriteError($"{ex}");
             }
         }
 
@@ -1284,7 +1283,7 @@ namespace epg123
             // populate xdocuments with default files
             for (var i = 0; i < (int) shellresource.MAX; ++i)
             {
-                _shellDllResources[i] = GetFileResource("epg123Client." + ((shellresource) i).ToString().Replace("_", "."));
+                _shellDllResources[i] = GetFileResource("epg123Client.WmcTweak." + ((shellresource) i).ToString().Replace("_", "."));
             }
 
             // update xdocuments
@@ -1360,7 +1359,7 @@ namespace epg123
             // activate the wait cursor for the tweak form
             UseWaitCursor = true;
 
-            if (WmcUtilities.SetWmcTunerLimits(TunerLimit))
+            if (WmcStore.SetWmcTunerLimits(TunerLimit))
             {
                 MessageBox.Show("The tuner limit increase has been successfully applied.", "Tuner Limit Tweak", MessageBoxButtons.OK);
             }

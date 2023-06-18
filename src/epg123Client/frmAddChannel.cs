@@ -1,12 +1,13 @@
-﻿using System;
+﻿using GaRyan2.Utilities;
+using GaRyan2.WmcUtilities;
+using Microsoft.MediaCenter.Guide;
+using Microsoft.MediaCenter.TV.Tuning;
+using Microsoft.Win32;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using epg123;
-using Microsoft.MediaCenter.Guide;
-using Microsoft.MediaCenter.TV.Tuning;
-using Microsoft.Win32;
 
 namespace epg123Client
 {

@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Windows.Forms;
-using epg123;
+using GaRyan2.Utilities;
+using GaRyan2.WmcUtilities;
 
 namespace epg123Client
 {
@@ -15,14 +16,14 @@ namespace epg123Client
             InitializeComponent();
             notify = notifyComplete;
 
-            WmcUtilities.BackgroundWorker = backgroundWorker1;
+            WmcStore.BackgroundWorker = backgroundWorker1;
             backgroundWorker1.WorkerReportsProgress = true;
             backgroundWorker1.RunWorkerAsync(filepath);
         }
 
         private void backgroundWorker_DoWork(object sender, DoWorkEventArgs e)
         {
-            Success = WmcUtilities.ImportMxfFile((string)e.Argument);
+            Success = WmcStore.ImportMxfFile((string)e.Argument);
         }
 
         private void backgroundWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)

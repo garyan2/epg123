@@ -1,44 +1,23 @@
-﻿using System;
+﻿using GaRyan2.Utilities;
+using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Newtonsoft.Json;
 
 namespace epg123
 {
     public static class epgCache
     {
-        public static Dictionary<string, epgJsonCache> JsonFiles = new Dictionary<string, epgJsonCache>();
+        public static Dictionary<string, epgJsonCache> JsonFiles;
         private static bool isDirty;
-        private const string CacheFileUri = "/epg123cache.json";
 
         public static void LoadCache()
         {
-            try
+            if ((JsonFiles = Helper.ReadJsonFile(Helper.Epg123CacheJsonPath, typeof(Dictionary<string, epgJsonCache>))) == null)
             {
-                if (File.Exists(Helper.Epg123CompressCachePath))
-                {
-                    using (var reader = new StreamReader(CompressXmlFiles.GetBackupFileStream(CacheFileUri, Helper.Epg123CompressCachePath)))
-                    {
-                        var serializer = new JsonSerializer();
-                        JsonFiles = (Dictionary<string, epgJsonCache>)serializer.Deserialize(reader, typeof(Dictionary<string, epgJsonCache>));
-                    }
-                    CompressXmlFiles.ClosePackage();
-                }
-                else if (File.Exists(Helper.Epg123CacheJsonPath))
-                {
-                    using (var reader = File.OpenText(Helper.Epg123CacheJsonPath))
-                    {
-                        var serializer = new JsonSerializer();
-                        JsonFiles = (Dictionary<string, epgJsonCache>)serializer.Deserialize(reader, typeof(Dictionary<string, epgJsonCache>));
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.WriteInformation("The cache file appears to be corrupted and will need to be rebuilt.");
-                Logger.WriteInformation(ex.Message);
+                JsonFiles = new Dictionary<string, epgJsonCache>();
+                if (File.Exists(Helper.Epg123CacheJsonPath)) Logger.WriteInformation("The cache file appears to be corrupted and will need to be rebuilt.");
             }
         }
 
@@ -46,46 +25,17 @@ namespace epg123
         {
             if (!isDirty || JsonFiles.Count <= 0) return;
             CleanDictionary();
-            try
+            if (!Helper.WriteJsonFile(JsonFiles, Helper.Epg123CacheJsonPath))
             {
-                //if (new ComputerInfo().AvailablePhysicalMemory < (ulong)Math.Pow(1024, 3)) // disable compression of cache file
-                {
-                    using (var writer = File.CreateText(Helper.Epg123CacheJsonPath))
-                    {
-                        var serializer = new JsonSerializer() { NullValueHandling = NullValueHandling.Ignore, Formatting = Formatting.Indented };
-                        serializer.Serialize(writer, JsonFiles);
-                    }
-
-                    Helper.DeleteFile(Helper.Epg123CompressCachePath);
-                }
-                //else
-                //{
-                //    var stream = new MemoryStream();
-                //    using (var swriter = new StreamWriter(stream))
-                //    {
-                //        using (var jwriter = new JsonTextWriter(swriter))
-                //        {
-                //            var serializer = new JsonSerializer() { NullValueHandling = NullValueHandling.Ignore, Formatting = Formatting.Indented };
-                //            serializer.Serialize(jwriter, JsonFiles);
-                //            swriter.Flush();
-                //            stream.Seek(0, SeekOrigin.Begin);
-
-                //            CompressXmlFiles.CompressSingleStreamToFile(stream, cacheFileUri, Helper.Epg123CompressCachePath);
-                //        }
-                //    }
-                //    if (File.Exists(Helper.Epg123CacheJsonPath))
-                //    {
-                //        File.Delete(Helper.Epg123CacheJsonPath);
-                //    }
-                //}
-            }
-            catch (Exception ex)
-            {
-                Logger.WriteInformation("Failed to write cache file to the cache folder. Message: " + ex.Message);
                 Logger.WriteInformation("Deleting cache file to be rebuilt on next update.");
-                Helper.DeleteFile(Helper.Epg123CompressCachePath);
                 Helper.DeleteFile(Helper.Epg123CacheJsonPath);
             }
+            CloseCache();
+        }
+
+        public static void CloseCache()
+        {
+            JsonFiles.Clear();
         }
 
         public static string GetAsset(string md5)
@@ -94,15 +44,25 @@ namespace epg123
             return JsonFiles[md5].JsonEntry;
         }
 
-        public static void AddAsset(string md5, string json)
+        private static string CleanJsonText(string json)
         {
-            // reduce the size of the string by removing nulls, empty strings, and false booleans
-            if (json != null)
+            if (!string.IsNullOrEmpty(json))
             {
                 json = Regex.Replace(json, "\"\\w+?\":null,?", string.Empty);
                 json = Regex.Replace(json, "\"\\w+?\":\"\",?", string.Empty);
                 json = Regex.Replace(json, "\"\\w+?\":false,?", string.Empty);
+                json = Regex.Replace(json, ",}", "}");
+                json = Regex.Replace(json, ",]", "]");
             }
+            return json;
+        }
+
+        public static void AddAsset(string md5, string json)
+        {
+            if (JsonFiles.ContainsKey(md5)) return;
+
+            // reduce the size of the string by removing nulls, empty strings, and false booleans
+            json = CleanJsonText(json);
 
             // store
             var epgJson = new epgJsonCache()
@@ -122,8 +82,7 @@ namespace epg123
             }
 
             // reduce the size of the string by removing nulls and empty strings
-            json = Regex.Replace(json, "\"\\w+?\":null,?", string.Empty);
-            json = Regex.Replace(json, "\"\\w+?\":\"\",?", string.Empty);
+            json = CleanJsonText(json);
 
             // store
             JsonFiles[md5].Images = json;
@@ -138,8 +97,7 @@ namespace epg123
             }
 
             // reduce the size of the string by removing nulls and empty strings
-            json = Regex.Replace(json, "\"\\w+?\":null,?", string.Empty);
-            json = Regex.Replace(json, "\"\\w+?\":\"\",?", string.Empty);
+            json = CleanJsonText(json);
 
             // store
             JsonFiles[md5].JsonEntry = json;

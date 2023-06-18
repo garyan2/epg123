@@ -1,22 +1,24 @@
-﻿using System;
+﻿using GaRyan2.MxfXml;
+using GaRyan2.SchedulesDirectAPI;
+using GaRyan2.Utilities;
+using GaRyan2.XmltvXml;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using epg123.MxfXml;
-using epg123.SchedulesDirect;
-using epg123.XmltvXml;
+using api = GaRyan2.SchedulesDirect;
 
 namespace epg123.sdJson2mxf
 {
     internal static partial class sdJson2Mxf
     {
-        private static xmltv xmltv;
+        private static XMLTV xmltv;
 
         private static bool CreateXmltvFile()
         {
             try
             {
-                xmltv = new xmltv
+                xmltv = new XMLTV
                 {
                     Date = DateTime.UtcNow.ToString(CultureInfo.InvariantCulture),
                     SourceInfoUrl = "http://schedulesdirect.org",
@@ -27,21 +29,18 @@ namespace epg123.sdJson2mxf
                     Programs = new List<XmltvProgramme>()
                 };
 
-                foreach (var service in SdMxf.With.Services)
+                foreach (var service in mxf.With.Services)
                 {
-                    if (service.StationId == "DUMMY" && !config.XmltvAddFillerData) continue;
+                    if (service.StationId == "DUMMY") continue;
                     xmltv.Channels.Add(BuildXmltvChannel(service));
 
                     if (service.MxfScheduleEntries.ScheduleEntry.Count == 0 && config.XmltvAddFillerData)
                     {
                         // add a program specific for this service
-                        var program = new MxfProgram
-                        {
-                            Description = config.XmltvFillerProgramDescription,
-                            IsGeneric = true,
-                            Title = service.Name,
-                            ProgramId = $"EPG123FILL{service.StationId}"
-                        };
+                        var program = mxf.FindOrCreateProgram($"EPG123FILL{service.StationId}");
+                        program.Title = service.Name;
+                        program.Description = config.XmltvFillerProgramDescription;
+                        program.IsGeneric = true;
 
                         // populate the schedule entries
                         var startTime = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, DateTime.UtcNow.Day, 0, 0, 0);
@@ -51,7 +50,7 @@ namespace epg123.sdJson2mxf
                             service.MxfScheduleEntries.ScheduleEntry.Add(new MxfScheduleEntry
                             {
                                 Duration = config.XmltvFillerProgramLength * 60 * 60,
-                                mxfProgram = SdMxf.GetProgram(program.ProgramId, program),
+                                mxfProgram = program,
                                 StartTime = startTime,
                                 IsRepeat = true
                             });
@@ -68,7 +67,7 @@ namespace epg123.sdJson2mxf
             }
             catch (Exception ex)
             {
-                Logger.WriteInformation("Failed to create the XMLTV file. Message : " + ex.Message);
+                Logger.WriteInformation("Failed to create the XMLTV file. Message : " + ex);
             }
             return false;
         }
@@ -96,7 +95,7 @@ namespace epg123.sdJson2mxf
             if (config.XmltvIncludeChannelNumbers)
             {
                 var numbers = new HashSet<string>();
-                foreach (var mxfLineup in SdMxf.With.Lineups)
+                foreach (var mxfLineup in mxf.With.Lineups)
                 {
                     foreach (var mxfChannel in mxfLineup.channels)
                     {
@@ -288,11 +287,11 @@ namespace epg123.sdJson2mxf
         }
         private static List<string> MxfPersonRankToXmltvCrew(List<MxfPersonRank> mxfPersons)
         {
-            return mxfPersons?.Select(person => person.mxfPerson.Name).ToList();
+            return mxfPersons?.Select(person => person.Name).ToList();
         }
         private static List<XmltvActor> MxfPersonRankToXmltvActors(List<MxfPersonRank> mxfPersons)
         {
-            return mxfPersons?.Select(person => new XmltvActor {Actor = person.mxfPerson.Name, Role = person.Character }).ToList();
+            return mxfPersons?.Select(person => new XmltvActor {Actor = person.Name, Role = person.Character }).ToList();
         }
 
         // Date
@@ -309,7 +308,7 @@ namespace epg123.sdJson2mxf
             var categories = new HashSet<string>();
             foreach (var keywordId in mxfProgram.Keywords.Split(','))
             {
-                foreach (var keyword in SdMxf.With.Keywords.Where(keyword => !keyword.Word.ToLower().Contains("premiere")).Where(keyword => keyword.Id == keywordId))
+                foreach (var keyword in mxf.With.Keywords.Where(keyword => !keyword.Word.ToLower().Contains("premiere")).Where(keyword => keyword.Id == keywordId))
                 {
                     if (keyword.Word.Equals("Uncategorized")) continue;
                     categories.Add(keyword.Word.Equals("Movies") ? "Movie" : keyword.Word);
@@ -361,7 +360,7 @@ namespace epg123.sdJson2mxf
                 artwork = mxfProgram.mxfSeriesInfo.extras["artwork"];
             }
 
-            return artwork.Count == 0 ? null : artwork.Select(image => new XmltvIcon { Src = Helper.Standalone ? image.Uri : $"{image.Uri.Replace($"{SdApi.JsonBaseUrl.Replace("ipv4.", "")}{SdApi.JsonApi}", $"http://{HostAddress}:{Helper.TcpPort}/")}", Height = image.Height, Width = image.Width }).ToList();
+            return artwork.Count == 0 ? null : artwork.Select(image => new XmltvIcon { Src = Helper.Standalone ? image.Uri : $"{image.Uri.Replace($"{api.BaseArtworkAddress}", $"http://{HostAddress}:{Helper.TcpUdpPort}/")}", Height = image.Height, Width = image.Width }).ToList();
         }
 
         private static XmltvText GrabSportEvent(MxfProgram program)
@@ -422,7 +421,7 @@ namespace epg123.sdJson2mxf
             }
             if (mxfProgram.Series == null) return list;
 
-            var mxfSeriesInfo = SdMxf.With.SeriesInfos[int.Parse(mxfProgram.Series.Substring(2)) - 1];
+            var mxfSeriesInfo = mxf.With.SeriesInfos[int.Parse(mxfProgram.Series.Substring(2)) - 1];
             if (mxfSeriesInfo.extras.ContainsKey("tvdb"))
             {
                 list.Add(new XmltvEpisodeNum { System = "thetvdb.com", Text = $"series/{mxfSeriesInfo.extras["tvdb"]}" });

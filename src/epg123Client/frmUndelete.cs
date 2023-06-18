@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using System.Windows.Forms;
 using Microsoft.MediaCenter.Guide;
-using epg123;
+using GaRyan2.Utilities;
+using GaRyan2.WmcUtilities;
 
 namespace epg123Client
 {
@@ -160,7 +161,7 @@ namespace epg123Client
                 }
                 catch (Exception ex)
                 {
-                    Logger.WriteInformation(ex.Message);
+                    Logger.WriteInformation($"{ex}");
                 }
             }
             ChannelAdded = true;

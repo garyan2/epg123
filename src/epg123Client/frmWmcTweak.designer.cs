@@ -1,4 +1,4 @@
-﻿namespace epg123
+﻿namespace epg123Client
 {
     partial class frmWmcTweak
     {

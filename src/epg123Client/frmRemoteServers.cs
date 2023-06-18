@@ -1,14 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using GaRyan2.Utilities;
+using System;
 using System.Linq;
-using System.Net;
-using System.Net.NetworkInformation;
-using System.Net.Sockets;
-using System.ServiceProcess;
-using System.Text;
 using System.Windows.Forms;
-using epg123;
 
 namespace epg123Client
 {
@@ -25,90 +18,38 @@ namespace epg123Client
             listView1.SmallImageList = listView1.LargeImageList = imageList;
             imageList.Images.Add(resImages.EPG123OKDark);
             imageList.ImageSize = new System.Drawing.Size(32, 32);
-        }
-
-        private List<string> GetEpg123Servers()
-        {
-            var responses = new List<string>();
-            var request = "EPG123ServerDiscovery";
-            var RequestData = Encoding.ASCII.GetBytes(request);
-
-            // need to verify server is not running
-            if (ServiceController.GetServices().Any(arg => arg.ServiceName.Equals("epg123Server")))
-            {
-                var sc = new ServiceController
-                {
-                    ServiceName = "epg123Server"
-                };
-                if (sc.Status == ServiceControllerStatus.Running)
-                {
-                    serviceRunning = true;
-                    Process.Start(new ProcessStartInfo
-                    {
-                        FileName = "net.exe",
-                        Arguments = "stop epg123Server",
-                        Verb = "runas"
-                    })?.WaitForExit();
-                }
-            }
-
-            foreach (var adapter in NetworkInterface.GetAllNetworkInterfaces().Where(arg => arg.SupportsMulticast && arg.OperationalStatus == OperationalStatus.Up))
-            {
-                foreach (var ip in adapter.GetIPProperties().UnicastAddresses.Where(arg => arg.Address.AddressFamily == AddressFamily.InterNetwork))
-                {
-                    var serverEP = new IPEndPoint(IPAddress.Broadcast, Helper.UdpPort);
-                    var clientEP = new IPEndPoint(ip.Address, Helper.UdpPort);
-
-                    var socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-                    socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Broadcast, 1);
-                    socket.ReceiveTimeout = 200;
-                    socket.Bind(clientEP);
-                    socket.SendTo(RequestData, serverEP);
-
-                    do
-                    {
-                        try
-                        {
-                            var buffer = new byte[256];
-                            socket.Receive(buffer);
-                            var response = Encoding.ASCII.GetString(buffer).Trim('\0');
-                            if (!response.Equals(request))
-                            {
-                                responses.Add(response);
-                            }
-                        }
-                        catch { break; }
-                    } while (socket.ReceiveTimeout != 0);
-                    socket.Close();
-                }
-            }
-
-            responses.Sort();
-            return responses;
+            serviceRunning = UdpFunctions.StopService();
         }
 
         private void frmRemoteServers_Shown(object sender, EventArgs e)
         {
+            btnRefresh.Enabled = btnSearch.Enabled = false;
             listView1.Items.Clear();
-            listView1.Items.AddRange(GetEpg123Servers().Select(server => new ListViewItem {Text = server, ImageIndex = 0}).ToArray());
+            Refresh();
+
+            Cursor = Cursors.WaitCursor;
+            listView1.Items.AddRange(UdpFunctions.DiscoverServers(false).Select(server => new ListViewItem { Text = $"{server}", ImageIndex = 0, Tag = server }).ToArray());
+            Cursor = Cursors.Default;
+            btnRefresh.Enabled = btnSearch.Enabled = true;
         }
 
         private void frmRemoteServers_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (serviceRunning)
-            {
-                Process.Start(new ProcessStartInfo
-                {
-                    FileName = "net.exe",
-                    Arguments = "start epg123Server",
-                    Verb = "runas"
-                })?.WaitForExit();
-            }
+            if (serviceRunning) UdpFunctions.StartService();
         }
 
         private void listView1_DoubleClick(object sender, EventArgs e)
         {
-            mxfPath = $"http://{listView1.SelectedItems[0].Text}:{Helper.TcpPort}/output/epg123.mxf";
+            string file = "epg123.mxf";
+            var server = (UdpFunctions.ServerDetails)listView1.SelectedItems[0].Tag;
+            if (!server.Epg123 && server.Hdhr2Mxf) file = "hdhr2mxf.mxf";
+            else if (server.Epg123 && server.Hdhr2Mxf && (DialogResult.Yes == MessageBox.Show(
+                "Both EPG123 (Schedules Direct) and HDHR2MXF (SiliconDust) are installed on this server. Would you like to use HDHR2MXF instead of the default EPG123?\n\nNote: You must have an active DVR Subscription with SiliconDust.",
+                "Select MXF Source", MessageBoxButtons.YesNo, MessageBoxIcon.Question)))
+            {
+                file = "hdhr2mxf.mxf";
+            }
+            mxfPath = $"http://{server.Address}:{Helper.TcpUdpPort}/output/{file}";
             Close();
         }
 

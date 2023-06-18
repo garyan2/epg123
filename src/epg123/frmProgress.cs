@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Windows.Forms;
+using GaRyan2.Utilities;
 
 namespace epg123
 {
@@ -20,7 +21,7 @@ namespace epg123
 
         private void backgroundWorker_DoWork(object sender, DoWorkEventArgs e)
         {
-            sdJson2mxf.sdJson2Mxf.Build((epgConfig)e.Argument);
+            sdJson2mxf.sdJson2Mxf.Build();
             if (!sdJson2mxf.sdJson2Mxf.Success)
             {
                 Logger.WriteError("Failed to create MXF file. Exiting.");

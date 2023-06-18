@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GaRyan2.Utilities;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -17,10 +18,13 @@ namespace epg123
         protected epgConfig(epgConfig other)
         {
             Version = Helper.Epg123Version;
+            BaseApiUrl = other.BaseApiUrl;
+            BaseArtworkUrl = other.BaseArtworkUrl;
+            CacheRetention = other.CacheRetention;
             UserAccount = new SdUserAccount
             {
-                LoginName = other.UserAccount.LoginName,
-                PasswordHash = other.UserAccount.PasswordHash
+                LoginName = other.UserAccount?.LoginName,
+                PasswordHash = other.UserAccount?.PasswordHash
             };
             RatingsOrigin = other.RatingsOrigin;
             DaysToDownload = other.DaysToDownload;
@@ -33,13 +37,10 @@ namespace epg123
             SeasonEventImages = other.SeasonEventImages;
             SeriesPosterArt = other.SeriesPosterArt;
             SeriesWsArt = other.SeriesWsArt;
-            TMDbCoverArt = other.TMDbCoverArt;
             IncludeSdLogos = other.IncludeSdLogos;
             PreferredLogoStyle = other.PreferredLogoStyle;
             AlternateLogoStyle = other.AlternateLogoStyle;
             AutoAddNew = other.AutoAddNew;
-            AutoImport = other.AutoImport;
-            Automatch = other.Automatch;
             ExcludeCastAndCrew = other.ExcludeCastAndCrew;
             CreateXmltv = other.CreateXmltv;
             XmltvIncludeChannelNumbers = other.XmltvIncludeChannelNumbers;
@@ -49,10 +50,8 @@ namespace epg123
             XmltvFillerProgramDescription = other.XmltvFillerProgramDescription;
             XmltvExtendedInfoInTitleDescriptions = other.XmltvExtendedInfoInTitleDescriptions;
             XmltvSingleImage = other.XmltvSingleImage;
-            XmltvOutputFile = other.XmltvOutputFile;
             UseIpAddress = other.UseIpAddress;
             ModernMediaUiPlusSupport = other.ModernMediaUiPlusSupport;
-            BrandLogoImage = other.BrandLogoImage;
             SuppressStationEmptyWarnings = other.SuppressStationEmptyWarnings;
 
             if (other.IncludedLineup != null)
@@ -100,6 +99,9 @@ namespace epg123
             if (ReferenceEquals(this, other)) return true;
 
             //if (!Version.Equals(other.Version)) return false;
+            if (!BaseApiUrl.Equals(other.BaseApiUrl)) return false;
+            if (!BaseArtworkUrl.Equals(other.BaseArtworkUrl)) return false;
+            if (!CacheRetention.Equals(other.CacheRetention)) return false;
             if (!UserAccount.LoginName.Equals(other.UserAccount?.LoginName)) return false;
             if (!UserAccount.PasswordHash.Equals(other.UserAccount?.PasswordHash)) return false;
             if (!RatingsOrigin.Equals(other.RatingsOrigin)) return false;
@@ -113,13 +115,10 @@ namespace epg123
             if (!SeasonEventImages.Equals(other.SeasonEventImages)) return false;
             if (!SeriesPosterArt.Equals(other.SeriesPosterArt)) return false;
             if (!SeriesWsArt.Equals(other.SeriesWsArt)) return false;
-            if (!TMDbCoverArt.Equals(other.TMDbCoverArt)) return false;
             if (!IncludeSdLogos.Equals(other.IncludeSdLogos)) return false;
             if (!PreferredLogoStyle.Equals(other.PreferredLogoStyle)) return false;
             if (!AlternateLogoStyle.Equals(other.AlternateLogoStyle)) return false;
             if (!AutoAddNew.Equals(other.AutoAddNew)) return false;
-            if (!AutoImport.Equals(other.AutoImport)) return false;
-            if (!Automatch.Equals(other.Automatch)) return false;
             if (!ExcludeCastAndCrew.Equals(other.ExcludeCastAndCrew)) return false;
             if (!CreateXmltv.Equals(other.CreateXmltv)) return false;
             if (!XmltvIncludeChannelNumbers.Equals(other.XmltvIncludeChannelNumbers)) return false;
@@ -129,10 +128,8 @@ namespace epg123
             if (!XmltvFillerProgramDescription.Equals(other.XmltvFillerProgramDescription)) return false;
             if (!XmltvExtendedInfoInTitleDescriptions.Equals(other.XmltvExtendedInfoInTitleDescriptions)) return false;
             if (!XmltvSingleImage.Equals(other.XmltvSingleImage)) return false;
-            if (!XmltvOutputFile.Equals(other.XmltvOutputFile)) return false;
             if (!(UseIpAddress ?? "").Equals(other.UseIpAddress ?? "")) return false;
             if (!ModernMediaUiPlusSupport.Equals(other.ModernMediaUiPlusSupport)) return false;
-            if (!BrandLogoImage.Equals(other.BrandLogoImage)) return false;
             if (!SuppressStationEmptyWarnings.Equals(other.SuppressStationEmptyWarnings)) return false;
             if (!ExpectedServicecount.Equals(other.ExpectedServicecount)) return false;
 
@@ -159,6 +156,15 @@ namespace epg123
 
         [XmlAttribute("version")]
         public string Version { get; set; } = Helper.Epg123Version;
+
+        [XmlElement("BaseApiUrl")]
+        public string BaseApiUrl { get; set; } = "https://json.schedulesdirect.org/20141201/";
+
+        [XmlElement("BaseArtworkUrl")]
+        public string BaseArtworkUrl { get; set; } = "https://json.schedulesdirect.org/20141201/";
+
+        [XmlElement("CacheRetention")]
+        public int CacheRetention { get; set; } = 30;
 
         [XmlElement("UserAccount")]
         public SdUserAccount UserAccount { get; set; }
@@ -211,12 +217,6 @@ namespace epg123
         [XmlElement("AutoAddNew")]
         public bool AutoAddNew { get; set; } = true;
 
-        [XmlElement("AutoImport")]
-        public bool AutoImport { get; set; } = true;
-
-        [XmlElement("Automatch")]
-        public bool Automatch { get; set; } = true;
-
         [XmlElement("ExcludeCastAndCrew")]
         public bool ExcludeCastAndCrew { get; set; }
 
@@ -244,9 +244,6 @@ namespace epg123
         [XmlElement("XmltvSingleImage")]
         public bool XmltvSingleImage { get; set; }
 
-        [XmlElement("XmltvOutputFile")]
-        public string XmltvOutputFile { get; set; } = Helper.Epg123XmltvPath;
-
         [XmlElement("UseIpAddress")]
         public string UseIpAddress { get; set; }
 
@@ -255,12 +252,6 @@ namespace epg123
 
         [XmlElement("ModernMediaUiPlusJsonFilepath")]
         public string ModernMediaUiPlusJsonFilepath { get; set; }
-
-        [XmlAnyElement("BrandLogoImageComment")]
-        public XmlComment BrandLogoImageComment { get => new XmlDocument().CreateComment(" BrandLogoImage: Add status image to guide view in WMC. Options are \"none\", \"light\", and \"dark\".");
-            set { } }
-        [XmlElement("BrandLogoImage")]
-        public string BrandLogoImage { get; set; } = "none";
 
         [XmlAnyElement("SuppressStationEmptyWarningsComment")]
         public XmlComment SuppressStationEmptyWarningsComment { get => new XmlDocument().CreateComment(" SuppressStationEmptyWarnings: Enter specific station callsigns, comma delimited, to suppress warnings for no guide data, or use a wildcard (*) for a group of callsigns. A solitary wildcard means all station warnings will be suppressed.");

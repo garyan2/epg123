@@ -1,17 +1,17 @@
-﻿using System;
+﻿using GaRyan2.Utilities;
+using GaRyan2.WmcUtilities;
+using Microsoft.MediaCenter.Guide;
+using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Windows.Forms;
-using epg123.Task;
-using Microsoft.MediaCenter.Guide;
-using epg123Client;
 
-namespace epg123
+namespace epg123Client
 {
     internal static class NativeMethods
     {
@@ -83,17 +83,14 @@ namespace epg123
         static Program()
         {
             // initialize logger
-            Logger.Initialize("Media Center", "epg123Client");
-
-            // establish file/folder locations
-            Helper.EstablishFileFolderPaths();
+            Logger.Initialize(Helper.Epg123TraceLogPath);
 
             // ensure WMC is installed
             if (!File.Exists(Helper.EhshellExeFilePath))
             {
                 MessageBox.Show("WMC is not present on this machine. Closing EPG123 Client Guide Tool.", "Initialization Error", MessageBoxButtons.OK, MessageBoxIcon.Hand);
                 Logger.WriteError("*** WMC is not present on this machine. ***");
-                Logger.Close();
+                //Logger.Close();
                 Application.Exit();
             }
 
@@ -109,7 +106,7 @@ namespace epg123
             {
                 // verify WMC is installed
                 MessageBox.Show("Could not verify Windows Media Center is installed on this machine. EPG123 Client cannot be started without WMC being present.", "Missing Windows Media Center", MessageBoxButtons.OK);
-                Logger.Close();
+                //Logger.Close();
                 Application.Exit();
             }
 
@@ -184,7 +181,7 @@ namespace epg123
                 case "-u -nogc": // opening WMC
                 case "-uf -nogc":
                     Logger.WriteVerbose($"**** Intercepted \"mcupdate.exe {arguments}\" call. Ignored. ****");
-                    Logger.Close();
+                    //Logger.Close();
                     return 0;
                 case "-u -manual -nogc -p 0": // guide update
                 case "-manual -nogc -p 0":
@@ -202,10 +199,10 @@ namespace epg123
                     proc?.WaitForExit();
 
                     Logger.WriteInformation("**** Attempted to kick off the epg123_update task on demand. ****");
-                    Logger.Close();
+                    //Logger.Close();
 
                     // monitor the task status until it is complete
-                    var ts = new epgTaskScheduler();
+                    var ts = new EpgTaskScheduler();
                     while (true)
                     {
                         // looks like WMC may have a 300000 ms timeout for the update action
@@ -235,9 +232,9 @@ namespace epg123
             bool nologo, import, force, showGui, advanced, nogc, verbose, noverify;
             var match = nologo = import = force = showGui = advanced = nogc = verbose = noverify = false;
 
-            if (File.Exists($"{Helper.Epg123ProgramDataFolder}\\nogc.txt"))
+            if (File.Exists($"{Helper.Epg123ProgramDataFolder}nogc.txt"))
             {
-                File.Delete($"{Helper.Epg123ProgramDataFolder}\\nogc.txt");
+                File.Delete($"{Helper.Epg123ProgramDataFolder}nogc.txt");
                 nogc = true;
             }
             if (args.Length > 0)
@@ -256,27 +253,11 @@ namespace epg123
                             if (i + 1 < args.Length)
                             {
                                 filename = args[++i].Replace("EPG:", "http:");
-                                if (filename.StartsWith("http"))
-                                {
-                                    statusLogo.MxfFile = Helper.Epg123MxfPath;
-                                    import = true;
-                                    break;
-                                }
-
-                                if (!File.Exists(filename))
+                                if (!filename.StartsWith("http") && !File.Exists(filename))
                                 {
                                     Logger.WriteError($"File \"{filename}\" does not exist.");
                                     return -1;
                                 }
-                                filename = new FileInfo(filename).FullName.ToLower();
-
-                                var testNewFile = filename.Replace("\\epg123.mxf", "\\output\\epg123.mxf");
-                                if (File.Exists(testNewFile))
-                                {
-                                    Logger.WriteWarning($"It appears the MXF file to import is incorrect. Changing the import file from \"{filename}\" to \"{testNewFile}\". Delete and re-create your Scheduled Task.");
-                                    filename = testNewFile;
-                                }
-                                statusLogo.MxfFile = filename;
                             }
                             else
                             {
@@ -306,7 +287,7 @@ namespace epg123
                             break;
                         default:
                             Logger.WriteVerbose($"**** Invalid arguments for epg123Client.exe; \"{arguments}\" ****");
-                            Logger.Close();
+                            //Logger.Close();
                             return -1;
                     }
                 }
@@ -325,9 +306,9 @@ namespace epg123
                 Logger.WriteMessage("===============================================================================");
                 Logger.WriteMessage($" {(showGui ? "Activating the epg123 client GUI." : "Beginning epg123 client execution.")} version {Helper.Epg123Version}");
                 Logger.WriteMessage("===============================================================================");
-                Logger.WriteMessage($"*** {Helper.GetOsDescription()} ***");
-                Logger.WriteMessage($"*** {Helper.GetDotNetDescription()} is intalled. ***");
-                Logger.WriteMessage($"*** {Helper.GetWmcDescription()} ***");
+                Logger.LogOsDescription();
+                Logger.LogDotNetDescription();
+                Logger.LogWmcDescription();
 
                 // show gui if needed
                 if (showGui)
@@ -362,9 +343,9 @@ namespace epg123
                     if (import)
                     {
                         // check if garbage cleanup is needed
-                        if (!nogc && !force && WmcRegistries.IsGarbageCleanupDue() && !ProgramRecording(60))
+                        if (!nogc && !force && WmcStore.IsGarbageCleanupDue() && !ProgramRecording(60))
                         {
-                            _ = WmcUtilities.PerformGarbageCleanup();
+                            _ = WmcStore.PerformGarbageCleanup();
                         }
 
                         // ensure no recordings are active if importing
@@ -389,7 +370,7 @@ namespace epg123
                         }
 
                         // get lineup and configure lineup type and devices 
-                        if (!WmcStore.ActivateEpg123LineupsInStore() || !WmcRegistries.ActivateGuide())
+                        if (!WmcStore.ActivateEpg123LineupsInStore() || !WmcStore.ActivateGuide())
                         {
                             Logger.WriteError("Failed to locate any lineups from EPG123.");
                             goto CompleteImport;
@@ -411,8 +392,8 @@ namespace epg123
                         }
                         catch (Exception ex)
                         {
-                            Logger.WriteError($"{ex.Message}");
                             Logger.WriteError("Failed to complete the automatic mapping of lineup stations to tuner channels.");
+                            Logger.WriteError($"{ex}");
                         }
                     }
 
@@ -430,8 +411,8 @@ namespace epg123
                         Logger.WriteInformation("Completed lineup refresh.");
 
                         // reindex database
-                        _ = WmcUtilities.ReindexPvrSchedule();
-                        _ = WmcUtilities.ReindexDatabase();
+                        _ = WmcStore.ReindexPvrSchedule();
+                        _ = WmcStore.ReindexDatabase();
                     }
 
                     // import complete
@@ -439,7 +420,7 @@ namespace epg123
                     if (import)
                     {
                         // update status logo
-                        statusLogo.StatusImage();
+                        statusLogo.StatusImage(filename);
 
                         // signal the notification tray to update the icon
                         Helper.SendPipeMessage("Import Complete");
@@ -450,7 +431,7 @@ namespace epg123
                     // all done
                     Logger.WriteInformation("Completed EPG123 client execution.");
                     Logger.WriteVerbose($"EPG123 client execution time was {DateTime.UtcNow - startTime}.");
-                    Logger.Close();
+                    //Logger.Close();
                     NativeMethods.SetThreadExecutionState(prevThreadState | (uint)ExecutionFlags.ES_CONTINUOUS);
                 }
             }
@@ -467,11 +448,11 @@ namespace epg123
 
             do
             {
-                var active = WmcStore.DetermineRecordingsInProgress() || WmcRegistries.NextScheduledRecording() - TimeSpan.FromMinutes(bufferMinutes) < DateTime.Now;
+                var active = WmcStore.DetermineRecordingsInProgress() || WmcStore.NextScheduledRecording() - TimeSpan.FromMinutes(bufferMinutes) < DateTime.Now;
                 if (!active && intervalCheck > 0)
                 {
                     Thread.Sleep(30000);
-                    active = WmcStore.DetermineRecordingsInProgress() || WmcRegistries.NextScheduledRecording() - TimeSpan.FromMinutes(bufferMinutes) < DateTime.Now;
+                    active = WmcStore.DetermineRecordingsInProgress() || WmcStore.NextScheduledRecording() - TimeSpan.FromMinutes(bufferMinutes) < DateTime.Now;
                 }
 
                 if (!active || expireTime < DateTime.Now)
@@ -510,7 +491,7 @@ namespace epg123
             }
 
             // do the import with or without progress form
-            if (!showProgress) return WmcUtilities.ImportMxfFile(file);
+            if (!showProgress) return WmcStore.ImportMxfFile(file);
             var frm = new frmImport(file, false);
             frm.ShowDialog();
             return frm.Success;

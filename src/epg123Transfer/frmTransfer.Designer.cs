@@ -38,8 +38,6 @@
             this.lvMxfRecordings = new System.Windows.Forms.ListView();
             this.clmOldType = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.clmOldDescription = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.contextMenuStrip2 = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.matchVerifyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.btnAddRecordings = new System.Windows.Forms.Button();
             this.lblDateTime = new System.Windows.Forms.Label();
             this.btnExit = new System.Windows.Forms.Button();
@@ -49,7 +47,6 @@
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.label2 = new System.Windows.Forms.Label();
             this.contextMenuStrip1.SuspendLayout();
-            this.contextMenuStrip2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -88,13 +85,13 @@
             this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripMenuItemCancel});
             this.contextMenuStrip1.Name = "contextMenuStrip1";
-            this.contextMenuStrip1.Size = new System.Drawing.Size(111, 26);
+            this.contextMenuStrip1.Size = new System.Drawing.Size(181, 48);
             this.contextMenuStrip1.Opening += new System.ComponentModel.CancelEventHandler(this.contextMenuStrip1_Opening);
             // 
             // toolStripMenuItemCancel
             // 
             this.toolStripMenuItemCancel.Name = "toolStripMenuItemCancel";
-            this.toolStripMenuItemCancel.Size = new System.Drawing.Size(110, 22);
+            this.toolStripMenuItemCancel.Size = new System.Drawing.Size(180, 22);
             this.toolStripMenuItemCancel.Text = "Cancel";
             this.toolStripMenuItemCancel.Click += new System.EventHandler(this.toolStripMenuItemCancel_Click);
             // 
@@ -104,7 +101,6 @@
             this.lvMxfRecordings.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.clmOldType,
             this.clmOldDescription});
-            this.lvMxfRecordings.ContextMenuStrip = this.contextMenuStrip2;
             this.lvMxfRecordings.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lvMxfRecordings.FullRowSelect = true;
             this.lvMxfRecordings.HideSelection = false;
@@ -126,21 +122,6 @@
             // 
             this.clmOldDescription.Text = "Title / Keyword(s)";
             this.clmOldDescription.Width = 100;
-            // 
-            // contextMenuStrip2
-            // 
-            this.contextMenuStrip2.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.matchVerifyToolStripMenuItem});
-            this.contextMenuStrip2.Name = "contextMenuStrip2";
-            this.contextMenuStrip2.Size = new System.Drawing.Size(154, 26);
-            this.contextMenuStrip2.Opening += new System.ComponentModel.CancelEventHandler(this.contextMenuStrip2_Opening);
-            // 
-            // matchVerifyToolStripMenuItem
-            // 
-            this.matchVerifyToolStripMenuItem.Name = "matchVerifyToolStripMenuItem";
-            this.matchVerifyToolStripMenuItem.Size = new System.Drawing.Size(153, 22);
-            this.matchVerifyToolStripMenuItem.Text = "Match && Verify";
-            this.matchVerifyToolStripMenuItem.Click += new System.EventHandler(this.matchVerifyToolStripMenuItem_Click);
             // 
             // btnAddRecordings
             // 
@@ -252,7 +233,6 @@
             this.Shown += new System.EventHandler(this.frmTransfer_Shown);
             this.SizeChanged += new System.EventHandler(this.frmTransfer_Shown);
             this.contextMenuStrip1.ResumeLayout(false);
-            this.contextMenuStrip2.ResumeLayout(false);
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
@@ -278,8 +258,6 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button btnOpenBackup;
         private System.Windows.Forms.OpenFileDialog openFileDialog1;
-        private System.Windows.Forms.ContextMenuStrip contextMenuStrip2;
-        private System.Windows.Forms.ToolStripMenuItem matchVerifyToolStripMenuItem;
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.Label label2;
     }

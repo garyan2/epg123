@@ -1,10 +1,9 @@
-﻿using System;
+﻿using GaRyan2.Utilities;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading;
-using System.Xml.Serialization;
 using System.Windows.Forms;
 
 namespace epg123
@@ -23,8 +22,6 @@ namespace epg123
         public enum ExecutionFlags : uint
         {
             ES_SYSTEM_REQUIRED = 0x00000001,
-            //ES_DISPLAY_REQUIRED = 0x00000002,
-            //ES_USER_PRESENT = 0x00000004,
             ES_AWAYMODE_REQUIRED = 0x00000040,
             ES_CONTINUOUS = 0x80000000
         }
@@ -38,72 +35,66 @@ namespace epg123
             AppDomain.CurrentDomain.UnhandledException += MyUnhandledException;
             Application.ThreadException += MyThreadException;
 
-            // establish file/folder locations
-            Logger.Initialize("Media Center", "EPG123");
-            Helper.EstablishFileFolderPaths();
+            // make sure configuration file exists
+            if (!File.Exists(Helper.Epg123CfgPath))
+            {
+                Console.WriteLine("There is no configuration file to use for updating guide listings.\nOpen epg123_gui.exe to create a configuration file.");
+                return -1;
+            }
 
-            bool import, match, showProgress;
-            import = match = showProgress = false;
-            var showGui = true;
+            bool import = false, match = false, showProgress = false;
+            bool error = false, showHelp = false;
             epgConfig config = null;
 
-            // only evaluate arguments if a configuration file exists, otherwise open the gui
-            if (File.Exists(Helper.Epg123CfgPath) && args != null)
+            if (args != null)
             {
                 foreach (var t in args)
                 {
                     switch (t.ToLower())
                     {
-                        case "-update":
-                            showGui = false;
+                        case "-import":
+                            if (File.Exists(Helper.EhshellExeFilePath)) import = true;
+                            else Console.WriteLine("WMC is not installed on this machine; -import is invalid.");
+                            break;
+                        case "-match":
+                            match = true;
                             break;
                         case "-p":
                             showProgress = true;
                             break;
+                        case "-update": // deprecated
+                            break;
+                        case "-h":
+                        case "/h":
+                        case "/?":
+                            showHelp = true;
+                            break;
                         default:
-                            return -1;
+                            Console.WriteLine($"Invalid switch - \"{t}\"\n");
+                            error = true;
+                            break;
                     }
                 }
             }
+            if (error || showHelp)
+            {
+                var help = "EPG123 [-IMPORT [-MATCH]] [-P]\n\n" +
+                           "-IMPORT     Automatically imports guide listings into WMC.\n" +
+                           "-MATCH      Automatically match guide listing in WMC.\n" +
+                           "-P          Shows progress GUI while downloading/importing guide\n" +
+                           "            listings.\n";
+                Console.WriteLine(help);
+                return error ? -1 : 0;
+            }
+
+            // initialize logger
+            Logger.Initialize(Helper.Epg123TraceLogPath);
 
             // create a mutex and keep alive until program exits
-            using (var mutex = Helper.GetProgramMutex($"Global\\{AppGuid}", !showGui))
+            using (var mutex = Helper.GetProgramMutex($"Global\\{AppGuid}", true))
             {
                 // check for an instance already running
                 if (mutex == null) return -1;
-
-                Logger.WriteMessage("===============================================================================");
-                Logger.WriteMessage($" {(showGui ? "Activating the epg123 configuration GUI." : "Beginning epg123 update execution.")} version {Helper.Epg123Version}");
-                Logger.WriteMessage("===============================================================================");
-                Logger.WriteMessage($"*** {Helper.GetOsDescription()} ***");
-                Logger.WriteMessage($"*** {Helper.GetDotNetDescription()} is intalled. ***");
-                Logger.WriteMessage($"*** {Helper.GetWmcDescription()} ***");
-
-                // open the configuration GUI if needed
-                if (showGui)
-                {
-                    var cfgForm = new frmMain();
-                    cfgForm.ShowDialog();
-                    Logger.Close();
-                    if (!cfgForm.Execute)
-                    {
-                        mutex.ReleaseMutex();
-                        if (!cfgForm.RestartAsAdmin) return 0;
-                        var startInfo = new ProcessStartInfo
-                        {
-                            FileName = Helper.Epg123ExePath,
-                            WorkingDirectory = Helper.ExecutablePath,
-                            UseShellExecute = true,
-                            Verb = "runas"
-                        };
-                        Process.Start(startInfo);
-                        return 0;
-                    }
-                    Logger.Initialize("Media Center", "EPG123");
-                    config = cfgForm.Config;
-                    import = config.AutoImport;
-                    match = config.Automatch;
-                }
 
                 // prevent machine from entering sleep mode
                 var prevThreadState = NativeMethods.SetThreadExecutionState((uint)ExecutionFlags.ES_CONTINUOUS |
@@ -111,47 +102,25 @@ namespace epg123
                                                                             (uint)ExecutionFlags.ES_AWAYMODE_REQUIRED);
 
                 // bring in the configuration
+                config = Helper.ReadXmlFile(Helper.Epg123CfgPath, typeof(epgConfig));
                 if (config == null)
                 {
-                    try
-                    {
-                        using (var stream = new StreamReader(Helper.Epg123CfgPath, Encoding.Default))
-                        {
-                            var serializer = new XmlSerializer(typeof(epgConfig));
-                            TextReader reader = new StringReader(stream.ReadToEnd());
-                            config = (epgConfig)serializer.Deserialize(reader);
-                            reader.Close();
-                        }
-                    }
-                    catch (IOException ex)
-                    {
-                        Logger.WriteError($"Failed to open configuration file during initialization due to IO exception. message: {ex.Message}");
-                        Logger.Close();
-                        NativeMethods.SetThreadExecutionState(prevThreadState | (uint)ExecutionFlags.ES_CONTINUOUS);
-                        mutex.ReleaseMutex();
-                        return -1;
-                    }
-                    catch (Exception ex)
-                    {
-                        Logger.WriteError($"Failed to open configuration file during initialization with unknown exception. message: {ex.Message}");
-                        Logger.Close();
-                        NativeMethods.SetThreadExecutionState(prevThreadState | (uint)ExecutionFlags.ES_CONTINUOUS);
-                        mutex.ReleaseMutex();
-                        return -1;
-                    }
+                    NativeMethods.SetThreadExecutionState(prevThreadState | (uint)ExecutionFlags.ES_CONTINUOUS);
+                    mutex.ReleaseMutex();
+                    return -1;
                 }
 
                 // let's do this
                 Helper.SendPipeMessage("Downloading|Initializing...");
                 var startTime = DateTime.UtcNow;
-                if (showGui || showProgress)
+                if (showProgress)
                 {
                     var build = new frmProgress(config);
                     build.ShowDialog();
                 }
                 else
                 {
-                    sdJson2mxf.sdJson2Mxf.Build(config);
+                    sdJson2mxf.sdJson2Mxf.Build();
                     if (!sdJson2mxf.sdJson2Mxf.Success)
                     {
                         Logger.WriteError("Failed to create MXF file. Exiting.");
@@ -159,9 +128,7 @@ namespace epg123
                 }
                 Helper.SendPipeMessage("Download Complete");
 
-                // close the logger and restore power/sleep settings
-                Logger.WriteVerbose($"epg123 update execution time was {DateTime.UtcNow - startTime}.");
-                Logger.Close();
+                // restore power/sleep settings
                 NativeMethods.SetThreadExecutionState(prevThreadState | (uint)ExecutionFlags.ES_CONTINUOUS);
 
                 // did a Save&Execute from GUI ... perform import and automatch as well if requested
@@ -192,12 +159,12 @@ namespace epg123
 
         private static void MyUnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
-            Logger.WriteError($"Unhandled exception caught from {AppDomain.CurrentDomain.FriendlyName}. message: {(e.ExceptionObject as Exception)?.Message}");
+            Logger.WriteError($"Unhandled exception caught from {AppDomain.CurrentDomain.FriendlyName}. message: {e.ExceptionObject as Exception}");
         }
 
         private static void MyThreadException(object sender, ThreadExceptionEventArgs e)
         {
-            Logger.WriteError($"Unhandled thread exception caught from {AppDomain.CurrentDomain.FriendlyName}. message: {e.Exception.Message}");
+            Logger.WriteError($"Unhandled thread exception caught from {AppDomain.CurrentDomain.FriendlyName}. message: {e.Exception}");
         }
     }
 }

@@ -1,9 +1,10 @@
-﻿using System;
+﻿using GaRyan2.Utilities;
+using System;
 using System.Drawing;
 using System.IO;
-using System.Windows.Forms;
-using epg123;
+using System.Net;
 using System.Runtime.InteropServices;
+using System.Windows.Forms;
 
 namespace logViewer
 {
@@ -40,8 +41,6 @@ namespace logViewer
             }
 
             richTextBox1.ZoomFactor = Properties.Settings.Default.ZoomFactor;
-
-            Helper.EstablishFileFolderPaths();
         }
 
         private void OpenLogFileAndDisplay(string logFile)
@@ -61,62 +60,86 @@ namespace logViewer
         private void DisplayLogFile(string logFile)
         {
             this.Text = $"EPG123 Log Viewer - {logFile}";
-            var fi = new FileInfo(logFile);
-            _lastPath = fileSystemWatcher1.Path = fi.DirectoryName;
-            fileSystemWatcher1.Filter = fi.Name;
-
-            try
+            if (logFile.StartsWith("http"))
             {
-                using (var fs = new FileStream(logFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-                using (var sr = new StreamReader(fs))
+                using (var wc = new WebClient())
                 {
-                    if (fs.Length < streamLocation) streamLocation = 0;
-                    else fs.Position = streamLocation;
-
-                    // read the line
-                    string line = null;
-                    do
+                    var log = wc.DownloadString(logFile);
+                    using (var sr = new StringReader(log))
                     {
-                        line = sr.ReadLine();
-                        if (line == null) break;
-                        if (line.Length < 2) continue;
+                        string line = null;
+                        do
+                        {
+                            line = sr.ReadLine();
+                            if (line == null) break;
+                            if (line.Length < 2) continue;
+                            AddLineOfText(line);
+                            ++_lines;
+                        }
+                        while (true);
 
-                        // determine if within last 24 hours
-                        if (!DateTime.TryParse(line.Substring(1, Math.Max(line.IndexOf(']') - 1, 0)), out DateTime dt) && richTextBox1.Text.Length == 0) continue;
-
-                        // add line with color
-                        richTextBox1.SelectionStart = richTextBox1.TextLength;
-                        if (line.Contains("[ERROR]") || dt == DateTime.MinValue)
-                        {
-                            richTextBox1.SelectionColor = Color.Red;
-                        }
-                        else if (line.Contains("[WARNG]") || line.ToLower().Contains("failed") || line.Contains("SD API WebException") || line.Contains("exception thrown") || line.Contains("SD responded") || line.Contains("Did not receive") || line.Contains("Problem occurred") || line.Contains("*****") || line.Contains("no tuners"))
-                        {
-                            richTextBox1.SelectionColor = Color.Yellow;
-                        }
-                        else if (line.Contains("==========") || line.Contains("Activating the") || line.Contains("Beginning"))
-                        {
-                            richTextBox1.SelectionColor = Color.White;
-                        }
-                        else if (line.Contains("Entering") || line.Contains("Exiting"))
-                        {
-                            richTextBox1.SelectionColor = Color.Cyan;
-                        }
-                        else
-                        {
-                            richTextBox1.SelectionColor = Color.ForestGreen;
-                        }
-
-                        richTextBox1.AppendText($"{line}\r\n");
-                        ++_lines;
+                        streamLocation = log.Length;
                     }
-                    while (line != null);
-
-                    streamLocation = fs.Position;
-                    UpdateStatusBar();
                 }
             }
-            catch { }
+            else
+            {
+                var fi = new FileInfo(logFile);
+                _lastPath = fileSystemWatcher1.Path = fi.DirectoryName;
+                fileSystemWatcher1.Filter = fi.Name;
+
+                try
+                {
+                    using (var fs = new FileStream(logFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                    using (var sr = new StreamReader(fs))
+                    {
+                        if (fs.Length < streamLocation) streamLocation = 0;
+                        else fs.Position = streamLocation;
+
+                        // read the line
+                        string line = null;
+                        do
+                        {
+                            line = sr.ReadLine();
+                            if (line == null) break;
+                            if (line.Length < 2) continue;
+                            AddLineOfText(line);
+                            ++_lines;
+                        }
+                        while (line != null);
+
+                        streamLocation = fs.Position;
+                    }
+                }
+                catch { }
+            }
+            UpdateStatusBar();
+        }
+
+        private void AddLineOfText(string line)
+        {
+            richTextBox1.SelectionStart = richTextBox1.TextLength;
+            if (line.Contains("[ERROR]"))
+            {
+                richTextBox1.SelectionColor = Color.Red;
+            }
+            else if (line.Contains("[WARNG]") || line.ToLower().Contains("failed") || line.Contains("SD API WebException") || line.Contains("exception thrown") || line.Contains("SD responded") || line.Contains("Did not receive") || line.Contains("Problem occurred") || line.Contains("*****") || line.Contains("no tuners"))
+            {
+                richTextBox1.SelectionColor = Color.Yellow;
+            }
+            else if (line.Contains("==========") || line.Contains("Activating the") || line.Contains("Beginning"))
+            {
+                richTextBox1.SelectionColor = Color.White;
+            }
+            else if (line.Contains("Entering") || line.Contains("Exiting"))
+            {
+                richTextBox1.SelectionColor = Color.Cyan;
+            }
+            else
+            {
+                richTextBox1.SelectionColor = Color.ForestGreen;
+            }
+            richTextBox1.AppendText($"{line}\r\n");
         }
 
         private void UpdateStatusBar()

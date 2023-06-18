@@ -54,7 +54,7 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>Resources\EPG123.ico</ApplicationIcon>
+    <ApplicationIcon>EPG123.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationManifest>app.manifest</ApplicationManifest>
@@ -94,68 +94,14 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CompressXmlFiles.cs" />
-    <Compile Include="CustomLineups.cs" />
     <Compile Include="epgCache.cs" />
-    <Compile Include="frmCustomChannel.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="frmCustomChannel.Designer.cs">
-      <DependentUpon>frmCustomChannel.cs</DependentUpon>
-    </Compile>
-    <Compile Include="frmCustomLineup.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="frmCustomLineup.Designer.cs">
-      <DependentUpon>frmCustomLineup.cs</DependentUpon>
-    </Compile>
-    <Compile Include="frmLogos.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="frmLogos.Designer.cs">
-      <DependentUpon>frmLogos.cs</DependentUpon>
-    </Compile>
-    <Compile Include="frmMain.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="frmMain.Designer.cs">
-      <DependentUpon>frmMain.cs</DependentUpon>
-    </Compile>
-    <Compile Include="ElevatedButton.cs">
-      <SubType>Component</SubType>
-    </Compile>
     <Compile Include="epgConfig.cs" />
-    <Compile Include="frmPreview.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="frmPreview.Designer.cs">
-      <DependentUpon>frmPreview.cs</DependentUpon>
-    </Compile>
     <Compile Include="frmProgress.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="frmProgress.Designer.cs">
       <DependentUpon>frmProgress.cs</DependentUpon>
     </Compile>
-    <Compile Include="Github\GithubApi.cs" />
-    <Compile Include="Helper.cs" />
-    <Compile Include="ListViewSorter.cs" />
-    <Compile Include="Logger.cs" />
-    <Compile Include="MxfXml\MXF.cs" />
-    <Compile Include="MxfXml\MxfAffiliate.cs" />
-    <Compile Include="MxfXml\MxfChannel.cs" />
-    <Compile Include="MxfXml\MxfGuideImage.cs" />
-    <Compile Include="MxfXml\MxfKeyword.cs" />
-    <Compile Include="MxfXml\MxfKeywordGroup.cs" />
-    <Compile Include="MxfXml\MxfLineup.cs" />
-    <Compile Include="MxfXml\MxfPerson.cs" />
-    <Compile Include="MxfXml\MxfPersonRank.cs" />
-    <Compile Include="MxfXml\MxfProgram.cs" />
-    <Compile Include="MxfXml\MxfProvider.cs" />
-    <Compile Include="MxfXml\MxfScheduleEntry.cs" />
-    <Compile Include="MxfXml\MxfSeason.cs" />
-    <Compile Include="MxfXml\MxfSeriesInfo.cs" />
-    <Compile Include="MxfXml\MxfService.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
@@ -168,44 +114,9 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
-    <Compile Include="resImages.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>resImages.resx</DependentUpon>
-    </Compile>
-    <Compile Include="SchedulesDirect\AddRemoveLineups.cs" />
-    <Compile Include="SchedulesDirect\AvailableCountries.cs" />
-    <Compile Include="SchedulesDirect\AvailableSatellites.cs" />
-    <Compile Include="SchedulesDirect\AvailableTransmitters.cs" />
-    <Compile Include="SchedulesDirect\BaseResponse.cs" />
-    <Compile Include="SchedulesDirect\GenericDescriptions.cs" />
-    <Compile Include="SchedulesDirect\LineupPreview.cs" />
     <Compile Include="sdJson2mxf\mxf2xmltv.cs" />
-    <Compile Include="brandLogo.cs" />
     <Compile Include="sdJson2mxf\seasonImages.cs" />
     <Compile Include="sdJson2mxf\sportsImages.cs" />
-    <Compile Include="SchedulesDirect\SdApi.cs" />
-    <Compile Include="SchedulesDirect\Artwork.cs" />
-    <Compile Include="SchedulesDirect\Headends.cs" />
-    <Compile Include="SchedulesDirect\ClientVersion.cs" />
-    <Compile Include="SchedulesDirect\Programs.cs" />
-    <Compile Include="SchedulesDirect\StationChannelMap.cs" />
-    <Compile Include="SchedulesDirect\StationSchedules.cs" />
-    <Compile Include="SchedulesDirect\SubscribedLineup.cs" />
-    <Compile Include="SchedulesDirect\Token.cs" />
-    <Compile Include="SchedulesDirect\UserStatus.cs" />
-    <Compile Include="frmLineups.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="frmLineups.Designer.cs">
-      <DependentUpon>frmLineups.cs</DependentUpon>
-    </Compile>
-    <Compile Include="frmLineupAdd.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="frmLineupAdd.Designer.cs">
-      <DependentUpon>frmLineupAdd.cs</DependentUpon>
-    </Compile>
     <Compile Include="sdJson2mxf\keywordGroups.cs" />
     <Compile Include="sdJson2mxf\sdJson2mxf.cs" />
     <Compile Include="sdJson2mxf\common.cs" />
@@ -215,25 +126,7 @@
     <Compile Include="sdJson2mxf\scheduleEntries.cs" />
     <Compile Include="sdJson2mxf\seriesImages.cs" />
     <Compile Include="sdJson2mxf\seriesInfos.cs" />
-    <Compile Include="Task\taskScheduler.cs" />
-    <Compile Include="TheMovieDbAPI\TmdbApi.cs" />
-    <Compile Include="TheMovieDbAPI\TmdbJsonClasses.cs" />
     <Compile Include="ModernMediaUiPlus.cs" />
-    <Compile Include="XmltvXml\XMLTV.cs" />
-    <Compile Include="XmltvXml\XmltvActor.cs" />
-    <Compile Include="XmltvXml\XmltvAudio.cs" />
-    <Compile Include="XmltvXml\XmltvChannel.cs" />
-    <Compile Include="XmltvXml\XmltvCredit.cs" />
-    <Compile Include="XmltvXml\XmltvEpisodeNum.cs" />
-    <Compile Include="XmltvXml\XmltvIcon.cs" />
-    <Compile Include="XmltvXml\XmltvLength.cs" />
-    <Compile Include="XmltvXml\XmltvPreviouslyShown.cs" />
-    <Compile Include="XmltvXml\XmltvProgramme.cs" />
-    <Compile Include="XmltvXml\XmltvRating.cs" />
-    <Compile Include="XmltvXml\XmltvReview.cs" />
-    <Compile Include="XmltvXml\XmltvSubtitles.cs" />
-    <Compile Include="XmltvXml\XmltvText.cs" />
-    <Compile Include="XmltvXml\XmltvVideo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config">
@@ -241,37 +134,12 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="frmCustomChannel.resx">
-      <DependentUpon>frmCustomChannel.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="frmCustomLineup.resx">
-      <DependentUpon>frmCustomLineup.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="frmLogos.resx">
-      <DependentUpon>frmLogos.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="frmMain.resx">
-      <DependentUpon>frmMain.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="frmPreview.resx">
-      <DependentUpon>frmPreview.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="frmProgress.resx">
       <DependentUpon>frmProgress.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Include="frmLineups.resx">
-      <DependentUpon>frmLineups.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="frmLineupAdd.resx">
-      <DependentUpon>frmLineupAdd.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="resImages.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>resImages.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
@@ -298,25 +166,34 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
-    <None Include="Resources\RedLight.ico" />
-    <None Include="Resources\GreenLight.ico" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\EPG123.ico" />
+    <ProjectReference Include="..\GaRyan2.Github\GaRyan2.Github.csproj">
+      <Project>{e82ca8a5-b4b2-4617-8caa-e4b93a4db330}</Project>
+      <Name>GaRyan2.Github</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\GaRyan2.MxfXmltvTools\GaRyan2.MxfXmltvTools.csproj">
+      <Project>{2a8d6f2b-3c96-4314-b61b-5d84eaa02f2f}</Project>
+      <Name>GaRyan2.MxfXmltvTools</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\GaRyan2.SchedulesDirect\GaRyan2.SchedulesDirect.csproj">
+      <Project>{2269b886-0160-4099-9a39-13b888a5f69a}</Project>
+      <Name>GaRyan2.SchedulesDirect</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\GaRyan2.Tmdb\GaRyan2.Tmdb.csproj">
+      <Project>{3ad6bcb1-24eb-4212-8639-6886f4c8d201}</Project>
+      <Name>GaRyan2.Tmdb</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\GaRyan2.Utilities\GaRyan2.Utilities.csproj">
+      <Project>{ccd05d81-0df1-45ff-9931-a50369526225}</Project>
+      <Name>GaRyan2.Utilities</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\EPG123_download.ico" />
+    <Folder Include="Resources\" />
   </ItemGroup>
   <ItemGroup>
-    <COMReference Include="TaskScheduler">
-      <Guid>{E34CB9F1-C7F7-424C-BE29-027DCC09363A}</Guid>
-      <VersionMajor>1</VersionMajor>
-      <VersionMinor>0</VersionMinor>
-      <Lcid>0</Lcid>
-      <WrapperTool>tlbimp</WrapperTool>
-      <Isolated>False</Isolated>
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-    </COMReference>
+    <Content Include="EPG123.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

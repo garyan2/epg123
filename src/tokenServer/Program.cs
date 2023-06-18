@@ -1,4 +1,5 @@
-﻿using System.ServiceProcess;
+﻿using GaRyan2.Utilities;
+using System.ServiceProcess;
 
 namespace tokenServer
 {
@@ -9,6 +10,8 @@ namespace tokenServer
         /// </summary>
         static void Main()
         {
+            Logger.Initialize(Helper.ServerLogPath);
+
             ServiceBase[] ServicesToRun;
             ServicesToRun = new ServiceBase[]
             {

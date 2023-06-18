@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Windows.Forms;
+﻿using GaRyan2.WmcUtilities;
 using Microsoft.MediaCenter.Guide;
+using System;
+using System.Collections.Generic;
+using System.Windows.Forms;
 
 namespace epg123Client
 {

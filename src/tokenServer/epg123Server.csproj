@@ -67,13 +67,20 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="epgConfig.cs" />
-    <Compile Include="Helper.cs" />
+    <Compile Include="..\epg123\epgConfig.cs">
+      <Link>SchedulesDirect\epgConfig.cs</Link>
+    </Compile>
+    <Compile Include="SchedulesDirect\SchedulesDirect.cs" />
+    <Compile Include="SchedulesDirect\Token.cs" />
+    <Compile Include="Tcp\ConfigServer.cs" />
+    <Compile Include="Tcp\FileServer.cs" />
+    <Compile Include="Tcp\ImageServer.cs" />
     <Compile Include="JsonImageCache.cs" />
-    <Compile Include="RegWatchers.cs">
+    <Compile Include="ConfigWatcher.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="SchedulesDirect\SdApi.cs" />
+    <Compile Include="SchedulesDirect\BaseResponse.cs" />
+    <Compile Include="SchedulesDirect\SchedulesDirectApi.cs" />
     <Compile Include="Server.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -82,13 +89,7 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TCPServer.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="Token.cs" />
-    <Compile Include="UDPServer.cs">
-      <SubType>Component</SubType>
-    </Compile>
+    <Compile Include="Udp\UdpServer.cs" />
     <Compile Include="WebStats.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -104,6 +105,16 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="favicon.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\GaRyan2.Github\GaRyan2.Github.csproj">
+      <Project>{e82ca8a5-b4b2-4617-8caa-e4b93a4db330}</Project>
+      <Name>GaRyan2.Github</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\GaRyan2.Utilities\GaRyan2.Utilities.csproj">
+      <Project>{ccd05d81-0df1-45ff-9931-a50369526225}</Project>
+      <Name>GaRyan2.Utilities</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

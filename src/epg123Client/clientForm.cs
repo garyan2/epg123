@@ -1,4 +1,11 @@
-﻿using System;
+﻿using epg123Client.Properties;
+using GaRyan2.Utilities;
+using GaRyan2.WmcUtilities;
+using Microsoft.MediaCenter.Guide;
+using Microsoft.MediaCenter.Store;
+using Microsoft.MediaCenter.Store.MXF;
+using Microsoft.Win32;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -11,14 +18,7 @@ using System.Threading;
 using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Linq;
-using epg123;
-using epg123.Task;
-using epg123Client.Properties;
-using Microsoft.Win32;
-using Microsoft.MediaCenter.Guide;
-using Microsoft.MediaCenter.Store;
-using Microsoft.MediaCenter.Store.MXF;
-using Settings = epg123Client.Properties.Settings;
+using Settings = epg123.Properties.Settings;
 
 namespace epg123Client
 {
@@ -28,7 +28,7 @@ namespace epg123Client
 
         private readonly ListViewColumnSorter _mergedChannelColumnSorter = new ListViewColumnSorter();
         private readonly ListViewColumnSorter _lineupChannelColumnSorter = new ListViewColumnSorter();
-        private readonly epgTaskScheduler _task = new epgTaskScheduler();
+        private readonly EpgTaskScheduler _task = new EpgTaskScheduler();
         private bool _forceExit;
         public bool RestartClientForm;
         public bool RestartAsAdmin;
@@ -397,7 +397,7 @@ namespace epg123Client
                     // create task using epg123.exe & epg123Client.exe
                     if (rdoFullMode.Checked)
                     {
-                        var actions = new epgTaskScheduler.TaskActions[2];
+                        var actions = new EpgTaskScheduler.TaskActions[2];
                         actions[0].Path = tbTaskInfo.Text;
                         actions[0].Arguments = "-update";
                         actions[1].Path = Helper.Epg123ClientExePath;
@@ -407,7 +407,7 @@ namespace epg123Client
                     // create task using epg123Client.exe
                     else
                     {
-                        var actions = new epgTaskScheduler.TaskActions[1];
+                        var actions = new EpgTaskScheduler.TaskActions[1];
                         actions[0].Path = Helper.Epg123ClientExePath;
                         actions[0].Arguments = $"-i \"{tbTaskInfo.Text}\"" + ((cbAutomatch.Checked) ? " -match" : null);
                         _task.CreateTask(cbTaskWake.Checked, tbSchedTime.Text, actions);
@@ -1009,7 +1009,11 @@ namespace epg123Client
             lineupChannelListView?.Items.Clear();
 
             // populate with new lineup channels
-            _lineupListViewItems.AddRange(WmcStore.GetLineupChannels(((myLineup)cmbObjectStoreLineups.Items[cmbObjectStoreLineups.SelectedIndex]).LineupId));
+            var lineups = new List<myLineupLvi>();
+            foreach (var channel in WmcStore.GetLineupChannels(((myLineup)cmbObjectStoreLineups.Items[cmbObjectStoreLineups.SelectedIndex]).LineupId))
+            {
+                _lineupListViewItems.Add(new myLineupLvi(channel));
+            }
             if ((lineupChannelListView.VirtualListSize = _lineupListViewItems.Count) > 0)
             {
                 lineupChannelListView.TopItem = lineupChannelListView.Items[0];
@@ -1468,7 +1472,7 @@ namespace epg123Client
             if (!Directory.Exists(Helper.Epg123OutputFolder)) Directory.CreateDirectory(Helper.Epg123OutputFolder);
 
             var settings = new XmlWriterSettings() {Indent = true};
-            using (var writer = XmlWriter.Create(new StreamWriter(Helper.Epg123OutputFolder + "\\mxfExport.mxf"), settings))
+            using (var writer = XmlWriter.Create(new StreamWriter(Helper.Epg123OutputFolder + "mxfExport.mxf"), settings))
             {
                 MxfExporter.Export(WmcStore.WmcObjectStore, writer, false);
             }
@@ -1643,8 +1647,7 @@ namespace epg123Client
             else if (openFileDialog1.ShowDialog() != DialogResult.OK) return;
 
             // perform the file import with progress form
-            Logger.EventId = 0;
-            statusLogo.MxfFile = openFileDialog1.FileName;
+            Logger.Status = 0;
             var importForm = new frmImport(openFileDialog1.FileName);
             importForm.ShowDialog();
 
@@ -1653,17 +1656,17 @@ namespace epg123Client
             {
                 WmcStore.AutoMapChannels();
                 BuildLineupChannelListView();
-                WmcUtilities.ReindexDatabase();
+                WmcStore.ReindexDatabase();
             }
             else
             {
                 MessageBox.Show("There was an error importing the MXF file.", "Import Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            statusLogo.StatusImage();
+            statusLogo.StatusImage(openFileDialog1.FileName);
 
             // make sure guide is activated and background scanning is stopped
             WmcStore.ActivateEpg123LineupsInStore();
-            WmcRegistries.ActivateGuide();
+            WmcStore.ActivateGuide();
 
             // open object store and repopulate the GUI
             if (!sender?.Equals(tbTaskInfo) ?? true) btnRefreshLineups_Click(null, null);
@@ -1710,7 +1713,7 @@ namespace epg123Client
             // going to assume backups are up-to-date if in safe mode
             if (SystemInformation.BootMode == BootMode.Normal)
             {
-                _ = WmcUtilities.PerformWmcConfigurationsBackup();
+                _ = WmcStore.PerformWmcConfigurationsBackup();
             }
 
             foreach (var backupFolder in BackupFolders)
@@ -1730,7 +1733,7 @@ namespace epg123Client
         private static string GetBackupFilename(string backup)
         {
             string ret = null;
-            var directory = new DirectoryInfo(WmcRegistries.GetStoreFilename().Replace(".db", $"\\backup\\{backup}"));
+            var directory = new DirectoryInfo(WmcStore.GetStoreFilename().Replace(".db", $"\\backup\\{backup}"));
             if (Directory.Exists(directory.FullName))
             {
                 ret = directory.GetFiles().OrderByDescending(arg => arg.LastWriteTime).First().FullName;
@@ -1790,7 +1793,7 @@ namespace epg123Client
             // build the listviews and make sure registries are good
             btnRefreshLineups_Click(null, null);
             WmcStore.ActivateEpg123LineupsInStore();
-            WmcRegistries.ActivateGuide();
+            WmcStore.ActivateGuide();
 
             // reenable the containers and restore the cursor
             splitContainer1.Enabled = splitContainer2.Enabled = true;
@@ -1988,7 +1991,7 @@ namespace epg123Client
         private string DeleteActiveDatabaseFile()
         {
             // determine current instance and build database name
-            var database = WmcRegistries.GetStoreFilename();
+            var database = WmcStore.GetStoreFilename();
 
             // ensure there is a database to rebuild
             if (!string.IsNullOrEmpty(database))
@@ -2037,7 +2040,7 @@ namespace epg123Client
             }
             catch (Exception ex)
             {
-                Logger.WriteError(ex.Message);
+                Logger.WriteError($"{ex}");
                 return false;
             }
             return true;
