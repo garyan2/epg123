@@ -132,12 +132,12 @@ namespace tokenServer
             {
                 var dupe = false;
                 lock (_queueLock) dupe = !queuedImages.Add(context.Request.RawUrl);
-                if (!dupe)
+                if (dupe)
                 {
-                    ServiceImageRequest(context);
-                    lock (_queueLock) { queuedImages.Remove(context.Request.RawUrl); }
+                    while (queuedImages.Contains(context.Request.RawUrl)) Thread.Sleep(10);
                 }
-                else context.Response.StatusCode = (int)HttpStatusCode.Accepted;
+                ServiceImageRequest(context);
+                lock (_queueLock) { queuedImages.Remove(context.Request.RawUrl); }
             }
             else if (context.Request.RawUrl.StartsWith("/logos/"))
             {
