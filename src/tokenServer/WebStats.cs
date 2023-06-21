@@ -96,7 +96,7 @@ namespace tokenServer
         {
             var header = "<head><style>" +
                 "table, td, th { border: 1px solid #dddddd; text-align: center; }" +
-                "td, th { padding: 8px; }" +
+                "td, th { padding: 6px; }" +
                 "</style></head>";
             return header;
         }
@@ -108,32 +108,32 @@ namespace tokenServer
             {
                 ret += $"<tr><td>EPG123</td>";
                 ret += "<td>N/A</td>";
-                ret += FileDetail(Helper.Epg123MxfPath);
-                ret += FileDetail(Helper.Epg123XmltvPath);
+                ret += FileDetail(Helper.Epg123MxfPath, 24);
+                ret += FileDetail(Helper.Epg123XmltvPath, 24);
                 ret += "</tr>";
             }
             if (File.Exists(Helper.Hdhr2MxfExePath))
             {
                 ret += $"<tr><td>HDHR2MXF</td>";
-                ret += FileDetail(Helper.Hdhr2MxfM3uPath);
-                ret += FileDetail(Helper.Hdhr2MxfMxfPath);
-                ret += FileDetail(Helper.Hdhr2mxfXmltvPath);
+                ret += FileDetail(Helper.Hdhr2MxfM3uPath, 24);
+                ret += FileDetail(Helper.Hdhr2MxfMxfPath, 24);
+                ret += FileDetail(Helper.Hdhr2mxfXmltvPath, 24);
                 ret += "</tr>";
             }
             if (File.Exists(Helper.PlutoTvExePath))
             {
                 ret += $"<tr><td>PlutoTV</td>";
-                ret += FileDetail(Helper.PlutoTvM3uPath);
+                ret += FileDetail(Helper.PlutoTvM3uPath, 12);
                 ret += "<td>N/A</td>";
-                ret += FileDetail(Helper.PlutoTvXmltvPath);
+                ret += FileDetail(Helper.PlutoTvXmltvPath, 12);
                 ret += "</tr>";
             }
             if (File.Exists(Helper.StirrTvExePath))
             {
                 ret += $"<tr><td>StirrTV</td>";
-                ret += FileDetail(Helper.StirrTvM3uPath);
+                ret += FileDetail(Helper.StirrTvM3uPath, 24);
                 ret += "<td>N/A</td>";
-                ret += FileDetail(Helper.StirrTvXmltvPath);
+                ret += FileDetail(Helper.StirrTvXmltvPath, 24);
                 ret += "</tr>";
             }
             ret += "</table>";
@@ -141,10 +141,12 @@ namespace tokenServer
             return ret;
         }
 
-        private static string FileDetail(string path)
+        private static string FileDetail(string path, int newHours)
         {
+            var old = false;
             var file = new FileInfo(path);
-            return file.Exists ? $"<td>{file.LastWriteTime}<br>{file.Length:N0} bytes</td>" : "<td></td>";
+            if (file.Exists && (DateTime.Now - file.LastWriteTime).TotalHours > newHours) old = true;
+            return file.Exists ? $"<td><font color=\"{(old ? "red" : "blue")}\">{file.LastWriteTime}<br>{file.Length:N0} bytes</font></td>" : "<td></td>";
         }
 
         public static void AddSdDownload(long size)

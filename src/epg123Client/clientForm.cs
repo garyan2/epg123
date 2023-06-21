@@ -394,14 +394,16 @@ namespace epg123Client
                 // create new task if file location is valid
                 if (!_task.Exist && !tbTaskInfo.Text.StartsWith("***"))
                 {
-                    // create task using epg123.exe & epg123Client.exe
+                    // create task using epg123.exe/hdhr2mxf.exe & epg123Client.exe
                     if (rdoFullMode.Checked)
                     {
+                        var importFile = Helper.Epg123MxfPath;
+                        if (tbTaskInfo.Text.Equals(Helper.Hdhr2MxfExePath, StringComparison.OrdinalIgnoreCase)) importFile = Helper.Hdhr2MxfMxfPath;
+
                         var actions = new EpgTaskScheduler.TaskActions[2];
                         actions[0].Path = tbTaskInfo.Text;
-                        actions[0].Arguments = "-update";
                         actions[1].Path = Helper.Epg123ClientExePath;
-                        actions[1].Arguments = $"-i \"{Helper.Epg123MxfPath}\"" + ((cbAutomatch.Checked) ? " -match" : null);
+                        actions[1].Arguments = $"-i \"{importFile}\"{(cbAutomatch.Checked ? " -match" : null)}";
                         _task.CreateTask(cbTaskWake.Checked, tbSchedTime.Text, actions);
                     }
                     // create task using epg123Client.exe
@@ -409,7 +411,7 @@ namespace epg123Client
                     {
                         var actions = new EpgTaskScheduler.TaskActions[1];
                         actions[0].Path = Helper.Epg123ClientExePath;
-                        actions[0].Arguments = $"-i \"{tbTaskInfo.Text}\"" + ((cbAutomatch.Checked) ? " -match" : null);
+                        actions[0].Arguments = $"-i \"{tbTaskInfo.Text}\"{(cbAutomatch.Checked ? " -match" : null)}";
                         _task.CreateTask(cbTaskWake.Checked, tbSchedTime.Text, actions);
                     }
                 }

@@ -118,6 +118,12 @@ Name: "{commondesktop}\{#MyClientName}"; Filename: "{app}\{#MyClientExeName}"; T
 Name: "{commonstartup}\EPG123 Tray"; Filename: "{app}\epgTray.exe"; Components: main2\tray
 
 [Registry]
+Root: HKLM; Subkey: "SYSTEM\CurrentControlSet\Services\EventLog\Media Center\EPG123"; Flags: deletekey noerror
+Root: HKLM; Subkey: "SYSTEM\CurrentControlSet\Services\EventLog\Media Center\EPG123Client"; Flags: deletekey noerror
+Root: HKLM; Subkey: "SOFTWARE\GaRyan2\"; Flags: deletekey noerror; Check: not IsWin64
+Root: HKLM; Subkey: "SOFTWARE\GaRyan2\epg123\"; Flags: deletekey noerror; Check: not IsWin64
+Root: HKLM64; Subkey: "SOFTWARE\GaRyan2\"; Flags: deletekey noerror; Check: IsWin64
+Root: HKLM64; Subkey: "SOFTWARE\GaRyan2\epg123\"; Flags: deletekey noerror; Check: IsWin64
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent runascurrentuser unchecked; Components: main1\epg123 main2
@@ -208,10 +214,6 @@ begin
     Exec(ExpandConstant('{sys}\sc.exe'), 'stop epg123Server', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
     Exec(ExpandConstant('{sys}\taskkill.exe'), '/f /im epg123Server.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
     Exec(ExpandConstant('{sys}\taskkill.exe'), '/f /im epgTray.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
-    RegDeleteKeyIncludingSubkeys(HKLM, 'SOFTWARE\GaRyan2');
-    RegDeleteKeyIncludingSubkeys(HKLM64, 'SOFTWARE\GaRyan2');
-    RegDeleteKeyIncludingSubkeys(HKLM, 'SYSTEM\CurrentControlSet\Services\EventLog\Media Center\EPG123');
-    RegDeleteKeyIncludingSubkeys(HKLM, 'SYSTEM\CurrentControlSet\Services\EventLog\Media Center\EPG123Client');
 end;
 
 // check where the installation folder is located

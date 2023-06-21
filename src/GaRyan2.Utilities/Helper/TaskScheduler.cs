@@ -126,7 +126,7 @@ namespace GaRyan2.Utilities
             foreach (var tAction in tActions)
             {
                 var action = (IExecAction)taskDefinition.Actions.Create(_TASK_ACTION_TYPE.TASK_ACTION_EXEC);
-                action.Arguments = tAction.Arguments.Replace("http:", "EPG:");
+                action.Arguments = tAction.Arguments?.Replace("http:", "EPG:");
                 action.Id = $"epg123 Execution Action {taskDefinition.Actions.Count}";
                 action.Path = tAction.Path;
                 action.WorkingDirectory = Helper.ExecutablePath;

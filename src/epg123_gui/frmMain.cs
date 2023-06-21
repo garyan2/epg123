@@ -387,9 +387,8 @@ namespace epg123
                 {
                     var actions = new EpgTaskScheduler.TaskActions[2];
                     actions[0].Path = Helper.Epg123ExePath;
-                    actions[0].Arguments = "-update";
                     actions[1].Path = Helper.Epg123ClientExePath;
-                    actions[1].Arguments = "-i \"" + Helper.Epg123MxfPath + "\"" + (cbAutomatch.Checked ? " -match" : null);
+                    actions[1].Arguments = $"-i \"{Helper.Epg123MxfPath}{(cbAutomatch.Checked ? " -match" : null)}";
                     _task.CreateTask(cbTaskWake.Checked, tbSchedTime.Text, actions);
                 }
                 // create task using epg123.exe
@@ -397,7 +396,6 @@ namespace epg123
                 {
                     var actions = new EpgTaskScheduler.TaskActions[1];
                     actions[0].Path = Helper.Epg123ExePath;
-                    actions[0].Arguments = "-update";
                     _task.CreateTask(cbTaskWake.Checked, tbSchedTime.Text, actions);
                 }
                 _task.ImportTask();
