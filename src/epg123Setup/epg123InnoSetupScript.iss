@@ -83,8 +83,8 @@ Name: "startmenu"; Description: "Create start menu icons"; GroupDescription: "{c
 Source: "misc\ndp462-kb3151802-web.exe"; DestDir: "{tmp}"; Flags: dontcopy
 Source: "{#SourcePath}\epg123.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: main1\epg123
 Source: "{#SourcePath}\epg123.exe.config"; DestDir: "{app}"; Flags: ignoreversion; Attribs: hidden; Components: main1\epg123
-Source: "{#SourcePath}\epg123_gui.exe"; DestDir: "{app}"; BeforeInstall: TaskKill('epg123_gui.exe'); Flags: ignoreversion signonce; Components: main1\epg123 main2
-Source: "{#SourcePath}\epg123_gui.exe.config"; DestDir: "{app}"; Flags: ignoreversion; Attribs: hidden; Components: main1\epg123 main2
+Source: "{#SourcePath}\epg123_gui.exe"; DestDir: "{app}"; BeforeInstall: TaskKill('epg123_gui.exe'); Flags: ignoreversion signonce; Components: main1\epg123 main2 and not main1
+Source: "{#SourcePath}\epg123_gui.exe.config"; DestDir: "{app}"; Flags: ignoreversion; Attribs: hidden; Components: main1\epg123 main2 and not main1
 Source: "{#SourcePath}\epg123Server.exe"; DestDir: "{app}"; BeforeInstall: TaskKill('epg123Server.exe'); Flags: ignoreversion signonce; Components: main1\epg123 main1\hdhr main1\plutotv main1\stirr
 Source: "{#SourcePath}\hdhr2mxf.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: main1\hdhr
 Source: "{#SourcePath}\Newtonsoft.Json.dll"; DestDir: "{app}"; Flags: ignoreversion; Components: main1\epg123 main1\hdhr main1\plutotv main1\stirr main2
@@ -108,12 +108,12 @@ Source: "docs\license.rtf"; DestDir: "{app}"; Flags: ignoreversion
 Source: "links\EPG123 Online.url"; DestDir: "{commonprograms}\{#MyAppName}"; Tasks: startmenu; Flags: ignoreversion
 
 [Icons]
-Name: "{commonprograms}\{#MyAppName}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: startmenu; Components: main1\epg123 main2
+Name: "{commonprograms}\{#MyAppName}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: startmenu; Components: main1\epg123 main2 and not main1
 Name: "{commonprograms}\{#MyAppName}\{#MyClientName}"; Filename: "{app}\{#MyClientExeName}"; Tasks: startmenu; Components: main2
 Name: "{commonprograms}\{#MyAppName}\EPG123 Transfer Tool"; Filename: "{app}\epg123Transfer.exe"; Tasks: startmenu; Components: main2
 Name: "{commonprograms}\{#MyAppName}\EPG123 Tray"; Filename: "{app}\epgTray.exe"; Tasks: startmenu; Components: main2\tray
 Name: "{commonprograms}\{#MyAppName}\Log Viewer"; Filename: "{app}\logViewer.exe"; Tasks: startmenu;
-Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon; Components: main1\epg123 main2
+Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon; Components: main1\epg123 main2 and not main1
 Name: "{commondesktop}\{#MyClientName}"; Filename: "{app}\{#MyClientExeName}"; Tasks: desktopicon; Components: main2
 Name: "{commonstartup}\EPG123 Tray"; Filename: "{app}\epgTray.exe"; Components: main2\tray
 
@@ -126,7 +126,7 @@ Root: HKLM64; Subkey: "SOFTWARE\GaRyan2\"; Flags: deletekey noerror; Check: IsWi
 Root: HKLM64; Subkey: "SOFTWARE\GaRyan2\epg123\"; Flags: deletekey noerror; Check: IsWin64
 
 [Run]
-Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent runascurrentuser unchecked; Components: main1\epg123 main2
+Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent runascurrentuser unchecked; Components: main1\epg123 main2 and not main1
 Filename: "{app}\{#MyClientExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyClientName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent runascurrentuser unchecked; Components: main2
 Filename: "{app}\epgTray.exe"; Flags: nowait runasoriginaluser; Components: main2\tray
 

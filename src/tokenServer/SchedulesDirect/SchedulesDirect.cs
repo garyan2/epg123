@@ -33,7 +33,7 @@ namespace GaRyan2
 
         public static void RefreshConfiguration()
         {
-            if (!File.Exists(Helper.Epg123ExePath) || !File.Exists(Helper.Epg123CfgPath)) return;
+            if (!File.Exists(Helper.Epg123ExePath)) return;
 
             // load epg123 config file
             epgConfig config = Helper.ReadXmlFile(Helper.Epg123CfgPath, typeof(epgConfig)) ?? new epgConfig();

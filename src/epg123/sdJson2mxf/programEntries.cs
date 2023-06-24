@@ -315,7 +315,7 @@ namespace epg123.sdJson2mxf
             }
 
             // queue up the sport event to get the event image
-            if ((Helper.StringContains(sd.ShowType, "Sports event") || Helper.StringContains(sd.ShowType, "Team event")) && sd.HasSportsArtwork | sd.HasEpisodeArtwork)
+            if ((Helper.StringContains(sd.ShowType, "Sports event") || Helper.StringContains(sd.ShowType, "Team event")) && (sd.HasSportsArtwork | sd.HasEpisodeArtwork | sd.HasSeriesArtwork | sd.HasImageArtwork))
             {
                 sportEvents.Add(prg);
             }

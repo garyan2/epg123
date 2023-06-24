@@ -44,26 +44,16 @@ namespace tokenServer
         {
             get
             {
-                var fiMxf = new FileInfo(Helper.Epg123MxfPath);
-                var fiXmltv = new FileInfo(Helper.Epg123XmltvPath);
-                var uptime = DateTime.Now - StartTime;
                 return PageHeader() +
                        $"<html><title>{Environment.MachineName} Server Status</title><body>" +
-                       $"<h1>Status</h1><p>" +
-                       $"Uptime: <font color=\"blue\">{uptime.Days:D2}</font> days, <font color=\"blue\">{uptime.Hours:D2}</font> hours, <font color=\"blue\">{uptime.Minutes:D2}</font> minutes, <font color=\"blue\">{uptime.Seconds:D2}</font> seconds<br>" +
-                       $"Image cache enabled: <font color=\"blue\">{JsonImageCache.cacheImages}</font><br>" +
-                       $"Image retention: <font color=\"blue\">{JsonImageCache.cacheRetention} days</font> after last request<br>" +
-                       $"Number of cached images: <font color=\"blue\">{JsonImageCache.ImageCache.Count} ({JsonImageCache.ImageCache.Select(x => x.Value.ByteSize).Sum():N0} bytes)</font><br>" +
-                       $"Download limit exceeded: <font color=\"{(LimitLocked ? "red" : "blue")}\">{LimitLocked}</font><br>" +
-                       $"Number of token refreshes: <font color=\"blue\">{tokenRefresh - 1}</font><br>" +
-                       $"Valid token: <font color=\"{(SchedulesDirect.GoodToken ? "blue" : "red")}\">{SchedulesDirect.GoodToken}</font></p><p>" +
+                       $"<h1>Status</h1>" +
+                       BuildEpgStatusAndConfiguration() +
                        BuildFileTable() +
-
                        $"<h1>Stats</h1><p>" +
                        $"<u><strong>Requests received by service (<font color=\"blue\">{reqRcvd + condReqRcvd + reqLogo + reqFile}</font>):</strong></u><br>" +
                        $"Logo requests: <font color=\"blue\">{reqLogo}</font><br>" +
                        $"Image requests: <font color=\"blue\">{reqRcvd}</font><br>" +
-                       $"Conditional requests: <font color=\"blue\">{condReqRcvd}</font><br>" + 
+                       $"Conditional requests: <font color=\"blue\">{condReqRcvd}</font><br>" +
                        $"File requests: <font color=\"blue\">{reqFile}</font><br><br>" +
                        $"<u><strong>Requests sent to Schedules Direct (<font color=\"blue\">{reqSent + condReqSent}</font>):</strong></u><br>" +
                        $"Image requests: <font color=\"blue\">{reqSent}</font><br>" +
@@ -103,7 +93,7 @@ namespace tokenServer
 
         private static string BuildFileTable()
         {
-            var ret = "<table><tr><th>Source</th><th>M3U</th><th>MXF</th><th>XMLTV</th></tr>";
+            var ret = "<p><table><tr><th>Source</th><th>M3U</th><th>MXF</th><th>XMLTV</th></tr>";
             if (File.Exists(Helper.Epg123ExePath))
             {
                 ret += $"<tr><td>EPG123</td>";
@@ -137,8 +127,24 @@ namespace tokenServer
                 ret += "</tr>";
             }
             ret += "</table>";
-            ret += $"<p><small><b>Links to files above can be constructed from server address + \"/output/&lt;source&gt;.&lt;extension&gt;\"; ex. http://{Environment.MachineName}:9009/output/epg123.mxf</b></small></p>";
+            ret += $"<p><small><b>Links to files above can be constructed from server address + \"/output/&lt;source&gt;.&lt;extension&gt;\"; ex. http://{Environment.MachineName}:9009/output/epg123.mxf</b></small></p></p>";
             return ret;
+        }
+
+        private static string BuildEpgStatusAndConfiguration()
+        {
+            var uptime = DateTime.Now - StartTime;
+            var ret = $"<p>Uptime: <font color=\"blue\">{uptime.Days:D2}</font> days, <font color=\"blue\">{uptime.Hours:D2}</font> hours, <font color=\"blue\">{uptime.Minutes:D2}</font> minutes, <font color=\"blue\">{uptime.Seconds:D2}</font> seconds<br>";
+            if (File.Exists(Helper.Epg123ExePath))
+            {
+                ret += $"Image cache enabled: <font color=\"blue\">{JsonImageCache.cacheImages}</font><br>" +
+                       $"Image retention: <font color=\"blue\">{JsonImageCache.cacheRetention} days</font> after last request<br>" +
+                       $"Number of cached images: <font color=\"blue\">{JsonImageCache.ImageCache.Count} ({JsonImageCache.ImageCache.Select(x => x.Value.ByteSize).Sum():N0} bytes)</font><br>" +
+                       $"Download limit exceeded: <font color=\"{(LimitLocked ? "red" : "blue")}\">{LimitLocked}</font><br>" +
+                       $"Number of token refreshes: <font color=\"blue\">{tokenRefresh - 1}</font><br>" +
+                       $"Valid token: <font color=\"{(SchedulesDirect.GoodToken ? "blue" : "red")}\">{SchedulesDirect.GoodToken}</font>";
+            }
+            return ret + "</p>";
         }
 
         private static string FileDetail(string path, int newHours)

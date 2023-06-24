@@ -198,6 +198,7 @@ namespace epg123
                         Settings.Default.CfgLocation = Helper.Epg123CfgPath;
                         break;
                     default: // UNKNOWN
+                        Settings.Default.CfgLocation = null;
                         MessageBox.Show("Unknown installation method. Closing application.", "Exiting");
                         break;
                 }
@@ -815,7 +816,9 @@ namespace epg123
             if (Config == null) return;
             Config.IncludedLineup = _allLineups.Values.Where(arg => arg.Include).OrderBy(arg => arg.Lineup.Lineup).Select(arg => arg.Lineup.Lineup).ToList();
             Config.DiscardChanNumbers = _allLineups.Values.Where(arg => arg.Include && arg.DiscardNumbers).OrderBy(arg => arg.Lineup.Lineup).Select(arg => arg.Lineup.Lineup).ToList();
-            Config.StationId = _allStations.Values.Select(arg => arg.StationOptions).OrderBy(arg => arg.CallSign).ToList();
+
+            var includedStations = _allLineups.Values.Where(arg => arg.Include).SelectMany(arg => arg.Channels.Select(ch => ch.StationId)).Distinct().ToList();
+            Config.StationId = _allStations.Values.Where(arg => includedStations.Contains(arg.StationId)).Select(arg => arg.StationOptions).OrderBy(arg => arg.CallSign).ToList();
             Config.ExpectedServicecount = Config.StationId.Count(arg => !arg.StationId.StartsWith("-"));
         }
 
