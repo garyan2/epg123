@@ -7,6 +7,7 @@ using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Windows.Forms.VisualStyles;
 
 namespace GaRyan2.SiliconDustApi
 {
@@ -69,8 +70,26 @@ namespace GaRyan2.SiliconDustApi
                             pos += len;
                             switch (tag)
                             {
-                                case 0x02: // device id
-                                    dev.DeviceId = $"{load[0] << 24 | load[1] << 16 | load[2] << 8 | load[3]:X2}";
+                                case 0x02: // device id & legacy determination
+                                    var id = load[0] << 24 | load[1] << 16 | load[2] << 8 | load[3];
+                                    dev.DeviceId = $"{id:X2}";
+                                    switch (id >> 20)
+                                    {
+                                        case 0x100: // TECH-US/TECH3-US
+                                            dev.Legacy = (id < 0x10040000) ? 1 : 0;
+                                            break;
+                                        case 0x120: // TECH3-EU
+                                            dev.Legacy = (id < 0x12030000) ? 1 : 0;
+                                            break;
+                                        case 0x101: // HDHR-US
+                                        case 0x102: // HDHR-T1-US
+                                        case 0x103: // HDHR3-US
+                                        case 0x111: // HDHR3-DT
+                                        case 0x121: // HDHR-EU
+                                        case 0x122: // HDHR3-EU
+                                            dev.Legacy = 1;
+                                            break;
+                                    }
                                     break;
                                 case 0x27: // lineup url
                                     dev.LineupUrl = Encoding.ASCII.GetString(load);

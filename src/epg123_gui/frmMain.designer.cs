@@ -33,6 +33,7 @@
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tabConfigs = new System.Windows.Forms.TabControl();
             this.tabConfig = new System.Windows.Forms.TabPage();
+            this.cbBrandLogo = new System.Windows.Forms.CheckBox();
             this.btnRemoveOrphans = new System.Windows.Forms.Button();
             this.cbOadOverride = new System.Windows.Forms.CheckBox();
             this.cbSeriesWsArt = new System.Windows.Forms.CheckBox();
@@ -160,18 +161,20 @@
             this.splitContainer1.Panel1.Controls.Add(this.tabConfigs);
             this.splitContainer1.Panel1.Controls.Add(this.grpAccount);
             this.splitContainer1.Panel1.Cursor = System.Windows.Forms.Cursors.Default;
-            this.splitContainer1.Panel1MinSize = 340;
+            this.splitContainer1.Panel1MinSize = 346;
             // 
             // splitContainer1.Panel2
             // 
             this.splitContainer1.Panel2.Controls.Add(this.tabLineups);
             this.splitContainer1.Panel2MinSize = 340;
             this.splitContainer1.Size = new System.Drawing.Size(784, 526);
-            this.splitContainer1.SplitterDistance = 340;
+            this.splitContainer1.SplitterDistance = 346;
             this.splitContainer1.TabIndex = 0;
             // 
             // tabConfigs
             // 
+            this.tabConfigs.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left)));
             this.tabConfigs.Controls.Add(this.tabConfig);
             this.tabConfigs.Controls.Add(this.tabXmltv);
             this.tabConfigs.Controls.Add(this.tabTask);
@@ -182,12 +185,14 @@
             this.tabConfigs.Multiline = true;
             this.tabConfigs.Name = "tabConfigs";
             this.tabConfigs.SelectedIndex = 0;
-            this.tabConfigs.Size = new System.Drawing.Size(317, 421);
+            this.tabConfigs.Size = new System.Drawing.Size(331, 421);
             this.tabConfigs.TabIndex = 10;
             // 
             // tabConfig
             // 
+            this.tabConfig.AutoScroll = true;
             this.tabConfig.BackColor = System.Drawing.SystemColors.Control;
+            this.tabConfig.Controls.Add(this.cbBrandLogo);
             this.tabConfig.Controls.Add(this.btnRemoveOrphans);
             this.tabConfig.Controls.Add(this.cbOadOverride);
             this.tabConfig.Controls.Add(this.cbSeriesWsArt);
@@ -210,9 +215,20 @@
             this.tabConfig.Location = new System.Drawing.Point(4, 22);
             this.tabConfig.Name = "tabConfig";
             this.tabConfig.Padding = new System.Windows.Forms.Padding(3);
-            this.tabConfig.Size = new System.Drawing.Size(309, 395);
+            this.tabConfig.Size = new System.Drawing.Size(323, 395);
             this.tabConfig.TabIndex = 2;
             this.tabConfig.Text = "Configuration";
+            // 
+            // cbBrandLogo
+            // 
+            this.cbBrandLogo.AutoSize = true;
+            this.cbBrandLogo.Location = new System.Drawing.Point(6, 341);
+            this.cbBrandLogo.Name = "cbBrandLogo";
+            this.cbBrandLogo.Size = new System.Drawing.Size(294, 17);
+            this.cbBrandLogo.TabIndex = 41;
+            this.cbBrandLogo.Text = "Add status logo in channel guide (viewable by extenders)";
+            this.cbBrandLogo.UseVisualStyleBackColor = true;
+            this.cbBrandLogo.CheckedChanged += new System.EventHandler(this.configs_Changed);
             // 
             // btnRemoveOrphans
             // 
@@ -271,7 +287,7 @@
             // 
             this.cbNoCastCrew.AccessibleName = "do not include cast and crew";
             this.cbNoCastCrew.AutoSize = true;
-            this.cbNoCastCrew.Location = new System.Drawing.Point(6, 366);
+            this.cbNoCastCrew.Location = new System.Drawing.Point(6, 387);
             this.cbNoCastCrew.Name = "cbNoCastCrew";
             this.cbNoCastCrew.Size = new System.Drawing.Size(247, 17);
             this.cbNoCastCrew.TabIndex = 17;
@@ -394,7 +410,7 @@
             // cbModernMedia
             // 
             this.cbModernMedia.AutoSize = true;
-            this.cbModernMedia.Location = new System.Drawing.Point(6, 342);
+            this.cbModernMedia.Location = new System.Drawing.Point(6, 364);
             this.cbModernMedia.Name = "cbModernMedia";
             this.cbModernMedia.Size = new System.Drawing.Size(199, 17);
             this.cbModernMedia.TabIndex = 16;
@@ -466,7 +482,7 @@
             this.tabXmltv.Location = new System.Drawing.Point(4, 22);
             this.tabXmltv.Name = "tabXmltv";
             this.tabXmltv.Padding = new System.Windows.Forms.Padding(3);
-            this.tabXmltv.Size = new System.Drawing.Size(309, 395);
+            this.tabXmltv.Size = new System.Drawing.Size(323, 395);
             this.tabXmltv.TabIndex = 3;
             this.tabXmltv.Text = "XMLTV";
             // 
@@ -639,7 +655,7 @@
             this.tabTask.Location = new System.Drawing.Point(4, 22);
             this.tabTask.Name = "tabTask";
             this.tabTask.Padding = new System.Windows.Forms.Padding(3);
-            this.tabTask.Size = new System.Drawing.Size(309, 395);
+            this.tabTask.Size = new System.Drawing.Size(323, 395);
             this.tabTask.TabIndex = 4;
             this.tabTask.Text = "Scheduled Task";
             // 
@@ -737,7 +753,7 @@
             this.tabService.Location = new System.Drawing.Point(4, 22);
             this.tabService.Name = "tabService";
             this.tabService.Padding = new System.Windows.Forms.Padding(3);
-            this.tabService.Size = new System.Drawing.Size(309, 395);
+            this.tabService.Size = new System.Drawing.Size(323, 395);
             this.tabService.TabIndex = 5;
             this.tabService.Text = "Service";
             // 
@@ -911,7 +927,7 @@
             this.grpAccount.Controls.Add(this.txtLoginName);
             this.grpAccount.Location = new System.Drawing.Point(12, 3);
             this.grpAccount.Name = "grpAccount";
-            this.grpAccount.Size = new System.Drawing.Size(317, 96);
+            this.grpAccount.Size = new System.Drawing.Size(327, 96);
             this.grpAccount.TabIndex = 0;
             this.grpAccount.TabStop = false;
             this.grpAccount.Text = "Schedules Direct Account";
@@ -1002,7 +1018,7 @@
             this.tabLineups.Location = new System.Drawing.Point(0, 0);
             this.tabLineups.Name = "tabLineups";
             this.tabLineups.SelectedIndex = 0;
-            this.tabLineups.Size = new System.Drawing.Size(440, 526);
+            this.tabLineups.Size = new System.Drawing.Size(434, 526);
             this.tabLineups.TabIndex = 0;
             // 
             // tabLineup
@@ -1011,7 +1027,7 @@
             this.tabLineup.Controls.Add(this.toolStrip6);
             this.tabLineup.Location = new System.Drawing.Point(4, 22);
             this.tabLineup.Name = "tabLineup";
-            this.tabLineup.Size = new System.Drawing.Size(432, 500);
+            this.tabLineup.Size = new System.Drawing.Size(426, 500);
             this.tabLineup.TabIndex = 5;
             this.tabLineup.Text = "Subscribed Lineups";
             this.tabLineup.UseVisualStyleBackColor = true;
@@ -1031,7 +1047,7 @@
             this.lvLineupChannels.Location = new System.Drawing.Point(0, 46);
             this.lvLineupChannels.Name = "lvLineupChannels";
             this.lvLineupChannels.OwnerDraw = true;
-            this.lvLineupChannels.Size = new System.Drawing.Size(432, 454);
+            this.lvLineupChannels.Size = new System.Drawing.Size(426, 454);
             this.lvLineupChannels.Sorting = System.Windows.Forms.SortOrder.Ascending;
             this.lvLineupChannels.TabIndex = 3;
             this.lvLineupChannels.UseCompatibleStateImageBehavior = false;
@@ -1097,7 +1113,7 @@
             this.toolStrip6.MaximumSize = new System.Drawing.Size(0, 46);
             this.toolStrip6.MinimumSize = new System.Drawing.Size(0, 46);
             this.toolStrip6.Name = "toolStrip6";
-            this.toolStrip6.Size = new System.Drawing.Size(432, 46);
+            this.toolStrip6.Size = new System.Drawing.Size(426, 46);
             this.toolStrip6.Stretch = true;
             this.toolStrip6.TabIndex = 2;
             this.toolStrip6.Text = "toolStrip6";
@@ -1152,7 +1168,7 @@
             this.comboLineups.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
             this.comboLineups.MaxDropDownItems = 16;
             this.comboLineups.Name = "comboLineups";
-            this.comboLineups.Size = new System.Drawing.Size(400, 23);
+            this.comboLineups.Size = new System.Drawing.Size(394, 23);
             this.comboLineups.Sorted = true;
             this.comboLineups.SelectedIndexChanged += new System.EventHandler(this.subscribedLineup_SelectedIndexChanged);
             // 
@@ -1422,5 +1438,6 @@
         private System.Windows.Forms.TextBox txtBaseApi;
         private System.Windows.Forms.Button btnChangeServer;
         private System.Windows.Forms.LinkLabel linkLabel3;
+        private System.Windows.Forms.CheckBox cbBrandLogo;
     }
 }

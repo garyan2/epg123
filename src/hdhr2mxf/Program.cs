@@ -176,20 +176,20 @@ namespace hdhr2mxf
                 var lineup = mxf.FindOrCreateLineup(detail.MxfLineupID, detail.MxfLineupName);
 
                 // get device channel tuning info and extra info
-                var channels = api.GetDeviceChannels(device.LineupUrl);
+                var channels = api.GetDeviceChannels(device.LineupUrl, device.Legacy);
                 var extras = api.GetDeviceChannelDetails(detail.DeviceAuth);
 
                 foreach (var channel in channels ?? new List<HdhrChannel>())
                 {
                     // find matching channel in xmltv file
-                    var xmlChannel = xml.Channels.FirstOrDefault(arg => arg.DisplayNames.Where(text => text.Text.Equals(channel.ToString(), StringComparison.OrdinalIgnoreCase)).Any());
+                    var xmlChannel = xml.Channels.FirstOrDefault(arg => arg.Lcn.Where(text => text.Text.Equals(channel.GuideNumber)).Any());
                     if (xmlChannel == null) continue;
 
                     // find matching channel in extras
-                    var extra = extras?.FirstOrDefault(arg => xmlChannel.DisplayNames.Where(text => text.Text.Equals(arg.ToString(), StringComparison.OrdinalIgnoreCase)).Any());
+                    var extra = extras?.FirstOrDefault(arg => xmlChannel.Lcn.Where(text => text.Text.Equals(arg.GuideNumber)).Any());
 
                     // add channel info in m3u file
-                    if (extra != null)
+                    if (extra != null && device.Legacy == 0)
                     {
                         m3uWrite.WriteLine($"#EXTINF:-1 channel-id=\"{channel.GuideNumber}\" channel-number=\"{channel.GuideNumber}\" tvg-id=\"{xmlChannel.Id}\" tvg-chno=\"{channel.GuideNumber}\" tvg-name=\"{channel.GuideName}\"{(_noLogos ? " " : $" tvg-logo=\"{extra.ImageUrl}\" ")}group-title=\"{detail.ModelNumber}-{detail.DeviceId}\",{channel.GuideNumber} {channel.GuideName}");
                         m3uWrite.WriteLine($"{channel.Url}");

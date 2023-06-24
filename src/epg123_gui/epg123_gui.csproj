@@ -72,7 +72,6 @@
     <Compile Include="Controls\Lineup.cs" />
     <Compile Include="Controls\ListView.cs" />
     <Compile Include="Controls\Station.cs" />
-    <Compile Include="CustomLineups.cs" />
     <Compile Include="ElevatedButton.cs">
       <SubType>Component</SubType>
     </Compile>

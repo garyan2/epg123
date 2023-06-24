@@ -52,6 +52,7 @@ namespace epg123
             XmltvSingleImage = other.XmltvSingleImage;
             UseIpAddress = other.UseIpAddress;
             ModernMediaUiPlusSupport = other.ModernMediaUiPlusSupport;
+            BrandLogoImage = other.BrandLogoImage;
             SuppressStationEmptyWarnings = other.SuppressStationEmptyWarnings;
 
             if (other.IncludedLineup != null)
@@ -130,6 +131,7 @@ namespace epg123
             if (!XmltvSingleImage.Equals(other.XmltvSingleImage)) return false;
             if (!(UseIpAddress ?? "").Equals(other.UseIpAddress ?? "")) return false;
             if (!ModernMediaUiPlusSupport.Equals(other.ModernMediaUiPlusSupport)) return false;
+            if (!BrandLogoImage.Equals(other.BrandLogoImage)) return false;
             if (!SuppressStationEmptyWarnings.Equals(other.SuppressStationEmptyWarnings)) return false;
             if (!ExpectedServicecount.Equals(other.ExpectedServicecount)) return false;
 
@@ -252,6 +254,15 @@ namespace epg123
 
         [XmlElement("ModernMediaUiPlusJsonFilepath")]
         public string ModernMediaUiPlusJsonFilepath { get; set; }
+
+        [XmlAnyElement("BrandLogoImageComment")]
+        public XmlComment BrandLogoImageComment
+        {
+            get => new XmlDocument().CreateComment(" BrandLogoImage: Add status image to guide view in WMC. Options are \"none\", \"light\", and \"dark\".");
+            set { }
+        }
+        [XmlElement("BrandLogoImage")]
+        public string BrandLogoImage { get; set; } = "none";
 
         [XmlAnyElement("SuppressStationEmptyWarningsComment")]
         public XmlComment SuppressStationEmptyWarningsComment { get => new XmlDocument().CreateComment(" SuppressStationEmptyWarnings: Enter specific station callsigns, comma delimited, to suppress warnings for no guide data, or use a wildcard (*) for a group of callsigns. A solitary wildcard means all station warnings will be suppressed.");

@@ -2,6 +2,7 @@
 using GaRyan2.SchedulesDirectAPI;
 using GaRyan2.Utilities;
 using System;
+using System.IO;
 using System.Net.Http;
 using System.Threading;
 using tokenServer;
@@ -32,6 +33,8 @@ namespace GaRyan2
 
         public static void RefreshConfiguration()
         {
+            if (!File.Exists(Helper.Epg123ExePath) || !File.Exists(Helper.Epg123CfgPath)) return;
+
             // load epg123 config file
             epgConfig config = Helper.ReadXmlFile(Helper.Epg123CfgPath, typeof(epgConfig)) ?? new epgConfig();
             if (api == null || api.BaseAddress != config.BaseApiUrl || api.BaseArtworkAddress != config.BaseArtworkUrl)

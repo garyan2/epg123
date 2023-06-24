@@ -18,6 +18,9 @@ namespace GaRyan2.SiliconDustApi
         [JsonProperty("LocalIP")]
         public string LocalIp { get; set; }
 
+        [JsonProperty("Legacy")]
+        public int Legacy { get; set; }
+
         [JsonProperty("BaseURL")]
         public string BaseUrl { get; set; }
 

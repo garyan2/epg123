@@ -94,6 +94,7 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="sdJson2mxf\brandLogo.cs" />
     <Compile Include="epgCache.cs" />
     <Compile Include="epgConfig.cs" />
     <Compile Include="frmProgress.cs">
@@ -189,11 +190,16 @@
       <Name>GaRyan2.Utilities</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Resources\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <Content Include="EPG123.ico" />
+    <None Include="Resources\updateAvailable.png" />
+    <None Include="Resources\EPG123WarningLight.png" />
+    <None Include="Resources\EPG123WarningDark.png" />
+    <None Include="Resources\EPG123OKLight.png" />
+    <None Include="Resources\EPG123OKDark.png" />
+    <None Include="Resources\EPG123ErrorLight.png" />
+    <None Include="Resources\EPG123ErrorDark.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

@@ -116,7 +116,7 @@ namespace epg123
             var info = string.Empty;
             if (Helper.InstallMethod == Helper.Installation.PORTABLE) info = " (PORTABLE)";
             else if (Helper.InstallMethod == Helper.Installation.CLIENT) info = $" (REMOTE: {Settings.Default.CfgLocation.Replace("epg123/epg123.cfg", "")})";
-            Text = $"EPG123 Configuration v{Helper.Epg123Version}{info}";
+            Text = $"EPG123 Configurator v{Helper.Epg123Version}{info}";
 
             // initialize the schedules direct api
             if (Helper.InstallMethod != Helper.Installation.PORTABLE)
@@ -252,6 +252,7 @@ namespace epg123
             cbSeasonEventImages.Checked = Config.SeasonEventImages;
             cbSdLogos.Checked = Config.IncludeSdLogos;
             cmbPreferredLogos.SelectedIndex = (int)(Helper.PreferredLogos)Enum.Parse(typeof(Helper.PreferredLogos), Config.PreferredLogoStyle, true);
+            cbBrandLogo.Checked = !Config.BrandLogoImage?.Equals("none") ?? false;
             cbModernMedia.Checked = Config.ModernMediaUiPlusSupport;
             cbNoCastCrew.Checked = Config.ExcludeCastAndCrew;
 
@@ -683,12 +684,16 @@ namespace epg123
             if (path == null) return null;
             if (_Bitmaps.ContainsKey(path)) return AddLogoBackground(_Bitmaps[path]);
 
-            using (var client = new WebClient())
-            using (var ms = new MemoryStream(client.DownloadData(path)))
+            try
             {
-                _Bitmaps.TryAdd(path, ResizeLogoBitmap(Helper.CropAndResizeImage(new Bitmap(ms))));
-                return AddLogoBackground(_Bitmaps[path]);
+                using (var client = new WebClient())
+                using (var ms = new MemoryStream(client.DownloadData(path)))
+                {
+                    _Bitmaps.TryAdd(path, ResizeLogoBitmap(Helper.CropAndResizeImage(new Bitmap(ms))));
+                    return AddLogoBackground(_Bitmaps[path]);
+                }
             }
+            catch { return null; }
         }
 
         private Bitmap ResizeLogoBitmap(Bitmap source, bool custom = false)
@@ -1249,6 +1254,18 @@ namespace epg123
             else if (sender.Equals(cbAddNewStations)) Config.AutoAddNew = cbAddNewStations.Checked;
             else if (sender.Equals(cbModernMedia)) Config.ModernMediaUiPlusSupport = cbModernMedia.Checked;
             else if (sender.Equals(cbNoCastCrew)) Config.ExcludeCastAndCrew = cbNoCastCrew.Checked;
+            else if (sender.Equals(cbBrandLogo))
+            {
+                if (cbBrandLogo.Checked)
+                {
+                    if (!Config.PreferredLogoStyle.Equals("LIGHT", StringComparison.OrdinalIgnoreCase) && !Config.AlternateLogoStyle.Equals("LIGHT", StringComparison.OrdinalIgnoreCase))
+                    {
+                        Config.BrandLogoImage = "light";
+                    }
+                    else Config.BrandLogoImage = "dark";
+                }
+                else Config.BrandLogoImage = "none";
+            }
         }
         #endregion
         #region ========== TAB: Service ==========

@@ -3,7 +3,6 @@ using GaRyan2.MxfXml;
 using GaRyan2.Utilities;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using api = GaRyan2.SchedulesDirect;
@@ -113,10 +112,9 @@ namespace epg123.sdJson2mxf
 
         private static void AddBrandLogoToMxf()
         {
-            Image bmp = new Bitmap(48, 55);
             using (var ms = new MemoryStream())
             {
-                bmp.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+                BrandLogo.StatusImage(config.BrandLogoImage).Save(ms, System.Drawing.Imaging.ImageFormat.Png);
                 mxf.DeviceGroup.GuideImage.Image = Convert.ToBase64String(ms.ToArray());
             }
         }
