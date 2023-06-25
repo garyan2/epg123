@@ -291,7 +291,7 @@ namespace GaRyan2.Utilities
             Process.Start(new ProcessStartInfo
             {
                 FileName = LogViewer,
-                Arguments = Epg123TraceLogPath
+                Arguments = $"\"{Epg123TraceLogPath}\""
             });
         }
 

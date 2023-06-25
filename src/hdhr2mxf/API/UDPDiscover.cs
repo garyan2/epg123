@@ -97,7 +97,7 @@ namespace GaRyan2.SiliconDustApi
                                 case 0x28: // storage url
                                     dev.StorageURL = Encoding.ASCII.GetString(load);
                                     break;
-                                case 0x2A: // base url
+                                case 0x2A: // base and discover url
                                     dev.BaseUrl = Encoding.ASCII.GetString(load);
                                     dev.DiscoverUrl = dev.BaseUrl + "/discover.json";
                                     var ipv4 = Regex.Match(dev.BaseUrl, @"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(:[0-9]+)?\b");

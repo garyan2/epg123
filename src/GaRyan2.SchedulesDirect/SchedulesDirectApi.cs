@@ -1,12 +1,52 @@
 ﻿using GaRyan2.Utilities;
 using Newtonsoft.Json;
+using System.Collections.Generic;
+using System.IO;
 using System.Net.Http;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace GaRyan2.SchedulesDirectAPI
 {
     internal class API : BaseAPI
     {
         public string SdErrorMessage;
+
+        public override async Task<T> GetHttpResponse<T>(HttpMethod method, string uri, object content = null)
+        {
+            using (var request = new HttpRequestMessage(method, uri)
+            {
+                Content = (content != null)
+                    ? new StringContent(JsonConvert.SerializeObject(content), Encoding.UTF8, "application/json")
+                    : null
+            })
+            using (var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false))
+            {
+                if (!response.IsSuccessStatusCode) return HandleHttpResponseError<T>(response, await response.Content.ReadAsStringAsync());
+                if (typeof(T) != typeof(List<LineupPreviewChannel>) &&
+                    typeof(T) != typeof(StationChannelMap) &&
+                    typeof(T) != typeof(Dictionary<string, Dictionary<string, ScheduleMd5Response>>))
+                {
+                    return JsonConvert.DeserializeObject<T>(await response.Content.ReadAsStringAsync(), JsonOptions);
+                }
+
+                using (var stream = await response.Content.ReadAsStreamAsync())
+                using (var sr = new StreamReader(stream))
+                using (var jr = new JsonTextReader(sr))
+                {
+                    if (typeof(T) == typeof(List<LineupPreviewChannel>) || typeof(T) == typeof(StationChannelMap))
+                    {
+                        return JsonConvert.DeserializeObject<T>(sr.ReadToEnd().Replace("[],", ""));
+                    }
+                    if (typeof(T) == typeof(Dictionary<string, Dictionary<string, ScheduleMd5Response>>))
+                    {
+                        return JsonConvert.DeserializeObject<T>(sr.ReadToEnd().Replace("[]", "{}"));
+                    }
+                    var serializer = new JsonSerializer();
+                    return serializer.Deserialize<T>(jr);
+                }
+            }
+        }
 
         public override T HandleHttpResponseError<T>(HttpResponseMessage response, string content)
         {
