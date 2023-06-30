@@ -14,18 +14,16 @@ namespace tokenServer
         public static bool cacheImages => cacheRetention > 0;
         public static int cacheRetention;
 
-        static JsonImageCache()
-        {
-            Load();
-        }
-
-        public static void Load()
+        public static void Initialize()
         {
             if (File.Exists(Helper.Epg123ImageCachePath))
             {
-                Helper.ReadJsonFile(Helper.Epg123ImageCachePath, typeof(Dictionary<string, CacheImage>));
+                ImageCache = Helper.ReadJsonFile(Helper.Epg123ImageCachePath, typeof(Dictionary<string, CacheImage>));
             }
             else ImageCache = new Dictionary<string, CacheImage>();
+
+            GetAllImageSizes();
+            AddImagesMissingInCacheFile();
         }
 
         public static void Cleanup()

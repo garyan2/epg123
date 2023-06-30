@@ -144,6 +144,7 @@ namespace epg123.sdJson2mxf
                             {
                                 StationLogosToDownload.Add(new KeyValuePair<MxfService, string[]>(mxfService, new[] { logoPath, stationLogo.Url }));
                             }
+                            else if (config.IncludeSdLogos && Helper.Standalone) encodedLogo = GetStringEncodedImage(logoPath);
                         }
 
                         // add to mxf guide images if file exists already
@@ -290,7 +291,8 @@ namespace epg123.sdJson2mxf
                 var logoPath = serviceLogo.Value[0];
                 if ((File.Exists(logoPath) || DownloadSdLogo(serviceLogo.Value[1], logoPath)) && string.IsNullOrEmpty(serviceLogo.Key.LogoImage))
                 {
-                    serviceLogo.Key.mxfGuideImage = mxf.FindOrCreateGuideImage(Helper.Standalone ? $"file://{logoPath}" : $"http://{HostAddress}:{Helper.TcpUdpPort}/logos/{Path.GetFileName(logoPath)}");
+                    serviceLogo.Key.mxfGuideImage = mxf.FindOrCreateGuideImage(Helper.Standalone ? $"file://{logoPath}" : $"http://{HostAddress}:{Helper.TcpUdpPort}/logos/{Path.GetFileName(logoPath)}",
+                        Helper.Standalone ? GetStringEncodedImage(logoPath) : null);
 
                     if (File.Exists(logoPath))
                     {

@@ -27,8 +27,7 @@ namespace tokenServer
             Github.Initialize($"EPG123/{Helper.Epg123Version}", "epg123");
             Helper.DeleteFile(Helper.ServerLogPath);
             StartConfigFileWatcher();
-            JsonImageCache.GetAllImageSizes();
-            JsonImageCache.AddImagesMissingInCacheFile();
+            JsonImageCache.Initialize();
 
             SchedulesDirect.Initialize();
             _imageServer.Start();

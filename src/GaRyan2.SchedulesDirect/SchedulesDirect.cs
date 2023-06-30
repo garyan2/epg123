@@ -252,6 +252,11 @@ namespace GaRyan2
             else Logger.WriteInformation($"Did not receive a response from Schedules Direct for artwork info of {request.Length} programs. ({DateTime.Now - dtStart:G})");
             return ret;
         }
+
+        public static List<string> GetCustomLogosFromServer(string server)
+        {
+            return api.GetApiResponse<List<string>>(Method.GET, server);
+        }
         #endregion
     }
 }

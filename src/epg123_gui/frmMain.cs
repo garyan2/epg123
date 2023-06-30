@@ -40,6 +40,7 @@ namespace epg123
         private epgConfig Config;
         private epgConfig _originalConfig;
         private Thread _logoThread;
+        private string _BaseServerAddress => Settings.Default.CfgLocation.Replace("epg123/epg123.cfg", "");
 
         #region ========== Form Opening/Closing ==========
         public ConfigForm()
@@ -115,13 +116,13 @@ namespace epg123
             // complete the title bar label with version number
             var info = string.Empty;
             if (Helper.InstallMethod == Helper.Installation.PORTABLE) info = " (PORTABLE)";
-            else if (Helper.InstallMethod == Helper.Installation.CLIENT) info = $" (REMOTE: {Settings.Default.CfgLocation.Replace("epg123/epg123.cfg", "")})";
+            else if (Helper.InstallMethod == Helper.Installation.CLIENT) info = $" (REMOTE: {_BaseServerAddress})";
             Text = $"EPG123 Configurator v{Helper.Epg123Version}{info}";
 
             // initialize the schedules direct api
             if (Helper.InstallMethod != Helper.Installation.PORTABLE)
             {
-                var baseApi = Settings.Default.CfgLocation.Replace("epg123.cfg", "");
+                var baseApi = $"{_BaseServerAddress}epg123/";
                 SdApi.Initialize($"EPG123/{Helper.Epg123Version}", baseApi, Config.BaseArtworkUrl);
             }
             else SdApi.Initialize($"EPG123/{Helper.Epg123Version}", Config.BaseApiUrl, Config.BaseArtworkUrl);
@@ -553,6 +554,10 @@ namespace epg123
             // build the imageList for all stations
             if (_allStations.Count > 0)
             {
+                if (Helper.InstallMethod == Helper.Installation.CLIENT)
+                {
+                    _RemoteCustomLogos = SdApi.GetCustomLogosFromServer($"{_BaseServerAddress}logos/custom");
+                }
                 BuildLanguageIcons();
                 GetAllServiceLogos();
             }
@@ -617,6 +622,7 @@ namespace epg123
 
         #region ===== Station Logo Generation =====
         private readonly ConcurrentDictionary<string, Bitmap> _Bitmaps = new ConcurrentDictionary<string, Bitmap>();
+        private List<string> _RemoteCustomLogos = new List<string>();
         private readonly object _bitmapLock = new object();
         private void GetAllServiceLogos()
         {
@@ -653,11 +659,26 @@ namespace epg123
             if (!Config.IncludeSdLogos) return null;
 
             // custom logo file check
-            var path = $"{Helper.Epg123LogosFolder}{station.Callsign}_c.png";
+            var filename = $"{station.Callsign}_c.png";
+            var path = $"{Helper.Epg123LogosFolder}{filename}";
             if (Helper.InstallMethod != Helper.Installation.CLIENT && File.Exists(path))
             {
-                if (!_Bitmaps.ContainsKey(path)) _Bitmaps.TryAdd(path, ResizeLogoBitmap(Image.FromFile(path) as Bitmap, true));
-                return AddLogoBackground(_Bitmaps[path]);
+                if (!_Bitmaps.ContainsKey(filename)) _Bitmaps.TryAdd(filename, ResizeLogoBitmap(Image.FromFile(path) as Bitmap, true));
+                return AddLogoBackground(_Bitmaps[filename]);
+            }
+
+            if (Helper.InstallMethod == Helper.Installation.CLIENT && _RemoteCustomLogos.Contains(filename))
+            {
+                path = $"{_BaseServerAddress}logos/{filename}";
+                if (!_Bitmaps.ContainsKey(filename))
+                {
+                    using (var client = new WebClient())
+                    using (var ms = new MemoryStream(client.DownloadData(path)))
+                    {
+                        _Bitmaps.TryAdd(filename, ResizeLogoBitmap(new Bitmap(ms), true));
+                    }
+                }
+                return AddLogoBackground(_Bitmaps[filename]);
             }
             if (Config.PreferredLogoStyle.Equals("none", StringComparison.OrdinalIgnoreCase)) return null;
 
@@ -666,16 +687,31 @@ namespace epg123
             var altLogo = station.StationLogos?.FirstOrDefault(arg => arg.Category.Equals(Config.AlternateLogoStyle.ToLower()))?.Md5;
 
             // change logo uri's into file path
-            if (priLogo != null) priLogo = $"{Helper.Epg123LogosFolder}{priLogo}.png";
-            if (altLogo != null) altLogo = $"{Helper.Epg123LogosFolder}{altLogo}.png";
-            if (priLogo == null && altLogo == null && station.Logo != null) priLogo = $"{Helper.Epg123LogosFolder}{station.Logo?.Md5}.png";
-            if ((path = priLogo ?? altLogo) == null) return null;
+            if (priLogo != null) priLogo = $"{priLogo}.png";
+            if (altLogo != null) altLogo = $"{altLogo}.png";
+            if (priLogo == null && altLogo == null && station.Logo != null) priLogo = $"{station.Logo?.Md5}.png";
+            if ((filename = priLogo ?? altLogo) == null) return null;
 
             // use primary or alternate file to display
-            if (File.Exists(path))
+            path = $"{Helper.Epg123LogosFolder}{filename}";
+            if (Helper.InstallMethod != Helper.Installation.CLIENT && File.Exists(path))
             {
-                if (!_Bitmaps.ContainsKey(path)) _Bitmaps.TryAdd(path, ResizeLogoBitmap(Image.FromFile(path) as Bitmap));
-                return AddLogoBackground(_Bitmaps[path]);
+                if (!_Bitmaps.ContainsKey(filename)) _Bitmaps.TryAdd(filename, ResizeLogoBitmap(Image.FromFile(path) as Bitmap));
+                return AddLogoBackground(_Bitmaps[filename]);
+            }
+
+            if (Helper.InstallMethod == Helper.Installation.CLIENT && _RemoteCustomLogos.Contains(filename))
+            {
+                path = $"{_BaseServerAddress}logos/{filename}";
+                if (!_Bitmaps.ContainsKey(filename))
+                {
+                    using (var client = new WebClient())
+                    using (var ms = new MemoryStream(client.DownloadData(path)))
+                    {
+                        _Bitmaps.TryAdd(filename, ResizeLogoBitmap(new Bitmap(ms), false));
+                    }
+                }
+                return AddLogoBackground(_Bitmaps[filename]);
             }
 
             // no logo file available so download it
@@ -868,10 +904,12 @@ namespace epg123
                 Close();
             }
         }
+
         private void btnCancel_Click(object sender, EventArgs e)
         {
             Close();
         }
+
         private void btnClientConfig_Click(object sender, EventArgs e)
         {
             var gui = new frmLineups();
@@ -880,6 +918,7 @@ namespace epg123
 
             BuildLineupsAndStations(gui.NewLineups);
         }
+
         private void btnViewLog_Click(object sender, EventArgs e)
         {
             if (Helper.InstallMethod == Helper.Installation.CLIENT)
@@ -887,11 +926,12 @@ namespace epg123
                 Process.Start(new ProcessStartInfo
                 {
                     FileName = Helper.LogViewer,
-                    Arguments = $"{Settings.Default.CfgLocation.Replace("epg123/epg123.cfg", "trace.log")}"
+                    Arguments = $"{_BaseServerAddress}trace.log"
                 });
             }
             else Helper.ViewLogFile();
         }
+
         private void btnClearCache_Click(object sender, EventArgs e)
         {
             Cursor = Cursors.WaitCursor;
@@ -902,7 +942,7 @@ namespace epg123
                 {
                     using (var wc = new WebClient())
                     {
-                        _ = wc.DownloadData($"{Settings.Default.CfgLocation.Replace("epg123.cfg", "clearCache")}");
+                        _ = wc.DownloadData($"{_BaseServerAddress}clearCache");
                         Logger.WriteInformation("Cache successfully cleared on server.");
                         success = true;
                     }
@@ -918,6 +958,7 @@ namespace epg123
             else MessageBox.Show("A problem occurred attempting to delete cache files.", "Operation Failed");
             Cursor = Cursors.Arrow;
         }
+
         private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
             linkLabel1.LinkVisited = true;
@@ -936,12 +977,12 @@ namespace epg123
             {
                 if (Helper.InstallMethod == Helper.Installation.CLIENT)
                 {
-                    MessageBox.Show("Currently not able to view/edit custom station logos while in remote client mode.", "Not Available");
+                    MessageBox.Show("Currently not able to edit custom station logos while in remote client mode.", "Not Available");
                     return;
                 }
                 var item = lvLineupChannels.SelectedItems[0] as MemberListViewItem;
                 var station = item.Station;
-                var frm = new frmLogos(station.Station);
+                var frm = new frmLogos(station.Station, _RemoteCustomLogos.Contains($"{station.CallSign}_c.png"));
                 frm.FormClosed += (o, args) =>
                 {
                     _allStations[station.StationId].ServiceLogo = GetServiceBitmap(station.Station);
@@ -1327,13 +1368,13 @@ namespace epg123
             // complete the title bar label with version number
             var info = string.Empty;
             if (Helper.InstallMethod == Helper.Installation.PORTABLE) info = " (PORTABLE)";
-            else if (Helper.InstallMethod == Helper.Installation.CLIENT) info = $" (REMOTE: {Settings.Default.CfgLocation.Replace("epg123/epg123.cfg", "")})";
+            else if (Helper.InstallMethod == Helper.Installation.CLIENT) info = $" (REMOTE: {_BaseServerAddress})";
             Text += $" v{Helper.Epg123Version}{info}";
 
             // initialize the schedules direct api
             if (Helper.InstallMethod != Helper.Installation.PORTABLE)
             {
-                var baseApi = Settings.Default.CfgLocation.Replace("epg123.cfg", "");
+                var baseApi = $"{_BaseServerAddress}epg123/";
                 SdApi.Initialize($"EPG123/{Helper.Epg123Version}", baseApi, Config.BaseArtworkUrl);
             }
             else SdApi.Initialize($"EPG123/{Helper.Epg123Version}", Config.BaseApiUrl, Config.BaseArtworkUrl);
@@ -1397,13 +1438,13 @@ namespace epg123
         private void linkLabel2_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
             linkLabel2.LinkVisited = true;
-            Process.Start($"{Settings.Default.CfgLocation.Replace("epg123/epg123.cfg", "")}server.log");
+            Process.Start($"{_BaseServerAddress}server.log");
         }
 
         private void linkLabel3_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
             linkLabel3.LinkVisited = true;
-            Process.Start($"{Settings.Default.CfgLocation.Replace("epg123/epg123.cfg", "")}");
+            Process.Start(_BaseServerAddress);
         }
         #endregion
         #endregion

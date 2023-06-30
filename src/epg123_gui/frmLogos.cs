@@ -10,6 +10,7 @@ using System.Windows.Forms;
 using GaRyan2.SchedulesDirectAPI;
 using Microsoft.VisualBasic.FileIO;
 using GaRyan2.Utilities;
+using epg123.Properties;
 
 namespace epg123
 {
@@ -18,13 +19,15 @@ namespace epg123
         private readonly string _callsign = string.Empty;
         private readonly LineupStation _station;
         private PictureBox _selectedBox = null;
+        private readonly string _customLogoPath;
 
-        public frmLogos(LineupStation station)
+        public frmLogos(LineupStation station, bool remote)
         {
             InitializeComponent();
 
             _callsign = station.Callsign;
             _station = station;
+            if (remote) _customLogoPath = $"{Settings.Default.CfgLocation.Replace("epg123/epg123.cfg", $"logos/{station.Callsign}_c.png")}";
 
             label7.Text = $"{station.Callsign}\n{station.Name}\n{station.Affiliate}";
             openFileDialog1.InitialDirectory = $"{Helper.Epg123LogosFolder}";
@@ -65,7 +68,14 @@ namespace epg123
 
         private void LoadLocalImages()
         {
-            if (File.Exists($"{Helper.Epg123LogosFolder}{_callsign}_c.png") && pbCustomLocal.Image == null)
+            if (!string.IsNullOrEmpty(_customLogoPath))
+            {
+                pbCustomLocal.BackColor = Color.FromArgb(255, 6, 15, 30);
+                pbCustomLocal.Load(_customLogoPath);
+                pbCustomLocal.Tag = $"{Helper.Epg123LogosFolder}{_callsign}_c.png";
+                pbCustomLocal.Refresh();
+            }
+            else if (File.Exists($"{Helper.Epg123LogosFolder}{_callsign}_c.png") && pbCustomLocal.Image == null)
             {
                 pbCustomLocal.BackColor = Color.FromArgb(255, 6, 15, 30);
                 pbCustomLocal.Image = Image.FromFile($"{Helper.Epg123LogosFolder}{_callsign}_c.png");

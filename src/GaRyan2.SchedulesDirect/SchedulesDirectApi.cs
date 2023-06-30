@@ -76,6 +76,9 @@ namespace GaRyan2.SchedulesDirectAPI
                     case 4101: // MAX_LINEUPS
                         Logger.WriteVerbose("***** You must remove a lineup in your account to add another lineup. *****");
                         break;
+                    case 9009: // Failed token request from user's server
+                        Logger.WriteVerbose("***** The EPG123 Server service could not obtain a token from Schedules Direct. View the server.log file for details.");
+                        break;
                 }
             }
             return default;

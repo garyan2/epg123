@@ -1,8 +1,10 @@
 ﻿using GaRyan2;
 using GaRyan2.Utilities;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -138,6 +140,17 @@ namespace tokenServer
                 }
                 ServiceImageRequest(context);
                 lock (_queueLock) { queuedImages.Remove(context.Request.RawUrl); }
+            }
+            else if (context.Request.RawUrl.StartsWith("/logos/custom"))
+            {
+                var response = Directory.GetFiles(Helper.Epg123LogosFolder, "*.png").ToList().Select(logo => logo.Substring(Helper.Epg123LogosFolder.Length)).ToList();
+                context.Response.ContentType = "application/json";
+                var content = JsonConvert.SerializeObject(response, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore, DefaultValueHandling = DefaultValueHandling.Ignore });
+                using (var ms = new MemoryStream(Encoding.UTF8.GetBytes(content)))
+                {
+                    ms.Position = 0;
+                    ms.CopyTo(context.Response.OutputStream);
+                }
             }
             else if (context.Request.RawUrl.StartsWith("/logos/"))
             {
