@@ -66,7 +66,7 @@ Name: "custom"; Description: "Custom Install"; Flags: IsCustom
 [Components]
 Name: "main1"; Description: "Server Files"; Types: full server; Flags: disablenouninstallwarning
 Name: "main1\epg123"; Description: "EPG123 for Schedules Direct"; Types: full server; Flags: disablenouninstallwarning
-Name: "main1\hdhr"; Description: "HDHR2MXF for SiliconDust DVR Service"; Types: full server; Flags: disablenouninstallwarning; Check: (IsWin64 and FileExists(ExpandConstant('{pf64}\silicondust\hdhomerun\hdhomerun_config.exe'))) or FileExists(ExpandConstant('{pf32}\silicondust\hdhomerun\hdhomerun_config.exe')) 
+Name: "main1\hdhr"; Description: "HDHR2MXF for SiliconDust DVR Service"; Types: full server; Flags: disablenouninstallwarning;
 Name: "main1\plutotv"; Description: "IPTV PlutoTV M3U/XMLTV Generator"; Types: full server; Flags: disablenouninstallwarning
 Name: "main1\stirr"; Description: "IPTV Stirr M3U/XMLTV Generator"; Types: full server; Flags: disablenouninstallwarning
 Name: "main2"; Description: "Client Files"; Types: full client; MinVersion: 6.1; Flags: disablenouninstallwarning; Check: FileExists(ExpandConstant('{win}\ehome\ehshell.exe'))
