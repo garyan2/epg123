@@ -127,6 +127,8 @@
             this.btnClearCache = new System.Windows.Forms.Button();
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
             this.btnTask = new epg123.ElevatedButton();
+            this.tabNotifier = new System.Windows.Forms.TabPage();
+            this.btnEmail = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -144,6 +146,7 @@
             this.tabLineup.SuspendLayout();
             this.lineupMenuStrip.SuspendLayout();
             this.toolStrip6.SuspendLayout();
+            this.tabNotifier.SuspendLayout();
             this.SuspendLayout();
             // 
             // splitContainer1
@@ -179,10 +182,10 @@
             this.tabConfigs.Controls.Add(this.tabXmltv);
             this.tabConfigs.Controls.Add(this.tabTask);
             this.tabConfigs.Controls.Add(this.tabService);
+            this.tabConfigs.Controls.Add(this.tabNotifier);
             this.tabConfigs.Enabled = false;
             this.tabConfigs.HotTrack = true;
             this.tabConfigs.Location = new System.Drawing.Point(12, 105);
-            this.tabConfigs.Multiline = true;
             this.tabConfigs.Name = "tabConfigs";
             this.tabConfigs.SelectedIndex = 0;
             this.tabConfigs.Size = new System.Drawing.Size(331, 421);
@@ -1289,6 +1292,27 @@
             this.btnTask.UseVisualStyleBackColor = true;
             this.btnTask.Click += new System.EventHandler(this.btnTask_Click);
             // 
+            // tabNotifier
+            // 
+            this.tabNotifier.BackColor = System.Drawing.SystemColors.Control;
+            this.tabNotifier.Controls.Add(this.btnEmail);
+            this.tabNotifier.Location = new System.Drawing.Point(4, 22);
+            this.tabNotifier.Name = "tabNotifier";
+            this.tabNotifier.Padding = new System.Windows.Forms.Padding(3);
+            this.tabNotifier.Size = new System.Drawing.Size(323, 395);
+            this.tabNotifier.TabIndex = 6;
+            this.tabNotifier.Text = "Notifications";
+            // 
+            // btnEmail
+            // 
+            this.btnEmail.Location = new System.Drawing.Point(6, 6);
+            this.btnEmail.Name = "btnEmail";
+            this.btnEmail.Size = new System.Drawing.Size(99, 23);
+            this.btnEmail.TabIndex = 0;
+            this.btnEmail.Text = "Setup E-mail";
+            this.btnEmail.UseVisualStyleBackColor = true;
+            this.btnEmail.Click += new System.EventHandler(this.btnEmail_Click);
+            // 
             // ConfigForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
@@ -1335,6 +1359,7 @@
             this.lineupMenuStrip.ResumeLayout(false);
             this.toolStrip6.ResumeLayout(false);
             this.toolStrip6.PerformLayout();
+            this.tabNotifier.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -1439,5 +1464,7 @@
         private System.Windows.Forms.Button btnChangeServer;
         private System.Windows.Forms.LinkLabel linkLabel3;
         private System.Windows.Forms.CheckBox cbBrandLogo;
+        private System.Windows.Forms.TabPage tabNotifier;
+        private System.Windows.Forms.Button btnEmail;
     }
 }

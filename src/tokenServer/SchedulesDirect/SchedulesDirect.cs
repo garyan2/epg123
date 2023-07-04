@@ -1,6 +1,7 @@
 ﻿using epg123;
 using GaRyan2.SchedulesDirectAPI;
 using GaRyan2.Utilities;
+using Newtonsoft.Json;
 using System;
 using System.IO;
 using System.Net.Http;
@@ -70,7 +71,7 @@ namespace GaRyan2
 
             api.ClearToken();
             var ret = api.GetApiResponse<TokenResponse>(Method.POST, "token", new TokenRequest { Username = username, PasswordHash = password });
-            if (ret != null && ret.Code == 0)
+            if ((ret?.Code ?? -1) == 0)
             {
                 WebStats.IncrementTokenRefresh();
                 Username = username; PasswordHash = password;
@@ -83,12 +84,14 @@ namespace GaRyan2
             }
             else
             {
+                if (ret != null) Logger.WriteError($"Failed to get a token from Schedules Direct.\n{JsonConvert.SerializeObject(ret)}");
+                else Logger.WriteError("Did not receive a response from Schedules Direct for a token request.");
                 GoodToken = false;
+                TokenTimestamp = DateTime.MinValue;
                 _timer = new Timer(TimerEvent);
                 _timer.Change(900000, 900000); // timer event every 15 minutes
-                Logger.WriteError("Did not receive a response from Schedules Direct for a token request.");
             }
-            return ret != null;
+            return (ret?.Code ?? -1) == 0;
         }
 
         public static HttpResponseMessage GetImage(string uri, DateTimeOffset ifModifiedSince)
@@ -100,8 +103,7 @@ namespace GaRyan2
         {
             if (DateTime.UtcNow - TokenTimestamp > TimeSpan.FromHours(23))
             {
-                JsonImageCache.Save();
-                GetToken();
+                if (GetToken()) JsonImageCache.Save();
             }
         }
     }

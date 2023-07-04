@@ -132,7 +132,7 @@ namespace epg123.sdJson2mxf
                 }
                 else
                 {
-                    Logger.WriteWarning($"Did not cache program {mxfProgram.ProgramId} due to missing Md5 hash.");
+                    Logger.WriteInformation($"Did not cache program {mxfProgram.ProgramId} due to missing Md5 hash.");
                 }
             }
         }

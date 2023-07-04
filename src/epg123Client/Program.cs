@@ -90,7 +90,6 @@ namespace epg123Client
             {
                 MessageBox.Show("WMC is not present on this machine. Closing EPG123 Client Guide Tool.", "Initialization Error", MessageBoxButtons.OK, MessageBoxIcon.Hand);
                 Logger.WriteError("*** WMC is not present on this machine. ***");
-                //Logger.Close();
                 Application.Exit();
             }
 
@@ -106,7 +105,6 @@ namespace epg123Client
             {
                 // verify WMC is installed
                 MessageBox.Show("Could not verify Windows Media Center is installed on this machine. EPG123 Client cannot be started without WMC being present.", "Missing Windows Media Center", MessageBoxButtons.OK);
-                //Logger.Close();
                 Application.Exit();
             }
 
@@ -181,7 +179,6 @@ namespace epg123Client
                 case "-u -nogc": // opening WMC
                 case "-uf -nogc":
                     Logger.WriteVerbose($"**** Intercepted \"mcupdate.exe {arguments}\" call. Ignored. ****");
-                    //Logger.Close();
                     return 0;
                 case "-u -manual -nogc -p 0": // guide update
                 case "-manual -nogc -p 0":
@@ -197,9 +194,7 @@ namespace epg123Client
                     // begin update
                     var proc = Process.Start(startInfo);
                     proc?.WaitForExit();
-
                     Logger.WriteInformation("**** Attempted to kick off the epg123_update task on demand. ****");
-                    //Logger.Close();
 
                     // monitor the task status until it is complete
                     var ts = new EpgTaskScheduler();
@@ -287,7 +282,6 @@ namespace epg123Client
                             break;
                         default:
                             Logger.WriteVerbose($"**** Invalid arguments for epg123Client.exe; \"{arguments}\" ****");
-                            //Logger.Close();
                             return -1;
                     }
                 }
@@ -416,7 +410,7 @@ namespace epg123Client
                     }
 
                     // import complete
-                    CompleteImport:
+                CompleteImport:
                     if (import)
                     {
                         // update status logo
@@ -431,12 +425,12 @@ namespace epg123Client
                     // all done
                     Logger.WriteInformation("Completed EPG123 client execution.");
                     Logger.WriteVerbose($"EPG123 client execution time was {DateTime.UtcNow - startTime}.");
-                    //Logger.Close();
                     NativeMethods.SetThreadExecutionState(prevThreadState | (uint)ExecutionFlags.ES_CONTINUOUS);
                 }
             }
-            Environment.Exit(0);
-            return 0;
+            if (!showGui) Logger.CloseAndSendNotification();
+            Environment.Exit(Logger.Status);
+            return Logger.Status;
         }
 
         #region ========== Import MXF File ==========

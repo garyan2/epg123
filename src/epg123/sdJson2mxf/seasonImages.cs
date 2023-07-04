@@ -65,7 +65,7 @@ namespace epg123.sdJson2mxf
                 ProcessSeasonImageResponses();
                 if (processedObjects != totalObjects)
                 {
-                    Logger.WriteInformation($"Failed to download and process {seasons.Count - processedObjects} season image links.");
+                    Logger.WriteWarning($"Failed to download and process {seasons.Count - processedObjects} season image links.");
                 }
             }
             Logger.WriteMessage("Exiting GetAllSeasonImages(). SUCCESS.");

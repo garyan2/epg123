@@ -17,7 +17,6 @@ namespace epg123.sdJson2mxf
     {
         private static readonly HashSet<string> IncludedStations = new HashSet<string>();
         private static readonly HashSet<string> ExcludedStations = new HashSet<string>();
-        private static readonly Dictionary<string, LineupStation> AllStations = new Dictionary<string, LineupStation>();
 
         public static int AddedStations;
         public static int MissingStations;
@@ -42,37 +41,35 @@ namespace epg123.sdJson2mxf
             Logger.WriteMessage($"Entering BuildLineupServices() for {clientLineups.Lineups.Count} lineups.");
             foreach (var clientLineup in clientLineups.Lineups)
             {
-                var flagCustom = !string.IsNullOrEmpty(clientLineup.Uri) && clientLineup.Uri.Equals("CUSTOM");
                 ++processedObjects; ReportProgress();
 
-                // request the lineup's station maps
-                StationChannelMap lineupMap = null;
-                if (!flagCustom)
-                {
-                    lineupMap = api.GetStationChannelMap(clientLineup.Lineup);
-                    if (lineupMap == null) continue;
-
-                    foreach (var station in lineupMap.Stations.Where(station => !AllStations.ContainsKey(station.StationId)))
-                    {
-                        AllStations.Add(station.StationId, station);
-                    }
-                }
-
+                // don't download station map if lineup not included
                 if (!config.IncludedLineup.Contains(clientLineup.Lineup))
                 {
-                    Logger.WriteVerbose($"Subscribed lineup {clientLineup.Lineup} has been EXCLUDED from download and processing.");
+                    Logger.WriteVerbose($"Subscribed lineup {clientLineup.Lineup} has been EXCLUDED by user from download and processing.");
                     continue;
                 }
+
+                // give warning that headend has been deleted
                 if (clientLineup.IsDeleted)
                 {
-                    Logger.WriteWarning($"Subscribed lineup {clientLineup.Lineup} has been DELETED at the headend.");
-                    continue;
+                    Logger.WriteError($"Subscribed lineup {clientLineup.Lineup} has been DELETED at the headend.");
+                    return false;
                 }
+
+                // request the lineup's station maps
+                var lineupMap = api.GetStationChannelMap(clientLineup.Lineup);
+                if ((lineupMap?.Stations?.Count ?? 0) == 0)
+                {
+                    Logger.WriteError($"Subscribed lineup {clientLineup.Lineup} does not contain any stations.");
+                    return false;
+                }
+
+                // log if channels numbers are discarded
                 if (config.DiscardChanNumbers.Contains(clientLineup.Lineup))
                 {
                     Logger.WriteVerbose($"Subscribed lineup {clientLineup.Lineup} will ignore all channel numbers.");
                 }
-                if (lineupMap == null) return false;
 
                 // get/create lineup
                 var mxfLineup = mxf.FindOrCreateLineup(clientLineup.Lineup, $"EPG123 {clientLineup.Name} ({clientLineup.Location})");

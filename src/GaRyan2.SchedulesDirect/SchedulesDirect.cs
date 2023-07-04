@@ -31,7 +31,7 @@ namespace GaRyan2
         /// Initializes the http client to communicate with Schedules Direct
         /// </summary>
         /// <param name="apiBaseAddress">optional API address to override default https://json.schedulesdirect.org/20141201/</param>
-        /// <param name="logFile">filepath to maintain log file. null means log will be written to console</param>
+        /// <param name="artworkBaseAddress">optional API address to override default https://json.schedulesdirect.org/20141201/</param>
         public static void Initialize(string userAgent, string apiBaseAddress, string artworkBaseAddress)
         {
             api.BaseAddress = apiBaseAddress;
@@ -54,7 +54,7 @@ namespace GaRyan2
         /// </summary>
         /// <param name="username">account username</param>
         /// <param name="passwordHash">optional to provide password hash if known</param>
-        /// <param name="password">account password; not needed if passwordHash is provided (can be null)</param>
+        /// <param name="requestNew">demand request for new token</param>
         /// <returns>true if successful</returns>
         public static bool GetToken(string username, string passwordHash, bool requestNew = false)
         {

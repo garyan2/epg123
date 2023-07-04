@@ -91,7 +91,7 @@ namespace epg123.sdJson2mxf
                 ProcessSeriesDescriptionsResponses();
                 if (processedObjects != totalObjects)
                 {
-                    Logger.WriteInformation($"Failed to download and process {mxf.SeriesInfosToProcess.Count - processedObjects} series descriptions.");
+                    Logger.WriteWarning($"Failed to download and process {mxf.SeriesInfosToProcess.Count - processedObjects} series descriptions.");
                 }
             }
             Logger.WriteMessage("Exiting BuildAllGenericSeriesInfoDescriptions(). SUCCESS.");
@@ -221,7 +221,7 @@ namespace epg123.sdJson2mxf
                 for (var i = 0; i < seriesDescriptionQueue.Count; i += MaxQueries)
                 {
                     if (GetExtendedSeriesDataForUiPlus(i)) continue;
-                    Logger.WriteInformation($"Failed to download and process {mxf.With.SeriesInfos.Count - processedObjects} extended series descriptions.");
+                    Logger.WriteWarning($"Failed to download and process {mxf.With.SeriesInfos.Count - processedObjects} extended series descriptions.");
                     return true;
                 }
             }
@@ -248,7 +248,7 @@ namespace epg123.sdJson2mxf
             {
                 if (response == null)
                 {
-                    Logger.WriteInformation($"Did not receive data for program {programs[idx++]}.");
+                    Logger.WriteWarning($"Did not receive data for program {programs[idx++]}.");
                     continue;
                 }
                 ++idx; IncrementProgress();

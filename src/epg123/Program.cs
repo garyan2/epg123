@@ -38,8 +38,8 @@ namespace epg123
             // make sure configuration file exists
             if (!File.Exists(Helper.Epg123CfgPath))
             {
-                Console.WriteLine("There is no configuration file to use for updating guide listings.\nOpen epg123_gui.exe to create a configuration file.");
-                return -1;
+                Logger.WriteError("There is no configuration file to use for updating guide listings.\nOpen epg123_gui.exe to create a configuration file.");
+                goto Exit;
             }
 
             bool import = false, match = false, showProgress = false;
@@ -94,7 +94,7 @@ namespace epg123
             using (var mutex = Helper.GetProgramMutex($"Global\\{AppGuid}", true))
             {
                 // check for an instance already running
-                if (mutex == null) return -1;
+                if (mutex == null) goto Exit;
 
                 // prevent machine from entering sleep mode
                 var prevThreadState = NativeMethods.SetThreadExecutionState((uint)ExecutionFlags.ES_CONTINUOUS |
@@ -107,7 +107,8 @@ namespace epg123
                 {
                     NativeMethods.SetThreadExecutionState(prevThreadState | (uint)ExecutionFlags.ES_CONTINUOUS);
                     mutex.ReleaseMutex();
-                    return -1;
+                    Logger.WriteError("Failed to read EPG123 configuration file.");
+                    goto Exit;
                 }
 
                 // let's do this
@@ -132,14 +133,14 @@ namespace epg123
                 NativeMethods.SetThreadExecutionState(prevThreadState | (uint)ExecutionFlags.ES_CONTINUOUS);
 
                 // did a Save&Execute from GUI ... perform import and automatch as well if requested
-                if (!sdJson2mxf.sdJson2Mxf.Success) return -1;
+                if (!sdJson2mxf.sdJson2Mxf.Success) goto Exit;
                 if (import)
                 {
                     // verify output file exists
                     if (!File.Exists(Helper.Epg123MxfPath) || !File.Exists(Helper.Epg123ClientExePath))
                     {
                         mutex.ReleaseMutex();
-                        return -1;
+                        goto Exit;
                     }
 
                     // epg123client
@@ -153,18 +154,23 @@ namespace epg123
                     var proc = Process.Start(startInfo);
                     proc?.WaitForExit();
                 }
-                return 0;
             }
+
+        Exit:
+            Logger.CloseAndSendNotification();
+            return Logger.Status;
         }
 
         private static void MyUnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
             Logger.WriteError($"Unhandled exception caught from {AppDomain.CurrentDomain.FriendlyName}. message: {e.ExceptionObject as Exception}");
+            Logger.CloseAndSendNotification();
         }
 
         private static void MyThreadException(object sender, ThreadExceptionEventArgs e)
         {
             Logger.WriteError($"Unhandled thread exception caught from {AppDomain.CurrentDomain.FriendlyName}. message: {e.Exception}");
+            Logger.CloseAndSendNotification();
         }
     }
 }

@@ -2104,6 +2104,12 @@ namespace epg123Client
             btnImport_Click(null, null);
         }
         #endregion
+
+        private void btnEmail_Click(object sender, EventArgs e)
+        {
+            var emailForm = new frmEmail();
+            emailForm.ShowDialog();
+        }
     }
 
     public static class ControlExtensions

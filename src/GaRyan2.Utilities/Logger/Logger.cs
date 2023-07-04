@@ -10,6 +10,7 @@ namespace GaRyan2.Utilities
         private const int Maxlogsize = 1024 * 1024;
         private static readonly TraceLevel _level = TraceLevel.Verbose;
         private static bool firstEntry = true;
+        private static string _sessionString;
 
         private static string _logFile;
         public static int Status;
@@ -19,6 +20,12 @@ namespace GaRyan2.Utilities
             Status = 0x0;
             _logFile = logFile;
             firstEntry = true;
+            _sessionString = string.Empty;
+        }
+
+        public static void CloseAndSendNotification()
+        {
+            SendNotification();
         }
 
         public static void WriteError(string message)
@@ -65,6 +72,7 @@ namespace GaRyan2.Utilities
 
             try
             {
+                _sessionString += $"{msg}\n";
                 Console.WriteLine(msg);
                 if (firstEntry) CheckFileLength();
                 lock (_logLock)

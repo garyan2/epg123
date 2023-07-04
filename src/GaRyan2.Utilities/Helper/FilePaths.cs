@@ -242,6 +242,11 @@ namespace GaRyan2.Utilities
         /// The file to define what action to perform when starting elevated
         /// </summary>
         public static string EButtonPath => Epg123ProgramDataFolder + "ebutton.txt";
+
+        /// <summary>
+        /// The file used to enable email notifications
+        /// </summary>
+        public static string EmailNotifier => Epg123ProgramDataFolder + "notifier.json";
         #endregion
 
         #region ========== Log Files ==========

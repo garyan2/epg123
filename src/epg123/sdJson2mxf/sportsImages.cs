@@ -57,7 +57,7 @@ namespace epg123.sdJson2mxf
                 ProcessSportsImageResponses();
                 if (processedObjects != totalObjects)
                 {
-                    Logger.WriteInformation($"Failed to download and process {sportEvents.Count - processedObjects} sport event image links.");
+                    Logger.WriteWarning($"Failed to download and process {sportEvents.Count - processedObjects} sport event image links.");
                 }
             }
             Logger.WriteMessage("Exiting GetAllSportsImages(). SUCCESS.");

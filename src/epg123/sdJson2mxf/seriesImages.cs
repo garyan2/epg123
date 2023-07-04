@@ -99,7 +99,7 @@ namespace epg123.sdJson2mxf
                 ProcessSeriesImageResponses();
                 if (processedObjects != totalObjects)
                 {
-                    Logger.WriteInformation($"Failed to download and process {mxf.SeriesInfosToProcess.Count - processedObjects} series image links.");
+                    Logger.WriteWarning($"Failed to download and process {mxf.SeriesInfosToProcess.Count - processedObjects} series image links.");
                 }
             }
             Logger.WriteMessage("Exiting GetAllSeriesImages(). SUCCESS.");

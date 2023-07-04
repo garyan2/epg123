@@ -112,6 +112,7 @@ namespace epg123
 
             // load configuration file and set component states/values
             LoadConfigurationFile(false);
+            if (Config == null) Config = new epgConfig();
 
             // complete the title bar label with version number
             var info = string.Empty;
@@ -296,6 +297,7 @@ namespace epg123
                 label1.Enabled = false;
                 ckIpAddress.Enabled = false;
                 cmbIpAddresses.Enabled = false;
+                tabConfigs.TabPages.Remove(tabNotifier);
             }
             else
             {
@@ -444,6 +446,7 @@ namespace epg123
             {
                 MessageBox.Show(SdApi.ErrorMessage, "Failed to Login");
                 txtLoginName.Enabled = txtPassword.Enabled = true;
+                Cursor = Cursors.Arrow;
                 return;
             }
             BuildLineupsAndStations();
@@ -865,11 +868,9 @@ namespace epg123
             // sanity checks
             if ((Config.ExpectedServicecount  == 0) && (sender != null))
             {
-                if (MessageBox.Show("There are no INCLUDED lineups and/or no stations selected for download.\n\nDo you wish to commit these changes?",
-                                    "No Stations to Download", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No)
-                {
-                    return;
-                }
+                MessageBox.Show("There are no INCLUDED lineups and/or no stations selected for download.\n\nConfiguration will not be saved.",
+                                "No Stations to Download", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
             }
             else if ((Config.ExpectedServicecount != _originalConfig.ExpectedServicecount) && (Config.ExpectedServicecount > 0))
             {
@@ -1447,6 +1448,12 @@ namespace epg123
             Process.Start(_BaseServerAddress);
         }
         #endregion
+
+        private void btnEmail_Click(object sender, EventArgs e)
+        {
+            var emailForm = new frmEmail();
+            emailForm.ShowDialog();
+        }
         #endregion
 
         private void lineupMenuStrip_Opening(object sender, CancelEventArgs e)

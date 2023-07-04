@@ -258,14 +258,14 @@ namespace epg123.sdJson2mxf
                     schedule = (ScheduleResponse)serializer.Deserialize(reader, typeof(ScheduleResponse));
                     if (schedule == null)
                     {
-                        Logger.WriteError("Failed to read Md5Schedule file in cache directory.");
+                        Logger.WriteError("Failed to read Md5Schedule entry in cache file.");
                         return;
                     }
                 }
             }
             catch (Exception ex)
             {
-                Logger.WriteError("Error occurred when trying to read Md5Schedule file in cache directory. Message: " + ex);
+                Logger.WriteError("Error occurred when trying to read Md5Schedule entry in cache file. Message: " + ex);
                 return;
             }
 

@@ -57,7 +57,7 @@ namespace epg123.sdJson2mxf
                 ProcessMovieImageResponses();
                 if (processedObjects != totalObjects)
                 {
-                    Logger.WriteInformation($"Failed to download and process {moviePrograms.Count - processedObjects} movie poster links.");
+                    Logger.WriteWarning($"Failed to download and process {moviePrograms.Count - processedObjects} movie poster links.");
                 }
             }
             Logger.WriteMessage("Exiting GetAllMoviePosters(). SUCCESS.");
