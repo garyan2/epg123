@@ -118,7 +118,6 @@ namespace GaRyan2.Utilities
 
         public static FileInfo GZipCompressFile(string filepath)
         {
-            var start = DateTime.Now;
             var fileToCompress = new FileInfo(filepath);
             using (var originalFileStream = fileToCompress.OpenRead())
             using (var compressedFileStream = File.Create(fileToCompress.FullName + ".gz"))

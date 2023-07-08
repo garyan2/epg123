@@ -5,7 +5,7 @@ namespace GaRyan2.Utilities
 {
     public partial class frmEmail : Form
     {
-        EmailNotifier notifier;
+        EpgNotifier notifier;
 
         public frmEmail()
         {
@@ -16,7 +16,7 @@ namespace GaRyan2.Utilities
 
         private void frmEmail_Load(object sender, EventArgs e)
         {
-            notifier = Helper.ReadJsonFile(Helper.EmailNotifier, typeof(EmailNotifier)) ?? new EmailNotifier();
+            notifier = Helper.ReadJsonFile(Helper.EmailNotifier, typeof(EpgNotifier)) ?? new EpgNotifier();
             
             txtUsername.Text = notifier.Username;
             txtPassword.Text = notifier.Password;
@@ -35,7 +35,7 @@ namespace GaRyan2.Utilities
 
         private void btnTest_Click(object sender, EventArgs e)
         {
-            var config = new EmailNotifier
+            var config = new EpgNotifier
             {
                 Username = txtUsername.Text,
                 Password = txtPassword.Text,

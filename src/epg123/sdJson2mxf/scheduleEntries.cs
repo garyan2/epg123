@@ -227,11 +227,11 @@ namespace epg123.sdJson2mxf
                             var compare = ScheduleEntries
                                 .Where(arg => arg.Value[0].Equals(response.StationId))
                                 .Single(arg => arg.Value[1].Equals(response.Metadata.StartDate));
-                            Logger.WriteWarning($"Md5 mismatch for station {compare.Value[0]} on {compare.Value[1]}. Expected: {compare.Key} - Downloaded {response.Metadata.Md5}");
+                            Logger.WriteWarning($"Md5 mismatch for station {compare.Value[0]} on {compare.Value[1]}. Expected: {compare.Key} - Downloaded: {response.Metadata.Md5}");
                         }
                         catch
                         {
-                            Logger.WriteWarning($"Md5 mismatch for station {response.StationId} on {response.Metadata.StartDate}. Downloaded {response.Metadata.Md5}");
+                            Logger.WriteWarning($"Md5 mismatch for station {response.StationId} on {response.Metadata.StartDate}. Downloaded: {response.Metadata.Md5}");
                         }
                     }
                 }

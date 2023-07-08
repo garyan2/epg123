@@ -1,8 +1,10 @@
 ﻿using GaRyan2.Utilities;
 using Microsoft.MediaCenter.Guide;
 using Microsoft.MediaCenter.Pvr;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace GaRyan2.WmcUtilities
@@ -208,6 +210,74 @@ namespace GaRyan2.WmcUtilities
                 Logger.WriteInformation($"Exception thrown during DetermineRecordingsInProgress(). {ex}");
             }
             return false;
+        }
+
+        public static void DetermineStorageStatus()
+        {
+            EpgNotifier notifier = Helper.ReadJsonFile(Helper.EmailNotifier, typeof(EpgNotifier)) ?? new EpgNotifier();
+            try
+            {
+                var daysToWarning = 3;
+                var daysToError = 1;
+                using (var recKey = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Media Center\Service\Recording", false))
+                {
+                    if (recKey == null) return;
+
+                    var recPath = (string)recKey.GetValue("RecordPath");
+                    var dirInfo = new DirectoryInfo(recPath);
+
+                    var quota = (long)recKey.GetValue("Quota");
+                    long quotaUsed = dirInfo.EnumerateFiles("*.*", SearchOption.AllDirectories).Sum(fi => fi.Length);
+                    long quotaRemaining = quota - quotaUsed;
+
+                    var drive = new DriveInfo(recPath.Substring(0, 1));
+                    long driveRemaining = drive.AvailableFreeSpace;
+
+                    long available = Math.Min(quotaRemaining, driveRemaining);
+                    var pctUsed = 100 * quotaUsed / (double)(quotaUsed + available);
+
+                    var msg = $"Recorder storage drive {drive.Name} has {Helper.BytesToString(available)} available. ({pctUsed:N1}% of {Helper.BytesToString(quotaUsed + available)} used)";
+                    if (notifier.StorageErrorGB > 0 && (long)notifier.StorageErrorGB * 1024 * 1024 * 1024 < available) Logger.WriteError(msg);
+                    else if (notifier.StorageWarningGB > 0 && (long)notifier.StorageWarningGB * 1024 * 1024 * 1024 < available) Logger.WriteWarning(msg);
+                    else Logger.WriteMessage($"*** {msg} ***");
+                }
+
+                var recordings = new Recordings(WmcObjectStore).Where(arg => !arg.Abandoned && arg.State != RecordingState.Deleted && arg.ReasonDeleted == DeleteReason.BumpedToRecord)
+                                                               .OrderBy(arg => arg.ExpectedDeleteDate).ToList();
+                if (recordings.Count > 0)
+                {
+                    var firstDelete = recordings.First();
+                    var msg = $"WMC predicts limited storage starting at {firstDelete.ExpectedDeleteDate.ToLocalTime()} and may need to delete existing recordings to record new programs.";
+                    if (notifier.StorageErrorGB == 0 && firstDelete.ExpectedDeleteDate < DateTime.UtcNow + TimeSpan.FromDays(daysToError)) Logger.WriteError(msg);
+                    else if (notifier.StorageWarningGB == 0 && firstDelete.ExpectedDeleteDate < DateTime.Now + TimeSpan.FromDays(daysToWarning)) Logger.WriteWarning(msg);
+                    else Logger.WriteInformation(msg);
+                }
+
+                recordings = new Recordings(WmcObjectStore).Where(arg => !arg.Abandoned && arg.State != RecordingState.Deleted && arg.ReasonDeleted == DeleteReason.DiskFull)
+                                                           .OrderBy(arg => arg.StartTime).ToList();
+                if (recordings.Count > 0)
+                {
+                    var firstDelete = recordings.First();
+                    var msg = $"WMC predicts running out of storage starting at {firstDelete.StartTime.ToLocalTime()} and may need to cancel scheduled recordings.";
+                    if (notifier.StorageErrorGB == 0 && firstDelete.StartTime < DateTime.UtcNow + TimeSpan.FromDays(daysToError)) Logger.WriteError(msg);
+                    else if (notifier.StorageWarningGB == 0 && firstDelete.StartTime < DateTime.Now + TimeSpan.FromDays(daysToWarning)) Logger.WriteWarning(msg);
+                    else Logger.WriteInformation(msg);
+                }
+
+                var requests = new RequestedPrograms(WmcObjectStore).Where(arg => arg.IsActive && arg.IsConflicted && !arg.WillRecord)
+                                                                    .OrderBy(arg => arg.PossibleAssignments?.First().ScheduleEntry.StartTime).ToList();
+                if (requests.Count > 0)
+                {
+                    foreach (var request in requests)
+                    {
+                        var entry = request.PossibleAssignments.First().ScheduleEntry;
+                        var msg = $"{entry.Program.Title} - {entry.Program.EpisodeTitle} at {entry.StartTime.ToLocalTime()} will not be recorded due to a tuner conflict.";
+                        if (entry.StartTime < DateTime.UtcNow + TimeSpan.FromDays(daysToError)) Logger.WriteError(msg);
+                        else if (entry.StartTime < DateTime.UtcNow + TimeSpan.FromDays(daysToWarning)) Logger.WriteWarning(msg);
+                    }
+                }
+            }
+            catch { }
         }
     }
 }

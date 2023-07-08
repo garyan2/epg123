@@ -126,6 +126,12 @@ namespace hdhr2mxf
             {
                 var detail = api.GetDeviceDetails(device.DiscoverUrl);
                 if (detail == null) continue;
+                if (device.DeviceId == null)
+                {
+                    device.DeviceId = detail.DeviceId;
+                    device.Legacy = detail.Legacy;
+                    device.LineupUrl = detail.LineupUrl;
+                }
                 Logger.WriteVerbose($"Discovered {detail.FriendlyName}{(string.IsNullOrEmpty(detail.Version) ? "" : $" version {detail.Version}")}{(string.IsNullOrEmpty(detail.ModelNumber) ? "" : $" {detail.ModelNumber}")}{(string.IsNullOrEmpty(detail.DeviceId) ? "" : $" ({detail.DeviceId})")}{(string.IsNullOrEmpty(detail.FirmwareName) ? "" : $" with firmware {detail.FirmwareVersion}")}.{(detail.TotalSpace > 0 ? $" ({(double)(detail.TotalSpace - detail.FreeSpace) / detail.TotalSpace * 100.0:N1}% of {Helper.BytesToString(detail.TotalSpace)} used)" : "")}");
                 if (!string.IsNullOrEmpty(detail.DeviceAuth))
                 {

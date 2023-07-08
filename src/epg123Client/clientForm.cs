@@ -18,7 +18,6 @@ using System.Threading;
 using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Linq;
-using Settings = epg123.Properties.Settings;
 
 namespace epg123Client
 {
@@ -2105,11 +2104,19 @@ namespace epg123Client
         }
         #endregion
 
+        #region ========== Notifier ==========
         private void btnEmail_Click(object sender, EventArgs e)
         {
             var emailForm = new frmEmail();
             emailForm.ShowDialog();
         }
+
+        private void btnStorage_Click(object sender, EventArgs e)
+        {
+            var frm = new frmStorage();
+            frm.ShowDialog();
+        }
+        #endregion
     }
 
     public static class ControlExtensions

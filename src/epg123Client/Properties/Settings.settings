@@ -9,7 +9,7 @@
       <Value Profile="(Default)">800, 600</Value>
     </Setting>
     <Setting Name="SplitterDistance" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">415</Value>
+      <Value Profile="(Default)">515</Value>
     </Setting>
     <Setting Name="WindowMaximized" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>

@@ -16,14 +16,19 @@ namespace tokenServer
 
         public static void Initialize()
         {
-            if (File.Exists(Helper.Epg123ImageCachePath))
-            {
-                ImageCache = Helper.ReadJsonFile(Helper.Epg123ImageCachePath, typeof(Dictionary<string, CacheImage>));
-            }
-            else ImageCache = new Dictionary<string, CacheImage>();
+            ImageCache = Helper.ReadJsonFile(Helper.Epg123ImageCachePath, typeof(Dictionary<string, CacheImage>)) ?? new Dictionary<string, CacheImage>();
 
-            GetAllImageSizes();
-            AddImagesMissingInCacheFile();
+            try
+            {
+                GetAllImageSizes();
+                AddImagesMissingInCacheFile();
+            }
+            catch
+            {
+                Logger.WriteError("There was an error in the imageCache.json file. Rebuilding.");
+                ImageCache = new Dictionary<string, CacheImage>();
+                AddImagesMissingInCacheFile();
+            }
         }
 
         public static void Cleanup()

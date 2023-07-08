@@ -97,6 +97,7 @@
             this.lblToolStripStatus = new System.Windows.Forms.ToolStripStatusLabel();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.btnStorage = new System.Windows.Forms.Button();
             this.btnEmail = new System.Windows.Forms.Button();
             this.grpClientConfig = new System.Windows.Forms.GroupBox();
             this.btnSatellites = new System.Windows.Forms.Button();
@@ -156,13 +157,13 @@
             // splitContainer1.Panel1
             // 
             this.splitContainer1.Panel1.Controls.Add(this.toolStripContainer1);
-            this.splitContainer1.Panel1MinSize = 415;
+            this.splitContainer1.Panel1MinSize = 515;
             // 
             // splitContainer1.Panel2
             // 
             this.splitContainer1.Panel2.Controls.Add(this.toolStripContainer2);
             this.splitContainer1.Size = new System.Drawing.Size(884, 428);
-            this.splitContainer1.SplitterDistance = 505;
+            this.splitContainer1.SplitterDistance = 515;
             this.splitContainer1.SplitterWidth = 6;
             this.splitContainer1.TabIndex = 0;
             // 
@@ -173,11 +174,11 @@
             // 
             this.toolStripContainer1.ContentPanel.Controls.Add(this.lvEditTextBox);
             this.toolStripContainer1.ContentPanel.Controls.Add(this.mergedChannelListView);
-            this.toolStripContainer1.ContentPanel.Size = new System.Drawing.Size(505, 378);
+            this.toolStripContainer1.ContentPanel.Size = new System.Drawing.Size(515, 378);
             this.toolStripContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.toolStripContainer1.Location = new System.Drawing.Point(0, 0);
             this.toolStripContainer1.Name = "toolStripContainer1";
-            this.toolStripContainer1.Size = new System.Drawing.Size(505, 428);
+            this.toolStripContainer1.Size = new System.Drawing.Size(515, 428);
             this.toolStripContainer1.TabIndex = 1;
             this.toolStripContainer1.Text = "toolStripContainer1";
             // 
@@ -214,7 +215,7 @@
             this.mergedChannelListView.Location = new System.Drawing.Point(0, 0);
             this.mergedChannelListView.Name = "mergedChannelListView";
             this.mergedChannelListView.OwnerDraw = true;
-            this.mergedChannelListView.Size = new System.Drawing.Size(505, 378);
+            this.mergedChannelListView.Size = new System.Drawing.Size(515, 378);
             this.mergedChannelListView.Sorting = System.Windows.Forms.SortOrder.Ascending;
             this.mergedChannelListView.TabIndex = 0;
             this.mergedChannelListView.UseCompatibleStateImageBehavior = false;
@@ -361,7 +362,7 @@
             this.btnLablesDisplay});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(505, 25);
+            this.toolStrip1.Size = new System.Drawing.Size(515, 25);
             this.toolStrip1.Stretch = true;
             this.toolStrip1.TabIndex = 1;
             // 
@@ -412,7 +413,7 @@
             this.btnExportMxf});
             this.mergedChannelToolStrip.Location = new System.Drawing.Point(0, 25);
             this.mergedChannelToolStrip.Name = "mergedChannelToolStrip";
-            this.mergedChannelToolStrip.Size = new System.Drawing.Size(505, 25);
+            this.mergedChannelToolStrip.Size = new System.Drawing.Size(515, 25);
             this.mergedChannelToolStrip.Stretch = true;
             this.mergedChannelToolStrip.TabIndex = 0;
             // 
@@ -520,7 +521,7 @@
             this.btnEncrypted.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
             this.btnEncrypted.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btnEncrypted.Name = "btnEncrypted";
-            this.btnEncrypted.Size = new System.Drawing.Size(23, 22);
+            this.btnEncrypted.Size = new System.Drawing.Size(23, 14);
             this.btnEncrypted.Text = "toolStripButton1";
             this.btnEncrypted.ToolTipText = "Filter: Encrypted Channels";
             this.btnEncrypted.Click += new System.EventHandler(this.btnEncrypted_Click);
@@ -532,7 +533,7 @@
             this.btnUnencrypted.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
             this.btnUnencrypted.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btnUnencrypted.Name = "btnUnencrypted";
-            this.btnUnencrypted.Size = new System.Drawing.Size(23, 22);
+            this.btnUnencrypted.Size = new System.Drawing.Size(23, 14);
             this.btnUnencrypted.Text = "toolStripButton1";
             this.btnUnencrypted.ToolTipText = "Filter: Unencrypted Channels";
             this.btnUnencrypted.Click += new System.EventHandler(this.btnUnencrypted_Click);
@@ -544,7 +545,7 @@
             this.btnBlocked.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
             this.btnBlocked.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btnBlocked.Name = "btnBlocked";
-            this.btnBlocked.Size = new System.Drawing.Size(23, 22);
+            this.btnBlocked.Size = new System.Drawing.Size(23, 14);
             this.btnBlocked.Text = "toolStripButton1";
             this.btnBlocked.ToolTipText = "Filter: Suggested Blocked Channels";
             this.btnBlocked.Click += new System.EventHandler(this.btnBlocked_Click);
@@ -556,7 +557,7 @@
             this.btnNotSuggestedBlocked.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
             this.btnNotSuggestedBlocked.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btnNotSuggestedBlocked.Name = "btnNotSuggestedBlocked";
-            this.btnNotSuggestedBlocked.Size = new System.Drawing.Size(23, 22);
+            this.btnNotSuggestedBlocked.Size = new System.Drawing.Size(23, 14);
             this.btnNotSuggestedBlocked.Text = "toolStripButton1";
             this.btnNotSuggestedBlocked.ToolTipText = "Filter: Not Suggested Blocked Channels";
             this.btnNotSuggestedBlocked.Click += new System.EventHandler(this.btnNotSuggestedBlocked_Click);
@@ -572,7 +573,7 @@
             this.btnDeleteChannel.Image = ((System.Drawing.Image)(resources.GetObject("btnDeleteChannel.Image")));
             this.btnDeleteChannel.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btnDeleteChannel.Name = "btnDeleteChannel";
-            this.btnDeleteChannel.Size = new System.Drawing.Size(23, 22);
+            this.btnDeleteChannel.Size = new System.Drawing.Size(23, 20);
             this.btnDeleteChannel.Text = "Delete Channel(s)";
             this.btnDeleteChannel.Click += new System.EventHandler(this.btnDeleteChannel_Click);
             // 
@@ -629,11 +630,11 @@
             // toolStripContainer2.ContentPanel
             // 
             this.toolStripContainer2.ContentPanel.Controls.Add(this.lineupChannelListView);
-            this.toolStripContainer2.ContentPanel.Size = new System.Drawing.Size(373, 378);
+            this.toolStripContainer2.ContentPanel.Size = new System.Drawing.Size(363, 378);
             this.toolStripContainer2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.toolStripContainer2.Location = new System.Drawing.Point(0, 0);
             this.toolStripContainer2.Name = "toolStripContainer2";
-            this.toolStripContainer2.Size = new System.Drawing.Size(373, 428);
+            this.toolStripContainer2.Size = new System.Drawing.Size(363, 428);
             this.toolStripContainer2.TabIndex = 1;
             this.toolStripContainer2.Text = "toolStripContainer2";
             // 
@@ -655,7 +656,7 @@
             this.lineupChannelListView.Location = new System.Drawing.Point(0, 0);
             this.lineupChannelListView.MultiSelect = false;
             this.lineupChannelListView.Name = "lineupChannelListView";
-            this.lineupChannelListView.Size = new System.Drawing.Size(373, 378);
+            this.lineupChannelListView.Size = new System.Drawing.Size(363, 378);
             this.lineupChannelListView.TabIndex = 0;
             this.lineupChannelListView.UseCompatibleStateImageBehavior = false;
             this.lineupChannelListView.View = System.Windows.Forms.View.Details;
@@ -686,7 +687,7 @@
             this.toolStripLabel4});
             this.toolStrip2.Location = new System.Drawing.Point(0, 0);
             this.toolStrip2.Name = "toolStrip2";
-            this.toolStrip2.Size = new System.Drawing.Size(373, 25);
+            this.toolStrip2.Size = new System.Drawing.Size(363, 25);
             this.toolStrip2.Stretch = true;
             this.toolStrip2.TabIndex = 1;
             // 
@@ -708,7 +709,7 @@
             this.btnDeleteLineup});
             this.lineupChannelToolStrip.Location = new System.Drawing.Point(0, 25);
             this.lineupChannelToolStrip.Name = "lineupChannelToolStrip";
-            this.lineupChannelToolStrip.Size = new System.Drawing.Size(373, 25);
+            this.lineupChannelToolStrip.Size = new System.Drawing.Size(363, 25);
             this.lineupChannelToolStrip.Stretch = true;
             this.lineupChannelToolStrip.TabIndex = 0;
             // 
@@ -803,6 +804,7 @@
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.btnStorage);
             this.groupBox1.Controls.Add(this.btnEmail);
             this.groupBox1.Location = new System.Drawing.Point(787, 3);
             this.groupBox1.Name = "groupBox1";
@@ -810,6 +812,16 @@
             this.groupBox1.TabIndex = 7;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Notifications";
+            // 
+            // btnStorage
+            // 
+            this.btnStorage.Location = new System.Drawing.Point(6, 44);
+            this.btnStorage.Name = "btnStorage";
+            this.btnStorage.Size = new System.Drawing.Size(75, 23);
+            this.btnStorage.TabIndex = 1;
+            this.btnStorage.Text = "Storage";
+            this.btnStorage.UseVisualStyleBackColor = true;
+            this.btnStorage.Click += new System.EventHandler(this.btnStorage_Click);
             // 
             // btnEmail
             // 
@@ -1207,5 +1219,6 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator9;
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.Button btnEmail;
+        private System.Windows.Forms.Button btnStorage;
     }
 }

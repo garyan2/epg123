@@ -303,6 +303,7 @@ namespace epg123Client
                 Logger.LogOsDescription();
                 Logger.LogDotNetDescription();
                 Logger.LogWmcDescription();
+                WmcStore.DetermineStorageStatus();
 
                 // show gui if needed
                 if (showGui)

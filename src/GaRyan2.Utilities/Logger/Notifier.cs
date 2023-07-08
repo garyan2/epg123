@@ -10,8 +10,8 @@ namespace GaRyan2.Utilities
     {
         private static void SendNotification()
         {
-            EmailNotifier emailConfig = Helper.ReadJsonFile(Helper.EmailNotifier, typeof(EmailNotifier));
-            if (emailConfig == null ||
+            EpgNotifier emailConfig = Helper.ReadJsonFile(Helper.EmailNotifier, typeof(EpgNotifier));
+            if (emailConfig?.SmtpServer == null ||
                (Status == 0x0000 && (emailConfig.NotifyOn & 0x01) == 0) ||
                (Status == 0x0001 && (emailConfig.NotifyOn & 0x02) == 0) ||
                (Status == 0xBAD1 && (emailConfig.NotifyOn & 0x04) == 0) ||
@@ -48,7 +48,7 @@ namespace GaRyan2.Utilities
             }
         }
 
-        public static bool SendTestMessage(EmailNotifier emailConfig)
+        public static bool SendTestMessage(EpgNotifier emailConfig)
         {
             var application = Assembly.GetEntryAssembly().GetName().Name.ToUpper();
             SmtpClient smtpClient = new SmtpClient
@@ -80,7 +80,7 @@ namespace GaRyan2.Utilities
         }
     }
 
-    public class EmailNotifier
+    public class EpgNotifier
     {
         [JsonProperty("Username")]
         public string Username { get; set; }
@@ -105,5 +105,11 @@ namespace GaRyan2.Utilities
 
         [JsonProperty("NotifyOn")]
         public int NotifyOn { get; set; } = 0x0E;
+
+        [JsonProperty("StorageWarningGB")]
+        public int StorageWarningGB { get; set; } = -1;
+
+        [JsonProperty("StorageErrorGB")]
+        public int StorageErrorGB { get; set; } = 0;
     }
 }
