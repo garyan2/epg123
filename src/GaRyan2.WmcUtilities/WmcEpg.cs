@@ -237,8 +237,8 @@ namespace GaRyan2.WmcUtilities
                     var pctUsed = 100 * quotaUsed / (double)(quotaUsed + available);
 
                     var msg = $"Recorder storage drive {drive.Name} has {Helper.BytesToString(available)} available. ({Helper.BytesToString(quotaUsed)} of {Helper.BytesToString(quotaUsed + available)} used)";
-                    if (notifier.StorageErrorGB > 0 && (long)notifier.StorageErrorGB * 1024 * 1024 * 1024 < available) Logger.WriteError(msg);
-                    else if (notifier.StorageWarningGB > 0 && (long)notifier.StorageWarningGB * 1024 * 1024 * 1024 < available) Logger.WriteWarning(msg);
+                    if (notifier.StorageErrorGB > 0 && (long)notifier.StorageErrorGB * 1024 * 1024 * 1024 > available) Logger.WriteError(msg);
+                    else if (notifier.StorageWarningGB > 0 && (long)notifier.StorageWarningGB * 1024 * 1024 * 1024 > available) Logger.WriteWarning(msg);
                     else Logger.WriteMessage($"*** {msg} ***");
                 }
 
