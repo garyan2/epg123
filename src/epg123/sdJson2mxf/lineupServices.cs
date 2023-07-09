@@ -6,9 +6,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Xml.Serialization;
 using api = GaRyan2.SchedulesDirect;
 
 namespace epg123.sdJson2mxf

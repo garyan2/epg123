@@ -139,7 +139,6 @@ namespace epg123Client
             this.Name = "frmRemoteServers";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Select path to MXF file";
-            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.frmRemoteServers_FormClosing);
             this.Shown += new System.EventHandler(this.frmRemoteServers_Shown);
             this.ResumeLayout(false);
 

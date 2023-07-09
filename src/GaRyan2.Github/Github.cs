@@ -1,6 +1,6 @@
-﻿using System.Linq;
+﻿using GaRyan2.GithubApi;
 using GaRyan2.Utilities;
-using GaRyan2.GithubApi;
+using System.Linq;
 
 namespace GaRyan2
 {

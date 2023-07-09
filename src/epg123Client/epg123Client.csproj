@@ -290,6 +290,10 @@
     <EmbeddedResource Include="SatMxf\satellites.xml" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\GaRyan2.Github\GaRyan2.Github.csproj">
+      <Project>{e82ca8a5-b4b2-4617-8caa-e4b93a4db330}</Project>
+      <Name>GaRyan2.Github</Name>
+    </ProjectReference>
     <ProjectReference Include="..\GaRyan2.MxfXmltvTools\GaRyan2.MxfXmltvTools.csproj">
       <Project>{2a8d6f2b-3c96-4314-b61b-5d84eaa02f2f}</Project>
       <Name>GaRyan2.MxfXmltvTools</Name>

@@ -63,13 +63,18 @@ namespace GaRyan2.Utilities
                 {
                     var responses = new Dictionary<IPAddress, byte[]>();
                     var udpServer = new IPEndPoint(IPAddress.Any, 0);
-                    var udpClient = new UdpClient(new IPEndPoint(ip.Address, Helper.TcpUdpPort))
+                    var udpClient = new UdpClient(new IPEndPoint(ip.Address, 0))
                     {
                         EnableBroadcast = true
                     };
                     udpClient.Client.ReceiveTimeout = TIMEOUT_MS;
                     udpClient.AllowNatTraversal(true);
-                    udpClient.Send(DiscoveryRequest, DiscoveryRequest.Length, new IPEndPoint(IPAddress.Broadcast, Helper.TcpUdpPort));
+
+                    try
+                    {
+                        udpClient.Send(DiscoveryRequest, DiscoveryRequest.Length, new IPEndPoint(IPAddress.Broadcast, Helper.TcpUdpPort));
+                    }
+                    catch { continue; }
 
                     do
                     {
@@ -78,6 +83,7 @@ namespace GaRyan2.Utilities
                             var buffer = udpClient.Receive(ref udpServer);
                             if (buffer[0] == 0x10 && buffer[1] == 0xFF)
                             {
+                                if (udpServer.Address.Equals(ip.Address)) continue;
                                 responses.Add(udpServer.Address, buffer);
                             }
                         }

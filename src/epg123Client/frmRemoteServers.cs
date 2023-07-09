@@ -8,7 +8,6 @@ namespace epg123Client
     public partial class frmRemoteServers : Form
     {
         private readonly ImageList imageList = new ImageList();
-        private bool serviceRunning;
         public string mxfPath;
 
         public frmRemoteServers()
@@ -18,7 +17,6 @@ namespace epg123Client
             listView1.SmallImageList = listView1.LargeImageList = imageList;
             imageList.Images.Add(resImages.EPG123OKDark);
             imageList.ImageSize = new System.Drawing.Size(32, 32);
-            serviceRunning = UdpFunctions.StopService();
         }
 
         private void frmRemoteServers_Shown(object sender, EventArgs e)
@@ -31,11 +29,6 @@ namespace epg123Client
             listView1.Items.AddRange(UdpFunctions.DiscoverServers(false).Select(server => new ListViewItem { Text = $"{server}", ImageIndex = 0, Tag = server }).ToArray());
             Cursor = Cursors.Default;
             btnRefresh.Enabled = btnSearch.Enabled = true;
-        }
-
-        private void frmRemoteServers_FormClosing(object sender, FormClosingEventArgs e)
-        {
-            if (serviceRunning) UdpFunctions.StartService();
         }
 
         private void listView1_DoubleClick(object sender, EventArgs e)

@@ -14,7 +14,8 @@ namespace GaRyan2
     public static class SchedulesDirect
     {
         private static API api;
-        private static Timer _timer;
+        private static readonly Timer _timer = new Timer(TimerEvent);
+        private static object _tokenLock = new object();
 
         public static string Token { get; private set; }
         public static DateTime TokenTimestamp = DateTime.MinValue;
@@ -66,32 +67,33 @@ namespace GaRyan2
         }
         public static bool GetToken(string username = null, string password = null, bool requestNew = false)
         {
-            if (!requestNew && DateTime.UtcNow - TokenTimestamp < TimeSpan.FromMinutes(1)) return true;
+            if (!requestNew && DateTime.UtcNow - TokenTimestamp < TimeSpan.FromMinutes(5)) return true;
             if (username == null || password == null) return false;
 
-            api.ClearToken();
-            var ret = api.GetApiResponse<TokenResponse>(Method.POST, "token", new TokenRequest { Username = username, PasswordHash = password });
-            if ((ret?.Code ?? -1) == 0)
+            lock (_tokenLock)
             {
-                WebStats.IncrementTokenRefresh();
-                Username = username; PasswordHash = password;
-                GoodToken = true;
-                TokenTimestamp = ret.Datetime;
-                api.SetToken(Token = ret.Token);
-                _timer = new Timer(TimerEvent);
-                _ = _timer.Change(60000, 60000); // timer event every 60 seconds
-                Logger.WriteInformation("Refreshed Schedules Direct API token.");
+                api.ClearToken();
+                var ret = api.GetApiResponse<TokenResponse>(Method.POST, "token", new TokenRequest { Username = username, PasswordHash = password });
+                if ((ret?.Code ?? -1) == 0)
+                {
+                    api.SetToken(Token = ret.Token);
+                    WebStats.IncrementTokenRefresh();
+                    Username = username; PasswordHash = password;
+                    GoodToken = true;
+                    TokenTimestamp = ret.Datetime;
+                    _ = _timer.Change(60000, 60000); // timer event every 60 seconds
+                    Logger.WriteInformation($"Refreshed Schedules Direct API token. Token={Token}");
+                }
+                else
+                {
+                    GoodToken = false;
+                    TokenTimestamp = DateTime.MinValue;
+                    _ = _timer.Change(900000, 900000); // timer event every 15 minutes
+                    if (ret != null) Logger.WriteError($"Failed to get a token from Schedules Direct.\n{JsonConvert.SerializeObject(ret)}");
+                    else Logger.WriteError("Did not receive a response from Schedules Direct for a token request.");
+                }
+                return (ret?.Code ?? -1) == 0;
             }
-            else
-            {
-                if (ret != null) Logger.WriteError($"Failed to get a token from Schedules Direct.\n{JsonConvert.SerializeObject(ret)}");
-                else Logger.WriteError("Did not receive a response from Schedules Direct for a token request.");
-                GoodToken = false;
-                TokenTimestamp = DateTime.MinValue;
-                _timer = new Timer(TimerEvent);
-                _timer.Change(900000, 900000); // timer event every 15 minutes
-            }
-            return (ret?.Code ?? -1) == 0;
         }
 
         public static HttpResponseMessage GetImage(string uri, DateTimeOffset ifModifiedSince)

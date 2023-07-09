@@ -226,7 +226,7 @@ namespace GaRyan2.WmcUtilities
                     var recPath = (string)recKey.GetValue("RecordPath");
                     var dirInfo = new DirectoryInfo(recPath);
 
-                    var quota = (long)recKey.GetValue("Quota");
+                    var quota = (long)recKey.GetValue("Quota", long.MaxValue);
                     long quotaUsed = dirInfo.EnumerateFiles("*.*", SearchOption.AllDirectories).Sum(fi => fi.Length);
                     long quotaRemaining = quota - quotaUsed;
 
@@ -236,7 +236,7 @@ namespace GaRyan2.WmcUtilities
                     long available = Math.Min(quotaRemaining, driveRemaining);
                     var pctUsed = 100 * quotaUsed / (double)(quotaUsed + available);
 
-                    var msg = $"Recorder storage drive {drive.Name} has {Helper.BytesToString(available)} available. ({pctUsed:N1}% of {Helper.BytesToString(quotaUsed + available)} used)";
+                    var msg = $"Recorder storage drive {drive.Name} has {Helper.BytesToString(available)} available. ({Helper.BytesToString(quotaUsed)} of {Helper.BytesToString(quotaUsed + available)} used)";
                     if (notifier.StorageErrorGB > 0 && (long)notifier.StorageErrorGB * 1024 * 1024 * 1024 < available) Logger.WriteError(msg);
                     else if (notifier.StorageWarningGB > 0 && (long)notifier.StorageWarningGB * 1024 * 1024 * 1024 < available) Logger.WriteWarning(msg);
                     else Logger.WriteMessage($"*** {msg} ***");

@@ -38,6 +38,7 @@ namespace epgTray
         public trayApplication()
         {
             Application.ApplicationExit += OnApplicationExit;
+            _timer = new Timer(TimerEvent);
             InitializeComponent();
 
             if (Settings.Default.UpgradeRequired)
@@ -217,7 +218,6 @@ namespace epgTray
             }
 
             _nextUpdate = lastTime + TimeSpan.FromHours(24);
-            _timer = new Timer(TimerEvent);
             _ = _timer.Change(30000, 30000);
 
             // set and display icon

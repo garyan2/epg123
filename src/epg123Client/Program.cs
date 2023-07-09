@@ -1,4 +1,5 @@
-﻿using GaRyan2.Utilities;
+﻿using GaRyan2;
+using GaRyan2.Utilities;
 using GaRyan2.WmcUtilities;
 using Microsoft.MediaCenter.Guide;
 using System;
@@ -304,6 +305,9 @@ namespace epg123Client
                 Logger.LogDotNetDescription();
                 Logger.LogWmcDescription();
                 WmcStore.DetermineStorageStatus();
+
+                Github.Initialize($"EPG123/{Helper.Epg123Version}", "epg123");
+                if (Logger.Status == 0 && Github.UpdateAvailable()) Logger.Status = 1;
 
                 // show gui if needed
                 if (showGui)

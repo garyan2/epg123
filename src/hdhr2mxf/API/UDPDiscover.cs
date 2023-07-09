@@ -7,7 +7,6 @@ using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Windows.Forms.VisualStyles;
 
 namespace GaRyan2.SiliconDustApi
 {
@@ -31,7 +30,7 @@ namespace GaRyan2.SiliconDustApi
                 {
                     var responses = new List<byte[]>(10); // pre-allocate 10 responses
                     var udpServer = new IPEndPoint(IPAddress.Any, 0);
-                    var udpClient = new UdpClient(new IPEndPoint(ip.Address, udpPort))
+                    var udpClient = new UdpClient(new IPEndPoint(ip.Address, 0))
                     {
                         EnableBroadcast = true
                     };

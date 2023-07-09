@@ -1,6 +1,7 @@
 ﻿using GaRyan2.Utilities;
 using Newtonsoft.Json;
 using System;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -73,6 +74,8 @@ namespace GaRyan2.SchedulesDirectAPI
 
         private HttpResponseMessage HandleHttpResponseError(HttpResponseMessage response, string content)
         {
+            var tokenUsed = response.RequestMessage.Headers.GetValues("token").FirstOrDefault();
+
             if (!string.IsNullOrEmpty(content))
             {
                 var err = JsonConvert.DeserializeObject<BaseResponse>(content);
@@ -119,7 +122,7 @@ namespace GaRyan2.SchedulesDirectAPI
                 response.ReasonPhrase = "I'm a teapot";
             }
             WebStats.IncrementHttpStat((int)response.StatusCode);
-            if (response.StatusCode != HttpStatusCode.NotModified) Logger.WriteError($"{response.RequestMessage.RequestUri.AbsolutePath.Replace(BaseAddress, "/")}: {(int)response.StatusCode} {response.ReasonPhrase}{(!string.IsNullOrEmpty(content) ? $"\n{content}" : "")}");
+            if (response.StatusCode != HttpStatusCode.NotModified) Logger.WriteError($"{response.RequestMessage.RequestUri.AbsolutePath.Replace(BaseAddress, "/")}: {(int)response.StatusCode} {response.ReasonPhrase} : Token={tokenUsed}{(!string.IsNullOrEmpty(content) ? $"\n{content}" : "")}");
             return response;
         }
         #endregion
