@@ -246,7 +246,7 @@ namespace epg123Client
 
                         Logger.Initialize(Helper.Epg123TraceLogPath, "Beginning WMC recorder storage/tuner conflict checks", true);
                         Logger.LogWmcDescription();
-                        Logger.WriteInformation($"WMC database indexing took {indexer.StartTime - indexer.ExitTime}. Exit: 0x{indexer.ExitCode:X8}");
+                        Logger.WriteInformation($"WMC database indexing took {indexer.ExitTime - indexer.StartTime}. Exit: 0x{indexer.ExitCode:X8}");
                         WmcStore.DetermineStorageStatus();
 
                         if (Logger.Status > 0)
