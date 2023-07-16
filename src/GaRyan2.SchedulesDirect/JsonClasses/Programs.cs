@@ -44,9 +44,6 @@ namespace GaRyan2.SchedulesDirectAPI
         [JsonProperty("officialURL")]
         public string OfficialUrl { get; set; }
 
-        [JsonProperty("keyWords")]
-        public ProgramKeyWords KeyWords { get; set; }
-
         [JsonProperty("contentRating")]
         [JsonConverter(typeof(SingleOrListConverter<ProgramContentRating>))]
         public List<ProgramContentRating> ContentRating { get; set; }
@@ -63,18 +60,22 @@ namespace GaRyan2.SchedulesDirectAPI
         [JsonConverter(typeof(SingleOrListConverter<ProgramPerson>))]
         public List<ProgramPerson> Crew { get; set; }
 
+        /// <summary>
+        /// program type; one of following values;
+        /// Show, Episode, Sports, Movie
+        /// </summary>
         [JsonProperty("entityType")]
         public string EntityType { get; set; }
 
+        /// <summary>
+        /// program subtype; one of following values:
+        /// Feature Film, Short Film, TV Movie, Miniseries, Series, Special, Sports event, Sports non-event, Paid Programming, Theatre Event, TBA, Off Air
+        /// </summary>
         [JsonProperty("showType")]
         public string ShowType { get; set; }
 
         [JsonProperty("episodeImage")]
         public string EpisodeImage { get; set; }
-
-        [JsonProperty("recommendations")]
-        [JsonConverter(typeof(SingleOrListConverter<ProgramRecommendation>))]
-        public List<ProgramRecommendation> Recommendations { get; set; }
 
         [JsonProperty("hasImageArtwork")]
         public bool HasImageArtwork { get; set; }

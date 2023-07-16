@@ -87,21 +87,18 @@ namespace hdhr2mxf
                 return error ? -1 : 0;
             }
 
-            Logger.Initialize(Helper.Epg123TraceLogPath);
+            Logger.Initialize(Helper.Epg123TraceLogPath, "Beginning HDHR2MXF update execution", false);
             api.Initialize();
 
             var success = Build();
             if (!success || !import) return success ? 0 : -1;
-            success = WmcStore.ImportMxfFile(Helper.Hdhr2MxfMxfPath) && WmcStore.ReindexPvrSchedule() && WmcStore.ReindexDatabase();
+            success = WmcStore.ImportMxfFile(Helper.Hdhr2MxfMxfPath) && WmcStore.ReindexDatabase();
             return success ? 0 : -1;
         }
 
         public static bool Build()
         {
             var startTime = DateTime.UtcNow;
-            Logger.WriteMessage("===============================================================================");
-            Logger.WriteMessage($" Beginning HDHR2MXF update execution. version {Helper.Epg123Version}");
-            Logger.WriteMessage("===============================================================================");
 
             // verify hdhomerun devices on network
             List<HdhrDiscover> devices;

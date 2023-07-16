@@ -144,7 +144,6 @@ namespace epg123.sdJson2mxf
             {
                 ContentRating = sdProgram.ContentRating,
                 EventDetails = sdProgram.EventDetails,
-                KeyWords = sdProgram.KeyWords,
                 Movie = sdProgram.Movie,
                 OriginalAirDate = !string.IsNullOrEmpty(sdProgram.ShowType) && sdProgram.ShowType.ToLower().Contains("series") ? sdProgram.OriginalAirDate.ToString("s") : null,
                 ShowType = sdProgram.ShowType

@@ -23,7 +23,7 @@ namespace stirrtv
         {
             try
             {
-                Logger.Initialize(Helper.Epg123TraceLogPath);
+                Logger.Initialize(Helper.Epg123TraceLogPath, "Beginning Stirr update execution", false);
                 api.Initialize();
                 Build();
             }
@@ -36,9 +36,6 @@ namespace stirrtv
         private static void Build()
         {
             var startTime = DateTime.UtcNow;
-            Logger.WriteMessage("===============================================================================");
-            Logger.WriteMessage($" Beginning StirrTV update execution. version {Helper.Epg123Version}");
-            Logger.WriteMessage("===============================================================================");
 
             // determine lineup channels and groups
             Logger.WriteInformation("Determining Stirr TV lineup...");

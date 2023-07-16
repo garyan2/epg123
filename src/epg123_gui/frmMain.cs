@@ -76,10 +76,7 @@ namespace epg123
             lvLineupChannels.DoubleBuffered(true);
 
             // initialize the logger
-            Logger.Initialize(Helper.Epg123TraceLogPath);
-            Logger.WriteMessage("===============================================================================");
-            Logger.WriteMessage($" Activating the EPG123 Configuration GUI. version {Helper.Epg123Version}");
-            Logger.WriteMessage("===============================================================================");
+            Logger.Initialize(Helper.Epg123TraceLogPath, "Activating the configuration GUI", false);
         }
 
         private void ConfigForm_Load(object sender, EventArgs e)
@@ -102,7 +99,7 @@ namespace epg123
 
             // check for updates
             github.Initialize($"EPG123/{Helper.Epg123Version}", "epg123");
-            if (github.UpdateAvailable()) lblUpdate.Text = $"UPDATE AVAILABLE";
+            if (github.UpdateAvailable()) lblUpdate.Text = "UPDATE AVAILABLE";
         }
 
         private void ConfigForm_Shown(object sender, EventArgs e)
@@ -872,7 +869,7 @@ namespace epg123
                                 "No Stations to Download", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
-            else if ((Config.ExpectedServicecount != _originalConfig.ExpectedServicecount) && (Config.ExpectedServicecount > 0))
+            else if ((Config.ExpectedServicecount != _originalConfig.ExpectedServicecount))
             {
                 var prompt = $"The number of stations to download has {((_originalConfig.ExpectedServicecount > Config.ExpectedServicecount) ? "decreased" : "increased")} from {_originalConfig.ExpectedServicecount} to {Config.ExpectedServicecount} from the previous configuration.\n\nDo you wish to commit these changes?";
                 if (MessageBox.Show(prompt, "Change in Expected Services Count", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No)

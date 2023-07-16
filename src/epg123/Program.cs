@@ -35,17 +35,9 @@ namespace epg123
             AppDomain.CurrentDomain.UnhandledException += MyUnhandledException;
             Application.ThreadException += MyThreadException;
 
-            // make sure configuration file exists
-            if (!File.Exists(Helper.Epg123CfgPath))
-            {
-                Logger.WriteError("There is no configuration file to use for updating guide listings.\nOpen epg123_gui.exe to create a configuration file.");
-                goto Exit;
-            }
-
-            bool import = false, match = false, showProgress = false;
-            bool error = false, showHelp = false;
-            epgConfig config = null;
-
+            bool import, match, showProgress, error, showHelp;
+            import = match = showProgress = error = showHelp = false;
+            string clientArgs = "";
             if (args != null)
             {
                 foreach (var t in args)
@@ -87,11 +79,8 @@ namespace epg123
                 return error ? -1 : 0;
             }
 
-            // initialize logger
-            Logger.Initialize(Helper.Epg123TraceLogPath);
-
             // create a mutex and keep alive until program exits
-            using (var mutex = Helper.GetProgramMutex($"Global\\{AppGuid}", true))
+            using (var mutex = Helper.GetProgramMutex($"Global\\{AppGuid}", false))
             {
                 // check for an instance already running
                 if (mutex == null) goto Exit;
@@ -101,22 +90,12 @@ namespace epg123
                                                                             (uint)ExecutionFlags.ES_SYSTEM_REQUIRED |
                                                                             (uint)ExecutionFlags.ES_AWAYMODE_REQUIRED);
 
-                // bring in the configuration
-                config = Helper.ReadXmlFile(Helper.Epg123CfgPath, typeof(epgConfig));
-                if (config == null)
-                {
-                    NativeMethods.SetThreadExecutionState(prevThreadState | (uint)ExecutionFlags.ES_CONTINUOUS);
-                    mutex.ReleaseMutex();
-                    Logger.WriteError("Failed to read EPG123 configuration file.");
-                    goto Exit;
-                }
-
                 // let's do this
+                Logger.Initialize(Helper.Epg123TraceLogPath, "Beginning MXF and XMLTV file updates", true);
                 Helper.SendPipeMessage("Downloading|Initializing...");
-                var startTime = DateTime.UtcNow;
                 if (showProgress)
                 {
-                    var build = new frmProgress(config);
+                    var build = new frmProgress();
                     build.ShowDialog();
                 }
                 else
@@ -128,6 +107,7 @@ namespace epg123
                     }
                 }
                 Helper.SendPipeMessage("Download Complete");
+                Logger.CloseAndSendNotification();
 
                 // restore power/sleep settings
                 NativeMethods.SetThreadExecutionState(prevThreadState | (uint)ExecutionFlags.ES_CONTINUOUS);
@@ -136,28 +116,18 @@ namespace epg123
                 if (!sdJson2mxf.sdJson2Mxf.Success) goto Exit;
                 if (import)
                 {
-                    // verify output file exists
-                    if (!File.Exists(Helper.Epg123MxfPath) || !File.Exists(Helper.Epg123ClientExePath))
-                    {
-                        mutex.ReleaseMutex();
-                        goto Exit;
-                    }
-
                     // epg123client
-                    var startInfo = new ProcessStartInfo()
+                    Process.Start(new ProcessStartInfo
                     {
                         FileName = "epg123Client.exe",
-                        Arguments = "-i \"" + Helper.Epg123MxfPath + "\" -nogc -noverify -p" + (match ? " -match" : string.Empty),
+                        Arguments = $"-i \"{Helper.Epg123MxfPath}\"{(showProgress ? " -p -nogc -noverify" : "")}{(match ? " -match" : "")}",
                         UseShellExecute = false,
                         CreateNoWindow = true
-                    };
-                    var proc = Process.Start(startInfo);
-                    proc?.WaitForExit();
+                    });
                 }
             }
 
         Exit:
-            Logger.CloseAndSendNotification();
             return Logger.Status;
         }
 

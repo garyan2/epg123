@@ -769,7 +769,7 @@ namespace epg123Client
                 var proc = Process.Start(exePath, exeArgs);
                 proc.WaitForExit();
 
-                if (proc.ExitCode != 0)
+                if (proc.ExitCode == 0xDEAD)
                 {
                     MessageBox.Show($"There was an error using {exeName} to create the MXF file.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     UpdateStatusText("Click the 'Step 3' button to try again.");

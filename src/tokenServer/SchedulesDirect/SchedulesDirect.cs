@@ -67,7 +67,7 @@ namespace GaRyan2
         }
         public static bool GetToken(string username = null, string password = null, bool requestNew = false)
         {
-            if (!requestNew && DateTime.UtcNow - TokenTimestamp < TimeSpan.FromMinutes(5)) return true;
+            if (!requestNew && DateTime.UtcNow - TokenTimestamp < TimeSpan.FromMinutes(1)) return true;
             if (username == null || password == null) return false;
 
             lock (_tokenLock)
@@ -82,7 +82,7 @@ namespace GaRyan2
                     GoodToken = true;
                     TokenTimestamp = ret.Datetime;
                     _ = _timer.Change(60000, 60000); // timer event every 60 seconds
-                    Logger.WriteInformation($"Refreshed Schedules Direct API token. Token={Token}");
+                    Logger.WriteInformation($"Refreshed Schedules Direct API token. Token={Token.Substring(0, 5)}...");
                 }
                 else
                 {

@@ -29,13 +29,15 @@ namespace epg123Client
         {
             get
             {
+                if (_mxfFile == null) return EPG123STATUS.SUCCESS;
+
                 // if mxf file doesn't exist, automatically an error
                 if (_mxfFile.StartsWith("http"))
                 {
                     if (_mxfFile.Contains("epg123.mxf")) _mxfFile = Helper.Epg123MxfPath;
                     else if (_mxfFile.Contains("hdhr2mxf.mxf")) _mxfFile = Helper.Hdhr2MxfMxfPath;
                 }
-                if (string.IsNullOrEmpty(_mxfFile) || !File.Exists(_mxfFile))
+                if (!File.Exists(_mxfFile))
                 {
                     return EPG123STATUS.ERROR;
                 }

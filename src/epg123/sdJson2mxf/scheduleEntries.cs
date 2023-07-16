@@ -181,7 +181,7 @@ namespace epg123.sdJson2mxf
                 if (requestErrors.Count <= 0) continue;
                 foreach (var keyValuePair in requestErrors)
                 {
-                    Logger.WriteError($"Requests for MD5 schedule entries of station {request.StationId} returned error code {keyValuePair.Key} , message: {keyValuePair.Value}");
+                    Logger.WriteWarning($"Requests for MD5 schedule entries of station {request.StationId} returned error code {keyValuePair.Key} , message: {keyValuePair.Value}");
                 }
             }
             ReportProgress();

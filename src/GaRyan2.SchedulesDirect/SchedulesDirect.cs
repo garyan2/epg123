@@ -58,7 +58,7 @@ namespace GaRyan2
         /// <returns>true if successful</returns>
         public static bool GetToken(string username, string passwordHash, bool requestNew = false)
         {
-            if (Helper.InstallMethod != Helper.Installation.PORTABLE)
+            if ((int)Helper.InstallMethod <= (int)Helper.Installation.CLIENT)
             {
                 api.ClearToken();
                 var baseApi = Helper.InstallMethod == Helper.Installation.CLIENT ? api.BaseAddress : $"http://localhost:{Helper.TcpUdpPort}/epg123/";
@@ -104,6 +104,23 @@ namespace GaRyan2
                 return ret != null;
             }
             Logger.WriteError("No password provided to attempt token request from Schedules Direct.");
+            return false;
+        }
+
+        public static bool GetTokenFromService(string serviceUrl)
+        {
+            var ret = api.GetApiResponse<TokenResponse>(Method.GET, $"{serviceUrl}token");
+            if (ret != null && ret.Code == 0)
+            {
+                api.SetToken(ret.Token);
+                Logger.WriteVerbose($"Token refresh successful. serverID: {ret.ServerId} , datetime: {ret.Datetime:s}Z");
+                return true;
+            }
+            else if (ret != null)
+            {
+                api.SdErrorMessage = ret.Message;
+            }
+            else Logger.WriteError("Did not receive a response from EPG123 Server for a token request.");
             return false;
         }
 

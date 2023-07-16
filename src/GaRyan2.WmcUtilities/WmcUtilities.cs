@@ -6,6 +6,7 @@ using System.Globalization;
 using System.IO;
 using System.Net;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace GaRyan2.WmcUtilities
 {
@@ -319,7 +320,32 @@ namespace GaRyan2.WmcUtilities
         #region ========== ReIndex Tasks ==========
         public static bool ReindexDatabase()
         {
-            return RunWmcIndexTask("ReindexSearchRoot", "ehPrivJob.exe", "/DoReindexSearchRoot");
+            bool ret = false;
+            try
+            {
+                Logger.WriteMessage($"Entering ReindexDatabase()");
+                var proc = Process.Start(new ProcessStartInfo
+                {
+                    FileName = Helper.Epg123ClientExePath,
+                    Arguments = "-storage",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                });
+                if (proc != null)
+                {
+                    proc.OutputDataReceived += Process_OutputDataReceived;
+                    proc.BeginOutputReadLine();
+                    proc.ErrorDataReceived += Process_ErrorDataReceived;
+                    proc.BeginErrorReadLine();
+                    proc.WaitForExit(100);
+                    ret = true;
+                }
+            }
+            catch { }
+            Logger.WriteMessage($"Exiting ReindexDatabase(). {(ret ? "SUCCESS" : "FAILURE")}.");
+            return ret;
         }
 
         public static bool ReindexPvrSchedule()

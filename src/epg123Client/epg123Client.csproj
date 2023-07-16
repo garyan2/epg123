@@ -56,8 +56,7 @@
     <ApplicationIcon>Resources\EPG123.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>
-    </StartupObject>
+    <StartupObject>epg123Client.Program</StartupObject>
   </PropertyGroup>
   <PropertyGroup />
   <PropertyGroup>

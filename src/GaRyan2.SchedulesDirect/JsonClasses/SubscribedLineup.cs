@@ -12,6 +12,11 @@ namespace GaRyan2.SchedulesDirectAPI
 
     public class SubscribedLineup
     {
+        public override string ToString()
+        {
+            return $"{Name} ({Location})";
+        }
+
         [JsonProperty("lineup")]
         public string Lineup { get; set; }
 

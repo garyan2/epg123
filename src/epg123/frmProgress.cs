@@ -8,7 +8,7 @@ namespace epg123
     public partial class frmProgress : Form
     {
         private bool _done;
-        public frmProgress(epgConfig config)
+        public frmProgress()
         {
             Application.EnableVisualStyles();
             InitializeComponent();
@@ -16,7 +16,7 @@ namespace epg123
 
             sdJson2mxf.sdJson2Mxf.BackgroundWorker = backgroundWorker1;
             backgroundWorker1.WorkerReportsProgress = true;
-            backgroundWorker1.RunWorkerAsync(config);
+            backgroundWorker1.RunWorkerAsync();
         }
 
         private void backgroundWorker_DoWork(object sender, DoWorkEventArgs e)

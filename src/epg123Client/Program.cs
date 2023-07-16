@@ -2,6 +2,7 @@
 using GaRyan2.Utilities;
 using GaRyan2.WmcUtilities;
 using Microsoft.MediaCenter.Guide;
+using Microsoft.Win32;
 using System;
 using System.Diagnostics;
 using System.Globalization;
@@ -80,11 +81,14 @@ namespace epg123Client
 
     internal static class Program
     {
+        [DllImport("kernel32.dll")]
+        static extern bool AttachConsole(int dwProcessId);
+        private const int ATTACH_PARENT_PROCESS = -1;
+
         #region ========== Binding Redirects ==========
         static Program()
         {
-            // initialize logger
-            Logger.Initialize(Helper.Epg123TraceLogPath);
+            AttachConsole(ATTACH_PARENT_PROCESS);
 
             // ensure WMC is installed
             if (!File.Exists(Helper.EhshellExeFilePath))
@@ -154,7 +158,6 @@ namespace epg123Client
         public enum ExecutionFlags : uint
         {
             ES_SYSTEM_REQUIRED = 0x00000001,
-
             //ES_DISPLAY_REQUIRED = 0x00000002,
             //ES_USER_PRESENT = 0x00000004,
             ES_AWAYMODE_REQUIRED = 0x00000040,
@@ -222,11 +225,57 @@ namespace epg123Client
                     proc = Process.Start(startInfo);
                     proc?.WaitForExit();
                     return 0;
+                case "-storage":
+                    using (var mutex = new Mutex(true, "Global\\EPG123Indexing", out bool createdNew))
+                    {
+                        if (!createdNew)
+                        {
+                            Console.Out.WriteLine("INFO: WMC database indexing is currently running.");
+                            return 0;
+                        }
+
+                        var indexer = Process.Start(new ProcessStartInfo
+                        {
+                            FileName = Environment.ExpandEnvironmentVariables(@"%SystemRoot%\ehome\ehPrivJob.exe"),
+                            Arguments = "/DoReindexSearchRoot",
+                            UseShellExecute = false,
+                            CreateNoWindow = true
+                        });
+                        Console.Out.WriteLine("SUCCESS: WMC database indexing has started.");
+                        indexer.WaitForExit();
+
+                        Logger.Initialize(Helper.Epg123TraceLogPath, "Beginning WMC recorder storage/tuner conflict checks", true);
+                        Logger.LogWmcDescription();
+                        Logger.WriteInformation($"WMC database indexing took {indexer.StartTime - indexer.ExitTime}. Exit: 0x{indexer.ExitCode:X8}");
+                        WmcStore.DetermineStorageStatus();
+
+                        if (Logger.Status > 0)
+                        {
+                            try
+                            {
+                                using (var key = Registry.LocalMachine.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Media Center\\Service\\Epg", true))
+                                {
+                                    if (key != null && (int)key.GetValue("epg123LastUpdateStatus", 0) < Logger.Status)
+                                    {
+                                        key.SetValue("epg123LastUpdateStatus", Logger.Status, RegistryValueKind.DWord);
+                                        statusLogo.StatusImage(null);
+                                        Helper.SendPipeMessage("Import Complete");
+                                    }
+                                }
+                            }
+                            catch
+                            {
+                                Logger.WriteInformation("Failed to set registry entries for status of update.");
+                            }
+                        }
+                        Logger.CloseAndSendNotification();
+                    }
+                    return Logger.Status;
             }
 
             // evaluate arguments
-            bool nologo, import, force, showGui, advanced, nogc, verbose, noverify;
-            var match = nologo = import = force = showGui = advanced = nogc = verbose = noverify = false;
+            bool match, nologo, import, force, showGui, advanced, nogc, verbose, noverify, error, showHelp;
+            match = nologo = import = force = showGui = advanced = nogc = verbose = noverify = error = showHelp = false;
 
             if (File.Exists($"{Helper.Epg123ProgramDataFolder}nogc.txt"))
             {
@@ -252,13 +301,13 @@ namespace epg123Client
                                 if (!filename.StartsWith("http") && !File.Exists(filename))
                                 {
                                     Logger.WriteError($"File \"{filename}\" does not exist.");
-                                    return -1;
+                                    error = true;
                                 }
                             }
                             else
                             {
                                 Logger.WriteError("Missing input filename and path.");
-                                return -1;
+                                error = true;
                             }
                             import = true;
                             break;
@@ -281,9 +330,15 @@ namespace epg123Client
                         case "-noverify":
                             noverify = true;
                             break;
+                        case "-h":
+                        case "/h":
+                        case "/?":
+                            showHelp = true;
+                            break;
                         default:
-                            Logger.WriteVerbose($"**** Invalid arguments for epg123Client.exe; \"{arguments}\" ****");
-                            return -1;
+                            Console.WriteLine($"\nInvalid switch - \"{args[i].ToLower()}\"");
+                            error = true;
+                            break;
                     }
                 }
             }
@@ -291,30 +346,39 @@ namespace epg123Client
             {
                 showGui = true;
             }
+            if (error || showHelp)
+            {
+                var help = "EPG123CLIENT [-I \"path_to_mxf\" [-F] [-P] [-NOGC] [-VERBOSE] [-NOVERIFY]] [-MATCH] [-NOLOGO] [-X]\n\n" +
+                           "-I          Import MXF file identified with \"path_to_mxf\".\n" +
+                           "-F          Force import of MXF file if recordings are in progress.\n" +
+                           "-P          Show progress (interactive mode only).\n" +
+                           "-NOGC       Do not allow database garbage collection to execute.\n" +
+                           "-VERBOSE    Provide verbose output during database verification.\n" +
+                           "-NOVERIFY   Do not perform database verification.\n" +
+                           "-MATCH      Perform automatic guide mapping to tuner channels.\n" +
+                           "-NOLOGO     Removes all channel logos from guide.\n" +
+                           "-X          Add advanced buttons to GUI to explore and export database.";
+                Console.WriteLine(help);
+                return error ? -1 : 0;
+            }
 
-            // create a mutex and keep alive until program exits
             using (var mutex = !showGui && showProgress ? new Mutex(false, $"Global\\{AppGuid}") : Helper.GetProgramMutex($"Global\\{AppGuid}", !showGui))
             {
                 // check for an instance already running
                 if (mutex == null) return -1;
 
-                Logger.WriteMessage("===============================================================================");
-                Logger.WriteMessage($" {(showGui ? "Activating the epg123 client GUI." : "Beginning epg123 client execution.")} version {Helper.Epg123Version}");
-                Logger.WriteMessage("===============================================================================");
-                Logger.LogOsDescription();
-                Logger.LogDotNetDescription();
-                Logger.LogWmcDescription();
-                WmcStore.DetermineStorageStatus();
-
+                // check for updates
                 Github.Initialize($"EPG123/{Helper.Epg123Version}", "epg123");
-                if (Logger.Status == 0 && Github.UpdateAvailable()) Logger.Status = 1;
+                if (Github.UpdateAvailable()) Logger.Status = 1;
 
                 // show gui if needed
                 if (showGui)
                 {
+                    Logger.Initialize(Helper.Epg123TraceLogPath, "Activating the client GUI", false);
+                    Logger.LogWmcDescription();
+
                     var client = new clientForm(advanced);
                     client.ShowDialog();
-
                     if (client.RestartClientForm)
                     {
                         // start a new process
@@ -330,6 +394,10 @@ namespace epg123Client
                 }
                 else
                 {
+                    if (import) Logger.Initialize(Helper.Epg123TraceLogPath, "Beginning MXF file import", true);
+                    else Logger.Initialize(Helper.Epg123TraceLogPath, "Beginning miscellaneous WMC options", false);
+                    Logger.LogWmcDescription();
+                    
                     // prevent machine from entering sleep mode
                     var prevThreadState = NativeMethods.SetThreadExecutionState(
                         (uint)ExecutionFlags.ES_CONTINUOUS |
@@ -410,7 +478,6 @@ namespace epg123Client
                         Logger.WriteInformation("Completed lineup refresh.");
 
                         // reindex database
-                        _ = WmcStore.ReindexPvrSchedule();
                         _ = WmcStore.ReindexDatabase();
                     }
 
@@ -433,8 +500,7 @@ namespace epg123Client
                     NativeMethods.SetThreadExecutionState(prevThreadState | (uint)ExecutionFlags.ES_CONTINUOUS);
                 }
             }
-            if (!showGui) Logger.CloseAndSendNotification();
-            Environment.Exit(Logger.Status);
+            Logger.CloseAndSendNotification();
             return Logger.Status;
         }
 
@@ -502,6 +568,7 @@ namespace epg123Client
             if (!((Exception) e.ExceptionObject).Message.Equals("access denied"))
             {
                 Logger.WriteError($"Unhandled exception caught from {AppDomain.CurrentDomain.FriendlyName}. message: {((Exception) e.ExceptionObject).Message}\n{((Exception) e.ExceptionObject).StackTrace}");
+                Logger.CloseAndSendNotification();
             }
             var currentProcess = Process.GetCurrentProcess();
             currentProcess.Kill();
@@ -510,6 +577,7 @@ namespace epg123Client
         private static void MyThreadException(object sender, ThreadExceptionEventArgs e)
         {
             Logger.WriteError($"Unhandled thread exception caught from {AppDomain.CurrentDomain.FriendlyName}. message: {e.Exception.Message}\n{e.Exception.StackTrace}");
+            Logger.CloseAndSendNotification();
             var currentProcess = Process.GetCurrentProcess();
             currentProcess.Kill();
         }

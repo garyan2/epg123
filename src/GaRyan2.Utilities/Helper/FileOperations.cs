@@ -39,7 +39,7 @@ namespace GaRyan2.Utilities
         {
             if (!File.Exists(filepath))
             {
-                Logger.WriteInformation($"File \"{filepath}\" does not exist.");
+                //Logger.WriteInformation($"File \"{filepath}\" does not exist.");
                 return null;
             }
 
@@ -81,7 +81,7 @@ namespace GaRyan2.Utilities
         {
             if (!File.Exists(filepath))
             {
-                Logger.WriteInformation($"File \"{filepath}\" does not exist.");
+                //Logger.WriteInformation($"File \"{filepath}\" does not exist.");
                 return null;
             }
 

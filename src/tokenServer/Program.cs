@@ -10,7 +10,7 @@ namespace tokenServer
         /// </summary>
         static void Main()
         {
-            Logger.Initialize(Helper.ServerLogPath);
+            Logger.Initialize(Helper.ServerLogPath, "Beginning EPG123 token/proxy/cache service", false);
 
             ServiceBase[] ServicesToRun;
             ServicesToRun = new ServiceBase[]

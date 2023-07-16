@@ -13,19 +13,27 @@ namespace GaRyan2.Utilities
         private static string _sessionString;
 
         private static string _logFile;
+        private static bool _notify;
         public static int Status;
 
-        public static void Initialize(string logFile)
+        public static void Initialize(string logFile, string action, bool notify)
         {
             Status = 0x0;
             _logFile = logFile;
             firstEntry = true;
             _sessionString = string.Empty;
+            _notify = notify;
+
+            WriteMessage("=====================================================================================");
+            WriteMessage($"{Helper.Epg123AssemblyName}: {action}. version {Helper.Epg123Version}");
+            WriteMessage("=====================================================================================");
+            LogOsDescription();
+            LogDotNetDescription();
         }
 
         public static void CloseAndSendNotification()
         {
-            SendNotification();
+            if (_notify) SendNotification();
         }
 
         public static void WriteError(string message)

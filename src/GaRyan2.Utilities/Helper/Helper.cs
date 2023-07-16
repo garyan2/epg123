@@ -28,7 +28,9 @@ namespace GaRyan2.Utilities
             UNKNOWN
         }
 
-        public static string Epg123Version => Assembly.GetEntryAssembly()?.GetName().Version.ToString();
+        private static AssemblyName _assembly => Assembly.GetEntryAssembly()?.GetName();
+        public static string Epg123Version => _assembly.Version.ToString();
+        public static string Epg123AssemblyName => _assembly.Name.ToUpper();
         public static bool Standalone => !File.Exists(TokenServer);
 
         public static Installation InstallMethod

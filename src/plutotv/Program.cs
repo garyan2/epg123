@@ -15,7 +15,7 @@ namespace plutotv
         
         static void Main(string[] args)
         {
-            Logger.Initialize(Helper.Epg123TraceLogPath);
+            Logger.Initialize(Helper.Epg123TraceLogPath, "Beginning PlutoTV update execution", false);
             api.Initialize();
             Build();
         }
@@ -23,10 +23,6 @@ namespace plutotv
         private static void Build()
         {
             var startTime = DateTime.UtcNow;
-            Logger.WriteMessage("===============================================================================");
-            Logger.WriteMessage($" Beginning PlutoTV update execution. version {Helper.Epg123Version}");
-            Logger.WriteMessage("===============================================================================");
-
             try
             {
                 var channels = api.GetPlutoChannels()?.OrderBy(arg => arg.Number).ThenBy(arg => arg.Name).ToList();

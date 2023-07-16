@@ -25,18 +25,12 @@ namespace epg123.sdJson2mxf
 
             // initialize components
             var userAgent = $"EPG123/{Helper.Epg123Version}";
-            Logger.Initialize(Helper.Epg123TraceLogPath);
             Github.Initialize(userAgent, "epg123");
             Tmdb.Initialize(userAgent);
 
             api.Initialize(userAgent, config.BaseApiUrl, config.BaseArtworkUrl);
 
             var startTime = DateTime.UtcNow;
-            Logger.WriteMessage("===============================================================================");
-            Logger.WriteMessage($"Beginning EPG123 update execution. version {Helper.Epg123Version}");
-            Logger.WriteMessage("===============================================================================");
-            Logger.LogOsDescription();
-            Logger.LogDotNetDescription();
             Logger.WriteVerbose($"DaysToDownload: {config.DaysToDownload} , TheTVDBNumbers : {config.TheTvdbNumbers} , PrefixEpisodeTitle: {config.PrefixEpisodeTitle} , PrefixEpisodeDescription : {config.PrefixEpisodeDescription} , AppendEpisodeDesc: {config.AppendEpisodeDesc} , OADOverride : {config.OadOverride} , SeasonEventImages : {config.SeasonEventImages} , IncludeSDLogos : {config.IncludeSdLogos} , AutoAddNew: {config.AutoAddNew} , CreateXmltv: {config.CreateXmltv}");
 
             // login to Schedules Direct and check server status
@@ -58,7 +52,11 @@ namespace epg123.sdJson2mxf
 
             // initialize mxf file
             mxf = new MXF("EPG123", $"Electronic Program Guide in 1-2-3 v{Helper.Epg123Version}", "GaRyan2", "Schedules Direct");
-            if (Github.UpdateAvailable()) mxf.Providers[0].DisplayName += $" (Update Available)";
+            if (Github.UpdateAvailable())
+            {
+                mxf.Providers[0].DisplayName += $" (Update Available)";
+                Logger.Status = 1;
+            }
 
             // load cache file
             epgCache.LoadCache();
