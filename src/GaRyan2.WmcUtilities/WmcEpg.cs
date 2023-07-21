@@ -239,7 +239,7 @@ namespace GaRyan2.WmcUtilities
                     var msg = $"Recorder storage drive {drive.Name} has {Helper.BytesToString(available)} available. ({Helper.BytesToString(quotaUsed)} of {Helper.BytesToString(quotaUsed + available)} used)";
                     if (notifier.StorageErrorGB > 0 && (long)notifier.StorageErrorGB * 1024 * 1024 * 1024 > available) Logger.WriteError(msg);
                     else if (notifier.StorageWarningGB > 0 && (long)notifier.StorageWarningGB * 1024 * 1024 * 1024 > available) Logger.WriteWarning(msg);
-                    else Logger.WriteMessage($"*** {msg} ***");
+                    else Logger.WriteInformation(msg);
                 }
 
                 var recordings = new Recordings(WmcObjectStore).Where(arg => !arg.Abandoned && arg.State != RecordingState.Deleted && arg.ReasonDeleted == DeleteReason.BumpedToRecord)
@@ -266,16 +266,19 @@ namespace GaRyan2.WmcUtilities
 
                 var requests = new RequestedPrograms(WmcObjectStore).Where(arg => arg.IsActive && arg.IsConflicted && !arg.WillRecord)
                                                                     .OrderBy(arg => arg.PossibleAssignments?.First().ScheduleEntry.StartTime).ToList();
-                if (requests.Count > 0)
+                var conflicts = requests.Count;
+                if (conflicts > 0)
                 {
                     foreach (var request in requests)
                     {
                         var entry = request.PossibleAssignments.First().ScheduleEntry;
                         var msg = $"{entry.Program.Title} - {entry.Program.EpisodeTitle} at {entry.StartTime.ToLocalTime()} will not be recorded due to a tuner conflict.";
-                        if (entry.StartTime < DateTime.UtcNow + TimeSpan.FromDays(daysToError)) Logger.WriteError(msg);
-                        else if (entry.StartTime < DateTime.UtcNow + TimeSpan.FromDays(daysToWarning)) Logger.WriteWarning(msg);
+                        if (entry.StartTime < DateTime.UtcNow + TimeSpan.FromDays(notifier.ConflictErrorDays)) Logger.WriteError(msg);
+                        else if (entry.StartTime < DateTime.UtcNow + TimeSpan.FromDays(notifier.ConflictWarningDays)) Logger.WriteWarning(msg);
+                        else --conflicts;
                     }
                 }
+                if (conflicts == 0) Logger.WriteInformation($"No tuner conflicts detected within next {Math.Max(notifier.ConflictErrorDays, notifier.ConflictWarningDays)} days.");
             }
             catch { }
         }

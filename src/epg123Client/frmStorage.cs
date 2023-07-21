@@ -31,5 +31,15 @@ namespace epg123Client
             Helper.WriteJsonFile(epgNotifier, Helper.EmailNotifier);
             Close();
         }
+
+        private void numConflictWarning_ValueChanged(object sender, EventArgs e)
+        {
+            epgNotifier.ConflictWarningDays = (int)numConflictWarning.Value;
+        }
+
+        private void numConflictError_ValueChanged(object sender, EventArgs e)
+        {
+            epgNotifier.ConflictErrorDays = (int)numConflictError.Value;
+        }
     }
 }

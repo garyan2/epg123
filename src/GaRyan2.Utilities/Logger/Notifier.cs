@@ -111,5 +111,11 @@ namespace GaRyan2.Utilities
 
         [JsonProperty("StorageErrorGB")]
         public int StorageErrorGB { get; set; } = 0;
+
+        [JsonProperty("ConflictWarningDays")]
+        public int ConflictWarningDays { get; set; } = 3;
+
+        [JsonProperty("ConflictErrorDays")]
+        public int ConflictErrorDays { get; set; } = 1;
     }
 }

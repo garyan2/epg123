@@ -630,11 +630,11 @@
             // toolStripContainer2.ContentPanel
             // 
             this.toolStripContainer2.ContentPanel.Controls.Add(this.lineupChannelListView);
-            this.toolStripContainer2.ContentPanel.Size = new System.Drawing.Size(363, 378);
+            this.toolStripContainer2.ContentPanel.Size = new System.Drawing.Size(365, 378);
             this.toolStripContainer2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.toolStripContainer2.Location = new System.Drawing.Point(0, 0);
             this.toolStripContainer2.Name = "toolStripContainer2";
-            this.toolStripContainer2.Size = new System.Drawing.Size(363, 428);
+            this.toolStripContainer2.Size = new System.Drawing.Size(365, 428);
             this.toolStripContainer2.TabIndex = 1;
             this.toolStripContainer2.Text = "toolStripContainer2";
             // 
@@ -656,7 +656,7 @@
             this.lineupChannelListView.Location = new System.Drawing.Point(0, 0);
             this.lineupChannelListView.MultiSelect = false;
             this.lineupChannelListView.Name = "lineupChannelListView";
-            this.lineupChannelListView.Size = new System.Drawing.Size(363, 378);
+            this.lineupChannelListView.Size = new System.Drawing.Size(365, 378);
             this.lineupChannelListView.TabIndex = 0;
             this.lineupChannelListView.UseCompatibleStateImageBehavior = false;
             this.lineupChannelListView.View = System.Windows.Forms.View.Details;
@@ -687,7 +687,7 @@
             this.toolStripLabel4});
             this.toolStrip2.Location = new System.Drawing.Point(0, 0);
             this.toolStrip2.Name = "toolStrip2";
-            this.toolStrip2.Size = new System.Drawing.Size(363, 25);
+            this.toolStrip2.Size = new System.Drawing.Size(365, 25);
             this.toolStrip2.Stretch = true;
             this.toolStrip2.TabIndex = 1;
             // 
@@ -709,7 +709,7 @@
             this.btnDeleteLineup});
             this.lineupChannelToolStrip.Location = new System.Drawing.Point(0, 25);
             this.lineupChannelToolStrip.Name = "lineupChannelToolStrip";
-            this.lineupChannelToolStrip.Size = new System.Drawing.Size(363, 25);
+            this.lineupChannelToolStrip.Size = new System.Drawing.Size(365, 25);
             this.lineupChannelToolStrip.Stretch = true;
             this.lineupChannelToolStrip.TabIndex = 0;
             // 
@@ -750,7 +750,7 @@
             this.btnDeleteLineup.Image = ((System.Drawing.Image)(resources.GetObject("btnDeleteLineup.Image")));
             this.btnDeleteLineup.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btnDeleteLineup.Name = "btnDeleteLineup";
-            this.btnDeleteLineup.Size = new System.Drawing.Size(23, 22);
+            this.btnDeleteLineup.Size = new System.Drawing.Size(23, 20);
             this.btnDeleteLineup.Text = "Delete Lineup";
             this.btnDeleteLineup.Click += new System.EventHandler(this.BtnDeleteLineupClick);
             // 
@@ -817,9 +817,9 @@
             // 
             this.btnStorage.Location = new System.Drawing.Point(6, 44);
             this.btnStorage.Name = "btnStorage";
-            this.btnStorage.Size = new System.Drawing.Size(75, 23);
+            this.btnStorage.Size = new System.Drawing.Size(75, 46);
             this.btnStorage.TabIndex = 1;
-            this.btnStorage.Text = "Storage";
+            this.btnStorage.Text = "Storage && Conflicts";
             this.btnStorage.UseVisualStyleBackColor = true;
             this.btnStorage.Click += new System.EventHandler(this.btnStorage_Click);
             // 

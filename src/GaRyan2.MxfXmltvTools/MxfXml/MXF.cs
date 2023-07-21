@@ -87,7 +87,8 @@ namespace GaRyan2.MxfXml
                     OnlyShowDynamicLineups = "false",
                     GuideImage = new MxfGuideImage(0, null, string.Empty)
                     {
-                        Uid = $"!Image!{generatorName}"
+                        Uid = $"!Image!{generatorName}",
+                        Image = "iVBORw0KGgoAAAANSUhEUgAAAEAAAAAoCAYAAABOzvzpAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAhSURBVGhD7cEBDQAAAMKg909tDwcEAAAAAAAAAAAAnKoBKCgAAWgZruEAAAAASUVORK5CYII="
                     }
                 };
 

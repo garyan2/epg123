@@ -340,6 +340,8 @@ namespace GaRyan2.WmcUtilities
                     proc.ErrorDataReceived += Process_ErrorDataReceived;
                     proc.BeginErrorReadLine();
                     proc.WaitForExit(100);
+                    proc.CancelErrorRead();
+                    proc.CancelOutputRead();
                     ret = true;
                 }
             }

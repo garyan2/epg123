@@ -59,6 +59,10 @@ namespace epg123Client
             {
                 lblConfig.Text = "Import MXF file from either EPG123 or HDHR2MXF";
             }
+            else if (_hdhr2mxfInstalled)
+            {
+                lblConfig.Text = "Import MXF file from HDHR2MXF";
+            }
 
             UpdateStatusText("Click the 'Step 1' button to begin.");
         }

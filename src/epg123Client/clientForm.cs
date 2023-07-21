@@ -2113,10 +2113,16 @@ namespace epg123Client
 
         private void btnStorage_Click(object sender, EventArgs e)
         {
-            var frm = new frmStorage();
-            frm.ShowDialog();
+            var storageForm = new frmStorage();
+            storageForm.ShowDialog();
         }
         #endregion
+
+        private void btnConflicts_Click(object sender, EventArgs e)
+        {
+            //var conflictForm = new
+            //conflictForm.ShowDialog();
+        }
     }
 
     public static class ControlExtensions

@@ -268,6 +268,7 @@ namespace epg123Client
                                 Logger.WriteInformation("Failed to set registry entries for status of update.");
                             }
                         }
+                        Logger.WriteInformation("Completed WMC recorder storage/tuner conflict checks.");
                         Logger.CloseAndSendNotification();
                     }
                     return Logger.Status;

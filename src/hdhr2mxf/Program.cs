@@ -88,6 +88,7 @@ namespace hdhr2mxf
             }
 
             Logger.Initialize(Helper.Epg123TraceLogPath, "Beginning HDHR2MXF update execution", false);
+            if (import) Logger.LogWmcDescription();
             api.Initialize();
 
             var success = Build();
