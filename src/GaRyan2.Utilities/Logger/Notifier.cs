@@ -11,7 +11,7 @@ namespace GaRyan2.Utilities
         private static void SendNotification()
         {
             EpgNotifier emailConfig = Helper.ReadJsonFile(Helper.EmailNotifier, typeof(EpgNotifier));
-            if (emailConfig?.SmtpServer == null ||
+            if (string.IsNullOrEmpty(emailConfig?.SmtpServer) ||
                (Status == 0x0000 && (emailConfig.NotifyOn & 0x01) == 0) ||
                (Status == 0x0001 && (emailConfig.NotifyOn & 0x02) == 0) ||
                (Status == 0xBAD1 && (emailConfig.NotifyOn & 0x04) == 0) ||

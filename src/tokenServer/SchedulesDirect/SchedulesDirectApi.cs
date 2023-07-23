@@ -62,7 +62,12 @@ namespace GaRyan2.SchedulesDirectAPI
                 var response = await _httpClient.SendAsync(message, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
 
                 if (!response.IsSuccessStatusCode || response.Content.Headers.ContentType.MediaType == "application/json")
-                    return HandleHttpResponseError(response, await response.Content.ReadAsStringAsync());
+                {
+                    if (response.Content.Headers.ContentType.MediaType == "application/json")
+                        return HandleHttpResponseError(response, await response.Content.ReadAsStringAsync());
+                    else
+                        return HandleHttpResponseError(response, null);
+                }
                 return response;
             }
             catch (HttpRequestException e)

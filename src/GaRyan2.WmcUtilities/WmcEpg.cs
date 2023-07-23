@@ -247,9 +247,10 @@ namespace GaRyan2.WmcUtilities
                 if (recordings.Count > 0)
                 {
                     var firstDelete = recordings.First();
-                    var msg = $"WMC predicts limited storage starting at {firstDelete.ExpectedDeleteDate.ToLocalTime()} and may need to delete existing recordings to record new programs.";
-                    if (notifier.StorageErrorGB == 0 && firstDelete.ExpectedDeleteDate < DateTime.UtcNow + TimeSpan.FromDays(daysToError)) Logger.WriteError(msg);
-                    else if (notifier.StorageWarningGB == 0 && firstDelete.ExpectedDeleteDate < DateTime.Now + TimeSpan.FromDays(daysToWarning)) Logger.WriteWarning(msg);
+                    var deleteTime = DateTime.SpecifyKind(firstDelete.ExpectedDeleteDate, DateTimeKind.Utc);
+                    var msg = $"WMC predicts limited storage starting at {deleteTime.ToLocalTime()} and may need to delete existing recordings to record new programs.";
+                    if (notifier.StorageErrorGB == 0 && deleteTime < DateTime.UtcNow + TimeSpan.FromDays(daysToError)) Logger.WriteError(msg);
+                    else if (notifier.StorageWarningGB == 0 && deleteTime < DateTime.UtcNow + TimeSpan.FromDays(daysToWarning)) Logger.WriteWarning(msg);
                     else Logger.WriteInformation(msg);
                 }
 
@@ -258,9 +259,10 @@ namespace GaRyan2.WmcUtilities
                 if (recordings.Count > 0)
                 {
                     var firstDelete = recordings.First();
-                    var msg = $"WMC predicts running out of storage starting at {firstDelete.StartTime.ToLocalTime()} and may need to cancel scheduled recordings.";
-                    if (notifier.StorageErrorGB == 0 && firstDelete.StartTime < DateTime.UtcNow + TimeSpan.FromDays(daysToError)) Logger.WriteError(msg);
-                    else if (notifier.StorageWarningGB == 0 && firstDelete.StartTime < DateTime.Now + TimeSpan.FromDays(daysToWarning)) Logger.WriteWarning(msg);
+                    var startTime = DateTime.SpecifyKind(firstDelete.StartTime, DateTimeKind.Utc);
+                    var msg = $"WMC predicts running out of storage starting at {startTime.ToLocalTime()} and may need to cancel scheduled recordings.";
+                    if (notifier.StorageErrorGB == 0 && startTime < DateTime.UtcNow + TimeSpan.FromDays(daysToError)) Logger.WriteError(msg);
+                    else if (notifier.StorageWarningGB == 0 && startTime < DateTime.UtcNow + TimeSpan.FromDays(daysToWarning)) Logger.WriteWarning(msg);
                     else Logger.WriteInformation(msg);
                 }
 
@@ -272,9 +274,10 @@ namespace GaRyan2.WmcUtilities
                     foreach (var request in requests)
                     {
                         var entry = request.PossibleAssignments.First().ScheduleEntry;
-                        var msg = $"{entry.Program.Title} - {entry.Program.EpisodeTitle} at {entry.StartTime.ToLocalTime()} will not be recorded due to a tuner conflict.";
-                        if (entry.StartTime < DateTime.UtcNow + TimeSpan.FromDays(notifier.ConflictErrorDays)) Logger.WriteError(msg);
-                        else if (entry.StartTime < DateTime.UtcNow + TimeSpan.FromDays(notifier.ConflictWarningDays)) Logger.WriteWarning(msg);
+                        var startTime = DateTime.SpecifyKind(entry.StartTime, DateTimeKind.Utc);
+                        var msg = $"{entry.Program.Title} - {entry.Program.EpisodeTitle} at {startTime.ToLocalTime()} will not be recorded due to a tuner conflict.";
+                        if (startTime > DateTime.UtcNow && startTime < DateTime.UtcNow + TimeSpan.FromDays(notifier.ConflictErrorDays)) Logger.WriteError(msg);
+                        else if (startTime > DateTime.UtcNow && startTime < DateTime.UtcNow + TimeSpan.FromDays(notifier.ConflictWarningDays)) Logger.WriteWarning(msg);
                         else --conflicts;
                     }
                 }

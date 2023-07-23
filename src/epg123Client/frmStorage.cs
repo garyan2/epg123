@@ -14,6 +14,8 @@ namespace epg123Client
             epgNotifier = Helper.ReadJsonFile(Helper.EmailNotifier, typeof(EpgNotifier)) ?? new EpgNotifier();
             numWarning.Value = epgNotifier.StorageWarningGB;
             numError.Value = epgNotifier.StorageErrorGB;
+            numConflictWarning.Value = epgNotifier.ConflictWarningDays;
+            numConflictError.Value = epgNotifier.ConflictErrorDays;
         }
 
         private void numWarning_ValueChanged(object sender, EventArgs e)
