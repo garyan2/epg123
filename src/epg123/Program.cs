@@ -37,7 +37,6 @@ namespace epg123
 
             bool import, match, showProgress, error, showHelp;
             import = match = showProgress = error = showHelp = false;
-            string clientArgs = "";
             if (args != null)
             {
                 foreach (var t in args)
@@ -73,8 +72,8 @@ namespace epg123
                 var help = "EPG123 [-IMPORT [-MATCH]] [-P]\n\n" +
                            "-IMPORT     Automatically imports guide listings into WMC.\n" +
                            "-MATCH      Automatically match guide listing in WMC.\n" +
-                           "-P          Shows progress GUI while downloading/importing guide\n" +
-                           "            listings.\n";
+                           "-P          Shows progress while downloading/importing guide\n" +
+                           "            listings (interactive mode only).\n";
                 Console.WriteLine(help);
                 return error ? -1 : 0;
             }
@@ -117,13 +116,15 @@ namespace epg123
                 if (import)
                 {
                     // epg123client
-                    Process.Start(new ProcessStartInfo
+                    var proc = Process.Start(new ProcessStartInfo
                     {
-                        FileName = "epg123Client.exe",
+                        FileName = Helper.Epg123ClientExePath,
                         Arguments = $"-i \"{Helper.Epg123MxfPath}\"{(showProgress ? " -p -nogc -noverify" : "")}{(match ? " -match" : "")}",
                         UseShellExecute = false,
                         CreateNoWindow = true
                     });
+                    proc.WaitForExit();
+                    Logger.Status = proc.ExitCode;
                 }
             }
 

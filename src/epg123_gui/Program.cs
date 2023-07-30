@@ -22,17 +22,18 @@ namespace epg123
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
-        static void Main()
+        static int Main()
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
             using (var mutex = Helper.GetProgramMutex($"Global\\{AppGuid}", false))
             {
-                if (mutex == null) return;
+                if (mutex == null) return 0;
 
                 var mainForm = new ConfigForm();
                 Application.Run(mainForm);
+                return Logger.Status;
             }
         }
     }

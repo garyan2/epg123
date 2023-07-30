@@ -92,9 +92,9 @@ namespace hdhr2mxf
             api.Initialize();
 
             var success = Build();
-            if (!success || !import) return success ? 0 : -1;
+            if (!success || !import) return success ? 0 : 0xDEAD;
             success = WmcStore.ImportMxfFile(Helper.Hdhr2MxfMxfPath) && WmcStore.ReindexDatabase();
-            return success ? 0 : -1;
+            return success ? 0 : 0xDEAD;
         }
 
         public static bool Build()

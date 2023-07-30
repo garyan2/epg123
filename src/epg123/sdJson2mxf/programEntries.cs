@@ -314,7 +314,7 @@ namespace epg123.sdJson2mxf
             }
 
             // queue up the sport event to get the event image
-            if ((Helper.StringContains(sd.ShowType, "Sports event") || Helper.StringContains(sd.ShowType, "Team event")) && (sd.HasSportsArtwork | sd.HasEpisodeArtwork | sd.HasSeriesArtwork | sd.HasImageArtwork))
+            if ((Helper.StringContains(sd.ShowType, "Sports event") || Helper.StringContains(sd.ShowType, "Team event")))// && (sd.HasSportsArtwork | sd.HasEpisodeArtwork | sd.HasSeriesArtwork | sd.HasImageArtwork))
             {
                 sportEvents.Add(prg);
             }
@@ -574,23 +574,29 @@ namespace epg123.sdJson2mxf
             var advisories = new HashSet<string>();
             if (sdProgram.ContentRating != null)
             {
-                var ratings = !string.IsNullOrEmpty(config.RatingsOrigin) ? config.RatingsOrigin.Split(',') : new[] { RegionInfo.CurrentRegion.ThreeLetterISORegionName };
+                var origins = !string.IsNullOrEmpty(config.RatingsOrigin) ? config.RatingsOrigin.Split(',') : new[] { RegionInfo.CurrentRegion.ThreeLetterISORegionName };
                 var contentRatings = new Dictionary<string, string>();
-                foreach (var rating in sdProgram.ContentRating)
+                if (Helper.TableContains(origins, "ALL"))
                 {
-                    if (string.IsNullOrEmpty(rating.Country) || Helper.TableContains(ratings, "ALL") || Helper.TableContains(ratings, rating.Country))
+                    foreach (var rating in sdProgram.ContentRating)
                     {
                         contentRatings.Add(rating.Body, rating.Code);
                     }
-
-                    if (rating.ContentAdvisory == null) continue;
-                    foreach (var reason in rating.ContentAdvisory)
+                }
+                else
+                {
+                    foreach (var origin in origins)
                     {
-                        advisories.Add(reason);
+                        foreach (var rating in sdProgram.ContentRating.Where(arg => arg.Country?.Equals(origin) ?? false))
+                        {
+                            contentRatings.Add(rating.Body, rating.Code);
+                        }
+                        if (contentRatings.Count > 0) break;
                     }
                 }
                 mxfProgram.extras.Add("ratings", contentRatings);
             }
+
             if (sdProgram.ContentAdvisory != null)
             {
                 foreach (var reason in sdProgram.ContentAdvisory)
@@ -598,7 +604,6 @@ namespace epg123.sdJson2mxf
                     advisories.Add(reason);
                 }
             }
-
             if (advisories.Count == 0) return;
             var advisoryTable = advisories.ToArray();
 

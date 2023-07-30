@@ -4,6 +4,7 @@ using GaRyan2.Utilities;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -304,11 +305,26 @@ namespace epg123.sdJson2mxf
                 var scheduleTvRatings = new Dictionary<string, string>();
                 if (scheduleProgram.Ratings != null)
                 {
-                    var ratings = config.RatingsOrigin.Split(',');
-                    foreach (var rating in scheduleProgram.Ratings.Where(rating => string.IsNullOrEmpty(rating.Country) || Helper.TableContains(ratings, "ALL") || Helper.TableContains(ratings, rating.Country)))
+                    var origins = !string.IsNullOrEmpty(config.RatingsOrigin) ? config.RatingsOrigin.Split(',') : new[] { RegionInfo.CurrentRegion.ThreeLetterISORegionName };
+                    if (Helper.TableContains(origins, "ALL"))
                     {
-                        scheduleTvRatings.Add(rating.Body, rating.Code);
+                        foreach (var rating in scheduleProgram.Ratings)
+                        {
+                            scheduleTvRatings.Add(rating.Body, rating.Code);
+                        }
                     }
+                    else
+                    {
+                        foreach (var origin in origins)
+                        {
+                            foreach (var rating in scheduleProgram.Ratings.Where(arg => arg.Country?.Equals(origin) ?? false))
+                            {
+                                scheduleTvRatings.Add(rating.Body, rating.Code);
+                            }
+                            if (scheduleTvRatings.Count > 0) break;
+                        }
+                    }
+                    mxfService.MxfScheduleEntries.ScheduleEntry.Last().extras.Add("ratings", scheduleTvRatings);
                 }
 
                 // populate the schedule entry and create program entry as required
@@ -342,7 +358,6 @@ namespace epg123.sdJson2mxf
                     //TvRating is determined in the class itself to combine with the program content ratings
                     IsSigned = scheduleProgram.Signed
                 });
-                mxfService.MxfScheduleEntries.ScheduleEntry.Last().extras.Add("ratings", scheduleTvRatings);
             }
         }
 

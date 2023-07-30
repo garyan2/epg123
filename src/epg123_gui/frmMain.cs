@@ -373,7 +373,7 @@ namespace epg123
             else
             {
                 // set import and automatch checkbox states
-                cbImport.Enabled = cbAutomatch.Enabled = File.Exists(Helper.Epg123ClientExePath) && File.Exists(Helper.EhshellExeFilePath);
+                cbImport.Enabled = cbImport.Checked = cbAutomatch.Enabled = File.Exists(Helper.Epg123ClientExePath) && File.Exists(Helper.EhshellExeFilePath);
                 lblSchedStatus.Text = _task.Exist || _task.ExistNoAccess ? string.Empty : _task.StatusString;
                 lblSchedStatus.ForeColor = Color.Red;
             }
@@ -897,9 +897,20 @@ namespace epg123
 
             if (sender?.Equals(btnExecute) ?? false)
             {
-                var args = $"-p{(cbImport.Checked ? " -import" : "")}{(cbAutomatch.Checked ? " -match" : "")}";
-                Process.Start(Helper.Epg123ExePath, args);
+                // run epg123 to create mxf file
+                Process proc;
+                proc = Process.Start(new ProcessStartInfo
+                {
+                    FileName = Helper.Epg123ExePath,
+                    Arguments = $"-p{(cbImport.Checked ? " -import" : "")}{(cbAutomatch.Checked ? " -match" : "")}",
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                });
+
+                // close gui and wait for exit
                 Close();
+                proc.WaitForExit();
+                Logger.Status = proc.ExitCode;
             }
         }
 

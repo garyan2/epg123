@@ -9,22 +9,10 @@ namespace GaRyan2
     public static class SchedulesDirect
     {
         private static readonly API api = new API();
-        public static string BaseAddress
-        {
-            get
-            {
-                return api.BaseAddress;
-            }
-        }
+        public static string BaseAddress => api.BaseAddress;
         public static string BaseArtworkAddress { get; private set; }
 
-        public static string ErrorMessage
-        {
-            get
-            {
-                return api.SdErrorMessage;
-            }
-        }
+        public static string ErrorMessage => api.SdErrorMessage;
         public static int MaxLineups;
 
         /// <summary>
@@ -58,7 +46,7 @@ namespace GaRyan2
         /// <returns>true if successful</returns>
         public static bool GetToken(string username, string passwordHash, bool requestNew = false)
         {
-            if ((int)Helper.InstallMethod <= (int)Helper.Installation.CLIENT)
+            if (Helper.InstallMethod == Helper.Installation.CLIENT || (Helper.InstallMethod == Helper.Installation.FULL && UdpFunctions.ServiceRunning()))
             {
                 api.ClearToken();
                 var baseApi = Helper.InstallMethod == Helper.Installation.CLIENT ? api.BaseAddress : $"http://localhost:{Helper.TcpUdpPort}/epg123/";
@@ -89,6 +77,10 @@ namespace GaRyan2
                 }
                 else Logger.WriteError("Did not receive a response from EPG123 Server for a token request.");
                 return false;
+            }
+            if (Helper.InstallMethod == Helper.Installation.FULL && !UdpFunctions.ServiceRunning())
+            {
+                Logger.WriteWarning("The \"EPG123 Server\" service is not running. Program images and remote client downloads will not be available.");
             }
 
             if (passwordHash != null)

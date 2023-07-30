@@ -728,9 +728,10 @@ namespace epg123Client
         private bool OpenEpg123Configuration()
         {
             var exeName = "EPG123";
-            var exePath = Helper.Epg123ExePath;
-            var exeArgs = "-p";
-            mxfImport = Helper.Epg123MxfPath;
+            var exePath = Helper.Epg123GuiPath;
+            mxfImport = string.Empty;
+
+            // simple client install
             if (Helper.InstallMethod == Helper.Installation.CLIENT)
             {
                 var frmRemote = new frmRemoteServers();
@@ -743,34 +744,31 @@ namespace epg123Client
                     return cbAutostep.Checked = false;
                 }
             }
-            else if (!_epg123Installed && _hdhr2mxfInstalled)
+            else
             {
-                exeName = "HDHR2MXF";
-                exePath = Helper.Hdhr2MxfExePath;
-                exeArgs = "";
-                mxfImport = Helper.Hdhr2MxfMxfPath;
-                Hdhr2MxfSrv = true;
-            }
-            else if (_epg123Installed && _hdhr2mxfInstalled)
-            {
-                const string text = "You have both the EPG123 executable for guide listings from Schedules Direct and the HDHR2MXF executable for guide listings from SiliconDust.\n\nDo you wish to proceed with HDHR2MXF?";
-                const string caption = "Multiple Guide Sources";
-                if (DialogResult.Yes == MessageBox.Show(text, caption, MessageBoxButtons.YesNo, MessageBoxIcon.Question))
+                // hdhr2mxf installed and used
+                if (_hdhr2mxfInstalled)
                 {
-                    exeName = "HDHR2MXF";
-                    exePath = Helper.Hdhr2MxfExePath;
-                    exeArgs = "";
-                    mxfImport = Helper.Hdhr2MxfMxfPath;
-                    Hdhr2MxfSrv = true;
+                    const string text = "You have both the EPG123 executable for guide listings from Schedules Direct and the HDHR2MXF executable for guide listings from SiliconDust.\n\nDo you wish to proceed with HDHR2MXF?";
+                    const string caption = "Multiple Guide Sources";
+                    if (!_epg123Installed || DialogResult.Yes == MessageBox.Show(text, caption, MessageBoxButtons.YesNo, MessageBoxIcon.Question))
+                    {
+                        exeName = "HDHR2MXF";
+                        exePath = Helper.Hdhr2MxfExePath;
+                        mxfImport = Helper.Hdhr2MxfMxfPath;
+                        Hdhr2MxfSrv = true;
+                    }
                 }
-            }
 
-            if (Helper.InstallMethod != Helper.Installation.CLIENT)
-            {
                 var txt = $"Running {exeName} and importing MXF ...";
                 UpdateStatusText(txt);
                 Logger.WriteVerbose(txt);
-                var proc = Process.Start(exePath, exeArgs);
+                var proc = Process.Start(new ProcessStartInfo
+                {
+                    FileName = exePath,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                });
                 proc.WaitForExit();
 
                 if (proc.ExitCode == 0xDEAD)
@@ -781,27 +779,24 @@ namespace epg123Client
                 }
             }
 
-            var importForm = new frmImport(mxfImport);
-            importForm.ShowDialog();
-            
-            // kick off the reindex
-            if (importForm.Success)
+            if (!string.IsNullOrEmpty(mxfImport))
             {
+                var importForm = new frmImport(mxfImport);
+                importForm.ShowDialog();
+                if (!importForm.Success)
+                {
+                    MessageBox.Show("There was an error importing the MXF file.", "Import Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    UpdateStatusText("Click the 'Step 3' button to try again.");
+                    return cbAutostep.Checked = false;
+                }
                 WmcStore.ActivateEpg123LineupsInStore();
                 WmcStore.ActivateGuide();
                 WmcStore.AutoMapChannels();
                 WmcStore.ReindexDatabase();
                 statusLogo.StatusImage(mxfImport);
                 Helper.SendPipeMessage("Import Complete");
-
-                return true;
             }
-            else
-            {
-                MessageBox.Show("There was an error importing the MXF file.", "Import Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                UpdateStatusText("Click the 'Step 3' button to try again.");
-                return cbAutostep.Checked = false;
-            }
+            return true;
         }
         #endregion
     }
