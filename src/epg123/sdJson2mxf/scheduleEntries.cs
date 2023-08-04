@@ -324,7 +324,6 @@ namespace epg123.sdJson2mxf
                             if (scheduleTvRatings.Count > 0) break;
                         }
                     }
-                    mxfService.MxfScheduleEntries.ScheduleEntry.Last().extras.Add("ratings", scheduleTvRatings);
                 }
 
                 // populate the schedule entry and create program entry as required
@@ -358,6 +357,7 @@ namespace epg123.sdJson2mxf
                     //TvRating is determined in the class itself to combine with the program content ratings
                     IsSigned = scheduleProgram.Signed
                 });
+                mxfService.MxfScheduleEntries.ScheduleEntry.Last().extras.Add("ratings", scheduleTvRatings);
             }
         }
 

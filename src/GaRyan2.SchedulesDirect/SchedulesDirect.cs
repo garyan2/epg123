@@ -46,6 +46,7 @@ namespace GaRyan2
         /// <returns>true if successful</returns>
         public static bool GetToken(string username, string passwordHash, bool requestNew = false)
         {
+            api.SdErrorMessage = null;
             if (Helper.InstallMethod == Helper.Installation.CLIENT || (Helper.InstallMethod == Helper.Installation.FULL && UdpFunctions.ServiceRunning()))
             {
                 api.ClearToken();
@@ -247,7 +248,7 @@ namespace GaRyan2
         public static Dictionary<string, GenericDescription> GetGenericDescriptions(string[] request)
         {
             var dtStart = DateTime.Now;
-            var ret = api.GetApiResponse<Dictionary<string, GenericDescription>>(Method.POST, "metadata/description", request);
+            var ret = api.GetApiResponse<Dictionary<string, GenericDescription>>(Method.POST, "metadata/description/", request);
             if (ret != null) Logger.WriteVerbose($"Successfully retrieved {ret.Count}/{request.Length} generic program descriptions. ({DateTime.Now - dtStart:G})");
             else Logger.WriteInformation($"Did not receive a response from Schedules Direct for {request.Length} generic program descriptions. ({DateTime.Now - dtStart:G})");
             return ret;
@@ -256,7 +257,7 @@ namespace GaRyan2
         public static List<ProgramMetadata> GetArtwork(string[] request)
         {
             var dtStart = DateTime.Now;
-            var ret = api.GetApiResponse<List<ProgramMetadata>>(Method.POST, "metadata/programs", request);
+            var ret = api.GetApiResponse<List<ProgramMetadata>>(Method.POST, "metadata/programs/", request);
             if (ret != null) Logger.WriteVerbose($"Successfully retrieved artwork info for {ret.Count}/{request.Length} programs. ({DateTime.Now - dtStart:G})");
             else Logger.WriteInformation($"Did not receive a response from Schedules Direct for artwork info of {request.Length} programs. ({DateTime.Now - dtStart:G})");
             return ret;

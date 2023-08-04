@@ -436,16 +436,16 @@ namespace epg123
                 return;
             }
 
+            if (string.IsNullOrEmpty(txtLoginName.Text) || string.IsNullOrEmpty(txtPassword.Text))
+            {
+                MessageBox.Show("Login username and/or password is blank.", "Missing Login Information", MessageBoxButtons.OK);
+                return;
+            }
+
             // disable input fields while trying to login
             Cursor = Cursors.WaitCursor;
             txtLoginName.Enabled = txtPassword.Enabled = false;
-            if (!Login(txtLoginName.Text, txtPassword.Text))
-            {
-                MessageBox.Show(SdApi.ErrorMessage, "Failed to Login");
-                txtLoginName.Enabled = txtPassword.Enabled = true;
-                Cursor = Cursors.Arrow;
-                return;
-            }
+            if (!Login(txtLoginName.Text, txtPassword.Text)) return;
             BuildLineupsAndStations();
             Cursor = Cursors.Arrow;
         }
@@ -496,6 +496,13 @@ namespace epg123
                     btnClientConfig_Click(null, null);
                     return true;
                 }
+            }
+            else
+            {
+                MessageBox.Show(SdApi.ErrorMessage ?? "Failed to get token. Check trace.log and/or server.log file for details.", "Failed to Login");
+                txtLoginName.Enabled = txtPassword.Enabled = true;
+                txtPassword.Text = string.Empty;
+                Cursor = Cursors.Arrow;
             }
             return false;
         }

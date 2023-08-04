@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 
@@ -8,6 +9,7 @@ namespace GaRyan2.Utilities
     {
         private static readonly object _logLock = new object();
         private const int Maxlogsize = 1024 * 1024;
+        private const int Maxlogfiles = 2;
         private static readonly TraceLevel _level = TraceLevel.Verbose;
         private static bool firstEntry = true;
         private static string _sessionString;
@@ -106,6 +108,29 @@ namespace GaRyan2.Utilities
 
                 // rename current log file with date/time stamp
                 File.Move(_logFile, _logFile.Replace(fileInfo.Extension, $"{DateTime.Now:yyyyMMdd_HHmmss}{fileInfo.Extension}"));
+
+                // find all the trace log files with proper data/time stamps
+                var sortedList = new SortedList<string, string>();
+                foreach (var file in Directory.GetFiles(Helper.Epg123ProgramDataFolder, "trace*.log"))
+                {
+                    var filename = new FileInfo(file).Name;
+                    if (DateTime.TryParseExact(filename, "'trace'yyyyMMdd_HHmmss'.log'", null, System.Globalization.DateTimeStyles.None, out _))
+                    {
+                        sortedList.Add(filename, file);
+                    }
+                }
+
+                // delete the oldest log file(s)
+                if (sortedList.Count <= Maxlogfiles) return;
+                for (var i = 0; i < Maxlogfiles; i++)
+                {
+                    sortedList.RemoveAt(sortedList.Count - 1);
+                }
+
+                foreach (var file in sortedList)
+                {
+                    Helper.DeleteFile(file.Value);
+                }
             }
             catch { }
         }

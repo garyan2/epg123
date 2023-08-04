@@ -132,6 +132,8 @@ Filename: "{app}\epgTray.exe"; Flags: nowait runasoriginaluser; Components: main
 
 Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""EPG123 Server"""; Flags: runhidden; StatusMsg: "Removing TCP firewall rule..."
 Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""EPG123 Client"""; Flags: runhidden; StatusMsg: "Removing UDP firewall rule..."
+Filename: "{sys}\sc.exe"; Parameters: "stop epg123Server"; Flags: runhidden; StatusMsg: "Stopping EPG123 Server..."
+Filename: "{sys}\sc.exe"; Parameters: "delete epg123Server" ; Flags: runhidden; StatusMsg: "Deleting server service..."
 
 Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall add rule name=""EPG123 Server"" dir=in action=allow profile=private,domain protocol=tcp localport=9009"; Flags: runhidden; Components: main1\epg123 main1\hdhr main1\plutotv main1\stirr; StatusMsg: "Adding TCP firewall rule..."
 Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall add rule name=""EPG123 Server"" dir=in action=allow profile=private,domain protocol=udp localport=9009"; Flags: runhidden; Components: main1\epg123 main1\hdhr main1\plutotv main1\stirr main2; StatusMsg: "Adding UDP firewall rule..."
