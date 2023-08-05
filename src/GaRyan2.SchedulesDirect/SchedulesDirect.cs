@@ -14,6 +14,7 @@ namespace GaRyan2
 
         public static string ErrorMessage => api.SdErrorMessage;
         public static int MaxLineups;
+        public static string myToken;
 
         /// <summary>
         /// Initializes the http client to communicate with Schedules Direct
@@ -47,7 +48,7 @@ namespace GaRyan2
         public static bool GetToken(string username, string passwordHash, bool requestNew = false)
         {
             api.SdErrorMessage = null;
-            if (Helper.InstallMethod == Helper.Installation.CLIENT || (Helper.InstallMethod == Helper.Installation.FULL && UdpFunctions.ServiceRunning()))
+            if (Helper.InstallMethod == Helper.Installation.CLIENT || (Helper.InstallMethod <= Helper.Installation.SERVER && UdpFunctions.ServiceRunning()))
             {
                 api.ClearToken();
                 var baseApi = Helper.InstallMethod == Helper.Installation.CLIENT ? api.BaseAddress : $"http://localhost:{Helper.TcpUdpPort}/epg123/";
@@ -90,6 +91,7 @@ namespace GaRyan2
                 var ret = api.GetApiResponse<TokenResponse>(Method.POST, "token", new TokenRequest { Username = username, PasswordHash = passwordHash });
                 if (ret != null && ret.Code == 0)
                 {
+                    myToken = ret.Token;
                     api.SetToken(ret.Token);
                     Logger.WriteVerbose($"Token request successful. serverID: {ret.ServerId} , datetime: {ret.Datetime:s}Z");
                 }
