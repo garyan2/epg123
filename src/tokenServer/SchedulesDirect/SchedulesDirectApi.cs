@@ -48,7 +48,7 @@ namespace GaRyan2.SchedulesDirectAPI
         #region ========== Image Downloads ==========
         public async Task<HttpResponseMessage> GetSdImage(string uri, DateTimeOffset ifModifiedSince)
         {
-            if (ifModifiedSince > DateTime.MinValue) WebStats.IncrementConditionalRequestSent();
+            if (ifModifiedSince.Ticks > DateTime.MinValue.Ticks) WebStats.IncrementConditionalRequestSent();
             else WebStats.IncrementRequestSent();
 
             try
@@ -58,7 +58,7 @@ namespace GaRyan2.SchedulesDirectAPI
                     Method = HttpMethod.Get,
                     RequestUri = new Uri($"{BaseArtworkAddress}{uri}")
                 };
-                if (ifModifiedSince > DateTime.MinValue) message.Headers.IfModifiedSince = ifModifiedSince;
+                if (ifModifiedSince.Ticks > DateTime.MinValue.Ticks) message.Headers.IfModifiedSince = ifModifiedSince;
                 var response = await _httpClient.SendAsync(message, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
 
                 if (!response.IsSuccessStatusCode || response.Content.Headers.ContentType.MediaType == "application/json")

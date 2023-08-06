@@ -12,9 +12,9 @@ namespace GaRyan2.Utilities
         private const int Maxlogfiles = 2;
         private static readonly TraceLevel _level = TraceLevel.Verbose;
         private static bool firstEntry = true;
-        private static string _sessionString;
+        private static string _sessionString = string.Empty;
 
-        private static string _logFile;
+        private static string _logFile = Helper.Epg123TraceLogPath;
         private static bool _notify;
         public static int Status;
 

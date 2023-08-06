@@ -129,7 +129,7 @@ namespace tokenServer
                     var info = new FileInfo($"{Helper.Epg123ImageCache}{filename.Substring(0, 1)}\\{filename}");
                     ImageCache[filename].LastModified = info.LastWriteTime;
                 }
-                if (ifModifiedSince == DateTime.MinValue && DateTime.Now - ImageCache[filename].LastModified < TimeSpan.FromDays(30))
+                if (ifModifiedSince.Ticks == DateTime.MinValue.Ticks && DateTime.Now - ImageCache[filename].LastModified < TimeSpan.FromDays(30))
                 {
                     return true;
                 }

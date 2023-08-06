@@ -155,7 +155,7 @@ namespace tokenServer
             else if (context.Request.RawUrl.StartsWith("/logos/"))
             {
                 _ = DateTime.TryParse(context.Request.Headers.Get("If-Modified-Since"), out DateTime ifModifiedSince);
-                ServiceLogoRequest(context.Response, context.Request.RawUrl, ifModifiedSince);
+                ServiceLogoRequest(context.Response, context.Request.RawUrl, ifModifiedSince.ToUniversalTime());
             }
         }
 
@@ -273,7 +273,7 @@ namespace tokenServer
         private static bool Send304OrImageFromCache(HttpListenerResponse response, DateTimeOffset ifModifiedSince, FileInfo fileInfo, bool logo = false)
         {
             // determine if 304 response is appropriate
-            if (ifModifiedSince != DateTime.MinValue && ifModifiedSince.UtcDateTime.AddSeconds(1) > (fileInfo?.LastWriteTimeUtc ?? DateTime.MinValue))
+            if (ifModifiedSince.Ticks != DateTime.MinValue.Ticks && ifModifiedSince.UtcDateTime.AddSeconds(1) > (fileInfo?.LastWriteTimeUtc ?? DateTime.MinValue))
             {
                 WebStats.IncrementHttpStat(304);
                 response.StatusCode = (int)HttpStatusCode.NotModified;
