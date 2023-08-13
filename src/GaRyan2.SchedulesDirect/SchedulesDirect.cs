@@ -21,12 +21,13 @@ namespace GaRyan2
         /// </summary>
         /// <param name="apiBaseAddress">optional API address to override default https://json.schedulesdirect.org/20141201/</param>
         /// <param name="artworkBaseAddress">optional API address to override default https://json.schedulesdirect.org/20141201/</param>
-        public static void Initialize(string userAgent, string apiBaseAddress, string artworkBaseAddress)
+        public static void Initialize(string userAgent, string apiBaseAddress, string artworkBaseAddress, bool debug)
         {
             api.BaseAddress = apiBaseAddress;
             BaseArtworkAddress = artworkBaseAddress;
             api.UserAgent = userAgent;
             api.Initialize();
+            if (debug) { api.RouteApiToDebugServer(); }
         }
 
         public static bool UploadConfiguration(string url, object config)

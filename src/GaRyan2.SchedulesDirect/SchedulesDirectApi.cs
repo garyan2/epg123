@@ -50,7 +50,7 @@ namespace GaRyan2.SchedulesDirectAPI
 
         public override T HandleHttpResponseError<T>(HttpResponseMessage response, string content)
         {
-            if (string.IsNullOrEmpty(content)) Logger.WriteVerbose($"HTTP request failed with status code \"{(int)response.StatusCode} {response.ReasonPhrase}\"");
+            if (string.IsNullOrEmpty(content) || !response.Content.Headers.ContentType.MediaType.Contains("json")) Logger.WriteVerbose($"HTTP request failed with status code \"{(int)response.StatusCode} {response.ReasonPhrase}\"");
             else
             {
                 var err = JsonConvert.DeserializeObject<BaseResponse>(content);
@@ -92,6 +92,11 @@ namespace GaRyan2.SchedulesDirectAPI
         public void SetToken(string token)
         {
             _httpClient.DefaultRequestHeaders.Add("token", token);
+        }
+
+        public void RouteApiToDebugServer()
+        {
+            _httpClient.DefaultRequestHeaders.Add("RouteTo", "debug");
         }
     }
 }

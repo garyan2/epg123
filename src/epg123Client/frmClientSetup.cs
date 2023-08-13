@@ -759,16 +759,19 @@ namespace epg123Client
                         Hdhr2MxfSrv = true;
                     }
                 }
-
                 var txt = $"Running {exeName} and importing MXF ...";
                 UpdateStatusText(txt);
                 Logger.WriteVerbose(txt);
-                var proc = Process.Start(new ProcessStartInfo
-                {
-                    FileName = exePath,
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                });
+
+                var proc = Process.GetProcesses().SingleOrDefault(arg => arg.ProcessName.Equals(Path.GetFileNameWithoutExtension(exePath))) ?? Process.Start(new ProcessStartInfo
+                    {
+                        FileName = exePath,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    });
+                proc.EnableRaisingEvents = true;
+                ShowWindow(proc.MainWindowHandle, SW_SHOWNORMAL);
+                SetForegroundWindow(proc.MainWindowHandle);
                 proc.WaitForExit();
 
                 if (proc.ExitCode == 0xDEAD)

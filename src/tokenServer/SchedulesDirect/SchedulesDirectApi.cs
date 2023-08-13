@@ -12,10 +12,11 @@ namespace GaRyan2.SchedulesDirectAPI
     internal class API : BaseAPI
     {
         public string BaseArtworkAddress { get; set; }
+        public bool UseDebug { get; set; }
 
         public override T HandleHttpResponseError<T>(HttpResponseMessage response, string content)
         {
-            if (string.IsNullOrEmpty(content)) Logger.WriteVerbose($"HTTP request failed with status code \"{(int)response.StatusCode} {response.ReasonPhrase}\"");
+            if (string.IsNullOrEmpty(content) || !response.Content.Headers.ContentType.MediaType.Contains("json")) Logger.WriteVerbose($"HTTP request failed with status code \"{(int)response.StatusCode} {response.ReasonPhrase}\"");
             else
             {
                 var err = JsonConvert.DeserializeObject<BaseResponse>(content);
@@ -140,6 +141,12 @@ namespace GaRyan2.SchedulesDirectAPI
         public void SetToken(string token)
         {
             _httpClient.DefaultRequestHeaders.Add("token", token);
+        }
+
+        public void RouteApiToDebugServer()
+        {
+            if (UseDebug) _httpClient.DefaultRequestHeaders.Add("RouteTo", "debug");
+            else _httpClient.DefaultRequestHeaders.Remove("RouteTo");
         }
     }
 }

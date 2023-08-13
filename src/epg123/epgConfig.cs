@@ -20,6 +20,7 @@ namespace epg123
             Version = Helper.Epg123Version;
             BaseApiUrl = other.BaseApiUrl;
             BaseArtworkUrl = other.BaseArtworkUrl;
+            UseDebug = other.UseDebug;
             CacheRetention = other.CacheRetention;
             UserAccount = new SdUserAccount
             {
@@ -102,6 +103,7 @@ namespace epg123
             //if (!Version.Equals(other.Version)) return false;
             if (!BaseApiUrl.Equals(other.BaseApiUrl)) return false;
             if (!BaseArtworkUrl.Equals(other.BaseArtworkUrl)) return false;
+            if (!UseDebug.Equals(other.UseDebug)) return false;
             if (!CacheRetention.Equals(other.CacheRetention)) return false;
             if (!UserAccount.LoginName.Equals(other.UserAccount?.LoginName)) return false;
             if (!UserAccount.PasswordHash.Equals(other.UserAccount?.PasswordHash)) return false;
@@ -164,6 +166,9 @@ namespace epg123
 
         [XmlElement("BaseArtworkUrl")]
         public string BaseArtworkUrl { get; set; } = "https://json.schedulesdirect.org/20141201/";
+
+        [XmlElement("UseDebug")]
+        public bool UseDebug { get; set; }
 
         [XmlElement("CacheRetention")]
         public int CacheRetention { get; set; } = 30;

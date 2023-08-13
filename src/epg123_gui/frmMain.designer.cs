@@ -69,11 +69,13 @@
             this.tabTask = new System.Windows.Forms.TabPage();
             this.cbAutomatch = new System.Windows.Forms.CheckBox();
             this.lblSchedStatus = new System.Windows.Forms.Label();
+            this.btnTask = new epg123.ElevatedButton();
             this.cbImport = new System.Windows.Forms.CheckBox();
             this.cbTaskWake = new System.Windows.Forms.CheckBox();
             this.tbSchedTime = new System.Windows.Forms.MaskedTextBox();
             this.lblUpdateTime = new System.Windows.Forms.Label();
             this.tabService = new System.Windows.Forms.TabPage();
+            this.ckDebug = new System.Windows.Forms.CheckBox();
             this.linkLabel3 = new System.Windows.Forms.LinkLabel();
             this.btnChangeServer = new System.Windows.Forms.Button();
             this.label5 = new System.Windows.Forms.Label();
@@ -89,6 +91,8 @@
             this.label1 = new System.Windows.Forms.Label();
             this.btnServiceStart = new System.Windows.Forms.Button();
             this.btnServiceStop = new System.Windows.Forms.Button();
+            this.tabNotifier = new System.Windows.Forms.TabPage();
+            this.btnEmail = new System.Windows.Forms.Button();
             this.grpAccount = new System.Windows.Forms.GroupBox();
             this.btnClientLineups = new System.Windows.Forms.Button();
             this.txtAcctExpires = new System.Windows.Forms.TextBox();
@@ -126,9 +130,6 @@
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.btnClearCache = new System.Windows.Forms.Button();
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
-            this.btnTask = new epg123.ElevatedButton();
-            this.tabNotifier = new System.Windows.Forms.TabPage();
-            this.btnEmail = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -141,12 +142,12 @@
             ((System.ComponentModel.ISupportInitialize)(this.numFillerDuration)).BeginInit();
             this.tabTask.SuspendLayout();
             this.tabService.SuspendLayout();
+            this.tabNotifier.SuspendLayout();
             this.grpAccount.SuspendLayout();
             this.tabLineups.SuspendLayout();
             this.tabLineup.SuspendLayout();
             this.lineupMenuStrip.SuspendLayout();
             this.toolStrip6.SuspendLayout();
-            this.tabNotifier.SuspendLayout();
             this.SuspendLayout();
             // 
             // splitContainer1
@@ -682,6 +683,17 @@
             this.lblSchedStatus.TabIndex = 4;
             this.lblSchedStatus.Text = "Task Status";
             // 
+            // btnTask
+            // 
+            this.btnTask.FlatStyle = System.Windows.Forms.FlatStyle.System;
+            this.btnTask.Location = new System.Drawing.Point(228, 87);
+            this.btnTask.Name = "btnTask";
+            this.btnTask.Size = new System.Drawing.Size(75, 23);
+            this.btnTask.TabIndex = 4;
+            this.btnTask.Text = "Create";
+            this.btnTask.UseVisualStyleBackColor = true;
+            this.btnTask.Click += new System.EventHandler(this.btnTask_Click);
+            // 
             // cbImport
             // 
             this.cbImport.AutoSize = true;
@@ -727,6 +739,7 @@
             // tabService
             // 
             this.tabService.BackColor = System.Drawing.SystemColors.Control;
+            this.tabService.Controls.Add(this.ckDebug);
             this.tabService.Controls.Add(this.linkLabel3);
             this.tabService.Controls.Add(this.btnChangeServer);
             this.tabService.Controls.Add(this.label5);
@@ -749,10 +762,21 @@
             this.tabService.TabIndex = 5;
             this.tabService.Text = "Service";
             // 
+            // ckDebug
+            // 
+            this.ckDebug.AutoSize = true;
+            this.ckDebug.Location = new System.Drawing.Point(6, 84);
+            this.ckDebug.Name = "ckDebug";
+            this.ckDebug.Size = new System.Drawing.Size(304, 17);
+            this.ckDebug.TabIndex = 17;
+            this.ckDebug.Text = "Debug Mode. Use if directed to do so by Schedules Direct.";
+            this.ckDebug.UseVisualStyleBackColor = true;
+            this.ckDebug.CheckedChanged += new System.EventHandler(this.ckDebug_CheckedChanged);
+            // 
             // linkLabel3
             // 
             this.linkLabel3.AutoSize = true;
-            this.linkLabel3.Location = new System.Drawing.Point(6, 251);
+            this.linkLabel3.Location = new System.Drawing.Point(9, 285);
             this.linkLabel3.Name = "linkLabel3";
             this.linkLabel3.Size = new System.Drawing.Size(147, 13);
             this.linkLabel3.TabIndex = 16;
@@ -810,7 +834,7 @@
             // 
             this.cmbIpAddresses.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cmbIpAddresses.FormattingEnabled = true;
-            this.cmbIpAddresses.Location = new System.Drawing.Point(23, 157);
+            this.cmbIpAddresses.Location = new System.Drawing.Point(26, 191);
             this.cmbIpAddresses.Name = "cmbIpAddresses";
             this.cmbIpAddresses.Size = new System.Drawing.Size(110, 21);
             this.cmbIpAddresses.TabIndex = 9;
@@ -821,7 +845,7 @@
             this.ckIpAddress.AutoSize = true;
             this.ckIpAddress.Checked = true;
             this.ckIpAddress.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.ckIpAddress.Location = new System.Drawing.Point(3, 134);
+            this.ckIpAddress.Location = new System.Drawing.Point(6, 168);
             this.ckIpAddress.Name = "ckIpAddress";
             this.ckIpAddress.Size = new System.Drawing.Size(270, 17);
             this.ckIpAddress.TabIndex = 8;
@@ -832,7 +856,7 @@
             // linkLabel2
             // 
             this.linkLabel2.AutoSize = true;
-            this.linkLabel2.Location = new System.Drawing.Point(6, 226);
+            this.linkLabel2.Location = new System.Drawing.Point(9, 260);
             this.linkLabel2.Name = "linkLabel2";
             this.linkLabel2.Size = new System.Drawing.Size(90, 13);
             this.linkLabel2.TabIndex = 5;
@@ -843,7 +867,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(6, 108);
+            this.label3.Location = new System.Drawing.Point(9, 142);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(87, 13);
             this.label3.TabIndex = 7;
@@ -852,7 +876,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(6, 91);
+            this.label2.Location = new System.Drawing.Point(9, 125);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(113, 13);
             this.label2.TabIndex = 6;
@@ -872,7 +896,7 @@
             "180 days",
             "365 days",
             "indefinitely"});
-            this.cbCacheRetention.Location = new System.Drawing.Point(125, 88);
+            this.cbCacheRetention.Location = new System.Drawing.Point(128, 122);
             this.cbCacheRetention.Name = "cbCacheRetention";
             this.cbCacheRetention.Size = new System.Drawing.Size(97, 21);
             this.cbCacheRetention.TabIndex = 3;
@@ -881,7 +905,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(6, 194);
+            this.label1.Location = new System.Drawing.Point(9, 228);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(120, 13);
             this.label1.TabIndex = 4;
@@ -889,7 +913,7 @@
             // 
             // btnServiceStart
             // 
-            this.btnServiceStart.Location = new System.Drawing.Point(147, 189);
+            this.btnServiceStart.Location = new System.Drawing.Point(150, 223);
             this.btnServiceStart.Name = "btnServiceStart";
             this.btnServiceStart.Size = new System.Drawing.Size(75, 23);
             this.btnServiceStart.TabIndex = 0;
@@ -899,13 +923,34 @@
             // 
             // btnServiceStop
             // 
-            this.btnServiceStop.Location = new System.Drawing.Point(228, 189);
+            this.btnServiceStop.Location = new System.Drawing.Point(231, 223);
             this.btnServiceStop.Name = "btnServiceStop";
             this.btnServiceStop.Size = new System.Drawing.Size(75, 23);
             this.btnServiceStop.TabIndex = 1;
             this.btnServiceStop.Text = "Stop";
             this.btnServiceStop.UseVisualStyleBackColor = true;
             this.btnServiceStop.Click += new System.EventHandler(this.btnServiceStartStop_Click);
+            // 
+            // tabNotifier
+            // 
+            this.tabNotifier.BackColor = System.Drawing.SystemColors.Control;
+            this.tabNotifier.Controls.Add(this.btnEmail);
+            this.tabNotifier.Location = new System.Drawing.Point(4, 22);
+            this.tabNotifier.Name = "tabNotifier";
+            this.tabNotifier.Padding = new System.Windows.Forms.Padding(3);
+            this.tabNotifier.Size = new System.Drawing.Size(323, 395);
+            this.tabNotifier.TabIndex = 6;
+            this.tabNotifier.Text = "Notifications";
+            // 
+            // btnEmail
+            // 
+            this.btnEmail.Location = new System.Drawing.Point(6, 6);
+            this.btnEmail.Name = "btnEmail";
+            this.btnEmail.Size = new System.Drawing.Size(99, 23);
+            this.btnEmail.TabIndex = 0;
+            this.btnEmail.Text = "Setup E-mail";
+            this.btnEmail.UseVisualStyleBackColor = true;
+            this.btnEmail.Click += new System.EventHandler(this.btnEmail_Click);
             // 
             // grpAccount
             // 
@@ -1105,7 +1150,7 @@
             this.toolStrip6.MaximumSize = new System.Drawing.Size(0, 46);
             this.toolStrip6.MinimumSize = new System.Drawing.Size(0, 46);
             this.toolStrip6.Name = "toolStrip6";
-            this.toolStrip6.Size = new System.Drawing.Size(0, 46);
+            this.toolStrip6.Size = new System.Drawing.Size(426, 46);
             this.toolStrip6.Stretch = true;
             this.toolStrip6.TabIndex = 2;
             this.toolStrip6.Text = "toolStrip6";
@@ -1281,38 +1326,6 @@
             this.btnClearCache.UseVisualStyleBackColor = true;
             this.btnClearCache.Click += new System.EventHandler(this.btnClearCache_Click);
             // 
-            // btnTask
-            // 
-            this.btnTask.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.btnTask.Location = new System.Drawing.Point(228, 87);
-            this.btnTask.Name = "btnTask";
-            this.btnTask.Size = new System.Drawing.Size(75, 23);
-            this.btnTask.TabIndex = 4;
-            this.btnTask.Text = "Create";
-            this.btnTask.UseVisualStyleBackColor = true;
-            this.btnTask.Click += new System.EventHandler(this.btnTask_Click);
-            // 
-            // tabNotifier
-            // 
-            this.tabNotifier.BackColor = System.Drawing.SystemColors.Control;
-            this.tabNotifier.Controls.Add(this.btnEmail);
-            this.tabNotifier.Location = new System.Drawing.Point(4, 22);
-            this.tabNotifier.Name = "tabNotifier";
-            this.tabNotifier.Padding = new System.Windows.Forms.Padding(3);
-            this.tabNotifier.Size = new System.Drawing.Size(323, 395);
-            this.tabNotifier.TabIndex = 6;
-            this.tabNotifier.Text = "Notifications";
-            // 
-            // btnEmail
-            // 
-            this.btnEmail.Location = new System.Drawing.Point(6, 6);
-            this.btnEmail.Name = "btnEmail";
-            this.btnEmail.Size = new System.Drawing.Size(99, 23);
-            this.btnEmail.TabIndex = 0;
-            this.btnEmail.Text = "Setup E-mail";
-            this.btnEmail.UseVisualStyleBackColor = true;
-            this.btnEmail.Click += new System.EventHandler(this.btnEmail_Click);
-            // 
             // ConfigForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
@@ -1351,6 +1364,7 @@
             this.tabTask.PerformLayout();
             this.tabService.ResumeLayout(false);
             this.tabService.PerformLayout();
+            this.tabNotifier.ResumeLayout(false);
             this.grpAccount.ResumeLayout(false);
             this.grpAccount.PerformLayout();
             this.tabLineups.ResumeLayout(false);
@@ -1359,7 +1373,6 @@
             this.lineupMenuStrip.ResumeLayout(false);
             this.toolStrip6.ResumeLayout(false);
             this.toolStrip6.PerformLayout();
-            this.tabNotifier.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -1466,5 +1479,6 @@
         private System.Windows.Forms.CheckBox cbBrandLogo;
         private System.Windows.Forms.TabPage tabNotifier;
         private System.Windows.Forms.Button btnEmail;
+        private System.Windows.Forms.CheckBox ckDebug;
     }
 }

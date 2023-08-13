@@ -121,9 +121,9 @@ namespace epg123
             if (Helper.InstallMethod != Helper.Installation.PORTABLE)
             {
                 var baseApi = $"{_BaseServerAddress}epg123/";
-                SdApi.Initialize($"EPG123/{Helper.Epg123Version}", baseApi, Config.BaseArtworkUrl);
+                SdApi.Initialize($"EPG123/{Helper.Epg123Version}", baseApi, Config.BaseArtworkUrl, Config.UseDebug);
             }
-            else SdApi.Initialize($"EPG123/{Helper.Epg123Version}", Config.BaseApiUrl, Config.BaseArtworkUrl);
+            else SdApi.Initialize($"EPG123/{Helper.Epg123Version}", Config.BaseApiUrl, Config.BaseArtworkUrl, Config.UseDebug);
 
             // login to Schedules Direct and get a token
             if (Login(Config.UserAccount?.LoginName, Config.UserAccount?.PasswordHash))
@@ -269,6 +269,7 @@ namespace epg123
 
             txtBaseApi.Text = Config.BaseApiUrl;
             txtBaseArtwork.Text = Config.BaseArtworkUrl;
+            ckDebug.Checked = Config.UseDebug;
             var index = Array.FindIndex(daysRetention, arg => arg == Config.CacheRetention);
             cbCacheRetention.Text = (string)cbCacheRetention.Items[index];
             if (Helper.InstallMethod != Helper.Installation.CLIENT)
@@ -304,7 +305,8 @@ namespace epg123
             
             if (Helper.InstallMethod == Helper.Installation.PORTABLE)
             {
-                tabConfigs.TabPages.Remove(tabService);
+                cbCacheRetention.Enabled = ckIpAddress.Enabled = cmbIpAddresses.Enabled = btnServiceStart.Enabled = btnServiceStop.Enabled = linkLabel2.Enabled = linkLabel3.Enabled = false;
+                label1.Enabled = label2.Enabled = label3.Enabled = false;
                 cbSeriesPosterArt.Enabled = false; cbSeriesPosterArt.Font = new Font(cbSeriesPosterArt.Font, cbSeriesPosterArt.Font.Style | FontStyle.Strikeout);
                 cbSeriesWsArt.Enabled = false; cbSeriesWsArt.Font = new Font(cbSeriesWsArt.Font, cbSeriesWsArt.Font.Style | FontStyle.Strikeout);
                 cbSeasonEventImages.Enabled = false; cbSeasonEventImages.Font = new Font(cbSeasonEventImages.Font, cbSeasonEventImages.Font.Style | FontStyle.Strikeout);
@@ -1376,6 +1378,11 @@ namespace epg123
             Config.BaseArtworkUrl = txtBaseArtwork.Text;
         }
 
+        private void ckDebug_CheckedChanged(object sender, EventArgs e)
+        {
+            Config.UseDebug = ckDebug.Checked;
+        }
+
         private void btnChangeServer_Click(object sender, EventArgs e)
         {
             // load configuration file and set component states/values
@@ -1391,9 +1398,9 @@ namespace epg123
             if (Helper.InstallMethod != Helper.Installation.PORTABLE)
             {
                 var baseApi = $"{_BaseServerAddress}epg123/";
-                SdApi.Initialize($"EPG123/{Helper.Epg123Version}", baseApi, Config.BaseArtworkUrl);
+                SdApi.Initialize($"EPG123/{Helper.Epg123Version}", baseApi, Config.BaseArtworkUrl, Config.UseDebug);
             }
-            else SdApi.Initialize($"EPG123/{Helper.Epg123Version}", Config.BaseApiUrl, Config.BaseArtworkUrl);
+            else SdApi.Initialize($"EPG123/{Helper.Epg123Version}", Config.BaseApiUrl, Config.BaseArtworkUrl, Config.UseDebug);
 
             // login to Schedules Direct and get a token
             if (Login(Config.UserAccount?.LoginName, Config.UserAccount?.PasswordHash))

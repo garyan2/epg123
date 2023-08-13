@@ -39,15 +39,17 @@ namespace GaRyan2
 
             // load epg123 config file
             epgConfig config = Helper.ReadXmlFile(Helper.Epg123CfgPath, typeof(epgConfig)) ?? new epgConfig();
-            if (api == null || api.BaseAddress != config.BaseApiUrl || api.BaseArtworkAddress != config.BaseArtworkUrl)
+            if (api == null || api.BaseAddress != config.BaseApiUrl || api.BaseArtworkAddress != config.BaseArtworkUrl || api.UseDebug != config.UseDebug)
             {
                 api = new API()
                 {
                     BaseAddress = ApiBaseAddress = config.BaseApiUrl,
                     BaseArtworkAddress = ApiBaseArtwork = config.BaseArtworkUrl,
-                    UserAgent = $"EPG123/{Helper.Epg123Version}"
+                    UserAgent = $"EPG123/{Helper.Epg123Version}",
+                    UseDebug = config.UseDebug
                 };
                 api.Initialize();
+                api.RouteApiToDebugServer();
                 _ = GetToken(config.UserAccount?.LoginName, config.UserAccount?.PasswordHash);
             }
             else if (Username != config.UserAccount?.LoginName || PasswordHash != config.UserAccount?.PasswordHash)

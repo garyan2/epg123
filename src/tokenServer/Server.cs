@@ -3,6 +3,7 @@ using GaRyan2.Utilities;
 using System;
 using System.IO;
 using System.ServiceProcess;
+using System.Threading.Tasks;
 
 namespace tokenServer
 {
@@ -24,27 +25,33 @@ namespace tokenServer
 
         protected override void OnStart(string[] args)
         {
-            try
+            Task.Run(() =>
             {
-                Github.Initialize($"EPG123/{Helper.Epg123Version}", "epg123");
                 Helper.DeleteFile(Helper.ServerLogPath);
-                StartConfigFileWatcher();
-                JsonImageCache.Initialize();
+                Logger.WriteInformation("Starting EPG123 Server service ...");
+                try
+                {
+                    Github.Initialize($"EPG123/{Helper.Epg123Version}", "epg123");
 
-                SchedulesDirect.Initialize();
-                _imageServer.Start();
-                _fileServer.Start();
-                _udpServer.Start();
-                _configServer.Start();
+                    SchedulesDirect.Initialize();
+                    StartConfigFileWatcher();
+                    _udpServer.Start();
+                    _configServer.Start();
+                    _fileServer.Start();
 
-                WebStats.StartTime = DateTime.Now;
-            }
-            catch (Exception ex)
-            {
-                Logger.WriteError($"Failed to initialize EPG123 Server service.\n{ex}");
-                ExitCode = -1;
-                this.Stop();
-            }
+                    JsonImageCache.Initialize();
+                    _imageServer.Start();
+
+                    Logger.WriteInformation("EPG123 Server service completed initializations.");
+                    WebStats.StartTime = DateTime.Now;
+                }
+                catch (Exception ex)
+                {
+                    Logger.WriteError($"Failed to initialize EPG123 Server service.\n{ex}");
+                    ExitCode = -1;
+                    this.Stop();
+                }
+            });
         }
 
         protected override void OnShutdown()

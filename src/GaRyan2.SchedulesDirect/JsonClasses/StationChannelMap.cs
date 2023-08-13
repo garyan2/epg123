@@ -75,6 +75,9 @@ namespace GaRyan2.SchedulesDirectAPI
         [JsonProperty("atscMinor")]
         public int? AtscMinor { get; set; }
 
+        [JsonProperty("atscType")]
+        public string AtscType { get; set; }
+
         [JsonProperty("frequencyHz")]
         public long? FrequencyHz { get; set; }
 
