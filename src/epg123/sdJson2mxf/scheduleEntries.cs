@@ -18,6 +18,7 @@ namespace epg123.sdJson2mxf
         private static int cachedSchedules;
         private static int downloadedSchedules;
         private static List<string> suppressedPrefixes = new List<string>();
+        private static int missingGuide;
 
         private static bool GetAllScheduleEntryMd5S(int days = 1)
         {
@@ -56,6 +57,13 @@ namespace epg123.sdJson2mxf
             }
             Logger.WriteVerbose($"Found {cachedSchedules} cached daily schedules.");
             Logger.WriteVerbose($"Downloaded {downloadedSchedules} daily schedules.");
+
+            var missing = (double)missingGuide / mxf.With.Services.Count;
+            if (missing > 0.1 && config.CreateXmltv)
+            {
+                Logger.WriteError($"{100 * missing:N1}% of all stations are missing guide data. Aborting update.");
+                return false;
+            }
 
             // reset counters again
             processedObjects = 0;
@@ -112,6 +120,7 @@ namespace epg123.sdJson2mxf
                         else
                         {
                             Logger.WriteWarning(comment);
+                            ++missingGuide;
                         }
                         processedObjects += dates.Length; ReportProgress();
                         continue;

@@ -88,7 +88,7 @@ Source: "{#SourcePath}\epg123_gui.exe.config"; DestDir: "{app}"; Flags: ignoreve
 Source: "{#SourcePath}\epg123Server.exe"; DestDir: "{app}"; BeforeInstall: TaskKill('epg123Server.exe'); Flags: ignoreversion signonce; Components: main1\epg123 main1\hdhr main1\plutotv main1\stirr
 Source: "{#SourcePath}\hdhr2mxf.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: main1\hdhr
 Source: "{#SourcePath}\Newtonsoft.Json.dll"; DestDir: "{app}"; Flags: ignoreversion; Components: main1\epg123 main1\hdhr main1\plutotv main1\stirr main2
-Source: "{#SourcePath}\epg123Client.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: main2
+Source: "{#SourcePath}\epg123Client.exe"; DestDir: "{app}"; BeforeInstall: TaskKill('epg123Client.exe'); Flags: ignoreversion signonce; Components: main2
 Source: "{#SourcePath}\epg123Client.exe.config"; DestDir: "{app}"; Flags: ignoreversion; Attribs: hidden; MinVersion: 6.1; OnlyBelowVersion: 6.2; Components: main2
 Source: "{#SourcePath}\epg123Transfer.exe"; DestDir: "{app}"; BeforeInstall: TaskKill('epg123Transfer.exe'); Flags: ignoreversion signonce; Components: main2
 Source: "{#SourcePath}\epg123Transfer.exe.config"; DestDir: "{app}"; Flags: ignoreversion; Attribs: hidden; MinVersion: 6.1; OnlyBelowVersion: 6.2; Components: main2
