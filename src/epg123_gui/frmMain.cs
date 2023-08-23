@@ -907,8 +907,7 @@ namespace epg123
             if (sender?.Equals(btnExecute) ?? false)
             {
                 // run epg123 to create mxf file
-                Process proc;
-                proc = Process.Start(new ProcessStartInfo
+                var proc = Process.Start(new ProcessStartInfo
                 {
                     FileName = Helper.Epg123ExePath,
                     Arguments = $"-p{(cbImport.Checked ? " -import" : "")}{(cbAutomatch.Checked ? " -match" : "")}",

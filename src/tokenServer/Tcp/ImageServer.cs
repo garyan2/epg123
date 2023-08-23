@@ -161,6 +161,12 @@ namespace tokenServer
 
         public void ServiceImageRequest(HttpListenerContext context, bool retry = false)
         {
+            if (!JsonImageCache.cacheReady)
+            {
+                context.Response.StatusCode = (int)HttpStatusCode.ServiceUnavailable;
+                return;
+            }
+
             var request = context.Request;
             var asset = request.RawUrl;
 

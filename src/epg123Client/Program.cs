@@ -11,6 +11,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace epg123Client
@@ -186,17 +187,15 @@ namespace epg123Client
                     return 0;
                 case "-u -manual -nogc -p 0": // guide update
                 case "-manual -nogc -p 0":
-                    var startTime = DateTime.Now;
-                    var startInfo = new ProcessStartInfo()
+                    // begin update
+                    var proc = Process.Start(new ProcessStartInfo
                     {
                         FileName = "schtasks.exe",
                         Arguments = "/run /tn \"epg123_update\"",
                         UseShellExecute = false,
                         CreateNoWindow = true,
-                    };
-
-                    // begin update
-                    var proc = Process.Start(startInfo);
+                    });
+                    var startTime = DateTime.Now;
                     proc?.WaitForExit();
                     Logger.WriteInformation("**** Attempted to kick off the epg123_update task on demand. ****");
 
@@ -217,12 +216,11 @@ namespace epg123Client
                     }
 
                     // kick off mcupdate so it can fail but signal WMC that update is complete
-                    startInfo = new ProcessStartInfo()
+                    proc = Process.Start(new ProcessStartInfo
                     {
                         FileName = Environment.ExpandEnvironmentVariables(@"%SystemRoot%\ehome\mcupdate.exe"),
                         Arguments = arguments
-                    };
-                    proc = Process.Start(startInfo);
+                    });
                     proc?.WaitForExit();
                     return 0;
                 case "-storage":
@@ -236,17 +234,38 @@ namespace epg123Client
 
                         var indexer = Process.Start(new ProcessStartInfo
                         {
-                            FileName = Environment.ExpandEnvironmentVariables(@"%SystemRoot%\ehome\ehPrivJob.exe"),
-                            Arguments = "/DoReindexSearchRoot",
+                            FileName = "schtasks.exe",
+                            Arguments = "/run /tn \"Microsoft\\Windows\\Media Center\\ReindexSearchRoot\"",
+                            RedirectStandardOutput = true,
+                            RedirectStandardError = true,
                             UseShellExecute = false,
                             CreateNoWindow = true
                         });
                         Console.Out.WriteLine("SUCCESS: WMC database indexing has started.");
                         indexer.WaitForExit();
 
+                        do
+                        {
+                            Thread.Sleep(10000);
+                            var query = Process.Start(new ProcessStartInfo
+                            {
+                                FileName = "schtasks.exe",
+                                Arguments = "/query /tn \"Microsoft\\Windows\\Media Center\\ReindexSearchRoot\"",
+                                RedirectStandardOutput = true,
+                                RedirectStandardError = true,
+                                UseShellExecute = false,
+                                CreateNoWindow = true
+                            });
+                            var err = query.StandardError.ReadToEnd();
+                            var output = query.StandardOutput.ReadToEnd();
+                            query.WaitForExit();
+
+                            if (!output.Contains("Running") || !string.IsNullOrEmpty(err)) break;
+                        } while (true);
+
                         Logger.Initialize(Helper.Epg123TraceLogPath, "Beginning WMC recorder storage/tuner conflict checks", true);
                         Logger.LogWmcDescription();
-                        Logger.WriteInformation($"WMC database indexing took {indexer.ExitTime - indexer.StartTime}. Exit: 0x{indexer.ExitCode:X8}");
+                        Logger.WriteInformation($"WMC database indexing took {DateTime.Now - indexer.StartTime}. Exit: 0x{indexer.ExitCode:X8}");
                         WmcStore.DetermineStorageStatus();
 
                         if (Logger.Status > 0)

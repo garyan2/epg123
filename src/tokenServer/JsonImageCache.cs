@@ -13,6 +13,7 @@ namespace tokenServer
         private static readonly object _cacheLock = new object();
         public static bool cacheImages => cacheRetention > 0;
         public static int cacheRetention;
+        public static bool cacheReady;
 
         public static void Initialize()
         {
@@ -110,6 +111,7 @@ namespace tokenServer
 
         public static void AddImagesMissingInCacheFile()
         {
+            cacheReady = false;
             var files = Directory.GetFiles($"{Helper.Epg123ImageCache}", "*.*", SearchOption.AllDirectories);
             foreach (var file in files.Where(arg => arg.EndsWith("jpg") || arg.EndsWith("png")).ToList())
             {
@@ -117,6 +119,7 @@ namespace tokenServer
                 if (ImageCache.ContainsKey(fi.Name)) continue;
                 AddImageToCache(fi.Name, fi.LastWriteTime, fi.Length);
             }
+            cacheReady = true;
         }
 
         public static bool IsImageRecent(string filename, DateTimeOffset ifModifiedSince)

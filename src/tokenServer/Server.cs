@@ -38,9 +38,8 @@ namespace tokenServer
                     _udpServer.Start();
                     _configServer.Start();
                     _fileServer.Start();
-
-                    JsonImageCache.Initialize();
                     _imageServer.Start();
+                    JsonImageCache.Initialize();
 
                     Logger.WriteInformation("EPG123 Server service completed initializations.");
                     WebStats.StartTime = DateTime.Now;
