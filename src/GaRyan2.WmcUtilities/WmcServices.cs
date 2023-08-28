@@ -45,7 +45,7 @@ namespace GaRyan2.WmcUtilities
             }
             catch (Exception ex)
             {
-                Logger.WriteError($"Exception thrown during ClearServiceScheduleEntries(). {ex}");
+                Logger.WriteError($"Exception thrown during ClearServiceScheduleEntries(). Message: {ex.Message}");
             }
         }
     }

@@ -153,7 +153,7 @@ namespace epg123Client
             }
             catch (Exception ex)
             {
-                Logger.WriteInformation($"Could not read registry settings for OEMLogo. {ex}");
+                Logger.WriteInformation($"Could not read registry settings for OEMLogo. Exception: {ex.Message}");
             }
 
             // set up the base image; default for brandlogo is light

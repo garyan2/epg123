@@ -26,8 +26,7 @@ namespace epg123.sdJson2mxf
             // initialize components
             var userAgent = $"EPG123/{Helper.Epg123Version}";
             Github.Initialize(userAgent, "epg123");
-            Tmdb.Initialize(userAgent);
-
+            Tmdb.Initialize(userAgent, config.ArtworkSize);
             api.Initialize(userAgent, config.BaseApiUrl, config.BaseArtworkUrl, config.UseDebug);
 
             var startTime = DateTime.UtcNow;

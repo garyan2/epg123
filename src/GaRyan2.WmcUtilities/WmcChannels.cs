@@ -25,7 +25,7 @@ namespace GaRyan2.WmcUtilities
             }
             catch (Exception ex)
             {
-                Logger.WriteError($"Exception thrown during SetChannelCustomCallsign(). {ex}");
+                Logger.WriteError($"Exception thrown during SetChannelCustomCallsign(). Message: {ex.Message}");
             }
         }
 
@@ -55,7 +55,7 @@ namespace GaRyan2.WmcUtilities
             }
             catch (Exception ex)
             {
-                Logger.WriteError($"Exception thrown during SetChannelCustomNumber(). {ex}");
+                Logger.WriteError($"Exception thrown during SetChannelCustomNumber(). Message: {ex.Message}");
             }
         }
 
@@ -83,7 +83,7 @@ namespace GaRyan2.WmcUtilities
             }
             catch (Exception ex)
             {
-                Logger.WriteError($"Exception thrown during AddUserChannel(). {ex}");
+                Logger.WriteError($"Exception thrown during AddUserChannel(). Message: {ex.Message}");
             }
         }
 
@@ -103,7 +103,7 @@ namespace GaRyan2.WmcUtilities
             }
             catch (Exception ex)
             {
-                Logger.WriteError($"Exception thrown during DeleteChannel(). {ex}");
+                Logger.WriteError($"Exception thrown during DeleteChannel(). Message: {ex.Message}");
             }
         }
 
@@ -129,7 +129,7 @@ namespace GaRyan2.WmcUtilities
             }
             catch (Exception ex)
             {
-                Logger.WriteError($"Exception thrown during GetAllScannedSourcesForChannel() for merged channel {mergedChannel}. {ex}");
+                Logger.WriteError($"Exception thrown during GetAllScannedSourcesForChannel() for merged channel {mergedChannel}. Message: {ex.Message}");
             }
             return ret;
         }
@@ -265,7 +265,7 @@ namespace GaRyan2.WmcUtilities
             }
             catch (Exception ex)
             {
-                Logger.WriteError($"Exception thrown during GetAllTuningInfos() for merged channel {mergedChannel}. {ex}");
+                Logger.WriteError($"Exception thrown during GetAllTuningInfos() for merged channel {mergedChannel}. Message: {ex.Message}");
             }
             return ret;
         }
@@ -285,7 +285,7 @@ namespace GaRyan2.WmcUtilities
             }
             catch (Exception ex)
             {
-                Logger.WriteInformation($"Exception thrown during GetLineupChannels(). {ex}");
+                Logger.WriteInformation($"Exception thrown during GetLineupChannels(). Message: {ex.Message}");
             }
             return ret;
         }
@@ -308,7 +308,7 @@ namespace GaRyan2.WmcUtilities
             }
             catch (Exception ex)
             {
-                Logger.WriteInformation($"Exception thrown during GetEpg123LineupChannels(). {ex}");
+                Logger.WriteInformation($"Exception thrown during GetEpg123LineupChannels(). Message: {ex.Message}");
             }
             return ret;
         }

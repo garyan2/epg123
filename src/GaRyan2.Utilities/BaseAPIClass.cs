@@ -89,7 +89,7 @@ namespace GaRyan2
             }
             catch (Exception e)
             {
-                Logger.WriteVerbose($"HTTP request exception thrown. Message: {e}");
+                Logger.WriteVerbose($"HTTP request exception thrown. Message: {e.Message}");
             }
             return default;
         }

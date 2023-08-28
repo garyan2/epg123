@@ -44,7 +44,7 @@ namespace GaRyan2.Utilities
             }
             catch (Exception ex)
             {
-                WriteError($"Failed to send email notification upon {sessionStatus}.\n{ex}");
+                WriteError($"Failed to send email notification upon {sessionStatus}. Exception: {ex.Message}");
             }
         }
 

@@ -55,7 +55,7 @@ namespace GaRyan2.WmcUtilities
             }
             catch (Exception ex)
             {
-                Logger.WriteInformation($"Exception thrown during ActivateEpg123LineupsInStore(). {ex}");
+                Logger.WriteInformation($"Exception thrown during ActivateEpg123LineupsInStore(). Message: {ex.Message}");
             }
             return (lineups > 0);
         }
@@ -86,7 +86,7 @@ namespace GaRyan2.WmcUtilities
             }
             catch (Exception ex)
             {
-                Logger.WriteError($"Exception thrown during UnsubscribeChannelsInLineup(). {ex}");
+                Logger.WriteError($"Exception thrown during UnsubscribeChannelsInLineup(). Message: {ex.Message}");
             }
         }
 
@@ -119,7 +119,7 @@ namespace GaRyan2.WmcUtilities
             }
             catch (Exception ex)
             {
-                Logger.WriteError($"Exception thrown during DeleteLineup(). {ex}");
+                Logger.WriteError($"Exception thrown during DeleteLineup(). Message: {ex.Message}");
             }
         }
 
@@ -148,7 +148,7 @@ namespace GaRyan2.WmcUtilities
             }
             catch (Exception ex)
             {
-                Logger.WriteInformation($"Exception thrown during GetDeviceLineupsAndIds(). {ex}");
+                Logger.WriteInformation($"Exception thrown during GetDeviceLineupsAndIds(). Message: {ex.Message}");
             }
             return ret;
         }
@@ -185,7 +185,7 @@ namespace GaRyan2.WmcUtilities
             }
             catch (Exception ex)
             {
-                Logger.WriteInformation($"Exception thrown during GetWmisLineups(). {ex}");
+                Logger.WriteInformation($"Exception thrown during GetWmisLineups(). Message: {ex.Message}");
             }
             return ret;
         }

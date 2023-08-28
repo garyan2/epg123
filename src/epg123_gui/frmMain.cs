@@ -247,8 +247,13 @@ namespace epg123
             cbAppendDescription.Checked = Config.AppendEpisodeDesc;
             cbAddNewStations.Checked = Config.AutoAddNew;
             cbOadOverride.Checked = Config.OadOverride;
-            cbSeriesPosterArt.Checked = Config.SeriesPosterArt;
-            cbSeriesWsArt.Checked = Config.SeriesWsArt;
+            if (Config.SeriesPosterAspect.Equals("2x3") || Config.SeriesPosterArt) rdo2x3.Checked = true;
+            else if (Config.SeriesPosterAspect.Equals("16x9") || Config.SeriesWsArt) rdo16x9.Checked = true;
+            else if (Config.SeriesPosterAspect.Equals("3x4")) rdo3x4.Checked = true;
+            else rdo4x3.Checked = true;
+            rdoSm.Checked = Config.ArtworkSize.Equals("Sm");
+            rdoMd.Checked = Config.ArtworkSize.Equals("Md");
+            rdoLg.Checked = Config.ArtworkSize.Equals("Lg");
             cbSeasonEventImages.Checked = Config.SeasonEventImages;
             cbSdLogos.Checked = Config.IncludeSdLogos;
             cmbPreferredLogos.SelectedIndex = (int)(Helper.PreferredLogos)Enum.Parse(typeof(Helper.PreferredLogos), Config.PreferredLogoStyle, true);
@@ -307,9 +312,10 @@ namespace epg123
             {
                 cbCacheRetention.Enabled = ckIpAddress.Enabled = cmbIpAddresses.Enabled = btnServiceStart.Enabled = btnServiceStop.Enabled = linkLabel2.Enabled = linkLabel3.Enabled = false;
                 label1.Enabled = label2.Enabled = label3.Enabled = false;
-                cbSeriesPosterArt.Enabled = false; cbSeriesPosterArt.Font = new Font(cbSeriesPosterArt.Font, cbSeriesPosterArt.Font.Style | FontStyle.Strikeout);
-                cbSeriesWsArt.Enabled = false; cbSeriesWsArt.Font = new Font(cbSeriesWsArt.Font, cbSeriesWsArt.Font.Style | FontStyle.Strikeout);
                 cbSeasonEventImages.Enabled = false; cbSeasonEventImages.Font = new Font(cbSeasonEventImages.Font, cbSeasonEventImages.Font.Style | FontStyle.Strikeout);
+                lblAspect.Enabled = lblSize.Enabled = pnlAspect.Enabled = pnlSize.Enabled = false;
+                lblAspect.Font = lblSize.Font = rdo2x3.Font = rdo3x4.Font = rdo4x3.Font = rdo16x9.Font = rdoSm.Font = rdoMd.Font = rdoLg.Font =
+                    new Font(lblAspect.Font, lblAspect.Font.Style | FontStyle.Strikeout);
             }
         }
         #endregion
@@ -878,7 +884,7 @@ namespace epg123
                                 "No Stations to Download", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
-            else if ((Config.ExpectedServicecount != _originalConfig.ExpectedServicecount))
+            else if (Config.ExpectedServicecount != _originalConfig.ExpectedServicecount)
             {
                 var prompt = $"The number of stations to download has {((_originalConfig.ExpectedServicecount > Config.ExpectedServicecount) ? "decreased" : "increased")} from {_originalConfig.ExpectedServicecount} to {Config.ExpectedServicecount} from the previous configuration.\n\nDo you wish to commit these changes?";
                 if (MessageBox.Show(prompt, "Change in Expected Services Count", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No)
@@ -1259,15 +1265,33 @@ namespace epg123
         #region ========== TAB: Images ==========
         private void imageConfigs_Changed(object sender, EventArgs e)
         {
-            if (sender.Equals(cbSeriesPosterArt))
+            if (sender.Equals(rdo2x3) && rdo2x3.Checked)
             {
-                if (cbSeriesWsArt.Checked && cbSeriesPosterArt.Checked) cbSeriesWsArt.Checked = false;
-                Config.SeriesPosterArt = cbSeriesPosterArt.Checked;
+                Config.SeriesPosterAspect = "2x3";
             }
-            else if (sender.Equals(cbSeriesWsArt))
+            else if (sender.Equals(rdo3x4) && rdo3x4.Checked)
             {
-                if (cbSeriesPosterArt.Checked && cbSeriesWsArt.Checked) cbSeriesPosterArt.Checked = false;
-                Config.SeriesWsArt = cbSeriesWsArt.Checked;
+                Config.SeriesPosterAspect = "3x4";
+            }
+            else if (sender.Equals(rdo4x3) && rdo4x3.Checked)
+            {
+                Config.SeriesPosterAspect = "4x3";
+            }
+            else if (sender.Equals(rdo16x9) && rdo16x9.Checked)
+            {
+                Config.SeriesPosterAspect = "16x9";
+            }
+            else if (sender.Equals(rdoSm) && rdoSm.Checked)
+            {
+                Config.ArtworkSize = "Sm";
+            }
+            else if (sender.Equals(rdoMd) && rdoMd.Checked)
+            {
+                Config.ArtworkSize = "Md";
+            }
+            else if (sender.Equals(rdoLg) && rdoLg.Checked)
+            {
+                Config.ArtworkSize = "Lg";
             }
             else if (sender.Equals(cbSdLogos))
             {

@@ -125,7 +125,7 @@ namespace GaRyan2.WmcUtilities
                         }
                         catch (Exception ex)
                         {
-                            Logger.WriteVerbose($"Failed to associate lineup {listings.Lineup} with device {device.Name ?? "<<NULL>>"} ({(device.ScannedLineup == null ? "<<NULL>>" : device.ScannedLineup.Name)}). {ex}");
+                            Logger.WriteVerbose($"Failed to associate lineup {listings.Lineup} with device {device.Name ?? "<<NULL>>"} ({(device.ScannedLineup == null ? "<<NULL>>" : device.ScannedLineup.Name)}). Exception: {ex.Message}");
                         }
                     }
 
@@ -158,7 +158,7 @@ namespace GaRyan2.WmcUtilities
             }
             catch (Exception ex)
             {
-                Logger.WriteInformation($"Exception thrown during SubscribeLineupChannel(). {ex}");
+                Logger.WriteInformation($"Exception thrown during SubscribeLineupChannel(). Message: {ex.Message}");
             }
         }
 
@@ -186,7 +186,7 @@ namespace GaRyan2.WmcUtilities
             }
             catch (Exception ex)
             {
-                Logger.WriteInformation($"Exception thrown during SetChannelEnableState(). {ex}");
+                Logger.WriteInformation($"Exception thrown during SetChannelEnableState(). Message: {ex.Message}");
             }
         }
 
@@ -207,7 +207,7 @@ namespace GaRyan2.WmcUtilities
             }
             catch (Exception ex)
             {
-                Logger.WriteInformation($"Exception thrown during DetermineRecordingsInProgress(). {ex}");
+                Logger.WriteInformation($"Exception thrown during DetermineRecordingsInProgress(). Message: {ex.Message}");
             }
             return false;
         }

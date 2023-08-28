@@ -33,7 +33,7 @@ namespace plutotv
             }
             catch (Exception e)
             {
-                Logger.WriteError($"Failed to create PlutoTV M3U/XMLTV files. {e}");
+                Logger.WriteError($"Failed to create PlutoTV M3U/XMLTV files. Exception: {e.Message}");
             }
             Logger.WriteVerbose($"PlutoTV update execution time was {DateTime.UtcNow - startTime}.");
         }

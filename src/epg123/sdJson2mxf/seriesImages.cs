@@ -167,11 +167,9 @@ namespace epg123.sdJson2mxf
         {
             var ret = new List<ProgramArtwork>();
             var images = sdImages.Where(arg =>
-                !string.IsNullOrEmpty(arg.Category) && !string.IsNullOrEmpty(arg.Aspect) &&
-                !string.IsNullOrEmpty(arg.Uri) &&
+                !string.IsNullOrEmpty(arg.Category) && !string.IsNullOrEmpty(arg.Aspect) && !string.IsNullOrEmpty(arg.Uri) &&
                 (string.IsNullOrEmpty(arg.Tier) || tiers.Contains(arg.Tier.ToLower())) &&
-                !string.IsNullOrEmpty(arg.Size) && (arg.Size.Equals("Md") && !arg.Aspect.Equals("16x9") && !arg.Aspect.Equals("1x1") ||
-                                                    arg.Size.Equals("Sm") && arg.Aspect.Equals("16x9")));
+                !string.IsNullOrEmpty(arg.Size) && arg.Size.Equals(config.ArtworkSize));
 
             // get the aspect ratios available and fix the URI
             var aspects = new HashSet<string>();
@@ -270,14 +268,9 @@ namespace epg123.sdJson2mxf
             {
                 image = artwork.FirstOrDefault();
             }
-            else if (config.SeriesPosterArt || config.SeriesWsArt)
-            {
-                image = artwork.SingleOrDefault(arg =>
-                    arg.Aspect.ToLower().Equals(config.SeriesPosterArt ? "2x3" : "16x9"));
-            }
             else
             {
-                image = artwork.SingleOrDefault(arg => arg.Aspect.ToLower().Equals("4x3"));
+                image = artwork.SingleOrDefault(arg => arg.Aspect.ToLower().Equals(config.SeriesPosterAspect));
             }
 
             if (image == null && type == ImageType.Series)

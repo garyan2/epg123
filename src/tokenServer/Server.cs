@@ -46,7 +46,7 @@ namespace tokenServer
                 }
                 catch (Exception ex)
                 {
-                    Logger.WriteError($"Failed to initialize EPG123 Server service.\n{ex}");
+                    Logger.WriteError($"Failed to initialize EPG123 Server service. Exception: {ex.Message}");
                     ExitCode = -1;
                     this.Stop();
                 }

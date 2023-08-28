@@ -1172,7 +1172,7 @@ namespace epg123Client
             }
             catch (Exception ex)
             {
-                Logger.WriteError($"{ex}");
+                Logger.WriteError($"{ex.Message}");
             }
         }
 

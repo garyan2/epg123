@@ -36,8 +36,8 @@ namespace epg123
             AppendEpisodeDesc = other.AppendEpisodeDesc;
             OadOverride = other.OadOverride;
             SeasonEventImages = other.SeasonEventImages;
-            SeriesPosterArt = other.SeriesPosterArt;
-            SeriesWsArt = other.SeriesWsArt;
+            SeriesPosterAspect = other.SeriesPosterAspect;
+            ArtworkSize = other.ArtworkSize;
             IncludeSdLogos = other.IncludeSdLogos;
             PreferredLogoStyle = other.PreferredLogoStyle;
             AlternateLogoStyle = other.AlternateLogoStyle;
@@ -116,8 +116,8 @@ namespace epg123
             if (!AppendEpisodeDesc.Equals(other.AppendEpisodeDesc)) return false;
             if (!OadOverride.Equals(other.OadOverride)) return false;
             if (!SeasonEventImages.Equals(other.SeasonEventImages)) return false;
-            if (!SeriesPosterArt.Equals(other.SeriesPosterArt)) return false;
-            if (!SeriesWsArt.Equals(other.SeriesWsArt)) return false;
+            if (!SeriesPosterAspect.Equals(other.SeriesPosterAspect)) return false;
+            if (!ArtworkSize.Equals(other.ArtworkSize)) return false;
             if (!IncludeSdLogos.Equals(other.IncludeSdLogos)) return false;
             if (!PreferredLogoStyle.Equals(other.PreferredLogoStyle)) return false;
             if (!AlternateLogoStyle.Equals(other.AlternateLogoStyle)) return false;
@@ -203,14 +203,31 @@ namespace epg123
         [XmlElement("SeasonEventImages")]
         public bool SeasonEventImages { get; set; } = true;
 
-        [XmlElement("SeriesPosterArt")]
+        [XmlElement("SeriesPosterArt")] // deprecated
         public bool SeriesPosterArt { get; set; }
+        public bool ShouldSerializeSeriesPosterArt() => false;
 
-        [XmlElement("SeriesWsArt")]
+        [XmlElement("SeriesWsArt")] // deprecated
         public bool SeriesWsArt { get; set; }
+        public bool ShouldSerializeSeriesWsArt() => false;
 
-        [XmlElement("TMDbCoverArt")]
-        public bool TMDbCoverArt { get; set; } = true;
+        [XmlAnyElement("SeriesPosterAspectComment")]
+        public XmlComment SeriesPosterAspectComment
+        {
+            get => new XmlDocument().CreateComment(" SeriesPostAspect: Set aspect of series artwork to link. \"2x3\", \"3x4\", \"4x3\", \"16x9\" ");
+            set { }
+        }
+        [XmlElement("SeriesPosterAspect")]
+        public string SeriesPosterAspect { get; set; } = "4x3";
+
+        [XmlAnyElement("ArtworkSizeComment")]
+        public XmlComment ArtworkSizeComment
+        {
+            get => new XmlDocument().CreateComment(" ArtworkSize: Set size of artwork to link. \"Sm\" Small, \"Md\" Medium, \"Lg\" Large ");
+            set { }
+        }
+        [XmlElement("ArtworkSize")]
+        public string ArtworkSize { get; set; } = "Md";
 
         [XmlElement("IncludeSDLogos")]
         public bool IncludeSdLogos { get; set; } = true;
@@ -263,15 +280,16 @@ namespace epg123
         [XmlAnyElement("BrandLogoImageComment")]
         public XmlComment BrandLogoImageComment
         {
-            get => new XmlDocument().CreateComment(" BrandLogoImage: Add status image to guide view in WMC. Options are \"none\", \"light\", and \"dark\".");
+            get => new XmlDocument().CreateComment(" BrandLogoImage: Add status image to guide view in WMC. Options are \"none\", \"light\", and \"dark\".\n You will need to clear the cache or wait 30 days for current images to be updated. ");
             set { }
         }
         [XmlElement("BrandLogoImage")]
         public string BrandLogoImage { get; set; } = "none";
 
         [XmlAnyElement("SuppressStationEmptyWarningsComment")]
-        public XmlComment SuppressStationEmptyWarningsComment { get => new XmlDocument().CreateComment(" SuppressStationEmptyWarnings: Enter specific station callsigns, comma delimited, to suppress warnings for no guide data, or use a wildcard (*) for a group of callsigns. A solitary wildcard means all station warnings will be suppressed.");
-            set { } }
+        public XmlComment SuppressStationEmptyWarningsComment { get => new XmlDocument().CreateComment(" SuppressStationEmptyWarnings: Enter specific station callsigns, comma delimited, to suppress warnings for no guide data, or use a wildcard (*) for a group of callsigns. A solitary wildcard means all station warnings will be suppressed. ");
+            set { }
+        }
         [XmlElement("SuppressStationEmptyWarnings")]
         public string SuppressStationEmptyWarnings { get; set; } = "GOAC*,LOOR*,EDAC*,LEAC*,PEG*,LOAC*,PPV*,PUAC*,SPALT*,INFO*";
 
@@ -288,7 +306,7 @@ namespace epg123
         public XmlComment StationIdComment
         {
             get =>
-                new XmlDocument().CreateComment("StationID attributes: You can add the following attributes to any station to customize your guide further.\n" +
+                new XmlDocument().CreateComment(" StationID attributes: You can add the following attributes to any station to customize your guide further.\n" +
                                                 "      HDOverride=\"true\" - flags all programs on this station to be HD\n" +
                                                 "      SDOverride=\"true\" - flags all programs on this station to be SD\n" +
                                                 "      customCallSign=\"H and I\" - will replace the call sign provided by Schedules Direct with \"H and I\"\n" +

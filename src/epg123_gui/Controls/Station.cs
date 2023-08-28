@@ -28,20 +28,11 @@ namespace epg123
             };
         }
 
-        private bool IsAtsc
-        {
-            get
-            {
-                var names = Station.Name.Replace("-", "").Split(' ');
-                return !string.IsNullOrEmpty(Station.Affiliate) && names.Length == 2 && names[0] == Station.Callsign && names[1].Equals($"({names[0]})");
-            }
-        }
-
         public LineupStation Station { get; private set; }
         public string StationId => Station.StationId;
         public string CallSign => Station.Callsign;
         public string LanguageCode => Station.BroadcastLanguage[0]?.ToLower().Substring(0, 2) ?? "zz";
-        public string Name => (IsAtsc ? $"{CallSign} ({Station.Affiliate})" : null) ?? Station.Name;
+        public string Name => (!string.IsNullOrEmpty(Station.Affiliate) ? $"{Station.Name} ({Station.Affiliate})" : Station.Name);
         public bool IsNew { get; internal set; }
 
         // static station options

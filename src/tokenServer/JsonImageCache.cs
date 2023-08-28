@@ -63,21 +63,21 @@ namespace tokenServer
             // remove "/image/" from beginning
             filename = filename.Substring(7);
             var location = $"{Helper.Epg123ImageCache}{filename.Substring(0, 1)}\\{filename}";
+            if (!File.Exists(location))
+            {
+                if (ImageCache.ContainsKey(filename)) ImageCache.Remove(filename);
+                return null;
+            }
+
             lock (_cacheLock)
             {
                 var fi = new FileInfo(location);
                 if (ImageCache.ContainsKey(filename))
                 {
-                    if (fi.Exists)
-                    {
-                        if (DateTime.Now - ImageCache[filename].LastUsed > TimeSpan.FromHours(24)) ImageCache[filename].LastUsed = DateTime.Now;
-                        if (ImageCache[filename].ByteSize == 0) ImageCache[filename].ByteSize = fi.Length;
-                        return fi;
-                    }
-                    ImageCache.Remove(filename);
+                    if (DateTime.Now - ImageCache[filename].LastUsed > TimeSpan.FromHours(24)) ImageCache[filename].LastUsed = DateTime.Now;
+                    if (ImageCache[filename].ByteSize == 0) ImageCache[filename].ByteSize = fi.Length;
+                    return fi;
                 }
-
-                if (!fi.Exists) return null;
                 ImageCache.Add(filename, new CacheImage { LastUsed = DateTime.Now, ByteSize = fi.Length});
                 return fi;
             }

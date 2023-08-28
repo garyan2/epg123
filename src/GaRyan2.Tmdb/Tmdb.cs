@@ -8,9 +8,16 @@ namespace GaRyan2
                                                       ApiKey = "05c57e15f625338ad1c5aa8a2899e589" };
         
         public static int PosterWidth { get; private set; }
+        private static int _minWidth;
 
-        public static void Initialize(string userAgent)
+        public static void Initialize(string userAgent, string size)
         {
+            switch (size)
+            {
+                case "Sm": _minWidth = 120; break;
+                case "Lg": _minWidth = 480; break;
+                default: _minWidth = 240; break;
+            }
             api.UserAgent = userAgent;
             api.Initialize();
         }
@@ -25,7 +32,7 @@ namespace GaRyan2
                 var width = 0;
                 for (int index = 0; index < api.Config.Images.PosterSizes.Count; ++index)
                 {
-                    if ((width = int.Parse(api.Config.Images.PosterSizes[index].Substring(1))) < 300) continue;
+                    if ((width = int.Parse(api.Config.Images.PosterSizes[index].Substring(1))) < _minWidth) continue;
                     break;
                 }
                 if (width > 0) PosterWidth = width;

@@ -33,17 +33,26 @@
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tabConfigs = new System.Windows.Forms.TabControl();
             this.tabConfig = new System.Windows.Forms.TabPage();
+            this.pnlSize = new System.Windows.Forms.Panel();
+            this.rdoSm = new System.Windows.Forms.RadioButton();
+            this.rdoMd = new System.Windows.Forms.RadioButton();
+            this.rdoLg = new System.Windows.Forms.RadioButton();
+            this.pnlAspect = new System.Windows.Forms.Panel();
+            this.rdo3x4 = new System.Windows.Forms.RadioButton();
+            this.rdo2x3 = new System.Windows.Forms.RadioButton();
+            this.rdo4x3 = new System.Windows.Forms.RadioButton();
+            this.rdo16x9 = new System.Windows.Forms.RadioButton();
+            this.lblAspect = new System.Windows.Forms.Label();
+            this.lblSize = new System.Windows.Forms.Label();
             this.cbBrandLogo = new System.Windows.Forms.CheckBox();
             this.btnRemoveOrphans = new System.Windows.Forms.Button();
             this.cbOadOverride = new System.Windows.Forms.CheckBox();
-            this.cbSeriesWsArt = new System.Windows.Forms.CheckBox();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.cbSeasonEventImages = new System.Windows.Forms.CheckBox();
             this.cbNoCastCrew = new System.Windows.Forms.CheckBox();
             this.cbAlternateSEFormat = new System.Windows.Forms.CheckBox();
             this.lblPreferredLogos = new System.Windows.Forms.Label();
             this.cmbPreferredLogos = new System.Windows.Forms.ComboBox();
-            this.cbSeriesPosterArt = new System.Windows.Forms.CheckBox();
             this.cbSdLogos = new System.Windows.Forms.CheckBox();
             this.cbTVDB = new System.Windows.Forms.CheckBox();
             this.cbPrefixTitle = new System.Windows.Forms.CheckBox();
@@ -136,6 +145,8 @@
             this.splitContainer1.SuspendLayout();
             this.tabConfigs.SuspendLayout();
             this.tabConfig.SuspendLayout();
+            this.pnlSize.SuspendLayout();
+            this.pnlAspect.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numDays)).BeginInit();
             this.tabXmltv.SuspendLayout();
@@ -196,17 +207,19 @@
             // 
             this.tabConfig.AutoScroll = true;
             this.tabConfig.BackColor = System.Drawing.SystemColors.Control;
+            this.tabConfig.Controls.Add(this.pnlSize);
+            this.tabConfig.Controls.Add(this.pnlAspect);
+            this.tabConfig.Controls.Add(this.lblAspect);
+            this.tabConfig.Controls.Add(this.lblSize);
             this.tabConfig.Controls.Add(this.cbBrandLogo);
             this.tabConfig.Controls.Add(this.btnRemoveOrphans);
             this.tabConfig.Controls.Add(this.cbOadOverride);
-            this.tabConfig.Controls.Add(this.cbSeriesWsArt);
             this.tabConfig.Controls.Add(this.pictureBox1);
             this.tabConfig.Controls.Add(this.cbSeasonEventImages);
             this.tabConfig.Controls.Add(this.cbNoCastCrew);
             this.tabConfig.Controls.Add(this.cbAlternateSEFormat);
             this.tabConfig.Controls.Add(this.lblPreferredLogos);
             this.tabConfig.Controls.Add(this.cmbPreferredLogos);
-            this.tabConfig.Controls.Add(this.cbSeriesPosterArt);
             this.tabConfig.Controls.Add(this.cbSdLogos);
             this.tabConfig.Controls.Add(this.cbTVDB);
             this.tabConfig.Controls.Add(this.cbPrefixTitle);
@@ -223,10 +236,132 @@
             this.tabConfig.TabIndex = 2;
             this.tabConfig.Text = "Configuration";
             // 
+            // pnlSize
+            // 
+            this.pnlSize.Controls.Add(this.rdoSm);
+            this.pnlSize.Controls.Add(this.rdoMd);
+            this.pnlSize.Controls.Add(this.rdoLg);
+            this.pnlSize.Location = new System.Drawing.Point(88, 221);
+            this.pnlSize.Name = "pnlSize";
+            this.pnlSize.Size = new System.Drawing.Size(214, 22);
+            this.pnlSize.TabIndex = 48;
+            // 
+            // rdoSm
+            // 
+            this.rdoSm.AutoSize = true;
+            this.rdoSm.Location = new System.Drawing.Point(3, 3);
+            this.rdoSm.Name = "rdoSm";
+            this.rdoSm.Size = new System.Drawing.Size(50, 17);
+            this.rdoSm.TabIndex = 0;
+            this.rdoSm.TabStop = true;
+            this.rdoSm.Text = "Small";
+            this.rdoSm.UseVisualStyleBackColor = true;
+            this.rdoSm.CheckedChanged += new System.EventHandler(this.imageConfigs_Changed);
+            // 
+            // rdoMd
+            // 
+            this.rdoMd.AutoSize = true;
+            this.rdoMd.Location = new System.Drawing.Point(59, 3);
+            this.rdoMd.Name = "rdoMd";
+            this.rdoMd.Size = new System.Drawing.Size(62, 17);
+            this.rdoMd.TabIndex = 1;
+            this.rdoMd.TabStop = true;
+            this.rdoMd.Text = "Medium";
+            this.rdoMd.UseVisualStyleBackColor = true;
+            this.rdoMd.CheckedChanged += new System.EventHandler(this.imageConfigs_Changed);
+            // 
+            // rdoLg
+            // 
+            this.rdoLg.AutoSize = true;
+            this.rdoLg.Location = new System.Drawing.Point(127, 3);
+            this.rdoLg.Name = "rdoLg";
+            this.rdoLg.Size = new System.Drawing.Size(52, 17);
+            this.rdoLg.TabIndex = 2;
+            this.rdoLg.TabStop = true;
+            this.rdoLg.Text = "Large";
+            this.rdoLg.UseVisualStyleBackColor = true;
+            this.rdoLg.CheckedChanged += new System.EventHandler(this.imageConfigs_Changed);
+            // 
+            // pnlAspect
+            // 
+            this.pnlAspect.Controls.Add(this.rdo3x4);
+            this.pnlAspect.Controls.Add(this.rdo2x3);
+            this.pnlAspect.Controls.Add(this.rdo4x3);
+            this.pnlAspect.Controls.Add(this.rdo16x9);
+            this.pnlAspect.Location = new System.Drawing.Point(88, 198);
+            this.pnlAspect.Name = "pnlAspect";
+            this.pnlAspect.Size = new System.Drawing.Size(214, 22);
+            this.pnlAspect.TabIndex = 47;
+            // 
+            // rdo3x4
+            // 
+            this.rdo3x4.AutoSize = true;
+            this.rdo3x4.Location = new System.Drawing.Point(51, 3);
+            this.rdo3x4.Name = "rdo3x4";
+            this.rdo3x4.Size = new System.Drawing.Size(42, 17);
+            this.rdo3x4.TabIndex = 46;
+            this.rdo3x4.TabStop = true;
+            this.rdo3x4.Text = "3x4";
+            this.rdo3x4.UseVisualStyleBackColor = true;
+            // 
+            // rdo2x3
+            // 
+            this.rdo2x3.AutoSize = true;
+            this.rdo2x3.Location = new System.Drawing.Point(3, 3);
+            this.rdo2x3.Name = "rdo2x3";
+            this.rdo2x3.Size = new System.Drawing.Size(42, 17);
+            this.rdo2x3.TabIndex = 43;
+            this.rdo2x3.TabStop = true;
+            this.rdo2x3.Text = "2x3";
+            this.rdo2x3.UseVisualStyleBackColor = true;
+            this.rdo2x3.CheckedChanged += new System.EventHandler(this.imageConfigs_Changed);
+            // 
+            // rdo4x3
+            // 
+            this.rdo4x3.AutoSize = true;
+            this.rdo4x3.Location = new System.Drawing.Point(99, 3);
+            this.rdo4x3.Name = "rdo4x3";
+            this.rdo4x3.Size = new System.Drawing.Size(42, 17);
+            this.rdo4x3.TabIndex = 44;
+            this.rdo4x3.TabStop = true;
+            this.rdo4x3.Text = "4x3";
+            this.rdo4x3.UseVisualStyleBackColor = true;
+            this.rdo4x3.CheckedChanged += new System.EventHandler(this.imageConfigs_Changed);
+            // 
+            // rdo16x9
+            // 
+            this.rdo16x9.AutoSize = true;
+            this.rdo16x9.Location = new System.Drawing.Point(147, 3);
+            this.rdo16x9.Name = "rdo16x9";
+            this.rdo16x9.Size = new System.Drawing.Size(48, 17);
+            this.rdo16x9.TabIndex = 45;
+            this.rdo16x9.TabStop = true;
+            this.rdo16x9.Text = "16x9";
+            this.rdo16x9.UseVisualStyleBackColor = true;
+            this.rdo16x9.CheckedChanged += new System.EventHandler(this.imageConfigs_Changed);
+            // 
+            // lblAspect
+            // 
+            this.lblAspect.AutoSize = true;
+            this.lblAspect.Location = new System.Drawing.Point(6, 203);
+            this.lblAspect.Name = "lblAspect";
+            this.lblAspect.Size = new System.Drawing.Size(76, 13);
+            this.lblAspect.TabIndex = 46;
+            this.lblAspect.Text = "Series Images:";
+            // 
+            // lblSize
+            // 
+            this.lblSize.AutoSize = true;
+            this.lblSize.Location = new System.Drawing.Point(6, 223);
+            this.lblSize.Name = "lblSize";
+            this.lblSize.Size = new System.Drawing.Size(67, 13);
+            this.lblSize.TabIndex = 42;
+            this.lblSize.Text = "Image Sizes:";
+            // 
             // cbBrandLogo
             // 
             this.cbBrandLogo.AutoSize = true;
-            this.cbBrandLogo.Location = new System.Drawing.Point(6, 341);
+            this.cbBrandLogo.Location = new System.Drawing.Point(6, 347);
             this.cbBrandLogo.Name = "cbBrandLogo";
             this.cbBrandLogo.Size = new System.Drawing.Size(294, 17);
             this.cbBrandLogo.TabIndex = 41;
@@ -236,7 +371,7 @@
             // 
             // btnRemoveOrphans
             // 
-            this.btnRemoveOrphans.Location = new System.Drawing.Point(79, 312);
+            this.btnRemoveOrphans.Location = new System.Drawing.Point(79, 318);
             this.btnRemoveOrphans.Name = "btnRemoveOrphans";
             this.btnRemoveOrphans.Size = new System.Drawing.Size(160, 23);
             this.btnRemoveOrphans.TabIndex = 40;
@@ -247,7 +382,7 @@
             // cbOadOverride
             // 
             this.cbOadOverride.AutoSize = true;
-            this.cbOadOverride.Location = new System.Drawing.Point(6, 170);
+            this.cbOadOverride.Location = new System.Drawing.Point(6, 179);
             this.cbOadOverride.Name = "cbOadOverride";
             this.cbOadOverride.Size = new System.Drawing.Size(232, 17);
             this.cbOadOverride.TabIndex = 9;
@@ -255,21 +390,9 @@
             this.cbOadOverride.UseVisualStyleBackColor = true;
             this.cbOadOverride.CheckedChanged += new System.EventHandler(this.configs_Changed);
             // 
-            // cbSeriesWsArt
-            // 
-            this.cbSeriesWsArt.AccessibleName = "use 16 by 9 posters for series images instead of 4 by 3";
-            this.cbSeriesWsArt.AutoSize = true;
-            this.cbSeriesWsArt.Location = new System.Drawing.Point(6, 216);
-            this.cbSeriesWsArt.Name = "cbSeriesWsArt";
-            this.cbSeriesWsArt.Size = new System.Drawing.Size(258, 17);
-            this.cbSeriesWsArt.TabIndex = 11;
-            this.cbSeriesWsArt.Text = "Use 16x9 posters for series images instead of 4x3";
-            this.cbSeriesWsArt.UseVisualStyleBackColor = true;
-            this.cbSeriesWsArt.CheckedChanged += new System.EventHandler(this.imageConfigs_Changed);
-            // 
             // pictureBox1
             // 
-            this.pictureBox1.Location = new System.Drawing.Point(286, 288);
+            this.pictureBox1.Location = new System.Drawing.Point(286, 294);
             this.pictureBox1.Name = "pictureBox1";
             this.pictureBox1.Size = new System.Drawing.Size(16, 16);
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
@@ -279,7 +402,7 @@
             // cbSeasonEventImages
             // 
             this.cbSeasonEventImages.AutoSize = true;
-            this.cbSeasonEventImages.Location = new System.Drawing.Point(6, 239);
+            this.cbSeasonEventImages.Location = new System.Drawing.Point(6, 245);
             this.cbSeasonEventImages.Name = "cbSeasonEventImages";
             this.cbSeasonEventImages.Size = new System.Drawing.Size(211, 17);
             this.cbSeasonEventImages.TabIndex = 12;
@@ -291,7 +414,7 @@
             // 
             this.cbNoCastCrew.AccessibleName = "do not include cast and crew";
             this.cbNoCastCrew.AutoSize = true;
-            this.cbNoCastCrew.Location = new System.Drawing.Point(6, 387);
+            this.cbNoCastCrew.Location = new System.Drawing.Point(6, 393);
             this.cbNoCastCrew.Name = "cbNoCastCrew";
             this.cbNoCastCrew.Size = new System.Drawing.Size(247, 17);
             this.cbNoCastCrew.TabIndex = 17;
@@ -303,7 +426,7 @@
             // 
             this.cbAlternateSEFormat.AutoSize = true;
             this.cbAlternateSEFormat.Enabled = false;
-            this.cbAlternateSEFormat.Location = new System.Drawing.Point(6, 101);
+            this.cbAlternateSEFormat.Location = new System.Drawing.Point(6, 110);
             this.cbAlternateSEFormat.Name = "cbAlternateSEFormat";
             this.cbAlternateSEFormat.Size = new System.Drawing.Size(295, 17);
             this.cbAlternateSEFormat.TabIndex = 6;
@@ -314,7 +437,7 @@
             // lblPreferredLogos
             // 
             this.lblPreferredLogos.AutoSize = true;
-            this.lblPreferredLogos.Location = new System.Drawing.Point(15, 288);
+            this.lblPreferredLogos.Location = new System.Drawing.Point(15, 294);
             this.lblPreferredLogos.Name = "lblPreferredLogos";
             this.lblPreferredLogos.Size = new System.Drawing.Size(99, 13);
             this.lblPreferredLogos.TabIndex = 32;
@@ -331,29 +454,17 @@
             "logos for light backgrounds",
             "gray logos",
             "none (custom logos only)"});
-            this.cmbPreferredLogos.Location = new System.Drawing.Point(120, 285);
+            this.cmbPreferredLogos.Location = new System.Drawing.Point(120, 291);
             this.cmbPreferredLogos.Name = "cmbPreferredLogos";
             this.cmbPreferredLogos.Size = new System.Drawing.Size(160, 21);
             this.cmbPreferredLogos.TabIndex = 15;
             this.cmbPreferredLogos.SelectedIndexChanged += new System.EventHandler(this.imageConfigs_Changed);
             // 
-            // cbSeriesPosterArt
-            // 
-            this.cbSeriesPosterArt.AccessibleName = "use 2 by 3 posters for series images instead of 4 by 3";
-            this.cbSeriesPosterArt.AutoSize = true;
-            this.cbSeriesPosterArt.Location = new System.Drawing.Point(6, 193);
-            this.cbSeriesPosterArt.Name = "cbSeriesPosterArt";
-            this.cbSeriesPosterArt.Size = new System.Drawing.Size(252, 17);
-            this.cbSeriesPosterArt.TabIndex = 10;
-            this.cbSeriesPosterArt.Text = "Use 2x3 posters for series images instead of 4x3";
-            this.cbSeriesPosterArt.UseVisualStyleBackColor = true;
-            this.cbSeriesPosterArt.CheckedChanged += new System.EventHandler(this.imageConfigs_Changed);
-            // 
             // cbSdLogos
             // 
             this.cbSdLogos.AccessibleName = "include station logos in local logos folder";
             this.cbSdLogos.AutoSize = true;
-            this.cbSdLogos.Location = new System.Drawing.Point(6, 262);
+            this.cbSdLogos.Location = new System.Drawing.Point(6, 268);
             this.cbSdLogos.Name = "cbSdLogos";
             this.cbSdLogos.Size = new System.Drawing.Size(199, 17);
             this.cbSdLogos.TabIndex = 14;
@@ -364,7 +475,7 @@
             // cbTVDB
             // 
             this.cbTVDB.AutoSize = true;
-            this.cbTVDB.Location = new System.Drawing.Point(6, 32);
+            this.cbTVDB.Location = new System.Drawing.Point(6, 41);
             this.cbTVDB.Name = "cbTVDB";
             this.cbTVDB.Size = new System.Drawing.Size(278, 17);
             this.cbTVDB.TabIndex = 3;
@@ -375,7 +486,7 @@
             // cbPrefixTitle
             // 
             this.cbPrefixTitle.AutoSize = true;
-            this.cbPrefixTitle.Location = new System.Drawing.Point(6, 55);
+            this.cbPrefixTitle.Location = new System.Drawing.Point(6, 64);
             this.cbPrefixTitle.Name = "cbPrefixTitle";
             this.cbPrefixTitle.Size = new System.Drawing.Size(274, 17);
             this.cbPrefixTitle.TabIndex = 4;
@@ -388,7 +499,7 @@
             this.cbPrefixDescription.AccessibleName = "prefix episode description with season and episode numbers";
             this.cbPrefixDescription.AutoSize = true;
             this.cbPrefixDescription.CheckAlign = System.Drawing.ContentAlignment.TopLeft;
-            this.cbPrefixDescription.Location = new System.Drawing.Point(6, 78);
+            this.cbPrefixDescription.Location = new System.Drawing.Point(6, 87);
             this.cbPrefixDescription.Name = "cbPrefixDescription";
             this.cbPrefixDescription.Size = new System.Drawing.Size(281, 17);
             this.cbPrefixDescription.TabIndex = 5;
@@ -402,7 +513,7 @@
             this.cbAppendDescription.AccessibleName = "append episode description with season and episode numbers";
             this.cbAppendDescription.AutoSize = true;
             this.cbAppendDescription.CheckAlign = System.Drawing.ContentAlignment.TopLeft;
-            this.cbAppendDescription.Location = new System.Drawing.Point(6, 124);
+            this.cbAppendDescription.Location = new System.Drawing.Point(6, 133);
             this.cbAppendDescription.Name = "cbAppendDescription";
             this.cbAppendDescription.Size = new System.Drawing.Size(292, 17);
             this.cbAppendDescription.TabIndex = 7;
@@ -414,7 +525,7 @@
             // cbModernMedia
             // 
             this.cbModernMedia.AutoSize = true;
-            this.cbModernMedia.Location = new System.Drawing.Point(6, 364);
+            this.cbModernMedia.Location = new System.Drawing.Point(6, 370);
             this.cbModernMedia.Name = "cbModernMedia";
             this.cbModernMedia.Size = new System.Drawing.Size(199, 17);
             this.cbModernMedia.TabIndex = 16;
@@ -426,7 +537,7 @@
             // 
             this.numDays.AccessibleDescription = "";
             this.numDays.AccessibleName = "days to download";
-            this.numDays.Location = new System.Drawing.Point(6, 6);
+            this.numDays.Location = new System.Drawing.Point(6, 15);
             this.numDays.Maximum = new decimal(new int[] {
             21,
             0,
@@ -451,7 +562,7 @@
             // lblDaysDownload
             // 
             this.lblDaysDownload.AutoSize = true;
-            this.lblDaysDownload.Location = new System.Drawing.Point(52, 8);
+            this.lblDaysDownload.Location = new System.Drawing.Point(52, 17);
             this.lblDaysDownload.Name = "lblDaysDownload";
             this.lblDaysDownload.Size = new System.Drawing.Size(172, 13);
             this.lblDaysDownload.TabIndex = 2;
@@ -460,7 +571,7 @@
             // cbAddNewStations
             // 
             this.cbAddNewStations.AutoSize = true;
-            this.cbAddNewStations.Location = new System.Drawing.Point(6, 147);
+            this.cbAddNewStations.Location = new System.Drawing.Point(6, 156);
             this.cbAddNewStations.Name = "cbAddNewStations";
             this.cbAddNewStations.Size = new System.Drawing.Size(246, 17);
             this.cbAddNewStations.TabIndex = 8;
@@ -1355,6 +1466,10 @@
             this.tabConfigs.ResumeLayout(false);
             this.tabConfig.ResumeLayout(false);
             this.tabConfig.PerformLayout();
+            this.pnlSize.ResumeLayout(false);
+            this.pnlSize.PerformLayout();
+            this.pnlAspect.ResumeLayout(false);
+            this.pnlAspect.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numDays)).EndInit();
             this.tabXmltv.ResumeLayout(false);
@@ -1433,7 +1548,6 @@
         private System.Windows.Forms.CheckBox cbAppendDescription;
         private System.Windows.Forms.Label lblPreferredLogos;
         private System.Windows.Forms.ComboBox cmbPreferredLogos;
-        private System.Windows.Forms.CheckBox cbSeriesPosterArt;
         private System.Windows.Forms.CheckBox cbSdLogos;
         private System.Windows.Forms.CheckBox cbAlternateSEFormat;
         private System.Windows.Forms.CheckBox ckXmltvExtendedInfo;
@@ -1447,7 +1561,6 @@
         private System.Windows.Forms.CheckBox cbNoCastCrew;
         private System.Windows.Forms.PictureBox pictureBox1;
         private System.Windows.Forms.CheckBox cbXmltvSingleImage;
-        private System.Windows.Forms.CheckBox cbSeriesWsArt;
         private System.Windows.Forms.ToolStrip toolStrip6;
         private System.Windows.Forms.ToolStripDropDownButton btnIncludeExclude;
         private System.Windows.Forms.ToolStripMenuItem menuInclude;
@@ -1480,5 +1593,16 @@
         private System.Windows.Forms.TabPage tabNotifier;
         private System.Windows.Forms.Button btnEmail;
         private System.Windows.Forms.CheckBox ckDebug;
+        private System.Windows.Forms.RadioButton rdoLg;
+        private System.Windows.Forms.RadioButton rdoMd;
+        private System.Windows.Forms.RadioButton rdoSm;
+        private System.Windows.Forms.Label lblSize;
+        private System.Windows.Forms.Label lblAspect;
+        private System.Windows.Forms.RadioButton rdo16x9;
+        private System.Windows.Forms.RadioButton rdo4x3;
+        private System.Windows.Forms.RadioButton rdo2x3;
+        private System.Windows.Forms.Panel pnlAspect;
+        private System.Windows.Forms.RadioButton rdo3x4;
+        private System.Windows.Forms.Panel pnlSize;
     }
 }

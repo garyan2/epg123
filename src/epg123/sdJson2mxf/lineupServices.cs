@@ -319,7 +319,7 @@ namespace epg123.sdJson2mxf
             }
             catch (Exception ex)
             {
-                Logger.WriteVerbose($"An exception occurred during downloadSDLogo(). {ex}");
+                Logger.WriteVerbose($"An exception occurred during DownloadSDLogo(). Message: {ex.Message}");
             }
             return false;
         }

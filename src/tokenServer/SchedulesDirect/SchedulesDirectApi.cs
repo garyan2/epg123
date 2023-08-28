@@ -62,9 +62,9 @@ namespace GaRyan2.SchedulesDirectAPI
                 if (ifModifiedSince.Ticks > DateTime.MinValue.Ticks) message.Headers.IfModifiedSince = ifModifiedSince;
                 var response = await _httpClient.SendAsync(message, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
 
-                if (!response.IsSuccessStatusCode || response.Content.Headers.ContentType.MediaType == "application/json")
+                if (!response.IsSuccessStatusCode || response.Content?.Headers?.ContentType?.MediaType == "application/json")
                 {
-                    if (response.Content.Headers.ContentType.MediaType == "application/json")
+                    if (response.Content?.Headers?.ContentType?.MediaType == "application/json")
                         return HandleHttpResponseError(response, await response.Content.ReadAsStringAsync());
                     else
                         return HandleHttpResponseError(response, null);
@@ -73,7 +73,7 @@ namespace GaRyan2.SchedulesDirectAPI
             }
             catch (HttpRequestException e)
             {
-                Logger.WriteError($"{uri} GetSdImage() Exception: {e}");
+                Logger.WriteError($"{uri} GetSdImage() Exception: {e.Message}");
             }
             return null;
         }

@@ -67,7 +67,7 @@ namespace epg123.sdJson2mxf
             }
             catch (Exception ex)
             {
-                Logger.WriteInformation("Failed to create the XMLTV file. Message : " + ex);
+                Logger.WriteInformation($"Failed to create the XMLTV file. Exception: {ex.Message}");
             }
             return false;
         }

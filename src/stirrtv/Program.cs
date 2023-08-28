@@ -29,7 +29,7 @@ namespace stirrtv
             }
             catch (Exception e)
             {
-                Logger.WriteError($"Failed to create Stirr M3U/XMLTV files. {e}");
+                Logger.WriteError($"Failed to create Stirr M3U/XMLTV files. Exception: {e.Message}");
             }
         }
 

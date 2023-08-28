@@ -105,7 +105,7 @@ namespace epg123.sdJson2mxf
                     Aspect = "2x3",
                     Category = "Box Art",
                     Height = (int)(tmdbApi.PosterWidth * 1.5),
-                    Size = "Md",
+                    Size = config.ArtworkSize,
                     Uri = poster,
                     Width = tmdbApi.PosterWidth
                 }

@@ -275,7 +275,7 @@ namespace epg123.sdJson2mxf
             }
             catch (Exception ex)
             {
-                Logger.WriteError("Error occurred when trying to read Md5Schedule entry in cache file. Message: " + ex);
+                Logger.WriteError($"Error occurred when trying to read Md5Schedule entry in cache file. Exception: {ex.Message}");
                 return;
             }
 

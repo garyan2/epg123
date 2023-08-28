@@ -1,5 +1,4 @@
-﻿using epg123;
-using GaRyan2;
+﻿using GaRyan2;
 using GaRyan2.SchedulesDirectAPI;
 using GaRyan2.Utilities;
 using Newtonsoft.Json;
@@ -10,7 +9,6 @@ using System.Net;
 using System.Text;
 using System.Threading;
 using System.Web;
-using System.Xml.Serialization;
 
 namespace tokenServer
 {
@@ -77,14 +75,11 @@ namespace tokenServer
                 switch (context.Request.Url.LocalPath.ToLower())
                 {
                     case "/epg123/epg123.cfg":
-                        epgConfig cfg = Helper.ReadXmlFile(Helper.Epg123CfgPath, typeof(epgConfig)) ?? new epgConfig();
-                        context.Response.ContentType = "text/xml";
-                        using (var ms = new MemoryStream())
+                        var fi1 = new FileInfo(Helper.Epg123CfgPath);
+                        using (var fs = new FileStream(fi1.FullName, FileMode.Open, FileAccess.Read, FileShare.Read))
                         {
-                            var serializer = new XmlSerializer(typeof(epgConfig));
-                            serializer.Serialize(ms, cfg);
-                            ms.Position = 0;
-                            ms.CopyTo(context.Response.OutputStream);
+                            context.Response.ContentType = "text/xml";
+                            fs.CopyTo(context.Response.OutputStream);
                         }
                         break;
                     case "/epg123/token":

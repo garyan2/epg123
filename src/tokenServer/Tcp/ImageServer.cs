@@ -116,7 +116,7 @@ namespace tokenServer
                 }
 
                 try { ProcessRequest(context); }
-                catch (Exception e) { Logger.WriteError($"Worker() Exception: {e}"); }
+                catch (Exception e) { Logger.WriteError($"Worker() Exception: {e.Message}"); }
                 context.Response.OutputStream?.Close();
             }
         }
@@ -189,7 +189,7 @@ namespace tokenServer
             if (!SchedulesDirect.GoodToken) goto NoToken;
 
             // add if-modified-since as needed
-            if ((fileInfo?.LastWriteTimeUtc ?? DateTime.MinValue) > ifModifiedSince.UtcDateTime)
+            if ((fileInfo?.LastWriteTimeUtc.Ticks ?? DateTime.MinValue.Ticks) > ifModifiedSince.Ticks)
             {
                 ifModifiedSince = fileInfo.LastWriteTimeUtc;
                 conditional = false;
@@ -201,7 +201,7 @@ namespace tokenServer
                 using (var memStream = new MemoryStream())
                 {
                     if (response == null) goto NoToken;
-                    response.Content.ReadAsStreamAsync()?.Result?.CopyTo(memStream);
+                    response.Content?.ReadAsStreamAsync()?.Result?.CopyTo(memStream);
 
                     if (response.StatusCode == HttpStatusCode.OK || response.StatusCode == HttpStatusCode.NotModified)
                     {
@@ -330,7 +330,7 @@ namespace tokenServer
             }
             catch (Exception e)
             {
-                Logger.WriteError($"{fileInfo.FullName} SendImage() Exception: {e}");
+                Logger.WriteError($"{fileInfo.FullName} SendImage() Exception: {e.Message}");
             }
         }
 
@@ -342,13 +342,13 @@ namespace tokenServer
             response.StatusCode = (int)httpResponse.StatusCode;
 
             // response headers
-            response.Headers[HttpResponseHeader.AcceptRanges] = httpResponse.Headers.AcceptRanges?.ToString();
-            response.Headers[HttpResponseHeader.Server] = httpResponse.Headers.Server?.ToString();
+            response.Headers[HttpResponseHeader.AcceptRanges] = httpResponse.Headers?.AcceptRanges?.ToString();
+            response.Headers[HttpResponseHeader.Server] = httpResponse.Headers?.Server?.ToString();
 
             // content headers
-            if (httpResponse.Content.Headers.ContentEncoding.Count > 0) response.ContentEncoding = Encoding.GetEncoding(httpResponse.Content.Headers.ContentEncoding.ToString());
-            response.ContentType = httpResponse.Content.Headers.ContentType.MediaType;
-            if (httpResponse.Content.Headers.LastModified != null) response.Headers[HttpResponseHeader.LastModified] = httpResponse.Content.Headers.LastModified.Value.ToString("R");
+            if (httpResponse.Content?.Headers?.ContentEncoding?.Count > 0) response.ContentEncoding = Encoding.GetEncoding(httpResponse.Content.Headers.ContentEncoding.ToString());
+            response.ContentType = httpResponse.Content?.Headers?.ContentType?.MediaType;
+            if (httpResponse.Content?.Headers?.LastModified != null) response.Headers[HttpResponseHeader.LastModified] = httpResponse.Content.Headers.LastModified.Value.ToString("R");
             response.ContentLength64 = memStream.Length;
 
             if (memStream.Length > 0) memStream.CopyTo(response.OutputStream);
