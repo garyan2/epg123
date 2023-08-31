@@ -94,17 +94,9 @@ namespace epg123.sdJson2mxf
                         StationImage stationLogo = null;
                         mxfService.UidOverride = $"!Service!EPG123_{station.StationId}";
 
-                        // determine station name for ATSC stations
-                        var atsc = false;
-                        var names = station.Name.Replace("-", "").Split(' ');
-                        if (!string.IsNullOrEmpty(station.Affiliate) && names.Length == 2 && names[0] == station.Callsign && $"({names[0]})" == $"{names[1]}")
-                        {
-                            atsc = true;
-                        }
-
                         // add callsign and station name
                         mxfService.CallSign = CheckCustomCallsign(station.StationId) ?? station.Callsign;
-                        mxfService.Name = CheckCustomServicename(station.StationId) ?? (atsc ? $"{station.Callsign} ({station.Affiliate})" : null) ?? station.Name;
+                        mxfService.Name = CheckCustomServicename(station.StationId) ?? (!string.IsNullOrEmpty(station.Affiliate) ? $"{station.Name} ({station.Affiliate})" : station.Name);
 
                         // add affiliate if available
                         if (!string.IsNullOrEmpty(station.Affiliate))

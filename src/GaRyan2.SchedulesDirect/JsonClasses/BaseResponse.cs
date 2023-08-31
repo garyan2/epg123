@@ -19,6 +19,7 @@ namespace GaRyan2.SchedulesDirectAPI
 
         [JsonProperty("datetime")]
         public DateTime Datetime { get; set; }
+        public bool ShouldSerializeDatetime() => Datetime.Ticks > 0;
 
         [JsonProperty("uuid")]
         public string Uuid { get; set; }

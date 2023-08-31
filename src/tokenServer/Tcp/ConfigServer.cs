@@ -76,11 +76,15 @@ namespace tokenServer
                 {
                     case "/epg123/epg123.cfg":
                         var fi1 = new FileInfo(Helper.Epg123CfgPath);
-                        using (var fs = new FileStream(fi1.FullName, FileMode.Open, FileAccess.Read, FileShare.Read))
+                        if (fi1.Exists)
                         {
-                            context.Response.ContentType = "text/xml";
-                            fs.CopyTo(context.Response.OutputStream);
+                            using (var fs = new FileStream(fi1.FullName, FileMode.Open, FileAccess.Read, FileShare.Read))
+                            {
+                                context.Response.ContentType = "text/xml";
+                                fs.CopyTo(context.Response.OutputStream);
+                            }
                         }
+                        else context.Response.StatusCode = (int)HttpStatusCode.NotFound;
                         break;
                     case "/epg123/token":
                         response = new TokenResponse

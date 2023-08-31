@@ -109,7 +109,6 @@ namespace epg123
 
             // load configuration file and set component states/values
             LoadConfigurationFile(false);
-            if (Config == null) Config = new epgConfig();
 
             // complete the title bar label with version number
             var info = string.Empty;
@@ -225,14 +224,18 @@ namespace epg123
                         Config.UseIpAddress = Settings.Default.CfgLocation.Substring("http://".Length).Split(':')[0];
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
-                    Logger.WriteError($"Failed to download configuration file from {Settings.Default.CfgLocation}.");
-                    if (!reload) LoadConfigurationFile(true);
-                    return;
+                    Logger.WriteError($"Failed to download configuration file from {Settings.Default.CfgLocation}. Exception: {ex.Message}");
+                    if (!reload)
+                    {
+                        LoadConfigurationFile(true);
+                        return;
+                    }
                 }
             }
-            else Config = (epgConfig)Helper.ReadXmlFile(Settings.Default.CfgLocation, typeof(epgConfig)) ?? new epgConfig();
+            else Config = (epgConfig)Helper.ReadXmlFile(Settings.Default.CfgLocation, typeof(epgConfig));
+            if (Config == null) Config = new epgConfig();
             _originalConfig = Config.Clone();
 
             // set control states and values
@@ -461,7 +464,7 @@ namespace epg123
         private bool Login(string username, string passwordHash)
         {
             btnLogin.Focus();
-            if (username == null || passwordHash == null) return false;
+            if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(passwordHash)) return false;
             if (username != Config.UserAccount?.LoginName || passwordHash != Config.UserAccount?.PasswordHash)
             {
                 Config.UserAccount = new SdUserAccount
@@ -896,6 +899,27 @@ namespace epg123
             // commit the updated config file if there are changes
             if (_newLogin || !Config.Equals(_originalConfig))
             {
+                // check if image size has changed
+                if (!Config.ArtworkSize.Equals(_originalConfig.ArtworkSize))
+                {
+                    if (Helper.InstallMethod == Helper.Installation.CLIENT)
+                    {
+                        try
+                        {
+                            using (var wc = new WebClient())
+                            {
+                                _ = wc.DownloadData($"{_BaseServerAddress}clearCache");
+                                Logger.WriteInformation("Cache successfully cleared on server.");
+                            }
+                        }
+                        catch { Logger.WriteError("Failed to clear json cache on server."); }
+                    }
+                    else if (Helper.DeleteFile(Helper.Epg123CacheJsonPath))
+                    {
+                        Logger.WriteInformation("Successfully deleted json cache file.");
+                    }
+                }
+
                 // save configuration file
                 Config.Version = Helper.Epg123Version;
                 if (Helper.InstallMethod != Helper.Installation.CLIENT) Helper.WriteXmlFile(Config, Helper.Epg123CfgPath);

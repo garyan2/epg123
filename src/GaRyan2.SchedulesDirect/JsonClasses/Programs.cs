@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 
 namespace GaRyan2.SchedulesDirectAPI
 {
@@ -9,7 +10,7 @@ namespace GaRyan2.SchedulesDirectAPI
         [JsonProperty("programID")]
         public string ProgramId { get; set; }
 
-        [JsonProperty("resourceID")]
+        [JsonProperty("resourceID"), JsonIgnore]
         public string ResourceId { get; set; }
 
         [JsonProperty("titles")]
@@ -30,8 +31,10 @@ namespace GaRyan2.SchedulesDirectAPI
 
         [JsonProperty("originalAirDate")]
         public DateTime OriginalAirDate { get; set; }
+        public bool ShouldSerializeOriginalAirDate() => OriginalAirDate.Ticks > 0;
 
         [JsonProperty("duration")]
+        [DefaultValue(0)]
         public int Duration { get; set; }
 
         [JsonProperty("movie")]
@@ -119,6 +122,7 @@ namespace GaRyan2.SchedulesDirectAPI
 
         [JsonProperty("gameDate")]
         public DateTime GameDate { get; set; }
+        public bool ShouldSerializeGameDate() => GameDate.Ticks > 0;
     }
 
     public class ProgramEventDetailsTeam

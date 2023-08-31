@@ -270,7 +270,8 @@ namespace epg123.sdJson2mxf
             }
             else
             {
-                image = artwork.SingleOrDefault(arg => arg.Aspect.ToLower().Equals(config.SeriesPosterAspect));
+                var aspect = config.SeriesPosterArt ? "2x3" : config.SeriesWsArt ? "16x9" : config.SeriesPosterAspect;
+                image = artwork.SingleOrDefault(arg => arg.Aspect.ToLower().Equals(aspect));
             }
 
             if (image == null && type == ImageType.Series)

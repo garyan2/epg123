@@ -147,21 +147,29 @@ namespace tokenServer
                     return;
                 case "/trace.log":
                     var fi1 = new FileInfo(Helper.Epg123TraceLogPath);
-                    using (var fs = new FileStream(fi1.FullName, FileMode.Open, FileAccess.Read, FileShare.Read))
+                    if (fi1.Exists)
                     {
-                        context.Response.ContentType = "text/plain";
-                        context.Response.Headers.Add("Content-Disposition", $"inline; filename=\"{fi1.Name}\"");
-                        fs.CopyTo(context.Response.OutputStream);
+                        using (var fs = new FileStream(fi1.FullName, FileMode.Open, FileAccess.Read, FileShare.Read))
+                        {
+                            context.Response.ContentType = "text/plain";
+                            context.Response.Headers.Add("Content-Disposition", $"inline; filename=\"{fi1.Name}\"");
+                            fs.CopyTo(context.Response.OutputStream);
+                        }
                     }
+                    else context.Response.StatusCode = (int)HttpStatusCode.NotFound;
                     return;
                 case "/server.log":
                     var fi2 = new FileInfo(Helper.ServerLogPath);
-                    using (var fs = new FileStream(fi2.FullName, FileMode.Open, FileAccess.Read, FileShare.Read))
+                    if (fi2.Exists)
                     {
-                        context.Response.ContentType = "text/plain";
-                        context.Response.Headers.Add("Content-Disposition", $"inline; filename=\"{fi2.Name}\"");
-                        fs.CopyTo(context.Response.OutputStream);
+                        using (var fs = new FileStream(fi2.FullName, FileMode.Open, FileAccess.Read, FileShare.Read))
+                        {
+                            context.Response.ContentType = "text/plain";
+                            context.Response.Headers.Add("Content-Disposition", $"inline; filename=\"{fi2.Name}\"");
+                            fs.CopyTo(context.Response.OutputStream);
+                        }
                     }
+                    else context.Response.StatusCode= (int)HttpStatusCode.NotFound;
                     return;
             }
 

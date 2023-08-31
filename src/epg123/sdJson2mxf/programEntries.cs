@@ -409,17 +409,6 @@ namespace epg123.sdJson2mxf
             {
                 // create a seriesInfo entry if needed
                 mxfSeriesInfo = mxf.FindOrCreateSeriesInfo(mxfProgram.ProgramId.Substring(2, 8), mxfProgram.ProgramId);
-                if (!mxfSeriesInfo.extras.ContainsKey("tvdb") && sdProgram.Metadata != null)
-                {
-                    foreach (var providers in sdProgram.Metadata)
-                    {
-                        if (providers.TryGetValue("TheTVDB", out var provider))
-                        {
-                            mxfSeriesInfo.extras.Add("tvdb", provider.SeriesId.ToString());
-                        }
-                    }
-                }
-
                 if (mxfProgram.ProgramId.StartsWith("SH"))
                 {
                     // go ahead and create/update the cache entry as needed
@@ -453,7 +442,7 @@ namespace epg123.sdJson2mxf
                         {
                             Code = 0,
                             Description1000 = mxfProgram.IsGeneric ? mxfProgram.Description : null,
-                            Description100 = mxfProgram.IsGeneric ?  mxfProgram.ShortDescription : null,
+                            Description100 = mxfProgram.IsGeneric ? mxfProgram.ShortDescription : null,
                             StartAirdate = mxfProgram.OriginalAirdate ?? string.Empty
                         };
 
