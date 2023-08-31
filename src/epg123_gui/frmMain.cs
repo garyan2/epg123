@@ -908,7 +908,7 @@ namespace epg123
                         {
                             using (var wc = new WebClient())
                             {
-                                _ = wc.DownloadData($"{_BaseServerAddress}clearCache");
+                                _ = wc.DownloadData($"{_BaseServerAddress}epg123/clearCache");
                                 Logger.WriteInformation("Cache successfully cleared on server.");
                             }
                         }
@@ -989,7 +989,7 @@ namespace epg123
                 {
                     using (var wc = new WebClient())
                     {
-                        _ = wc.DownloadData($"{_BaseServerAddress}clearCache");
+                        _ = wc.DownloadData($"{_BaseServerAddress}epg123/clearCache");
                         Logger.WriteInformation("Cache successfully cleared on server.");
                         success = true;
                     }
