@@ -294,14 +294,15 @@ namespace epg123.sdJson2mxf
             // transfer show types to mxf program
             //prg.IsLimitedSeries = null;
             prg.IsMiniseries = Helper.StringContains(sd.ShowType, "Miniseries");
-            prg.IsMovie = Helper.StringContains(sd.EntityType, "Movie");
+            prg.IsMovie = sd.ProgramId.StartsWith("MV") || Helper.StringContains(sd.EntityType, "Movie");
             prg.IsPaidProgramming = Helper.StringContains(sd.ShowType, "Paid Programming");
             //prg.IsProgramEpisodic = null;
             //prg.IsSerial = null;
             prg.IsSeries = Helper.StringContains(sd.ShowType, "Series") && !Helper.TableContains(sd.Genres, "Sports talk");
             prg.IsShortFilm = Helper.StringContains(sd.ShowType, "Short Film");
             prg.IsSpecial = Helper.StringContains(sd.ShowType, "Special");
-            prg.IsSports = Helper.StringContains(sd.ShowType, "Sports event") || 
+            prg.IsSports = sd.ProgramId.StartsWith("SP") ||
+                           Helper.StringContains(sd.ShowType, "Sports event") || 
                            Helper.StringContains(sd.ShowType, "Sports non-event") || 
                            Helper.StringContains(sd.ShowType, "Team event") ||
                            Helper.TableContains(sd.Genres, "Sports talk");

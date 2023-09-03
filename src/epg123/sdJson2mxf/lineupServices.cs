@@ -96,7 +96,14 @@ namespace epg123.sdJson2mxf
 
                         // add callsign and station name
                         mxfService.CallSign = CheckCustomCallsign(station.StationId) ?? station.Callsign;
-                        mxfService.Name = CheckCustomServicename(station.StationId) ?? (!string.IsNullOrEmpty(station.Affiliate) ? $"{station.Name} ({station.Affiliate})" : station.Name);
+                        if (string.IsNullOrEmpty(mxfService.Name = CheckCustomServicename(station.StationId)))
+                        {
+                            var names = Regex.Matches(station.Name.Replace("-", ""), station.Callsign);
+                            if (names.Count > 1)
+                            {
+                                mxfService.Name = (!string.IsNullOrEmpty(station.Affiliate) ? $"{station.Callsign} ({station.Affiliate})" : station.Name);
+                            }
+                        }
 
                         // add affiliate if available
                         if (!string.IsNullOrEmpty(station.Affiliate))
@@ -311,7 +318,7 @@ namespace epg123.sdJson2mxf
             }
             catch (Exception ex)
             {
-                Logger.WriteVerbose($"An exception occurred during DownloadSDLogo(). Message: {ex.Message}");
+                Logger.WriteVerbose($"An exception occurred during DownloadSDLogo(). Message: {ex?.InnerException.Message ?? ex.Message}");
             }
             return false;
         }

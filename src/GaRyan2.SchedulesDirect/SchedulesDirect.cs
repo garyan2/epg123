@@ -2,6 +2,7 @@
 using GaRyan2.Utilities;
 using System;
 using System.Collections.Generic;
+using System.Web;
 using static GaRyan2.BaseAPI;
 
 namespace GaRyan2
@@ -67,7 +68,7 @@ namespace GaRyan2
                     else if (ret1 == null) return false;
                 }
 
-                var ret = api.GetApiResponse<TokenResponse>(Method.GET, $"{baseApi}newtoken?username={username}&password={passwordHash}");
+                var ret = api.GetApiResponse<TokenResponse>(Method.GET, $"{baseApi}newtoken?username={HttpUtility.UrlEncode(username)}&password={passwordHash}");
                 if (ret != null && ret.Code == 0)
                 {
                     api.SetToken(ret.Token);

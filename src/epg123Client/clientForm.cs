@@ -2117,12 +2117,6 @@ namespace epg123Client
             storageForm.ShowDialog();
         }
         #endregion
-
-        private void btnConflicts_Click(object sender, EventArgs e)
-        {
-            //var conflictForm = new
-            //conflictForm.ShowDialog();
-        }
     }
 
     public static class ControlExtensions

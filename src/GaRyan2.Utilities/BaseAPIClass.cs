@@ -87,9 +87,9 @@ namespace GaRyan2
                         return PutXmlClass<T>(HttpMethod.Put, uri, classObject).Result;
                 }
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                Logger.WriteVerbose($"HTTP request exception thrown. Message: {e.Message}");
+                Logger.WriteVerbose($"HTTP request exception thrown. Message: {ex.InnerException?.Message ?? ex.Message}");
             }
             return default;
         }
@@ -105,8 +105,8 @@ namespace GaRyan2
             using (var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false))
             {
                 return !response.IsSuccessStatusCode
-                    ? HandleHttpResponseError<T>(response, await response.Content.ReadAsStringAsync())
-                    : JsonConvert.DeserializeObject<T>(await response.Content.ReadAsStringAsync(), JsonOptions);
+                    ? HandleHttpResponseError<T>(response, await response.Content?.ReadAsStringAsync())
+                    : JsonConvert.DeserializeObject<T>(await response.Content?.ReadAsStringAsync(), JsonOptions);
             }
         }
 
@@ -125,8 +125,8 @@ namespace GaRyan2
             using (var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false))
             {
                 return !response.IsSuccessStatusCode
-                    ? HandleHttpResponseError<T>(response, await response.Content.ReadAsStringAsync())
-                    : JsonConvert.DeserializeObject<T>(await response.Content.ReadAsStringAsync(), JsonOptions);
+                    ? HandleHttpResponseError<T>(response, await response.Content?.ReadAsStringAsync())
+                    : JsonConvert.DeserializeObject<T>(await response.Content?.ReadAsStringAsync(), JsonOptions);
             }
         }
 

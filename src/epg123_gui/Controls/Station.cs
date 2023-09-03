@@ -1,6 +1,7 @@
 ﻿using GaRyan2.SchedulesDirectAPI;
 using System;
 using System.Drawing;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
 namespace epg123
@@ -28,11 +29,19 @@ namespace epg123
             };
         }
 
+        private bool IsAtsc
+        {
+            get
+            {
+                var names = Regex.Matches(Station.Name.Replace("-", ""), Station.Callsign);
+                return names.Count > 1;
+            }
+        }
         public LineupStation Station { get; private set; }
         public string StationId => Station.StationId;
         public string CallSign => Station.Callsign;
         public string LanguageCode => Station.BroadcastLanguage[0]?.ToLower().Substring(0, 2) ?? "zz";
-        public string Name => (!string.IsNullOrEmpty(Station.Affiliate) ? $"{Station.Name} ({Station.Affiliate})" : Station.Name);
+        public string Name => (IsAtsc && !string.IsNullOrEmpty(Station.Affiliate) ? $"{Station.Callsign} ({Station.Affiliate})" : Station.Name);
         public bool IsNew { get; internal set; }
 
         // static station options

@@ -132,7 +132,7 @@ namespace tokenServer
                             response = new TokenResponse
                             {
                                 Code = 9009,
-                                Message = $"Failed to get new token. Review the {location} server service.log file for SD response details.",
+                                Message = $"Failed to get new token. Review the {location} server.log file for SD response details.",
                                 ServerId = $"{Dns.GetHostName()}",
                                 Datetime = DateTime.UtcNow,
                                 Token = "CAFEDEADBEEFCAFEDEADBEEFCAFEDEADBEEFCAFE",

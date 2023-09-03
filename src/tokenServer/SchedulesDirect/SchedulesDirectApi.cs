@@ -16,7 +16,7 @@ namespace GaRyan2.SchedulesDirectAPI
 
         public override T HandleHttpResponseError<T>(HttpResponseMessage response, string content)
         {
-            if (string.IsNullOrEmpty(content) || !response.Content.Headers.ContentType.MediaType.Contains("json")) Logger.WriteVerbose($"HTTP request failed with status code \"{(int)response.StatusCode} {response.ReasonPhrase}\"");
+            if (string.IsNullOrEmpty(content) || !(response.Content?.Headers?.ContentType?.MediaType?.Contains("json") ?? false)) Logger.WriteVerbose($"HTTP request failed with status code \"{(int)response.StatusCode} {response.ReasonPhrase}\"");
             else
             {
                 var err = JsonConvert.DeserializeObject<BaseResponse>(content);
@@ -71,9 +71,9 @@ namespace GaRyan2.SchedulesDirectAPI
                 }
                 return response;
             }
-            catch (HttpRequestException e)
+            catch (HttpRequestException ex)
             {
-                Logger.WriteError($"{uri} GetSdImage() Exception: {e.Message}");
+                Logger.WriteError($"{uri} GetSdImage() Exception: {ex?.InnerException.Message ?? ex.Message}");
             }
             return null;
         }

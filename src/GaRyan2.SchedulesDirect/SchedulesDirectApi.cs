@@ -22,7 +22,7 @@ namespace GaRyan2.SchedulesDirectAPI
             })
             using (var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false))
             {
-                if (!response.IsSuccessStatusCode) return HandleHttpResponseError<T>(response, await response.Content.ReadAsStringAsync());
+                if (!response.IsSuccessStatusCode) return HandleHttpResponseError<T>(response, await response.Content?.ReadAsStringAsync());
                 if (typeof(T) != typeof(List<LineupPreviewChannel>) &&
                     typeof(T) != typeof(StationChannelMap) &&
                     typeof(T) != typeof(Dictionary<string, Dictionary<string, ScheduleMd5Response>>))
@@ -50,7 +50,7 @@ namespace GaRyan2.SchedulesDirectAPI
 
         public override T HandleHttpResponseError<T>(HttpResponseMessage response, string content)
         {
-            if (string.IsNullOrEmpty(content) || !response.Content.Headers.ContentType.MediaType.Contains("json")) Logger.WriteVerbose($"HTTP request failed with status code \"{(int)response.StatusCode} {response.ReasonPhrase}\"");
+            if (string.IsNullOrEmpty(content) || !(response.Content?.Headers?.ContentType?.MediaType?.Contains("json") ?? false)) Logger.WriteVerbose($"HTTP request failed with status code \"{(int)response.StatusCode} {response.ReasonPhrase}\"");
             else
             {
                 var err = JsonConvert.DeserializeObject<BaseResponse>(content);
