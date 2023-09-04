@@ -239,11 +239,10 @@ namespace GaRyan2.Utilities
         public static string ReportExceptionMessages(Exception ex)
         {
             var ret = string.Empty;
-            var cnt = 0;
             var innerException = ex;
             do
             {
-                ret += $"\n Exception {cnt}: {ex.Message}";
+                ret += $" {innerException.Message} ";
                 innerException = innerException.InnerException;
             } while (innerException != null);
             return ret;

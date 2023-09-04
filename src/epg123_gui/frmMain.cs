@@ -172,6 +172,9 @@ namespace epg123
 
         private void LoadConfigurationFile(bool reload)
         {
+            // start service if needed
+            if (Helper.InstallMethod <= Helper.Installation.SERVER) UdpFunctions.StartService();
+
             // determine path to cfg file
             if (reload) Settings.Default.CfgLocation = null;
             if (string.IsNullOrEmpty(Settings.Default.CfgLocation) ||
@@ -183,7 +186,6 @@ namespace epg123
                 {
                     case Helper.Installation.FULL:
                     case Helper.Installation.SERVER:
-                        UdpFunctions.StartService();
                         Settings.Default.CfgLocation = $"http://localhost:{Helper.TcpUdpPort}/epg123/epg123.cfg";
                         break;
                     case Helper.Installation.CLIENT:

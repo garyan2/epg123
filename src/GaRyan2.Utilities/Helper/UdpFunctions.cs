@@ -7,6 +7,7 @@ using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.ServiceProcess;
 using System.Text;
+using System.Threading;
 
 namespace GaRyan2.Utilities
 {
@@ -131,7 +132,11 @@ namespace GaRyan2.Utilities
 
         public static void StartService()
         {
-            if (!ServiceRunning()) StartStopService("start");
+            if (!ServiceRunning())
+            {
+                StartStopService("start");
+                Thread.Sleep(100);
+            }
         }
 
         private static void StartStopService(string arg)
