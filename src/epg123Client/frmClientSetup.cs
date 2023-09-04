@@ -190,7 +190,7 @@ namespace epg123Client
                         }
                         catch (Exception ex)
                         {
-                            Logger.WriteError($"{ex.Message}");
+                            Logger.WriteError($"{Helper.ReportExceptionMessages(ex)}");
                         }
                     }
 
@@ -203,7 +203,7 @@ namespace epg123Client
                         }
                         catch (Exception ex)
                         {
-                            Logger.WriteError($"{ex.Message}");
+                            Logger.WriteError($"{Helper.ReportExceptionMessages(ex)}");
                         }
                     }
                 }
@@ -650,12 +650,12 @@ namespace epg123Client
                 }
                 catch (IOException ex)
                 {
-                    MessageBox.Show(ex.Message, "IO Exception", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(Helper.ReportExceptionMessages(ex), "IO Exception", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     success = false;
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(ex.Message, "Exception", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(Helper.ReportExceptionMessages(ex), "Exception", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     success = false;
                 }
                 UpdateStatusText(string.Empty);

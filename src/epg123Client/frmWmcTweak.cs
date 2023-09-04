@@ -1149,7 +1149,7 @@ namespace epg123Client
                     }
                     catch (Exception ex)
                     {
-                        var msg = $"{ex.Message}\n";
+                        var msg = $"{Helper.ReportExceptionMessages(ex)}\n";
                         msg += "\nThe following processes are preventing the shell file from being updated:";
                         foreach (var process in FileUtil.WhoIsLocking(_shellEhomePath))
                         {
@@ -1172,7 +1172,7 @@ namespace epg123Client
             }
             catch (Exception ex)
             {
-                Logger.WriteError($"{ex.Message}");
+                Logger.WriteError($"{Helper.ReportExceptionMessages(ex)}");
             }
         }
 

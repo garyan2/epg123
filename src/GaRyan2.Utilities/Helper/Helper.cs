@@ -48,81 +48,6 @@ namespace GaRyan2.Utilities
 
         public const int TcpUdpPort = 9009;
 
-
-        //public static bool CreateAndSetFolderAcl(string folder)
-        //{
-        //    try
-        //    {
-        //        // establish security identifier for everyone and desired rights
-        //        var everyone = new SecurityIdentifier(WellKnownSidType.WorldSid, null);
-        //        const FileSystemRights rights = FileSystemRights.FullControl;
-
-        //        // make sure directory exists
-        //        var info = new DirectoryInfo(folder);
-        //        var newInstall = !Directory.Exists(folder);
-        //        if (newInstall)
-        //        {
-        //            info = Directory.CreateDirectory(folder);
-        //        }
-
-        //        // check to make sure everyone does not already have access
-        //        var security = info.GetAccessControl(AccessControlSections.Access);
-        //        var authorizationRules = security.GetAccessRules(true, true, typeof(NTAccount));
-        //        if (authorizationRules.Cast<FileSystemAccessRule>().Any(rule =>
-        //            rule.IdentityReference.Value == everyone.Translate(typeof(NTAccount)).ToString() &&
-        //            rule.AccessControlType == AccessControlType.Allow &&
-        //            rule.FileSystemRights == rights))
-        //        {
-        //            return true;
-        //        }
-
-        //        if (!newInstall && (DialogResult.OK != MessageBox.Show($"EPG123 is going to add the user 'Everyone' with Full Control rights to the \"{folder}\" folder. This may take a while depending on how many files are in the folder and subfolders.",
-        //            "Edit Permissions", MessageBoxButtons.OK)))
-        //        {
-        //            return false;
-        //        }
-
-        //        // *** Add Access Rule to the actual directory itself
-        //        var accessRule = new FileSystemAccessRule(everyone,
-        //            rights,
-        //            InheritanceFlags.None,
-        //            PropagationFlags.NoPropagateInherit,
-        //            AccessControlType.Allow);
-
-        //        security.ModifyAccessRule(AccessControlModification.Set, accessRule, out var result);
-        //        if (!result)
-        //            return false;
-
-        //        // *** Always allow objects to inherit on a directory
-        //        const InheritanceFlags iFlags = InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit;
-
-        //        // *** Add Access rule for the inheritance
-        //        accessRule = new FileSystemAccessRule(everyone,
-        //            rights,
-        //            iFlags,
-        //            PropagationFlags.InheritOnly,
-        //            AccessControlType.Allow);
-        //        security.ModifyAccessRule(AccessControlModification.Add, accessRule, out result);
-
-        //        if (!result)
-        //            return false;
-
-        //        info.SetAccessControl(security);
-        //    }
-        //    catch
-        //    {
-        //        if (!UserHasElevatedRights)
-        //        {
-        //            MessageBox.Show($"EPG123 did not have sufficient privileges to edit the folder \"{folder}\" permissions. Please run this GUI with elevated rights (as Administrator) to make the necessary changes.",
-        //                "Folder Permissions Error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-        //        }
-
-        //        return false;
-        //    }
-
-        //    return true;
-        //}
-
         public static Mutex GetProgramMutex(string uid, bool take)
         {
             var mutex = new Mutex(false, uid);
@@ -309,6 +234,19 @@ namespace GaRyan2.Utilities
                 }
             }
             return "0 bytes";
+        }
+
+        public static string ReportExceptionMessages(Exception ex)
+        {
+            var ret = string.Empty;
+            var cnt = 0;
+            var innerException = ex;
+            do
+            {
+                ret += $"\n Exception {cnt}: {ex.Message}";
+                innerException = innerException.InnerException;
+            } while (innerException != null);
+            return ret;
         }
     }
 }

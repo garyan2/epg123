@@ -161,7 +161,7 @@ namespace epg123Client
                 }
                 catch (Exception ex)
                 {
-                    Logger.WriteInformation($"{ex.Message}");
+                    Logger.WriteInformation($"{Helper.ReportExceptionMessages(ex)}");
                 }
             }
             ChannelAdded = true;

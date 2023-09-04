@@ -187,7 +187,7 @@ namespace GaRyan2.Utilities
                     }
                     catch (Exception ex)
                     {
-                        Logger.WriteError($"Failed to import the daily task into Task Scheduler. Exit: {ex.HResult:X8}");
+                        Logger.WriteError($"Failed to import the daily task into Task Scheduler. Exit: {ex.HResult:X8}{Helper.ReportExceptionMessages(ex)}");
                     }
                 }
                 return false;
@@ -233,7 +233,7 @@ namespace GaRyan2.Utilities
                 }
                 catch (Exception ex)
                 {
-                    Logger.WriteError($"Failed to delete the daily task from Task Scheduler. Exit: {ex.HResult:X8}");
+                    Logger.WriteError($"Failed to delete the daily task from Task Scheduler. Exit: {ex.HResult:X8}{Helper.ReportExceptionMessages(ex)}");
                 }
                 return false;
             }

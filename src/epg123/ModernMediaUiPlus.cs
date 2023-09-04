@@ -29,7 +29,7 @@ namespace epg123
                 }
                 catch (Exception ex)
                 {
-                    Logger.WriteError($"Failed to save the ModernMedia UI+ JSON support file to \"{filepath}\". Exception: {ex.Message}");
+                    Logger.WriteError($"Failed to save the ModernMedia UI+ JSON support file to \"{filepath}\". Exception:{Helper.ReportExceptionMessages(ex)}");
                 }
             }
         }

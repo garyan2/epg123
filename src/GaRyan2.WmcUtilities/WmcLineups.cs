@@ -55,7 +55,7 @@ namespace GaRyan2.WmcUtilities
             }
             catch (Exception ex)
             {
-                Logger.WriteInformation($"Exception thrown during ActivateEpg123LineupsInStore(). Message: {ex.Message}");
+                Logger.WriteInformation($"Exception thrown during ActivateEpg123LineupsInStore(). Message:{Helper.ReportExceptionMessages(ex)}");
             }
             return (lineups > 0);
         }
@@ -86,7 +86,7 @@ namespace GaRyan2.WmcUtilities
             }
             catch (Exception ex)
             {
-                Logger.WriteError($"Exception thrown during UnsubscribeChannelsInLineup(). Message: {ex.Message}");
+                Logger.WriteError($"Exception thrown during UnsubscribeChannelsInLineup(). Message:{Helper.ReportExceptionMessages(ex)}");
             }
         }
 
@@ -119,7 +119,7 @@ namespace GaRyan2.WmcUtilities
             }
             catch (Exception ex)
             {
-                Logger.WriteError($"Exception thrown during DeleteLineup(). Message: {ex.Message}");
+                Logger.WriteError($"Exception thrown during DeleteLineup(). Message:{Helper.ReportExceptionMessages(ex)}");
             }
         }
 
@@ -148,7 +148,7 @@ namespace GaRyan2.WmcUtilities
             }
             catch (Exception ex)
             {
-                Logger.WriteInformation($"Exception thrown during GetDeviceLineupsAndIds(). Message: {ex.Message}");
+                Logger.WriteInformation($"Exception thrown during GetDeviceLineupsAndIds(). Message:{Helper.ReportExceptionMessages(ex)}");
             }
             return ret;
         }
@@ -185,7 +185,7 @@ namespace GaRyan2.WmcUtilities
             }
             catch (Exception ex)
             {
-                Logger.WriteInformation($"Exception thrown during GetWmisLineups(). Message: {ex.Message}");
+                Logger.WriteInformation($"Exception thrown during GetWmisLineups(). Message:{Helper.ReportExceptionMessages(ex)}");
             }
             return ret;
         }

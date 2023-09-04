@@ -62,7 +62,7 @@ namespace GaRyan2.WmcUtilities
             }
             catch (Exception ex)
             {
-                Logger.WriteInformation($"Exception thrown while trying to dispose of ObjectStore. Message: {ex.Message}");
+                Logger.WriteInformation($"Exception thrown while trying to dispose of ObjectStore. Message:{Helper.ReportExceptionMessages(ex)}");
             }
             _objectStore = null;
             GC.WaitForPendingFinalizers();

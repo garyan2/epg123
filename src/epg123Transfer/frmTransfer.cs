@@ -585,7 +585,7 @@ namespace epg123Transfer
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Failed to import the old recording requests.\n\n{ex.Message}", "Failed to Import", MessageBoxButtons.OK);
+                MessageBox.Show($"Failed to import the old recording requests.\n\n{Helper.ReportExceptionMessages(ex)}", "Failed to Import", MessageBoxButtons.OK);
             }
 
             BuildListViews();

@@ -318,7 +318,7 @@ namespace epg123.sdJson2mxf
             }
             catch (Exception ex)
             {
-                Logger.WriteVerbose($"An exception occurred during DownloadSDLogo(). Message: {ex?.InnerException.Message ?? ex.Message}");
+                Logger.WriteVerbose($"An exception occurred during DownloadSDLogo(). Message:{Helper.ReportExceptionMessages(ex)}");
             }
             return false;
         }

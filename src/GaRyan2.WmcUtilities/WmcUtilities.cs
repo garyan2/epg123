@@ -51,7 +51,7 @@ namespace GaRyan2.WmcUtilities
             }
             catch (Exception ex)
             {
-                Logger.WriteError($"Exception thrown during PerformWmcConfigurationsBackup(). Message: {ex.Message}");
+                Logger.WriteError($"Exception thrown during PerformWmcConfigurationsBackup(). Message:{Helper.ReportExceptionMessages(ex)}");
             }
             return ret;
         }
@@ -91,7 +91,7 @@ namespace GaRyan2.WmcUtilities
             }
             catch (Exception ex)
             {
-                Logger.WriteInformation($"Exception thrown during PerformGarbageCleanup(). Message: {ex}");
+                Logger.WriteInformation($"Exception thrown during PerformGarbageCleanup(). Message:{Helper.ReportExceptionMessages(ex)}");
             }
 
             Logger.WriteMessage("Entering PerformGarbageCleanup().");
@@ -137,7 +137,7 @@ namespace GaRyan2.WmcUtilities
             }
             catch (Exception ex)
             {
-                Logger.WriteError($"Exception thrown during PerformGarbageCleanup(). Message: {ex.Message}");
+                Logger.WriteError($"Exception thrown during PerformGarbageCleanup(). Message:{Helper.ReportExceptionMessages(ex)}");
             }
 
             if (ret)
@@ -158,7 +158,7 @@ namespace GaRyan2.WmcUtilities
                 }
                 catch (Exception ex)
                 {
-                    Logger.WriteError($"Exception thrown during PerformGarbageCleanup(). Message: {ex.Message}");
+                    Logger.WriteError($"Exception thrown during PerformGarbageCleanup(). Message:{Helper.ReportExceptionMessages(ex)}");
                 }
             }
 
@@ -204,9 +204,9 @@ namespace GaRyan2.WmcUtilities
                             mxfFile = filepath;
                         }
                     }
-                    catch (Exception e)
+                    catch (Exception ex)
                     {
-                        Logger.WriteError($"Failed to download MXF file from \"{mxfFile}\". Exception: {e.Message}");
+                        Logger.WriteError($"Failed to download MXF file from \"{mxfFile}\". Exception:{Helper.ReportExceptionMessages(ex)}");
                         return false;
                     }
                 }
@@ -250,7 +250,7 @@ namespace GaRyan2.WmcUtilities
             }
             catch (Exception ex)
             {
-                Logger.WriteError($"Exception thrown during ImportMxfFile(). Message: {ex.Message}");
+                Logger.WriteError($"Exception thrown during ImportMxfFile(). Message:{Helper.ReportExceptionMessages(ex)}");
             }
 
             Logger.WriteMessage($"Exiting ImportMxfFile(). {(ret ? "SUCCESS" : "FAILURE")}.");
@@ -310,7 +310,7 @@ namespace GaRyan2.WmcUtilities
             }
             catch (Exception ex)
             {
-                Logger.WriteError($"Exception thrown during SetWmcTunerLimits(). Message: {ex.Message}");
+                Logger.WriteError($"Exception thrown during SetWmcTunerLimits(). Message:{Helper.ReportExceptionMessages(ex)}");
             }
             return ret;
         }
@@ -397,7 +397,7 @@ namespace GaRyan2.WmcUtilities
             }
             catch (Exception ex)
             {
-                Logger.WriteInformation($"Exception thrown during RunWmcIndexTask() using schtasks.exe. Message: {ex.Message}");
+                Logger.WriteInformation($"Exception thrown during RunWmcIndexTask() using schtasks.exe. Message:{Helper.ReportExceptionMessages(ex)}");
             }
 
             try
@@ -442,7 +442,7 @@ namespace GaRyan2.WmcUtilities
             }
             catch (Exception ex)
             {
-                Logger.WriteError($"Exception thrown during RunWmcIndexTask() using {program}. Message: {ex.Message}");
+                Logger.WriteError($"Exception thrown during RunWmcIndexTask() using {program}. Message:{Helper.ReportExceptionMessages(ex)}");
             }
 
             Finish:

@@ -478,7 +478,7 @@ namespace epg123Client
                         }
                         catch (Exception ex)
                         {
-                            Logger.WriteError($"Failed to complete the automatic mapping of lineup stations to tuner channels. Exception: {ex.Message}");
+                            Logger.WriteError($"Failed to complete the automatic mapping of lineup stations to tuner channels. Exception:{Helper.ReportExceptionMessages(ex)}");
                         }
                     }
 

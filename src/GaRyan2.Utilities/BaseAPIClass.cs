@@ -89,7 +89,7 @@ namespace GaRyan2
             }
             catch (Exception ex)
             {
-                Logger.WriteVerbose($"HTTP request exception thrown. Message: {ex.InnerException?.Message ?? ex.Message}");
+                Logger.WriteVerbose($"HTTP request exception thrown. Message:{Helper.ReportExceptionMessages(ex)}");
             }
             return default;
         }

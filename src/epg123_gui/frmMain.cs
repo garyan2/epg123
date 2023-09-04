@@ -226,7 +226,7 @@ namespace epg123
                 }
                 catch (Exception ex)
                 {
-                    Logger.WriteError($"Failed to download configuration file from {Settings.Default.CfgLocation}. Exception: {ex?.InnerException.Message ?? ex.Message}");
+                    Logger.WriteError($"Failed to download configuration file from {Settings.Default.CfgLocation}. Exception:{Helper.ReportExceptionMessages(ex)}");
                     if (!reload)
                     {
                         LoadConfigurationFile(true);

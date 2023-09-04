@@ -111,7 +111,7 @@ namespace tokenServer
                 }
 
                 try { ProcessRequest(context); }
-                catch (Exception ex) { Logger.WriteError($"Worker() Exception: {ex.Message}"); }
+                catch (Exception ex) { Logger.WriteError($"Worker() Exception:{Helper.ReportExceptionMessages(ex)}"); }
                 context.Response.OutputStream?.Close();
             }
         }
@@ -334,7 +334,7 @@ namespace tokenServer
             }
             catch (Exception ex)
             {
-                Logger.WriteError($"{fileInfo.FullName} HandleFileRequest() Exception: {ex.Message}");
+                Logger.WriteError($"{fileInfo.FullName} HandleFileRequest() Exception:{Helper.ReportExceptionMessages(ex)}");
             }
         }
 

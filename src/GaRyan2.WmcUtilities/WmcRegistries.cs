@@ -31,7 +31,7 @@ namespace GaRyan2.WmcUtilities
             }
             catch (Exception ex)
             {
-                Logger.WriteInformation($"Could not write/verify the registry settings to activate the guide in WMC. Exception: {ex.Message}");
+                Logger.WriteInformation($"Could not write/verify the registry settings to activate the guide in WMC. Exception:{Helper.ReportExceptionMessages(ex)}");
             }
             return ret;
         }
@@ -56,7 +56,7 @@ namespace GaRyan2.WmcUtilities
             }
             catch (Exception ex)
             {
-                Logger.WriteInformation($"Could not write/verify the registry settings to {(enable ? "en" : "dis")}able background scanning. Exception: {ex.Message}");
+                Logger.WriteInformation($"Could not write/verify the registry settings to {(enable ? "en" : "dis")}able background scanning. Exception:{Helper.ReportExceptionMessages(ex)}");
             }
             return ret;
         }
@@ -84,7 +84,7 @@ namespace GaRyan2.WmcUtilities
             }
             catch (Exception ex)
             {
-                Logger.WriteInformation($"Could not construct the store filename from the registry. Using <<null>> to open store. Exception: {ex.Message}");
+                Logger.WriteInformation($"Could not construct the store filename from the registry. Using <<null>> to open store. Exception:{Helper.ReportExceptionMessages(ex)}");
             }
             return ret;
         }
@@ -109,7 +109,7 @@ namespace GaRyan2.WmcUtilities
             }
             catch (Exception ex)
             {
-                Logger.WriteInformation($"Could not determine when next recording is to start. Exception: {ex.Message}");
+                Logger.WriteInformation($"Could not determine when next recording is to start. Exception:{Helper.ReportExceptionMessages(ex)}");
             }
 
             return ret;
@@ -146,7 +146,7 @@ namespace GaRyan2.WmcUtilities
             }
             catch (Exception ex)
             {
-                Logger.WriteInformation($"Could not verify when garbage cleanup was last run. Exception: {ex.Message}");
+                Logger.WriteInformation($"Could not verify when garbage cleanup was last run. Exception:{Helper.ReportExceptionMessages(ex)}");
             }
             return ret;
         }

@@ -157,9 +157,9 @@ namespace epg123Client
                                 WmcStore.WmcObjectStore.Add(addScheduleEntry);
                                 ++correctedCount;
                             }
-                            catch (Exception e)
+                            catch (Exception ex)
                             {
-                                Logger.WriteWarning($"Service {mxfService.CallSign}: Failed to add schedule entry from {mxfStartTime.ToLocalTime()} to {mxfEndTime.ToLocalTime()} for program [{mxfProgram.Uid.Substring(9)} - [{mxfProgram.Title}] - [{mxfProgram.EpisodeTitle}]].\nException: {e.Message}");
+                                Logger.WriteWarning($"Service {mxfService.CallSign}: Failed to add schedule entry from {mxfStartTime.ToLocalTime()} to {mxfEndTime.ToLocalTime()} for program [{mxfProgram.Uid.Substring(9)} - [{mxfProgram.Title}] - [{mxfProgram.EpisodeTitle}]].\nException:{Helper.ReportExceptionMessages(ex)}");
                                 break;
                             }
                         }
@@ -212,9 +212,9 @@ namespace epg123Client
                                     wmcScheduleEntry.EndTime = mxfEndTime;
                                 });
                             }
-                            catch (Exception e)
+                            catch (Exception ex)
                             {
-                                Logger.WriteWarning($"Service {mxfService.CallSign} at {mxfStartTime.ToLocalTime()}: Failed to change end time of [{wmcScheduleEntry.Program.GetUIdValue().Substring(9)} - [{wmcScheduleEntry.Program.Title}]-[{wmcScheduleEntry.Program.EpisodeTitle}]] from {wmcScheduleEntry.EndTime.ToLocalTime()} to {mxfEndTime.ToLocalTime()}\nException: {e.Message}");
+                                Logger.WriteWarning($"Service {mxfService.CallSign} at {mxfStartTime.ToLocalTime()}: Failed to change end time of [{wmcScheduleEntry.Program.GetUIdValue().Substring(9)} - [{wmcScheduleEntry.Program.Title}]-[{wmcScheduleEntry.Program.EpisodeTitle}]] from {wmcScheduleEntry.EndTime.ToLocalTime()} to {mxfEndTime.ToLocalTime()}\nException:{Helper.ReportExceptionMessages(ex)}");
                                 break;
                             }
                         }
@@ -233,9 +233,9 @@ namespace epg123Client
                             if (verbose) Logger.WriteInformation($"Service {mxfService.CallSign}: Removing schedule entry on {orphans.Value.StartTime.ToLocalTime()} for [{orphans.Value.Program.GetUIdValue().Replace("!Program!", "")} - [{orphans.Value.Program.Title}]-[{orphans.Value.Program.EpisodeTitle}]] due to being replaced/overlapped by another schedule entry.");
                             RemoveScheduleEntry(orphans.Value);
                         }
-                        catch (Exception e)
+                        catch (Exception ex)
                         {
-                            if (verbose) Logger.WriteInformation($"Service {mxfService.CallSign} at {orphans.Value.StartTime.ToLocalTime()}: Failed to remove [{orphans.Value.Program.GetUIdValue().Replace("!Program!", "")} - [{orphans.Value.Program.Title}]-[{orphans.Value.Program.EpisodeTitle}]] due to being overlapped by another schedule entry.\nException: {e.Message}");
+                            if (verbose) Logger.WriteInformation($"Service {mxfService.CallSign} at {orphans.Value.StartTime.ToLocalTime()}: Failed to remove [{orphans.Value.Program.GetUIdValue().Replace("!Program!", "")} - [{orphans.Value.Program.Title}]-[{orphans.Value.Program.EpisodeTitle}]] due to being overlapped by another schedule entry.\nException:{Helper.ReportExceptionMessages(ex)}");
                         }
                     }
                 }

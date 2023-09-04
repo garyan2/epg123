@@ -27,9 +27,9 @@ namespace stirrtv
                 api.Initialize();
                 Build();
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                Logger.WriteError($"Failed to create Stirr M3U/XMLTV files. Exception: {e.Message}");
+                Logger.WriteError($"Failed to create Stirr M3U/XMLTV files. Exception:{Helper.ReportExceptionMessages(ex)}");
             }
         }
 

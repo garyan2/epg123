@@ -30,7 +30,7 @@ namespace GaRyan2.Utilities
             }
             catch (Exception ex)
             {
-                Logger.WriteError($"Failed to write file \"{filepath}\". Exception: {ex.Message}");
+                Logger.WriteError($"Failed to write file \"{filepath}\". Exception:{ReportExceptionMessages(ex)}");
             }
             return false;
         }
@@ -53,7 +53,7 @@ namespace GaRyan2.Utilities
             }
             catch (Exception ex)
             {
-                Logger.WriteError($"Failed to read file \"{filepath}\". Exception: {ex.Message}");
+                Logger.WriteError($"Failed to read file \"{filepath}\". Exception:{ReportExceptionMessages(ex)}");
             }
             return null;
         }
@@ -72,7 +72,7 @@ namespace GaRyan2.Utilities
             }
             catch (Exception ex)
             {
-                Logger.WriteError($"Failed to write file \"{filepath}\". Exception: {ex.Message}");
+                Logger.WriteError($"Failed to write file \"{filepath}\". Exception:{ReportExceptionMessages(ex)}");
             }
             return false;
         }
@@ -96,7 +96,7 @@ namespace GaRyan2.Utilities
             }
             catch (Exception ex)
             {
-                Logger.WriteError($"Failed to read file \"{filepath}\". Exception: {ex.Message}");
+                Logger.WriteError($"Failed to read file \"{filepath}\". Exception:{ReportExceptionMessages(ex)}");
             }
             return null;
         }
@@ -111,7 +111,7 @@ namespace GaRyan2.Utilities
             }
             catch (Exception ex)
             {
-                Logger.WriteInformation($"Failed to delete file \"{filepath}\". Exception: {ex.Message}");
+                Logger.WriteInformation($"Failed to delete file \"{filepath}\". Exception:{ReportExceptionMessages(ex)}");
             }
             return false;
         }

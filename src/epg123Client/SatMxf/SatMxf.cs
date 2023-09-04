@@ -79,7 +79,7 @@ namespace epg123Client
             }
             catch (Exception ex)
             {
-                Logger.WriteError($"Exception thrown during UpdateDvbsTransponders(). Message: {ex.Message}");
+                Logger.WriteError($"Exception thrown during UpdateDvbsTransponders(). Message:{Helper.ReportExceptionMessages(ex)}");
             }
             return ret;
         }

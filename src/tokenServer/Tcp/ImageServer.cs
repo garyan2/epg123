@@ -116,7 +116,7 @@ namespace tokenServer
                 }
 
                 try { ProcessRequest(context); }
-                catch (Exception e) { Logger.WriteError($"Worker() Exception: {e.Message}"); }
+                catch (Exception ex) { Logger.WriteError($"Worker() Exception:{Helper.ReportExceptionMessages(ex)}"); }
                 context.Response.OutputStream?.Close();
             }
         }
@@ -261,9 +261,9 @@ namespace tokenServer
                     return;
                 }
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                Logger.WriteError($"{asset} ServiceImageRequest() Exception: {e}");
+                Logger.WriteError($"{asset} ServiceImageRequest() Exception:{Helper.ReportExceptionMessages(ex)}");
                 WebStats.IncrementHttpStat(999);
                 return;
             }
@@ -328,9 +328,9 @@ namespace tokenServer
                     fs.CopyTo(response.OutputStream);
                 }
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                Logger.WriteError($"{fileInfo.FullName} SendImage() Exception: {e.Message}");
+                Logger.WriteError($"{fileInfo.FullName} SendImage() Exception:{Helper.ReportExceptionMessages(ex)}");
             }
         }
 

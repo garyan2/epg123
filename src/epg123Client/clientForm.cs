@@ -2041,7 +2041,7 @@ namespace epg123Client
             }
             catch (Exception ex)
             {
-                Logger.WriteError($"{ex.Message}");
+                Logger.WriteError($"{Helper.ReportExceptionMessages(ex)}");
                 return false;
             }
             return true;
