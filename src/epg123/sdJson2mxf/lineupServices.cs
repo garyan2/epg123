@@ -103,6 +103,7 @@ namespace epg123.sdJson2mxf
                             {
                                 mxfService.Name = (!string.IsNullOrEmpty(station.Affiliate) ? $"{station.Callsign} ({station.Affiliate})" : station.Name);
                             }
+                            else mxfService.Name = station.Name;
                         }
 
                         // add affiliate if available
