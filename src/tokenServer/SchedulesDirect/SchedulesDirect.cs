@@ -41,6 +41,7 @@ namespace GaRyan2
             epgConfig config = Helper.ReadXmlFile(Helper.Epg123CfgPath, typeof(epgConfig)) ?? new epgConfig();
             if (api == null || api.BaseAddress != config.BaseApiUrl || api.BaseArtworkAddress != config.BaseArtworkUrl || api.UseDebug != config.UseDebug)
             {
+                Logger.WriteInformation($"BaseApi: {config.BaseApiUrl} , BaseArtwork: {config.BaseArtworkUrl} , Debug: {config.UseDebug}");
                 api = new API()
                 {
                     BaseAddress = ApiBaseAddress = config.BaseApiUrl,
