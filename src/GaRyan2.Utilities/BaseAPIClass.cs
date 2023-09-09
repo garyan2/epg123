@@ -50,7 +50,7 @@ namespace GaRyan2
         public virtual void Initialize()
         {
             ServicePointManager.DefaultConnectionLimit = 10;
-            ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12 | (SecurityProtocolType)3072;
+            //ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
 
             _httpClient = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressMethods })
             {
