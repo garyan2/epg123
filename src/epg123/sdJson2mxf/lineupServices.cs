@@ -99,7 +99,7 @@ namespace epg123.sdJson2mxf
                         if (string.IsNullOrEmpty(mxfService.Name = CheckCustomServicename(station.StationId)))
                         {
                             var names = Regex.Matches(station.Name.Replace("-", ""), station.Callsign);
-                            if (names.Count > 1)
+                            if (names.Count > 0)
                             {
                                 mxfService.Name = (!string.IsNullOrEmpty(station.Affiliate) ? $"{station.Callsign} ({station.Affiliate})" : station.Name);
                             }
@@ -185,6 +185,7 @@ namespace epg123.sdJson2mxf
                         string matchName = map.ProviderCallsign;
                         switch (clientLineup.Transport)
                         {
+                            case "Satellite":
                             case "DVB-S":
                                 var m = Regex.Match(lineupMap.Metadata.Lineup, @"\d+\.\d+");
                                 if (m.Success && map.FrequencyHz > 0 && map.NetworkId > 0 && map.TransportId > 0 && map.ServiceId > 0)
@@ -194,17 +195,17 @@ namespace epg123.sdJson2mxf
                                         map.FrequencyHz /= 1000;
                                     }
                                     matchName = $"DVBS:{m.Value.Replace(".", "")}:{map.FrequencyHz}:{map.NetworkId}:{map.TransportId}:{map.ServiceId}";
+                                    number = -1;
+                                    subnumber = 0;
                                 }
-                                number = -1;
-                                subnumber = 0;
                                 break;
+                            case "Antenna":
                             case "DVB-T":
                                 if (map.NetworkId > 0 && map.TransportId > 0 && map.ServiceId > 0)
                                 {
                                     matchName = $"DVBT:{map.NetworkId}:{map.TransportId}:{map.ServiceId}";
+                                    break;
                                 }
-                                break;
-                            case "Antenna":
                                 if (map.AtscMajor > 0 && map.AtscMinor > 0)
                                 {
                                     matchName = $"OC:{map.AtscMajor}:{map.AtscMinor}";

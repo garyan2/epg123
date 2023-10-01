@@ -280,7 +280,7 @@ namespace epg123
         [XmlAnyElement("BrandLogoImageComment")]
         public XmlComment BrandLogoImageComment
         {
-            get => new XmlDocument().CreateComment(" BrandLogoImage: Add status image to guide view in WMC. Options are \"none\", \"light\", and \"dark\".\n You will need to clear the cache or wait 30 days for current images to be updated. ");
+            get => new XmlDocument().CreateComment(" BrandLogoImage: Add status image to guide view in WMC. Options are \"none\", \"light\", and \"dark\". ");
             set { }
         }
         [XmlElement("BrandLogoImage")]

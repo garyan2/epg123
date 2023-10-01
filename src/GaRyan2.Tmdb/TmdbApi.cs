@@ -26,7 +26,7 @@ namespace GaRyan2.TmdbApi
         public MovieResults SearchMovieCatalog(string title, int year, string lang)
         {
             // verify tmdb is up and configurations have been downloaded
-            if (!IsAlive) return null;
+            if (!IsAlive || string.IsNullOrEmpty(title)) return null;
             if (Config == null)
             {
                 Config = GetTmdbConfigurations();

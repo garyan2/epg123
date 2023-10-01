@@ -121,6 +121,7 @@ namespace GaRyan2.Utilities
             if (table == null) return false;
             foreach (var str in table)
             {
+                if (string.IsNullOrEmpty(str)) continue;
                 if (!exactMatch && str.ToLower().Contains(text.ToLower())) return true;
                 if (str.ToLower().Equals(text.ToLower())) return true;
             }

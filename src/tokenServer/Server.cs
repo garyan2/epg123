@@ -25,21 +25,22 @@ namespace tokenServer
 
         protected override void OnStart(string[] args)
         {
+            Helper.DeleteFile(Helper.ServerLogPath);
+            Logger.WriteInformation("Starting EPG123 Server service ...");
+
+            Github.Initialize($"EPG123/{Helper.Epg123Version}", "epg123");
+            SchedulesDirect.Initialize();
+            StartConfigFileWatcher();
+            _udpServer.Start();
+            _configServer.Start();
+            _fileServer.Start();
+
             Task.Run(() =>
             {
-                Helper.DeleteFile(Helper.ServerLogPath);
-                Logger.WriteInformation("Starting EPG123 Server service ...");
                 try
                 {
-                    Github.Initialize($"EPG123/{Helper.Epg123Version}", "epg123");
-
-                    SchedulesDirect.Initialize();
-                    StartConfigFileWatcher();
-                    _udpServer.Start();
-                    _configServer.Start();
-                    _fileServer.Start();
-                    _imageServer.Start();
                     JsonImageCache.Initialize();
+                    _imageServer.Start();
 
                     Logger.WriteInformation("EPG123 Server service completed initializations.");
                     WebStats.StartTime = DateTime.Now;

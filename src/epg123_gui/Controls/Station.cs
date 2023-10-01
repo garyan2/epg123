@@ -34,7 +34,7 @@ namespace epg123
             get
             {
                 var names = Regex.Matches(Station.Name.Replace("-", ""), Station.Callsign);
-                return names.Count > 1;
+                return names.Count > 0;
             }
         }
         public LineupStation Station { get; private set; }

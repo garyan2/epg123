@@ -26,15 +26,6 @@ namespace epg123
             var countryResp = SdApi.GetAvailableCountries();
             if (countryResp != null)
             {
-                // add the only freeview listing
-                _countries.Add(new Country()
-                {
-                    FullName = "Great Britain Freeview",
-                    PostalCode = "/",
-                    PostalCodeExample = null,
-                    ShortName = "GBR"
-                });
-
                 // get all the region/countries
                 var regions = new List<string>(countryResp.Keys);
                 foreach (var country in regions.Where(region => !region.ToLower().Equals("zzz")).Select(region => countryResp[region]).SelectMany(regionCountries => regionCountries))

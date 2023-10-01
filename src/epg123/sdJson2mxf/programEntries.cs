@@ -267,6 +267,8 @@ namespace epg123.sdJson2mxf
 
         private static void SetProgramFlags(MxfProgram prg, Programme sd)
         {
+            var types = new[] { sd.EntityType, sd.ShowType };
+
             // transfer genres to mxf program
             prg.IsAction = Helper.TableContains(sd.Genres, "Action") || Helper.TableContains(sd.Genres, "Adventure");
             prg.IsAdultOnly = Helper.TableContains(sd.Genres, "Adults Only");
@@ -277,7 +279,7 @@ namespace epg123.sdJson2mxf
             prg.IsHorror = Helper.TableContains(sd.Genres, "Horror");
             prg.IsIndy = Helper.TableContains(sd.Genres, "Independent") || Helper.TableContains(sd.Genres, "Indy");
             prg.IsKids = Helper.TableContains(sd.Genres, "Children") || Helper.TableContains(sd.Genres, "Kids");
-            prg.IsMusic = Helper.TableContains(sd.Genres, "Music");
+            prg.IsMusic = Helper.TableContains(sd.Genres, "Music") || Helper.TableContains(types, "Music");
             prg.IsNews = Helper.TableContains(sd.Genres, "News");
             prg.IsReality = Helper.TableContains(sd.Genres, "Reality");
             prg.IsRomance = Helper.TableContains(sd.Genres, "Romance") || Helper.TableContains(sd.Genres, "Romantic");
@@ -293,29 +295,27 @@ namespace epg123.sdJson2mxf
 
             // transfer show types to mxf program
             //prg.IsLimitedSeries = null;
-            prg.IsMiniseries = Helper.StringContains(sd.ShowType, "Miniseries");
-            prg.IsMovie = sd.ProgramId.StartsWith("MV") || Helper.StringContains(sd.EntityType, "Movie");
-            prg.IsPaidProgramming = Helper.StringContains(sd.ShowType, "Paid Programming");
+            prg.IsMiniseries = Helper.TableContains(types, "Miniseries");
+            prg.IsMovie = sd.ProgramId.StartsWith("MV") || Helper.TableContains(types, "Movie");
+            prg.IsPaidProgramming = Helper.TableContains(types, "Paid Program");
             //prg.IsProgramEpisodic = null;
             //prg.IsSerial = null;
-            prg.IsSeries = Helper.StringContains(sd.ShowType, "Series") && !Helper.TableContains(sd.Genres, "Sports talk");
-            prg.IsShortFilm = Helper.StringContains(sd.ShowType, "Short Film");
-            prg.IsSpecial = Helper.StringContains(sd.ShowType, "Special");
+            prg.IsSeries = Helper.TableContains(types, "Series") && !Helper.TableContains(sd.Genres, "Sports talk");
+            prg.IsShortFilm = Helper.TableContains(types, "Short Film");
+            prg.IsSpecial = Helper.TableContains(types, "Special");
             prg.IsSports = sd.ProgramId.StartsWith("SP") ||
-                           Helper.StringContains(sd.ShowType, "Sports event") || 
-                           Helper.StringContains(sd.ShowType, "Sports non-event") || 
-                           Helper.StringContains(sd.ShowType, "Team event") ||
+                           Helper.TableContains(types, "Event") || 
                            Helper.TableContains(sd.Genres, "Sports talk");
 
             // set isGeneric flag if programID starts with "SH", is a series, is not a miniseries, and is not paid programming
-            if (prg.ProgramId.StartsWith("SH") && (prg.IsSports && !Helper.StringContains(sd.EntityType, "Sports") ||
+            if (prg.ProgramId.StartsWith("SH") && (prg.IsSports && !Helper.TableContains(types, "Sports") ||
                                                    prg.IsSeries && !prg.IsMiniseries && !prg.IsPaidProgramming))
             {
                 prg.IsGeneric = true;
             }
 
             // queue up the sport event to get the event image
-            if ((Helper.StringContains(sd.ShowType, "Sports event") || Helper.StringContains(sd.ShowType, "Team event")))// && (sd.HasSportsArtwork | sd.HasEpisodeArtwork | sd.HasSeriesArtwork | sd.HasImageArtwork))
+            if (Helper.TableContains(types, "Event"))// && (sd.HasSportsArtwork | sd.HasEpisodeArtwork | sd.HasSeriesArtwork | sd.HasImageArtwork))
             {
                 sportEvents.Add(prg);
             }
