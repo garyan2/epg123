@@ -13,6 +13,8 @@ namespace GaRyan2.WmcUtilities
     {
         public static void AutoMapChannels(bool mapChannels = false)
         {
+            if (!mapChannels) return;
+
             // get all active channels in lineup(s) from EPG123/HDHR2MXF
             var epg123Channels = GetEpg123LineupChannels();
             if (epg123Channels.Count == 0)
@@ -20,25 +22,6 @@ namespace GaRyan2.WmcUtilities
                 Logger.WriteError("There are no EPG123/HDHR2MXF listings in the database to perform any mappings.");
                 return;
             }
-
-            // get all stations that have been removed from EPG123/HDHR2MXF lineups
-            var removedStations = new Channels(WmcObjectStore).Where(arg => (arg.Lineup?.Name.StartsWith("EPG123") ?? false) ||
-                                                                            (arg.Lineup?.Name.StartsWith("HDHR2MXF") ?? false))
-                                                              .Where(arg => ChannelIsOrphaned(epg123Channels, arg))
-                                                              .OrderBy(arg => arg.Number).ThenBy(arg => arg.SubNumber).ToList();
-
-            // remove orphaned stations from epg123/hdhr2mxf lineup(s)
-            foreach (var station in removedStations)
-            {
-                var lineup = station.Lineup;
-                Logger.WriteVerbose($"Channel '{station}' was removed from lineup '{lineup}'");
-                lineup.RemoveChannel(station);
-                lineup.Update();
-            }
-            Logger.WriteVerbose($"Completed channel cleanup as needed after MXF file import.");
-
-            // stop here if mapping channels is false
-            if (!mapChannels) goto Finish;
 
             // get all merged channels
             var mergedChannels = (from MergedChannel mergedChannel in WmcMergedLineup.UncachedChannels
@@ -78,20 +61,8 @@ namespace GaRyan2.WmcUtilities
                 }
             }
             Logger.WriteInformation("Completed the automatic mapping of lineup stations to tuner channels.");
-
-        Finish:
-            // finish it
             WmcMergedLineup.FullMerge(false);
             WmcMergedLineup.Update();
-        }
-
-        private static bool ChannelIsOrphaned(List<Channel> channels, Channel channel)
-        {
-            foreach (Channel c in channels)
-            {
-                if (c.IsSameAs(channel)) return false;
-            }
-            return true;
         }
 
         /// <summary>

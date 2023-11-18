@@ -101,7 +101,7 @@ namespace epg123.sdJson2mxf
                             var names = Regex.Matches(station.Name.Replace("-", ""), station.Callsign);
                             if (names.Count > 0)
                             {
-                                mxfService.Name = (!string.IsNullOrEmpty(station.Affiliate) ? $"{station.Callsign} ({station.Affiliate})" : station.Name);
+                                mxfService.Name = (!string.IsNullOrEmpty(station.Affiliate) ? $"{station.Name} ({station.Affiliate})" : station.Name);
                             }
                             else mxfService.Name = station.Name;
                         }

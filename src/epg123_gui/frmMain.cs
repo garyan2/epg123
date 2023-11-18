@@ -116,6 +116,22 @@ namespace epg123
             else if (Helper.InstallMethod == Helper.Installation.CLIENT) info = $" (REMOTE: {_BaseServerAddress})";
             Text = $"EPG123 Configurator v{Helper.Epg123Version}{info}";
 
+            // check if in debug mode
+            if (Config.UseDebug && (DialogResult.Yes == MessageBox.Show("You are currently connecting with Schedules Direct in Debug Mode. Do you wish to change back to Normal mode?",
+                                                                        "SD Debug Mode", MessageBoxButtons.YesNo, MessageBoxIcon.Question)))
+            {
+                _originalConfig.UseDebug = Config.UseDebug = ckDebug.Checked = false;
+                if (Helper.InstallMethod != Helper.Installation.CLIENT) Helper.WriteXmlFile(Config, Helper.Epg123CfgPath);
+                else
+                {
+                    var baseApi = $"{_BaseServerAddress}epg123/";
+                    SdApi.Initialize($"EPG123/{Helper.Epg123Version}", baseApi, Config.BaseArtworkUrl, !Config.UseDebug);
+                    SdApi.UploadConfiguration(Settings.Default.CfgLocation, Config);
+                    Application.Restart();
+                    Environment.Exit(0);
+                }
+            }
+
             // initialize the schedules direct api
             if (Helper.InstallMethod != Helper.Installation.PORTABLE)
             {

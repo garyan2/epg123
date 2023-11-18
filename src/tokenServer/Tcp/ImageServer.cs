@@ -264,7 +264,8 @@ namespace tokenServer
             catch (Exception ex)
             {
                 Logger.WriteError($"{asset} ServiceImageRequest() Exception:{Helper.ReportExceptionMessages(ex)}");
-                WebStats.IncrementHttpStat(999);
+                if (context.Response.StatusCode <= (int)HttpStatusCode.OK) context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                WebStats.IncrementHttpStat(context.Response.StatusCode);
                 return;
             }
 

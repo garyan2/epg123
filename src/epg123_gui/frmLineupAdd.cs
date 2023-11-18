@@ -40,17 +40,6 @@ namespace epg123
                     cmbCountries.Items.Add(country.FullName);
                 }
 
-                // add the DVB satellites
-                foreach (var regionCountries in from region in regions where region.ToLower().Equals("zzz") select countryResp[region])
-                {
-                    _countries.Add(null); cmbCountries.Items.Add(string.Empty);
-                    foreach (var country in regionCountries)
-                    {
-                        _countries.Add(country);
-                        cmbCountries.Items.Add(country.FullName);
-                    }
-                }
-
                 // add a manual option
                 _countries.Add(null);
                 _countries.Add(new Country()
@@ -99,20 +88,9 @@ namespace epg123
             lblExample.Text = string.Empty;
             txtZipcode.Text = string.Empty;
 
-            if (string.IsNullOrEmpty(cmbCountries.Text))
-            {
-                return;
-            }
-            else if (_countries[cmbCountries.SelectedIndex].ShortName.Equals("ZZZ"))
-            {
-                GetSatellites();
-            }
-            else if (_countries[cmbCountries.SelectedIndex].PostalCodeExample == null)
-            {
-                GetTransmitters(_countries[cmbCountries.SelectedIndex].ShortName);
-            }
-
+            if (string.IsNullOrEmpty(cmbCountries.Text)) return;
             if (string.IsNullOrEmpty(_countries[cmbCountries.SelectedIndex].PostalCodeExample)) return;
+
             _mask = "(" + _countries[cmbCountries.SelectedIndex].PostalCode.Split('/')[1] + ")";
             if (!_countries[cmbCountries.SelectedIndex].OnePostalCode)
             {
@@ -186,9 +164,7 @@ namespace epg123
                             Location = head.Location,
                             Lineup = lineup.Lineup
                         });
-                        //listBox1.Items.Add(string.Format("{0} ({1})", lineup.Name, head.Location));
                     }
-
                 }
 
                 if (_headends.Count > 0)
@@ -203,38 +179,6 @@ namespace epg123
 
             UseWaitCursor = false;
             Enabled = true;
-        }
-        private void GetSatellites()
-        {
-            var satcom = SdApi.GetAvailableSatellites();
-            for (var i = 0; i < satcom.Count; ++i)
-            {
-                _headends.Add(new SubscribedLineup()
-                {
-                    Transport = "DVB-S",
-                    Name = satcom[i].lineup,
-                    Location = null,
-                    Lineup = satcom[i].lineup
-                });
-                listBox1.Items.Add(satcom[i].lineup);
-            }
-        }
-        private void GetTransmitters(string country)
-        {
-            var xmitters = SdApi.GetTransmitters(country);
-            var sites = new List<string>(xmitters.Keys);
-            foreach (var site in sites)
-            {
-                if (!xmitters.TryGetValue(site, out var lineup)) continue;
-                _headends.Add(new SubscribedLineup()
-                {
-                    Transport = "DVB-T",
-                    Name = site,
-                    Location = null,
-                    Lineup = lineup
-                });
-                listBox1.Items.Add(site);
-            }
         }
 
         private void listBox1_DoubleClick(object sender, EventArgs e)

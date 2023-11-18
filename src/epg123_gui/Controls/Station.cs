@@ -41,7 +41,7 @@ namespace epg123
         public string StationId => Station.StationId;
         public string CallSign => Station.Callsign;
         public string LanguageCode => Station.BroadcastLanguage[0]?.ToLower().Substring(0, 2) ?? "zz";
-        public string Name => (IsAtsc && !string.IsNullOrEmpty(Station.Affiliate) ? $"{Station.Callsign} ({Station.Affiliate})" : Station.Name);
+        public string Name => (IsAtsc && !string.IsNullOrEmpty(Station.Affiliate) ? $"{Station.Name} ({Station.Affiliate})" : Station.Name);
         public bool IsNew { get; internal set; }
 
         // static station options

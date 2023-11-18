@@ -20,8 +20,8 @@
 ; NOTE: The value of AppId uniquely identifies this application.
 ; Do not use the same AppId value in installers for other applications.
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
-SignTool=signtool /d "EPG123" /du "https://epg123.garyan2.net" $f
-SignedUninstaller=yes
+; SignTool=signtool /d "EPG123" /du "https://epg123.garyan2.net" $f
+; SignedUninstaller=yes
 AppId={{A592C107-8384-4DFF-902E-30F5133EA626}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}

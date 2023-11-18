@@ -1,9 +1,12 @@
-﻿using GaRyan2.Utilities;
+﻿using GaRyan2.MxfXml;
+using GaRyan2.Utilities;
+using Microsoft.MediaCenter.Guide;
 using Microsoft.Win32;
 using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
 
@@ -209,6 +212,36 @@ namespace GaRyan2.WmcUtilities
                         Logger.WriteError($"Failed to download MXF file from \"{mxfFile}\". Exception:{Helper.ReportExceptionMessages(ex)}");
                         return false;
                     }
+                }
+
+                // check for channels removed from lineups
+                try
+                {
+                    MXF mxf = Helper.ReadXmlFile(mxfFile, typeof(MXF));
+                    foreach (var wmis in GetWmisLineups())
+                    {
+                        if (!(WmcObjectStore.Fetch(wmis.LineupId) is Lineup lup)) continue;
+                        var xml = mxf?.With?.Lineups?.FirstOrDefault(arg => arg.Uid == lup.GetUIdValue());
+                        if (xml == null) continue;
+
+                        foreach (var channel in lup.GetChannels())
+                        {
+                            var mxfch = xml.channels.FirstOrDefault(arg => arg.Uid.Contains(channel.GetUIdValue()));
+                            if (mxfch != null) continue;
+
+                            Logger.WriteInformation($"Channel '{channel.ChannelNumber} {channel.CallSign}' was removed from lineup '{lup.Name}'. Unsubscribing channel before import.");
+                            foreach (MergedChannel mch in channel.ReferencingPrimaryChannels.ToList())
+                            {
+                                SubscribeLineupChannel(0, mch.Id);
+                            }
+                        }
+                    }
+                    Close();
+                }
+                catch (Exception ex)
+                {
+                    Logger.WriteWarning($"Exception thrown while comparing WMC lineups with MXF lineups. Message:{Helper.ReportExceptionMessages(ex)}");
+                    Close();
                 }
 
                 // establish program to run and environment for import

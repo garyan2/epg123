@@ -66,6 +66,10 @@
     <Compile Include="WmcUtilities.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\GaRyan2.MxfXmltvTools\GaRyan2.MxfXmltvTools.csproj">
+      <Project>{2a8d6f2b-3c96-4314-b61b-5d84eaa02f2f}</Project>
+      <Name>GaRyan2.MxfXmltvTools</Name>
+    </ProjectReference>
     <ProjectReference Include="..\GaRyan2.Utilities\GaRyan2.Utilities.csproj">
       <Project>{ccd05d81-0df1-45ff-9931-a50369526225}</Project>
       <Name>GaRyan2.Utilities</Name>

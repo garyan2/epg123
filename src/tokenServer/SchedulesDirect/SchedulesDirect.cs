@@ -24,6 +24,7 @@ namespace GaRyan2
         public static string PasswordHash { get; private set; }
         public static string ApiBaseAddress { get; private set; }
         public static string ApiBaseArtwork { get; private set; }
+        public static bool ApiDebug { get; private set; }
 
         /// <summary>
         /// Initializes the http client to communicate with Schedules Direct
@@ -47,15 +48,15 @@ namespace GaRyan2
                     BaseAddress = ApiBaseAddress = config.BaseApiUrl,
                     BaseArtworkAddress = ApiBaseArtwork = config.BaseArtworkUrl,
                     UserAgent = $"EPG123/{Helper.Epg123Version}",
-                    UseDebug = config.UseDebug
+                    UseDebug = ApiDebug = config.UseDebug
                 };
                 api.Initialize();
                 api.RouteApiToDebugServer();
-                _ = GetToken(config.UserAccount?.LoginName, config.UserAccount?.PasswordHash);
+                _ = GetToken(config.UserAccount?.LoginName, config.UserAccount?.PasswordHash, true);
             }
             else if (Username != config.UserAccount?.LoginName || PasswordHash != config.UserAccount?.PasswordHash)
             {
-                _ = GetToken(config.UserAccount?.LoginName, config.UserAccount?.PasswordHash);
+                _ = GetToken(config.UserAccount?.LoginName, config.UserAccount?.PasswordHash, true);
             }
             JsonImageCache.cacheRetention = config.CacheRetention;
         }

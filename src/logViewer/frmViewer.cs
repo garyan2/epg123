@@ -255,9 +255,9 @@ namespace logViewer
         {
             if (m.Msg == WM_MOUSEWHEEL)
             {
-                if (((int)m.WParam & MK_CONTROL) == MK_CONTROL)
+                if (((int)(long)m.WParam & MK_CONTROL) == MK_CONTROL)
                 {
-                    if ((int)m.WParam > 0) SendKeys.Send("{ADD}");
+                    if ((int)(long)m.WParam > 0) SendKeys.Send("{ADD}");
                     else SendKeys.Send("{SUBTRACT}");
                     return;
                 }
@@ -265,7 +265,7 @@ namespace logViewer
                 int scrollLines = SystemInformation.MouseWheelScrollLines;
                 for (int i = 0; i < scrollLines; i++)
                 {
-                    if ((int)m.WParam > 0) // when wParam is greater than 0
+                    if ((int)(long)m.WParam > 0) // when wParam is greater than 0
                         SendMessage(this.Handle, WM_VSCROLL, (IntPtr)0, IntPtr.Zero); // scroll up 
                     else
                         SendMessage(this.Handle, WM_VSCROLL, (IntPtr)1, IntPtr.Zero); // else scroll down

@@ -29,7 +29,8 @@ namespace tokenServer
             if (config.UserAccount?.LoginName != SchedulesDirect.Username ||
                 config.UserAccount?.PasswordHash != SchedulesDirect.PasswordHash ||
                 config.BaseApiUrl != SchedulesDirect.ApiBaseAddress ||
-                config.BaseArtworkUrl != SchedulesDirect.ApiBaseArtwork)
+                config.BaseArtworkUrl != SchedulesDirect.ApiBaseArtwork ||
+                config.UseDebug != SchedulesDirect.ApiDebug)
             {
                 Logger.WriteInformation("Configuration reloaded due to account or base URL changes in file.");
                 SchedulesDirect.RefreshConfiguration();

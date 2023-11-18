@@ -152,6 +152,8 @@ namespace GaRyan2.Utilities
 
         private void ChangeMcUpdateTaskPath(string path)
         {
+            if (!File.Exists(Helper.EhshellExeFilePath)) return;
+
             _ = taskService.NewTask(0);
             ITaskDefinition newTask = taskService.GetFolder("\\Microsoft\\Windows\\Media Center").GetTask("mcupdate").Definition;
             ((IExecAction)newTask.Actions[1]).Path = path;
