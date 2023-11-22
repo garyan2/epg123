@@ -12,7 +12,7 @@
 #define MyAppVersion Str(Version[0]) + "." + Str(Version[1]) + "." + Str(Version[2]) + "." + Str(Version[3])
 
 #define MyAppPublisher "GaRyan2"
-#define MyAppURL "http://garyan2.github.io/"
+#define MyAppURL "https://garyan2.github.io/"
 
 #define MySetupBaseFilename "epg123Setup_v"
 
@@ -20,8 +20,8 @@
 ; NOTE: The value of AppId uniquely identifies this application.
 ; Do not use the same AppId value in installers for other applications.
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
-; SignTool=signtool /d "EPG123" /du "https://epg123.garyan2.net" $f
-; SignedUninstaller=yes
+SignTool=SSL.com /d "EPG123" /du "https://garyan2.github.io/" $f
+SignedUninstaller=yes
 AppId={{A592C107-8384-4DFF-902E-30F5133EA626}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}

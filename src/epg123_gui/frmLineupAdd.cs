@@ -26,6 +26,16 @@ namespace epg123
             var countryResp = SdApi.GetAvailableCountries();
             if (countryResp != null)
             {
+                // add the only freeview listing
+                _countries.Add(new Country()
+                {
+                    FullName = "Great Britain Freeview",
+                    OnePostalCode = true,
+                    PostalCode = "/",
+                    PostalCodeExample = null,
+                    ShortName = "GBR"
+                });
+
                 // get all the region/countries
                 var regions = new List<string>(countryResp.Keys);
                 foreach (var country in regions.Where(region => !region.ToLower().Equals("zzz")).Select(region => countryResp[region]).SelectMany(regionCountries => regionCountries))
@@ -89,7 +99,7 @@ namespace epg123
             txtZipcode.Text = string.Empty;
 
             if (string.IsNullOrEmpty(cmbCountries.Text)) return;
-            if (string.IsNullOrEmpty(_countries[cmbCountries.SelectedIndex].PostalCodeExample)) return;
+            if (string.IsNullOrEmpty(_countries[cmbCountries.SelectedIndex].PostalCodeExample)) GetTransmitters(_countries[cmbCountries.SelectedIndex].ShortName);
 
             _mask = "(" + _countries[cmbCountries.SelectedIndex].PostalCode.Split('/')[1] + ")";
             if (!_countries[cmbCountries.SelectedIndex].OnePostalCode)
@@ -97,6 +107,10 @@ namespace epg123
                 lblExample.Text = $"Example: {_countries[cmbCountries.SelectedIndex].PostalCodeExample}";
                 txtZipcode.Enabled = true;
                 btnFetch.Enabled = true;
+            }
+            else if (_countries[cmbCountries.SelectedIndex].PostalCodeExample == null)
+            {
+                txtZipcode.Enabled = btnFetch.Enabled = false;
             }
             else
             {
@@ -150,6 +164,8 @@ namespace epg123
                 if (heads == null)
                 {
                     MessageBox.Show("No headends found for entered postal code and country.", "No Headend Found", MessageBoxButtons.OK);
+                    UseWaitCursor = false;
+                    Enabled = true;
                     return;
                 }
 
@@ -179,6 +195,24 @@ namespace epg123
 
             UseWaitCursor = false;
             Enabled = true;
+        }
+
+        private void GetTransmitters(string country)
+        {
+            var xmitters = SdApi.GetTransmitters(country);
+            var sites = new List<string>(xmitters.Keys);
+            foreach (var site in sites)
+            {
+                if (!xmitters.TryGetValue(site, out var lineup)) continue;
+                _headends.Add(new SubscribedLineup()
+                {
+                    Transport = "DVB-T",
+                    Name = site,
+                    Location = null,
+                    Lineup = lineup
+                });
+                listBox1.Items.Add(site);
+            }
         }
 
         private void listBox1_DoubleClick(object sender, EventArgs e)
