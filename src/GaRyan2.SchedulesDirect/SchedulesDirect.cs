@@ -33,7 +33,7 @@ namespace GaRyan2
 
         public static bool UploadConfiguration(string url, object config)
         {
-            var ret = api.GetApiResponse<BaseResponse>(Method.UPCFG, url, config);
+            var ret = api.GetApiResponse<BaseResponse>(Method.PUTX, url, config);
             if (ret != null) Logger.WriteVerbose("Successfully uploaded configuration file to server.");
             else Logger.WriteError("Failed to upload configuration file to server.");
             return ret != null;
@@ -267,10 +267,26 @@ namespace GaRyan2
             return ret;
         }
 
+        public static List<ProgramArtwork> GetCelebrityArtwork(string personId)
+        {
+            return api.GetApiResponse<List<ProgramArtwork>>(Method.GET, $"metadata/celebrity/{personId}");
+        }
+        #endregion
+
+        // following functions are unique to EPG123 Server and do not interact with Schedules Direct
         public static List<string> GetCustomLogosFromServer(string server)
         {
             return api.GetApiResponse<List<string>>(Method.GET, server);
         }
-        #endregion
+
+        public static bool DeleteLogo(string logo)
+        {
+            return api.GetApiResponse<BaseResponse>(Method.DELETE, logo)?.Code == 0;
+        }
+
+        public static bool UploadLogo(string logo, byte[] image)
+        {
+            return api.GetApiResponse<BaseResponse>(Method.PUTB, logo, image)?.Code == 0;
+        }
     }
 }

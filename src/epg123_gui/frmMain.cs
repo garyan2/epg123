@@ -1,4 +1,5 @@
-﻿using epg123.Properties;
+﻿using epg123;
+using epg123_gui.Properties;
 using GaRyan2.SchedulesDirectAPI;
 using GaRyan2.Utilities;
 using System;
@@ -22,7 +23,7 @@ using System.Xml.Serialization;
 using github = GaRyan2.Github;
 using SdApi = GaRyan2.SchedulesDirect;
 
-namespace epg123
+namespace epg123_gui
 {
     public partial class ConfigForm : Form
     {
@@ -429,7 +430,7 @@ namespace epg123
                     actions[0].Path = Helper.Epg123ExePath;
                     _task.CreateTask(cbTaskWake.Checked, tbSchedTime.Text, actions);
                 }
-                _task.ImportTask();
+                if (!Helper.UserHasElevatedRights) _task.ImportTask();
             }
             else _task.DeleteTask();
 
@@ -1040,16 +1041,13 @@ namespace epg123
             var minX = lvi.SubItems[3].Bounds.X;
             if (e.X > minX && e.X < minX + 48)
             {
-                if (Helper.InstallMethod == Helper.Installation.CLIENT)
-                {
-                    MessageBox.Show("Currently not able to edit custom station logos while in remote client mode.", "Not Available");
-                    return;
-                }
                 var item = lvLineupChannels.SelectedItems[0] as MemberListViewItem;
                 var station = item.Station;
-                var frm = new frmLogos(station.Station, _RemoteCustomLogos.Contains($"{station.CallSign}_c.png"));
+                var frm = new frmLogos(station.Station);
                 frm.FormClosed += (o, args) =>
                 {
+                    if (frm.LogoChanged) _RemoteCustomLogos = SdApi.GetCustomLogosFromServer($"{_BaseServerAddress}logos/custom");
+                    lock (_bitmapLock) _Bitmaps.TryRemove($"{station.Station.Callsign}_c.png", out _);
                     _allStations[station.StationId].ServiceLogo = GetServiceBitmap(station.Station);
                 };
                 frm.Show(this);

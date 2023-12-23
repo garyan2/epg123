@@ -433,7 +433,10 @@ namespace GaRyan2.Converters
             foreach (var person in xmltvProgramme.Credits.Guests)
             {
                 mxfProgram.GuestActorRole = mxfProgram.GuestActorRole ?? new List<MxfPersonRank>();
-                mxfProgram.GuestActorRole.Add(new MxfPersonRank(mxf.FindOrCreatePerson(person)));
+                mxfProgram.GuestActorRole.Add(new MxfPersonRank(mxf.FindOrCreatePerson(person.Actor))
+                {
+                    Character = person.Role
+                });
             }
         }
 

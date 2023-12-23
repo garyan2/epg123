@@ -1,10 +1,11 @@
-﻿using GaRyan2.SchedulesDirectAPI;
+﻿using epg123;
+using GaRyan2.SchedulesDirectAPI;
 using System;
 using System.Drawing;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
-namespace epg123
+namespace epg123_gui
 {
     internal class MemberStation
     {

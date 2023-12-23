@@ -33,6 +33,6 @@ namespace GaRyan2.XmltvXml
         public List<string> Commentators { get; set; }
 
         [XmlElement("guest")]
-        public List<string> Guests { get; set; }
+        public List<XmltvActor> Guests { get; set; }
     }
 }

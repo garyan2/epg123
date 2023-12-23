@@ -3,7 +3,7 @@ using System.Linq;
 using System.Windows.Forms;
 using SdApi = GaRyan2.SchedulesDirect;
 
-namespace epg123
+namespace epg123_gui
 {
     public partial class frmPreview : Form
     {

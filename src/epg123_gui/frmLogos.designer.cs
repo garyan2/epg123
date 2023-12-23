@@ -1,4 +1,4 @@
-﻿namespace epg123
+﻿namespace epg123_gui
 {
     partial class frmLogos
     {
@@ -29,7 +29,6 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmLogos));
             this.pbCustomLocal = new System.Windows.Forms.PictureBox();
             this.contextMenuStrip2 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.menuDeleteCustom = new System.Windows.Forms.ToolStripMenuItem();
@@ -50,7 +49,6 @@
             this.label5 = new System.Windows.Forms.Label();
             this.label6 = new System.Windows.Forms.Label();
             this.label7 = new System.Windows.Forms.Label();
-            this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             ((System.ComponentModel.ISupportInitialize)(this.pbCustomLocal)).BeginInit();
             this.contextMenuStrip2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pbDarkLocal)).BeginInit();
@@ -98,70 +96,60 @@
             // 
             this.pbDarkLocal.BackColor = System.Drawing.SystemColors.Control;
             this.pbDarkLocal.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.pbDarkLocal.ContextMenuStrip = this.contextMenuStrip2;
             this.pbDarkLocal.Location = new System.Drawing.Point(187, 108);
             this.pbDarkLocal.Name = "pbDarkLocal";
             this.pbDarkLocal.Size = new System.Drawing.Size(120, 90);
             this.pbDarkLocal.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pbDarkLocal.TabIndex = 1;
             this.pbDarkLocal.TabStop = false;
-            this.pbDarkLocal.DragDrop += new System.Windows.Forms.DragEventHandler(this.pictureBox_DragDrop);
             this.pbDarkLocal.MouseDown += new System.Windows.Forms.MouseEventHandler(this.picDragSource_MouseDown);
             // 
             // pbWhiteLocal
             // 
             this.pbWhiteLocal.BackColor = System.Drawing.SystemColors.Control;
             this.pbWhiteLocal.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.pbWhiteLocal.ContextMenuStrip = this.contextMenuStrip2;
             this.pbWhiteLocal.Location = new System.Drawing.Point(187, 204);
             this.pbWhiteLocal.Name = "pbWhiteLocal";
             this.pbWhiteLocal.Size = new System.Drawing.Size(120, 90);
             this.pbWhiteLocal.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pbWhiteLocal.TabIndex = 2;
             this.pbWhiteLocal.TabStop = false;
-            this.pbWhiteLocal.DragDrop += new System.Windows.Forms.DragEventHandler(this.pictureBox_DragDrop);
             this.pbWhiteLocal.MouseDown += new System.Windows.Forms.MouseEventHandler(this.picDragSource_MouseDown);
             // 
             // pbLightLocal
             // 
             this.pbLightLocal.BackColor = System.Drawing.SystemColors.Control;
             this.pbLightLocal.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.pbLightLocal.ContextMenuStrip = this.contextMenuStrip2;
             this.pbLightLocal.Location = new System.Drawing.Point(187, 300);
             this.pbLightLocal.Name = "pbLightLocal";
             this.pbLightLocal.Size = new System.Drawing.Size(120, 90);
             this.pbLightLocal.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pbLightLocal.TabIndex = 3;
             this.pbLightLocal.TabStop = false;
-            this.pbLightLocal.DragDrop += new System.Windows.Forms.DragEventHandler(this.pictureBox_DragDrop);
             this.pbLightLocal.MouseDown += new System.Windows.Forms.MouseEventHandler(this.picDragSource_MouseDown);
             // 
             // pbGrayLocal
             // 
             this.pbGrayLocal.BackColor = System.Drawing.SystemColors.Control;
             this.pbGrayLocal.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.pbGrayLocal.ContextMenuStrip = this.contextMenuStrip2;
             this.pbGrayLocal.Location = new System.Drawing.Point(187, 396);
             this.pbGrayLocal.Name = "pbGrayLocal";
             this.pbGrayLocal.Size = new System.Drawing.Size(120, 90);
             this.pbGrayLocal.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pbGrayLocal.TabIndex = 4;
             this.pbGrayLocal.TabStop = false;
-            this.pbGrayLocal.DragDrop += new System.Windows.Forms.DragEventHandler(this.pictureBox_DragDrop);
             this.pbGrayLocal.MouseDown += new System.Windows.Forms.MouseEventHandler(this.picDragSource_MouseDown);
             // 
             // pbDefaultLocal
             // 
             this.pbDefaultLocal.BackColor = System.Drawing.SystemColors.Control;
             this.pbDefaultLocal.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.pbDefaultLocal.ContextMenuStrip = this.contextMenuStrip2;
             this.pbDefaultLocal.Location = new System.Drawing.Point(187, 492);
             this.pbDefaultLocal.Name = "pbDefaultLocal";
             this.pbDefaultLocal.Size = new System.Drawing.Size(120, 90);
             this.pbDefaultLocal.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pbDefaultLocal.TabIndex = 5;
             this.pbDefaultLocal.TabStop = false;
-            this.pbDefaultLocal.DragDrop += new System.Windows.Forms.DragEventHandler(this.pictureBox_DragDrop);
             this.pbDefaultLocal.MouseDown += new System.Windows.Forms.MouseEventHandler(this.picDragSource_MouseDown);
             // 
             // pbDarkRemote
@@ -293,11 +281,6 @@
             this.label7.Text = "label7";
             this.label7.UseMnemonic = false;
             // 
-            // openFileDialog1
-            // 
-            this.openFileDialog1.Filter = resources.GetString("openFileDialog1.Filter");
-            this.openFileDialog1.RestoreDirectory = true;
-            // 
             // frmLogos
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -366,7 +349,6 @@
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip2;
-        private System.Windows.Forms.OpenFileDialog openFileDialog1;
         private System.Windows.Forms.ToolStripMenuItem menuDeleteCustom;
     }
 }

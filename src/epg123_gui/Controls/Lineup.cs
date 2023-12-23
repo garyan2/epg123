@@ -1,7 +1,7 @@
 ﻿using GaRyan2.SchedulesDirectAPI;
 using System.Collections.Generic;
 
-namespace epg123
+namespace epg123_gui
 {
     internal class MemberLineup
     {

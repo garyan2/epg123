@@ -2,6 +2,7 @@
 using System.IO;
 using Microsoft.Win32;
 using GaRyan2.Utilities;
+using System.Globalization;
 
 namespace GaRyan2.WmcUtilities
 {
@@ -120,6 +121,7 @@ namespace GaRyan2.WmcUtilities
             var ret = true;
             var HKLM_EPGKEY = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Media Center\Service\EPG";
             var NEXTDBGC_KEYVALUE = "dbgc:next run time";
+            var nextRunTime = DateTime.Now + TimeSpan.FromDays(5);
 
             try
             {
@@ -129,7 +131,7 @@ namespace GaRyan2.WmcUtilities
                     if (key != null)
                     {
                         string nextRun;
-                        if ((nextRun = (string)key.GetValue(NEXTDBGC_KEYVALUE)) != null)
+                        if (!string.IsNullOrEmpty(nextRun = (string)key.GetValue(NEXTDBGC_KEYVALUE)))
                         {
                             var deltaTime = DateTime.Parse(nextRun) - DateTime.Now;
                             if (deltaTime > TimeSpan.FromHours(12) && deltaTime < TimeSpan.FromDays(5))
@@ -137,6 +139,16 @@ namespace GaRyan2.WmcUtilities
                                 ret = false;
                             }
                         }
+                        else
+                        {
+                            key.SetValue(NEXTDBGC_KEYVALUE, $"{nextRunTime:s}");
+                        }
+
+                        // verify periodic downloads are not enabled
+                        if ((int)key.GetValue("dl", 1) != 0) key.SetValue("dl", 0);
+
+                        // write a last index time in the future to avoid the dbgc kicking off a reindex while importing the mxf file
+                        key.SetValue("LastFullReindex", Convert.ToString(nextRunTime, CultureInfo.InvariantCulture));
                     }
                     else
                     {

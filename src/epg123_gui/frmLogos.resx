@@ -120,10 +120,4 @@
   <metadata name="contextMenuStrip2.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
-  <metadata name="openFileDialog1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>172, 17</value>
-  </metadata>
-  <data name="openFileDialog1.Filter" xml:space="preserve">
-    <value>All image types (*.png; *.jpg; *.jpeg; *.jpe; *.jfif; *.exif; *.bmp; *.dib; *.rle; *.tiff; *.tif; *.gif)|*.png;*.jpg;*.jpeg;*.jpe;*.jfif;*.exif;*.bmp;*.dib;*.rle;*.tiff;*.tif;*.gif|PNG (*.png)|*.png|JPEG (*.jpg; *.jpeg; *.jpe; *.jfif; *.exif)|*.jpg;*.jpeg;*.jpe;*.jfif;*.exif|BMP (*.bmp; *.dib; *.rle)|*.bmp;*.dib;*.rle|TIFF (*.tiff; *.tif; *.gif)|*.tiff;*.tif;*.gif</value>
-  </data>
 </root>

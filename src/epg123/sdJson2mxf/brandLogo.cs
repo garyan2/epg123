@@ -93,8 +93,9 @@ namespace epg123
             }
 
             // this is scaled to be aspect ratio 64x40 and cutting off the antenna (19 px)
-            var height = 75 - 19;
-            var image = new Bitmap(height * 64 / 40, height);
+            var antenna = 19;
+            var height = 75 - antenna;
+            var image = new Bitmap((int)(height * 64 / 40 + 0.5), height);
 
             // create new image with base image and date text
             image.SetResolution(baseImage.HorizontalResolution, baseImage.VerticalResolution);
@@ -103,14 +104,15 @@ namespace epg123
                 g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
                 g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;
 
-                var updateImageWidth = (updateImage.Width == 1) ? 0 : updateImage.Width + 2;
+                var updateImageWidth = (updateImage.Width == 1) ? 0 : updateImage.Width;
+                var centerPoint = image.Width - updateImageWidth - Math.Max(baseImage.Width, textSize.Width) / 2 + 1;
 
-                g.DrawImage(updateImage, image.Width - updateImageWidth + 2, 0);
-                g.DrawImage(baseImage, image.Width - updateImageWidth - baseImage.Width, image.Height - 75);
+                g.DrawImage(updateImage, image.Width - updateImageWidth, 0);
+                g.DrawImage(baseImage, centerPoint - baseImage.Width / 2, -antenna);
 
                 using (Brush textbrush = new SolidBrush(textColor))
                 {
-                    g.DrawString(text, font, textbrush, image.Width - updateImageWidth - textSize.Width + 3, image.Height - textSize.Height + 2);
+                    g.DrawString(text, font, textbrush, centerPoint - textSize.Width / 2, baseImage.Height - antenna);
                 }
             }
             return image;

@@ -75,7 +75,7 @@ namespace epg123Client
                 {
                     continue;
                 }
-                if (mxfStartTime > DateTime.UtcNow)
+                if (mxfStartTime - TimeSpan.FromHours(4.0) > DateTime.UtcNow)
                 {
                     Logger.WriteInformation($"Service {mxfService.Uid}: {mxfService.CallSign}: first mxf schedule entry to verify is in the future at {mxfStartTime.ToLocalTime()}.");
                 }

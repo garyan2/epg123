@@ -1,4 +1,9 @@
-﻿using System;
+﻿using epg123_gui.Properties;
+using GaRyan2;
+using GaRyan2.SchedulesDirectAPI;
+using GaRyan2.Utilities;
+using Microsoft.VisualBasic.FileIO;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -7,41 +12,34 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Windows.Forms;
-using GaRyan2.SchedulesDirectAPI;
-using Microsoft.VisualBasic.FileIO;
-using GaRyan2.Utilities;
-using epg123.Properties;
 
-namespace epg123
+namespace epg123_gui
 {
     public partial class frmLogos : Form
     {
-        private readonly string _callsign = string.Empty;
         private readonly LineupStation _station;
         private PictureBox _selectedBox = null;
-        private readonly string _customLogoPath;
+        private readonly string _customLogo;
+        private readonly bool isRemote = Settings.Default.CfgLocation.StartsWith("http");
+        private readonly string baseLogoPath = Settings.Default.CfgLocation.Replace("\\epg123.cfg", "\\logos\\").Replace("/epg123/epg123.cfg", "/logos/");
+        private readonly List<string> availableLogos;
+        public bool LogoChanged;
 
-        public frmLogos(LineupStation station, bool remote)
+        public frmLogos(LineupStation station)
         {
             InitializeComponent();
 
-            _callsign = station.Callsign;
             _station = station;
-            if (remote) _customLogoPath = $"{Settings.Default.CfgLocation.Replace("epg123/epg123.cfg", $"logos/{station.Callsign}_c.png")}";
+            _customLogo = $"{station.Callsign}_c.png";
+            if (isRemote) availableLogos = SchedulesDirect.GetCustomLogosFromServer($"{baseLogoPath}custom");
+            else availableLogos = Directory.GetFiles(Helper.Epg123LogosFolder, "*.png").ToList().Select(logo => logo.Substring(Helper.Epg123LogosFolder.Length)).ToList();
 
             label7.Text = $"{station.Callsign}\n{station.Name}\n{station.Affiliate}";
-            openFileDialog1.InitialDirectory = $"{Helper.Epg123LogosFolder}";
         }
 
         private void frmLogos_Load(object sender, EventArgs e)
         {
-            pbDarkLocal.AllowDrop = true;
-            pbWhiteLocal.AllowDrop = true;
-            pbLightLocal.AllowDrop = true;
-            pbGrayLocal.AllowDrop = true;
-            pbDefaultLocal.AllowDrop = true;
             pbCustomLocal.AllowDrop = true;
-
             Location = Owner.Location;
             Left += (Owner.ClientSize.Width - Width) / 2;
             Top += (Owner.ClientSize.Height - Height) / 4;
@@ -68,21 +66,19 @@ namespace epg123
 
         private void LoadLocalImages()
         {
-            if (!string.IsNullOrEmpty(_customLogoPath))
+            // load custom logo
+            if (availableLogos.Contains(_customLogo))
             {
+                var logoFilePath = $"{baseLogoPath}{_customLogo}";
+
                 pbCustomLocal.BackColor = Color.FromArgb(255, 6, 15, 30);
-                pbCustomLocal.Load(_customLogoPath);
-                pbCustomLocal.Tag = $"{Helper.Epg123LogosFolder}{_callsign}_c.png";
-                pbCustomLocal.Refresh();
-            }
-            else if (File.Exists($"{Helper.Epg123LogosFolder}{_callsign}_c.png") && pbCustomLocal.Image == null)
-            {
-                pbCustomLocal.BackColor = Color.FromArgb(255, 6, 15, 30);
-                pbCustomLocal.Image = Image.FromFile($"{Helper.Epg123LogosFolder}{_callsign}_c.png");
-                pbCustomLocal.Tag = $"{Helper.Epg123LogosFolder}{_callsign}_c.png";
+                if (isRemote) pbCustomLocal.Load(logoFilePath);
+                else pbCustomLocal.Image = Image.FromFile(logoFilePath);
+                pbCustomLocal.Tag = logoFilePath;
                 pbCustomLocal.Refresh();
             }
 
+            // load targeted background logos
             var categories = new string[] { "dark", "white", "light", "gray" };
             var pictureBoxes = new PictureBox[] { pbDarkLocal, pbWhiteLocal, pbLightLocal, pbGrayLocal };
             var backColors = new Color[] { Color.FromArgb(255, 6, 15, 30), Color.FromArgb(255, 6, 15, 30), Color.White, Color.White };
@@ -90,23 +86,29 @@ namespace epg123
             {
                 var stationLogo = _station.StationLogos?.FirstOrDefault(arg => arg.Category != null && arg.Category.Equals(categories[i], StringComparison.OrdinalIgnoreCase));
                 if (stationLogo == null) continue;
-                var logoFilepath = $"{Helper.Epg123LogosFolder}{stationLogo.Md5}.png";
-                if (File.Exists(logoFilepath) && pictureBoxes[i].Image == null)
+
+                if (availableLogos.Contains($"{stationLogo.Md5}.png"))
                 {
+                    var logoFilepath = $"{baseLogoPath}{stationLogo.Md5}.png";
+
                     pictureBoxes[i].BackColor = backColors[i];
-                    pictureBoxes[i].Image = Image.FromFile(logoFilepath);
+                    if (isRemote) pictureBoxes[i].Load(logoFilepath);
+                    else pictureBoxes[i].Image = Image.FromFile(logoFilepath);
                     pictureBoxes[i].Tag = logoFilepath;
                     pictureBoxes[i].Refresh();
                 }
             }
 
+            // load default logo
             if (_station.Logo?.Url != null)
             {
-                var logoFilepath = $"{Helper.Epg123LogosFolder}{_station.Logo.Md5}.png";
-                if (File.Exists(logoFilepath) && pbDefaultLocal.Image == null)
+                if (availableLogos.Contains($"{_station.Logo.Md5}.png"))
                 {
+                    var logoFilepath = $"{baseLogoPath}{_station.Logo.Md5}.png";
+
                     pbDefaultLocal.BackColor = Color.FromArgb(255, 6, 15, 30);
-                    pbDefaultLocal.Image = Image.FromFile(logoFilepath);
+                    if (isRemote) pbDefaultLocal.Load(logoFilepath);
+                    else pbDefaultLocal.Image = Image.FromFile(logoFilepath);
                     pbDefaultLocal.Tag = logoFilepath;
                     pbDefaultLocal.Refresh();
                 }
@@ -128,13 +130,13 @@ namespace epg123
                 {
                     case "dark":
                         if (pbDarkRemote.Image != null) break;
-                        pbDarkRemote.BackColor = Color.FromArgb(255, 6, 15, 30); ;
+                        pbDarkRemote.BackColor = Color.FromArgb(255, 6, 15, 30);
                         pbDarkRemote.Load(image.Url);
                         pbDarkRemote.Refresh();
                         break;
                     case "white":
                         if (pbWhiteRemote.Image != null) break;
-                        pbWhiteRemote.BackColor = Color.FromArgb(255, 6, 15, 30); ;
+                        pbWhiteRemote.BackColor = Color.FromArgb(255, 6, 15, 30);
                         pbWhiteRemote.Load(image.Url);
                         pbWhiteRemote.Refresh();
                         break;
@@ -170,8 +172,17 @@ namespace epg123
 
             try
             {
-                if (File.Exists(path)) DeleteToRecycle(path);
-                return;
+                if (isRemote && SchedulesDirect.DeleteLogo(path.Replace("/logos/", "/logos/custom/")))
+                {
+                    availableLogos.Remove($"{_customLogo}");
+                    LogoChanged = true;
+                }
+                else if (File.Exists(path))
+                {
+                    availableLogos.Remove($"{_customLogo}");
+                    DeleteToRecycle(path);
+                }
+                //return;
             }
             catch
             {
@@ -236,14 +247,7 @@ namespace epg123
             var target = (PictureBox)sender;
             if (imgBitmap == null || _selectedBox == target) return;
 
-            var path = $"{Helper.Epg123LogosFolder}{_callsign}";
-            if (target == pbCustomLocal) path += "_c.png";
-            if (target == pbDarkLocal) path += "_d.png";
-            if (target == pbWhiteLocal) path += "_w.png";
-            if (target == pbLightLocal) path += "_l.png";
-            if (target == pbGrayLocal) path += "_g.png";
-            if (target == pbDefaultLocal) path += ".png";
-
+            var path = $"{baseLogoPath}{_customLogo}";
             if (target.Image != null)
             {
                 target.Image.Dispose();
@@ -251,10 +255,25 @@ namespace epg123
                 target.Refresh();
             }
 
-            if (File.Exists(path)) DeleteToRecycle(path);
-
             var image = Helper.CropAndResizeImage(imgBitmap);
-            image.Save(path, ImageFormat.Png);
+            if (isRemote)
+            {
+                using (var ms = new MemoryStream())
+                {
+                    image.Save(ms, ImageFormat.Png);
+                    if (SchedulesDirect.UploadLogo(path.Replace("/logos/", "/logos/custom/"), ms.ToArray()) && !availableLogos.Contains($"{_customLogo}"))
+                    {
+                        availableLogos.Add($"{_customLogo}");
+                        LogoChanged = true;
+                    }
+                }
+            }
+            else
+            {
+                if (File.Exists(path)) DeleteToRecycle(path);
+                image.Save(path, ImageFormat.Png);
+                if (!availableLogos.Contains($"{_customLogo}")) availableLogos.Add($"{_customLogo}");
+            }
             imgBitmap.Dispose();
             image.Dispose();
 
@@ -275,6 +294,7 @@ namespace epg123
             pbWhiteLocal.Image?.Dispose();
             pbLightLocal.Image?.Dispose();
             pbGrayLocal.Image?.Dispose();
+            pbDefaultLocal.Image?.Dispose();
         }
     }
 }

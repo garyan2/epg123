@@ -7,7 +7,7 @@ using GaRyan2.SchedulesDirectAPI;
 using Microsoft.Win32;
 using SdApi = GaRyan2.SchedulesDirect;
 
-namespace epg123
+namespace epg123_gui
 {
     public partial class frmLineupAdd : Form
     {

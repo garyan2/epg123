@@ -9,7 +9,6 @@ using api = GaRyan2.SchedulesDirect;
 
 namespace epg123.sdJson2mxf
 {
-
     internal static partial class sdJson2Mxf
     {
         private static string HostAddress => string.IsNullOrEmpty(config.UseIpAddress) ? Environment.MachineName : config.UseIpAddress;
@@ -76,7 +75,7 @@ namespace epg123.sdJson2mxf
                 // save cache file and mxf file
                 epgCache.WriteCache();
                 AddBrandLogoToMxf();
-                CreateDummLineupChannel();
+                CreateDummyLineupChannel();
                 WaitForLogoDownloadsToComplete();
                 if (WriteMxf()) Success = true;
 
@@ -103,6 +102,8 @@ namespace epg123.sdJson2mxf
         {
             if (config.ExpectedServicecount < 20 || !(config.ExpectedServicecount - MissingStations < config.ExpectedServicecount * 0.95)) return true;
             Logger.WriteError($"Of the expected {config.ExpectedServicecount} stations to download, there are only {config.ExpectedServicecount - MissingStations} stations available from Schedules Direct. Aborting update for review by user.");
+            Logger.WriteError("ACTION: Review log file to see what stations have been added and removed from your lineup(s) since you last saved your configuration.");
+            Logger.WriteError("ACTION: Open configuration GUI and review lineup(s). If lineup channels and stations are accurate, click [Save] to rebaseline the expected number of stations to download.");
             return false;
         }
 
@@ -115,7 +116,7 @@ namespace epg123.sdJson2mxf
             }
         }
 
-        private static void CreateDummLineupChannel()
+        private static void CreateDummyLineupChannel()
         {
             var mxfService = mxf.FindOrCreateService("DUMMY");
             mxfService.CallSign = "DUMMY";

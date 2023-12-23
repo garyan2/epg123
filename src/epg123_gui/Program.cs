@@ -3,7 +3,7 @@ using System;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
-namespace epg123
+namespace epg123_gui
 {
     internal static class NativeMethods
     {

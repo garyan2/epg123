@@ -1,10 +1,10 @@
-﻿using epg123.Properties;
+﻿using epg123_gui.Properties;
 using GaRyan2.Utilities;
 using System;
 using System.Linq;
 using System.Windows.Forms;
 
-namespace epg123
+namespace epg123_gui
 {
     public partial class frmRemoteServers : Form
     {

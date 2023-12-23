@@ -23,7 +23,8 @@ namespace epg123Client
 
         private void backgroundWorker_DoWork(object sender, DoWorkEventArgs e)
         {
-            Success = WmcStore.ImportMxfFile((string)e.Argument);
+            Success = WmcStore.ImportMxfFile((string)e.Argument, true);
+            statusLogo.StatusImage((string)e.Argument);
         }
 
         private void backgroundWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)

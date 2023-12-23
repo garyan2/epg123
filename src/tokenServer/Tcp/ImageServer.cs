@@ -1,4 +1,5 @@
 ﻿using GaRyan2;
+using GaRyan2.SchedulesDirectAPI;
 using GaRyan2.Utilities;
 using Newtonsoft.Json;
 using System;
@@ -7,6 +8,8 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 
@@ -123,14 +126,66 @@ namespace tokenServer
 
         private void ProcessRequest(HttpListenerContext context)
         {
+            if (context.Request.RawUrl.StartsWith("/logos/custom"))
+            {
+                switch (context.Request.HttpMethod)
+                {
+                    case "GET":
+                        var response = Directory.GetFiles(Helper.Epg123LogosFolder, "*.png").ToList().Select(logo => logo.Substring(Helper.Epg123LogosFolder.Length)).ToList();
+                        context.Response.ContentType = "application/json";
+                        var content = JsonConvert.SerializeObject(response, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore, DefaultValueHandling = DefaultValueHandling.Ignore });
+                        using (var ms = new MemoryStream(Encoding.UTF8.GetBytes(content)))
+                        {
+                            ms.Position = 0;
+                            ms.CopyTo(context.Response.OutputStream);
+                        }
+                        break;
+                    case "PUT":
+                        var file = context.Request.RawUrl.Substring("/logos/custom/".Length);
+                        using (var filestream = new FileStream($"{Helper.Epg123LogosFolder}{file}", FileMode.Create, FileAccess.Write))
+                        {
+                            context.Request.InputStream.CopyTo(filestream);
+                            filestream.Flush();
+                        }
+                        context.Response.ContentType = "application/json";
+                        var pContent = JsonConvert.SerializeObject(new BaseResponse(), new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore, DefaultValueHandling = DefaultValueHandling.Ignore });
+                        using (var ms = new MemoryStream(Encoding.UTF8.GetBytes(pContent)))
+                        {
+                            ms.Position = 0;
+                            ms.CopyTo(context.Response.OutputStream);
+                        }
+                        break;
+                    case "DELETE":
+                        var logofile = context.Request.RawUrl.Substring("/logos/custom/".Length);
+                        if (!string.IsNullOrEmpty(logofile) && File.Exists($"{Helper.Epg123LogosFolder}{logofile}"))
+                        {
+                            if (Helper.DeleteFile($"{Helper.Epg123LogosFolder}{logofile}"))
+                            {
+                                context.Response.ContentType = "application/json";
+                                var dContent = JsonConvert.SerializeObject(new BaseResponse(), new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore, DefaultValueHandling = DefaultValueHandling.Ignore });
+                                using (var ms = new MemoryStream(Encoding.UTF8.GetBytes(dContent)))
+                                {
+                                    ms.Position = 0;
+                                    ms.CopyTo(context.Response.OutputStream);
+                                }
+                                return;
+                            }
+                        }
+                        Send404NotFound(context.Response, $"/logos/{logofile}");
+                        break;
+                    default:
+                        context.Response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
+                        context.Response.Headers[HttpResponseHeader.Allow] = "GET, PUT, DELETE";
+                        break;
+                }
+            }
             // ensure http GET methods only for images
-            if (context.Request.HttpMethod != "GET")
+            else if (context.Request.HttpMethod != "GET")
             {
                 context.Response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
                 context.Response.Headers[HttpResponseHeader.Allow] = "GET";
             }
-
-            if (context.Request.RawUrl.StartsWith("/image/"))
+            else if (context.Request.RawUrl.StartsWith("/image/"))
             {
                 var dupe = false;
                 lock (_queueLock) dupe = !queuedImages.Add(context.Request.RawUrl);
@@ -140,17 +195,6 @@ namespace tokenServer
                 }
                 ServiceImageRequest(context);
                 lock (_queueLock) { queuedImages.Remove(context.Request.RawUrl); }
-            }
-            else if (context.Request.RawUrl.StartsWith("/logos/custom"))
-            {
-                var response = Directory.GetFiles(Helper.Epg123LogosFolder, "*.png").ToList().Select(logo => logo.Substring(Helper.Epg123LogosFolder.Length)).ToList();
-                context.Response.ContentType = "application/json";
-                var content = JsonConvert.SerializeObject(response, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore, DefaultValueHandling = DefaultValueHandling.Ignore });
-                using (var ms = new MemoryStream(Encoding.UTF8.GetBytes(content)))
-                {
-                    ms.Position = 0;
-                    ms.CopyTo(context.Response.OutputStream);
-                }
             }
             else if (context.Request.RawUrl.StartsWith("/logos/"))
             {
@@ -274,7 +318,7 @@ namespace tokenServer
             if (Send304OrImageFromCache(context.Response, ifModifiedSince, fileInfo)) return;
 
             // nothing to give the client
-            Send404NotFound(context.Response, asset);
+            Send503NotUnavailable(context.Response, asset);
         }
 
         private static bool Send304OrImageFromCache(HttpListenerResponse response, DateTimeOffset ifModifiedSince, FileInfo fileInfo, bool logo = false)
@@ -305,6 +349,13 @@ namespace tokenServer
             WebStats.IncrementHttpStat(404);
             response.StatusCode = (int)HttpStatusCode.NotFound;
             Logger.WriteError($"{asset} 404 Not Found");
+        }
+
+        private static void Send503NotUnavailable(HttpListenerResponse response, string asset)
+        {
+            WebStats.IncrementHttpStat(503);
+            response.StatusCode = (int)HttpStatusCode.ServiceUnavailable;
+            Logger.WriteError($"{asset} 503 Service Unavailable");
         }
 
         private static void SendImage(HttpListenerResponse response, FileInfo fileInfo)

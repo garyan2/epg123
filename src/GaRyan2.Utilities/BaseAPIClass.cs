@@ -4,6 +4,7 @@ using System;
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
@@ -39,7 +40,8 @@ namespace GaRyan2
             POST,
             PUT,
             DELETE,
-            UPCFG,
+            PUTX,
+            PUTB
         }
 
         public HttpClient _httpClient;
@@ -83,8 +85,10 @@ namespace GaRyan2
                         return GetHttpResponse<T>(HttpMethod.Put, uri).Result;
                     case Method.DELETE:
                         return GetHttpResponse<T>(HttpMethod.Delete, uri).Result;
-                    case Method.UPCFG:
+                    case Method.PUTX:
                         return PutXmlClass<T>(HttpMethod.Put, uri, classObject).Result;
+                    case Method.PUTB:
+                        return PutBinary<T>(HttpMethod.Put, uri, (byte[])classObject).Result;
                 }
             }
             catch (Exception ex)
@@ -121,6 +125,20 @@ namespace GaRyan2
             using (var request = new HttpRequestMessage(method, uri)
             {
                 Content = new StringContent(sw.ToString(), Encoding.UTF8, "text/xml")
+            })
+            using (var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false))
+            {
+                return !response.IsSuccessStatusCode
+                    ? HandleHttpResponseError<T>(response, await response.Content?.ReadAsStringAsync())
+                    : JsonConvert.DeserializeObject<T>(await response.Content?.ReadAsStringAsync(), JsonOptions);
+            }
+        }
+
+        public virtual async Task<T> PutBinary<T>(HttpMethod method, string uri, byte[] content)
+        {
+            using (var request = new HttpRequestMessage(method, uri)
+            {
+                Content = new ByteArrayContent(content)
             })
             using (var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false))
             {

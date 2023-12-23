@@ -44,21 +44,13 @@ namespace epg123Client
 
                 // look at the status of the mxf file generated for warnings
                 XDocument providers = null;
-                XDocument deviceGroup = null;
                 using (var reader = XmlReader.Create(_mxfFile))
                 {
                     reader.MoveToContent();
                     while (reader.Read())
                     {
-                        if (reader.Name == "DeviceGroup")
-                        {
-                            deviceGroup = XDocument.Load(reader.ReadSubtree());
-                            if (providers != null) break;
-                        }
-
                         if (reader.Name != "Providers") continue;
                         providers = XDocument.Load(reader.ReadSubtree());
-                        if (deviceGroup != null) break;
                     }
                 }
 
@@ -67,25 +59,6 @@ namespace epg123Client
                     .Where(arg => arg.Attribute("name") != null)
                     .SingleOrDefault(arg => arg.Attribute("name")?.Value == "EPG123" || arg.Attribute("name")?.Value == "HDHR2MXF");
                 if (provider == null) return EPG123STATUS.OTHERMXF;
-
-                // determine if file is old
-                DateTime timestamp;
-                if (deviceGroup != null)
-                {
-                    timestamp = DateTime.Parse(deviceGroup.Root?.Attribute("lastConfigurationChange")?.Value);
-                }
-                else
-                {
-                    var fi = new FileInfo(_mxfFile);
-                    timestamp = fi.LastWriteTime;
-                }
-                var mxfFileAge = DateTime.Now - timestamp;
-                Logger.WriteInformation($"MXF file was created on {timestamp.ToLocalTime()}");
-                if (mxfFileAge > TimeSpan.FromHours(23.0))
-                {
-                    Logger.WriteError($"The MXF file imported is {mxfFileAge.TotalHours:N2} hours old.");
-                    return EPG123STATUS.ERROR;
-                }
 
                 // determine the update available flag
                 if (provider.Attribute("displayName") != null)
@@ -96,15 +69,6 @@ namespace epg123Client
                 // read the epg123 status
                 if (provider.Attribute("status") == null) return EPG123STATUS.SUCCESS;
                 var ret = (EPG123STATUS) (int.Parse(provider.Attribute("status")?.Value));
-                switch (ret)
-                {
-                    case EPG123STATUS.WARNING:
-                        Logger.WriteWarning("There was a WARNING generated during the MXF file creation.");
-                        break;
-                    case EPG123STATUS.ERROR:
-                        Logger.WriteError("There was an ERROR generated during the MXF file creation.");
-                        break;
-                }
                 return ret;
             }
         }
@@ -235,13 +199,14 @@ namespace epg123Client
                 g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;
 
                 var updateImageWidth = (updateImage.Width == 1) ? 0 : updateImage.Width;
+                var centerPoint = image.Width - updateImageWidth - Math.Max(baseImage.Width, textSize.Width) / 2 + 1;
 
                 g.DrawImage(updateImage, image.Width - updateImageWidth, 0);
-                g.DrawImage(baseImage, image.Width - updateImageWidth - baseImage.Width, image.Height - 75);
+                g.DrawImage(baseImage, centerPoint - baseImage.Width / 2, 0);
 
                 using (Brush textbrush = new SolidBrush(textColor))
                 {
-                    g.DrawString(text, font, textbrush, image.Width - updateImageWidth - textSize.Width + 2, image.Height - textSize.Height + 2);
+                    g.DrawString(text, font, textbrush, centerPoint - textSize.Width / 2, baseImage.Height);
                 }
             }
 

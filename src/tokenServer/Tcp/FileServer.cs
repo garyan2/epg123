@@ -134,6 +134,7 @@ namespace tokenServer
                 case "/status.html":
                     var htmlBytes = Encoding.UTF8.GetBytes(WebStats.Html);
                     context.Response.ContentType = "text/html;charset-utf-8";
+                    context.Response.Headers.Add("X-Robots-Tag", "none");
                     context.Response.OutputStream.Write(htmlBytes, 0, htmlBytes.Length);
                     return;
                 case "/favicon.ico":

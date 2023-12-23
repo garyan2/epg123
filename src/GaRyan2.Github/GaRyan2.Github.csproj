@@ -44,6 +44,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\SolutionInfo.cs">
+      <Link>Properties\SolutionInfo.cs</Link>
+    </Compile>
     <Compile Include="JsonClasses\Asset.cs" />
     <Compile Include="GithubApi.cs" />
     <Compile Include="JsonClasses\Person.cs" />

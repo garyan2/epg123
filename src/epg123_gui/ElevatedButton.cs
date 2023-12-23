@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 using System.Security.Principal;
 using System.Windows.Forms;
 
-namespace epg123
+namespace epg123_gui
 {
     /// <summary>
     /// Is a button with the UAC shield

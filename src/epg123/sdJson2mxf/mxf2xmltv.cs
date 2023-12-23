@@ -280,7 +280,7 @@ namespace epg123.sdJson2mxf
                     Writers = MxfPersonRankToXmltvCrew(mxfProgram.WriterRole),
                     Producers = MxfPersonRankToXmltvCrew(mxfProgram.ProducerRole),
                     Presenters = MxfPersonRankToXmltvCrew(mxfProgram.HostRole),
-                    Guests = MxfPersonRankToXmltvCrew(mxfProgram.GuestActorRole)
+                    Guests = MxfPersonRankToXmltvActors(mxfProgram.GuestActorRole)
                 };
             }
             return null;

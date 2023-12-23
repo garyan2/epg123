@@ -96,6 +96,9 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\SolutionInfo.cs">
+      <Link>Properties\SolutionInfo.cs</Link>
+    </Compile>
     <Compile Include="sdJson2mxf\brandLogo.cs" />
     <Compile Include="epgCache.cs" />
     <Compile Include="epgConfig.cs" />

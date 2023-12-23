@@ -66,37 +66,6 @@ namespace GaRyan2.WmcUtilities
             const string nextDbgcKey = "dbgc:next run time";
             var nextRunTime = DateTime.Now + TimeSpan.FromDays(5);
 
-            try
-            {
-                // read registry to see if database garbage cleanup is needed
-                using (var key = Registry.LocalMachine.OpenSubKey(hklmEpgKey, true))
-                {
-                    if (key != null)
-                    {
-                        // verify periodic downloads are not enabled
-                        if ((int)key.GetValue("dl", 1) != 0) key.SetValue("dl", 0);
-
-                        // write a last index time in the future to avoid the dbgc kicking off a reindex while importing the mxf file
-                        key.SetValue("LastFullReindex", Convert.ToString(nextRunTime, CultureInfo.InvariantCulture));
-
-                        string nextRun;
-                        if ((nextRun = (string)key.GetValue(nextDbgcKey)) != null)
-                        {
-                            var deltaTime = DateTime.Parse(nextRun) - DateTime.Now;
-                            if (deltaTime > TimeSpan.FromHours(12) && deltaTime < TimeSpan.FromDays(5)) return true;
-                        }
-                    }
-                    else
-                    {
-                        Logger.WriteInformation("Could not verify when garbage cleanup was last run.");
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.WriteInformation($"Exception thrown during PerformGarbageCleanup(). Message:{Helper.ReportExceptionMessages(ex)}");
-            }
-
             Logger.WriteMessage("Entering PerformGarbageCleanup().");
             Helper.SendPipeMessage("Importing|Performing garbage cleanup...");
             try
@@ -183,7 +152,7 @@ namespace GaRyan2.WmcUtilities
         }
 
         #region ========== LoadMxf ==========
-        public static bool ImportMxfFile(string mxfFile)
+        public static bool ImportMxfFile(string mxfFile, bool forceImport = false)
         {
             var ret = false;
             Logger.WriteMessage($"Entering ImportMxfFile() for file \"{mxfFile}\".");
@@ -214,25 +183,59 @@ namespace GaRyan2.WmcUtilities
                     }
                 }
 
-                // check for channels removed from lineups
+                // check file age, server status, and for channels removed from lineups
                 try
                 {
                     MXF mxf = Helper.ReadXmlFile(mxfFile, typeof(MXF));
-                    foreach (var wmis in GetWmisLineups())
+                    if (mxf == null) return false;
+
+                    if (mxf.Providers?.SingleOrDefault(arg => arg.Name.Equals("EPG123") || arg.Name.Equals("HDHR2MXF")) != null)
                     {
-                        if (!(WmcObjectStore.Fetch(wmis.LineupId) is Lineup lup)) continue;
-                        var xml = mxf?.With?.Lineups?.FirstOrDefault(arg => arg.Uid == lup.GetUIdValue());
-                        if (xml == null) continue;
-
-                        foreach (var channel in lup.GetChannels())
+                        DateTimeOffset.TryParse(mxf.DeviceGroup?.LastConfigurationChange, out DateTimeOffset lastUpdateTime);
+                        Logger.WriteInformation($"MXF file was created on {lastUpdateTime.ToLocalTime()}");
+                        if (!forceImport && DateTime.UtcNow - lastUpdateTime > TimeSpan.FromHours(24.0))
                         {
-                            var mxfch = xml.channels.FirstOrDefault(arg => arg.Uid.Contains(channel.GetUIdValue()));
-                            if (mxfch != null) continue;
+                            Logger.WriteError($"The MXF file is {(DateTime.UtcNow - lastUpdateTime).TotalHours:N2} hours old. Aborting import.");
+                            Logger.WriteError("ACTION: Review trace.log file to determine cause of failed MXF file creation within last 24 hours.");
+                            Logger.WriteError("ACTION: To force an import of the aged MXF file, use the client GUI [Manual Import] button.");
+                            return false;
+                        }
 
-                            Logger.WriteInformation($"Channel '{channel.ChannelNumber} {channel.CallSign}' was removed from lineup '{lup.Name}'. Unsubscribing channel before import.");
-                            foreach (MergedChannel mch in channel.ReferencingPrimaryChannels.ToList())
+                        if (mxf.Providers[0].DisplayName.Contains("Available"))
+                        {
+                            Logger.WriteInformation("The MXF file reports the EPG123 server installation is not up to date.");
+                            Logger.WriteInformation("ACTION: Download the latest version from https://garyan2.github.io/ and update the server and/or client(s).");
+                        }
+                        switch (mxf.Providers[0].Status)
+                        {
+                            case 0xBAD1:
+                                Logger.WriteWarning("There was a WARNING generated during the MXF file creation.");
+                                Logger.WriteWarning("ACTION: Review trace.log file to determine cause of warning during MXF file creation within last 24 hours.");
+                                break;
+                            case 0xDEAD:
+                                Logger.WriteError("There was an ERROR generated during the MXF file creation.");
+                                Logger.WriteError("ACTION: Review trace.log file to determine cause of error during MXF file creation within last 24 hours.");
+                                break;
+                            default:
+                                break;
+                        }
+
+                        foreach (var wmis in GetWmisLineups())
+                        {
+                            if (!(WmcObjectStore.Fetch(wmis.LineupId) is Lineup lup)) continue;
+                            var xml = mxf?.With?.Lineups?.FirstOrDefault(arg => arg.Uid == lup.GetUIdValue());
+                            if (xml == null) continue;
+
+                            foreach (var channel in lup.GetChannels())
                             {
-                                SubscribeLineupChannel(0, mch.Id);
+                                var mxfch = xml.channels.FirstOrDefault(arg => arg.Uid.Contains(channel.GetUIdValue()));
+                                if (mxfch != null) continue;
+
+                                Logger.WriteInformation($"Channel '{channel.ChannelNumber} {channel.CallSign}' was removed from lineup '{lup.Name}'. Unsubscribing channel before import.");
+                                foreach (MergedChannel mch in channel.ReferencingPrimaryChannels.ToList())
+                                {
+                                    SubscribeLineupChannel(0, mch.Id);
+                                }
                             }
                         }
                     }

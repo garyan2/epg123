@@ -18,6 +18,14 @@ namespace GaRyan2.Utilities
                 {
                     _executablePath = AppDomain.CurrentDomain.BaseDirectory;
                     if (!string.IsNullOrEmpty(_executablePath)) Directory.SetCurrentDirectory(_executablePath);
+
+                    // create folders as needed
+                    if (InstallMethod != Installation.CLIENT)
+                    {
+                        if (!Directory.Exists(Epg123CacheFolder)) Directory.CreateDirectory(Epg123CacheFolder);
+                        if (!Directory.Exists(Epg123ImageCache)) Directory.CreateDirectory(Epg123ImageCache);
+                        if (!Directory.Exists(Epg123LogosFolder)) Directory.CreateDirectory(Epg123LogosFolder);
+                    }
                     if (!Directory.Exists(Epg123OutputFolder)) Directory.CreateDirectory(Epg123OutputFolder);
                 }
                 return _executablePath;

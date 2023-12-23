@@ -1,5 +1,5 @@
 ﻿
-namespace epg123
+namespace epg123_gui
 {
     partial class frmRemoteServers
     {

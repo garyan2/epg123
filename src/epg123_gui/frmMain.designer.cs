@@ -1,4 +1,4 @@
-﻿namespace epg123
+﻿namespace epg123_gui
 {
     partial class ConfigForm
     {
@@ -78,7 +78,7 @@
             this.tabTask = new System.Windows.Forms.TabPage();
             this.cbAutomatch = new System.Windows.Forms.CheckBox();
             this.lblSchedStatus = new System.Windows.Forms.Label();
-            this.btnTask = new epg123.ElevatedButton();
+            this.btnTask = new epg123_gui.ElevatedButton();
             this.cbImport = new System.Windows.Forms.CheckBox();
             this.cbTaskWake = new System.Windows.Forms.CheckBox();
             this.tbSchedTime = new System.Windows.Forms.MaskedTextBox();

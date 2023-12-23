@@ -2,7 +2,7 @@
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace epg123
+namespace epg123_gui
 {
     internal class MemberListViewItem : ListViewItem
     {
