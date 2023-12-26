@@ -46,7 +46,7 @@ namespace GaRyan2.Utilities
         public static string BackupZipFile { get; set; }
         public static string OutputPathOverride { get; set; }
 
-        public const int TcpUdpPort = 9009;
+        public const int TcpUdpPort = 9008;
 
         public static Mutex GetProgramMutex(string uid, bool take)
         {

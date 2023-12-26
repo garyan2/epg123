@@ -11,7 +11,7 @@ namespace epg123.sdJson2mxf
 {
     internal static partial class sdJson2Mxf
     {
-        private static string HostAddress => string.IsNullOrEmpty(config.UseIpAddress) ? Environment.MachineName : config.UseIpAddress;
+        private static string HostAddress = "192.168.7.6";
         private static epgConfig config;
 
         public static bool Success;

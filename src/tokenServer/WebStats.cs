@@ -127,7 +127,7 @@ namespace tokenServer
                 ret += "</tr>";
             }
             ret += "</table>";
-            ret += $"<p><small><b>Links to files above can be constructed from server address + \"/output/&lt;source&gt;.&lt;extension&gt;\"; ex. http://{Environment.MachineName}:9009/output/epg123.mxf</b></small></p></p>";
+            ret += $"<p><small><b>Links to files above can be constructed from server address + \"/output/&lt;source&gt;.&lt;extension&gt;\"; ex. http://192.168.8.7:9008/output/epg123.mxf</b></small></p></p>";
             return ret;
         }
 

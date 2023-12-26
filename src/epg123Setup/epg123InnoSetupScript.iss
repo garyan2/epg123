@@ -148,8 +148,8 @@ Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=
 Filename: "{sys}\sc.exe"; Parameters: "stop epg123Server"; Flags: runhidden; StatusMsg: "Stopping EPG123 Server..."
 Filename: "{sys}\sc.exe"; Parameters: "delete epg123Server" ; Flags: runhidden; StatusMsg: "Deleting server service..."
 
-Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall add rule name=""EPG123 Server"" dir=in action=allow profile=private,domain protocol=tcp localport=9009"; Flags: runhidden; Components: main1\epg123 main1\hdhr; StatusMsg: "Adding TCP firewall rule..."
-Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall add rule name=""EPG123 Server"" dir=in action=allow profile=private,domain protocol=udp localport=9009"; Flags: runhidden; Components: main1\epg123 main1\hdhr main2; StatusMsg: "Adding UDP firewall rule..."
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall add rule name=""EPG123 Server"" dir=in action=allow profile=private,domain protocol=tcp localport=9008"; Flags: runhidden; Components: main1\epg123 main1\hdhr; StatusMsg: "Adding TCP firewall rule..."
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall add rule name=""EPG123 Server"" dir=in action=allow profile=private,domain protocol=udp localport=9008"; Flags: runhidden; Components: main1\epg123 main1\hdhr main2; StatusMsg: "Adding UDP firewall rule..."
 Filename: "{sys}\sc.exe"; Parameters: "create epg123Server start= delayed-auto binPath= ""{app}\epg123Server.exe"" displayname= ""EPG123 Server"""; Flags: runhidden; Components: main1\epg123 main1\hdhr; StatusMsg: "Creating server service..."
 Filename: "{sys}\sc.exe"; Parameters: "description epg123Server ""Services image redirects adding token requirements and provides an endpoint to download output files."""; Flags: runhidden; Components: main1\epg123 main1\hdhr
 Filename: "{sys}\sc.exe"; Parameters: "failure ""epg123Server"" reset= 86400 actions= restart/60000/restart/60000/restart/60000"; Flags: runhidden; Components: main1\epg123 main1\hdhr
