@@ -149,7 +149,7 @@ namespace epg123.sdJson2mxf
             mxf.Providers[0].Status = Logger.Status;
 
             if (!Helper.WriteXmlFile(mxf, Helper.Epg123MxfPath, true)) return false;
-            
+
             var fi = new FileInfo(Helper.Epg123MxfPath);
             Logger.WriteInformation($"Completed save of the MXF file to \"{Helper.Epg123MxfPath}\". ({Helper.BytesToString(fi.Length)})");
             Logger.WriteVerbose($"Generated MXF file contains {mxf.With.Services.Count - 1} services, {mxf.With.SeriesInfos.Count} series, {mxf.With.Seasons.Count} seasons, {mxf.With.Programs.Count} programs, {mxf.With.ScheduleEntries.Sum(x => x.ScheduleEntry.Count)} schedule entries, and {mxf.With.People.Count} people with {mxf.With.GuideImages.Count} image links.");

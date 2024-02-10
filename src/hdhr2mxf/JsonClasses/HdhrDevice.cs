@@ -43,7 +43,7 @@ namespace GaRyan2.SiliconDustApi
         public int TunerCount { get; set; }
 
         [JsonProperty("StorageID")]
-        public string StorageID { get;set; }
+        public string StorageID { get; set; }
 
         [JsonProperty("StorageURL")]
         public string StorageURL { get; set; }

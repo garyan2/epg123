@@ -287,7 +287,9 @@ namespace epg123
         public string BrandLogoImage { get; set; } = "none";
 
         [XmlAnyElement("SuppressStationEmptyWarningsComment")]
-        public XmlComment SuppressStationEmptyWarningsComment { get => new XmlDocument().CreateComment(" SuppressStationEmptyWarnings: Enter specific station callsigns, comma delimited, to suppress warnings for no guide data, or use a wildcard (*) for a group of callsigns. A solitary wildcard means all station warnings will be suppressed. ");
+        public XmlComment SuppressStationEmptyWarningsComment
+        {
+            get => new XmlDocument().CreateComment(" SuppressStationEmptyWarnings: Enter specific station callsigns, comma delimited, to suppress warnings for no guide data, or use a wildcard (*) for a group of callsigns. A solitary wildcard means all station warnings will be suppressed. ");
             set { }
         }
         [XmlElement("SuppressStationEmptyWarnings")]

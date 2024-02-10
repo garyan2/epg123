@@ -8,12 +8,10 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 
-namespace tokenServer
+namespace epg123Server
 {
     class HttpImageServer : IDisposable
     {
@@ -62,7 +60,7 @@ namespace tokenServer
         }
 
         public void Dispose()
-        { 
+        {
             Stop();
         }
 

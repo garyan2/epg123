@@ -11,7 +11,7 @@ namespace logViewer
     public partial class frmViewer : Form
     {
         private long streamLocation;
-        private string _filename;
+        private readonly string _filename;
         private string _lastPath;
         private int _lines;
 

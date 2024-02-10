@@ -7,7 +7,7 @@ namespace GaRyan2.MxfXml
     {
         private string _uid;
         private string _service;
-        
+
         [XmlIgnore] public MxfDvbsHeadend _mxfHeadend;
         [XmlIgnore] public MxfDvbsService _mxfService;
 

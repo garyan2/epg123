@@ -1,7 +1,7 @@
 ﻿using GaRyan2.Utilities;
 using System.ServiceProcess;
 
-namespace tokenServer
+namespace epg123Server
 {
     static class Program
     {

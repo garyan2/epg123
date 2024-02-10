@@ -1,4 +1,6 @@
-﻿using System;
+﻿using GaRyan2.Utilities;
+using Microsoft.Win32;
+using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -6,8 +8,6 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Xml;
 using System.Xml.Linq;
-using GaRyan2.Utilities;
-using Microsoft.Win32;
 
 namespace epg123Client
 {
@@ -68,7 +68,7 @@ namespace epg123Client
 
                 // read the epg123 status
                 if (provider.Attribute("status") == null) return EPG123STATUS.SUCCESS;
-                var ret = (EPG123STATUS) (int.Parse(provider.Attribute("status")?.Value));
+                var ret = (EPG123STATUS)(int.Parse(provider.Attribute("status")?.Value));
                 return ret;
             }
         }
@@ -77,7 +77,7 @@ namespace epg123Client
         {
             _mxfFile = mxfFile;
             // don't update the status logo if the imported mxf was not from epg123
-            var filestatus = (int) MxfFileStatus;
+            var filestatus = (int)MxfFileStatus;
             if ((EPG123STATUS)filestatus == EPG123STATUS.OTHERMXF) return;
 
             // determine overall status

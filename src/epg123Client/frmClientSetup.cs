@@ -170,8 +170,8 @@ namespace epg123Client
         }
 
         #region ========== Step 1 Clean Start ==========
-        private readonly string[] _regKeysDelete = {@"Service\Epg"};
-        private readonly string[] _regKeysCreate = {@"Service\Epg"};
+        private readonly string[] _regKeysDelete = { @"Service\Epg" };
+        private readonly string[] _regKeysCreate = { @"Service\Epg" };
 
         private void RefreshRegistryKeys()
         {
@@ -588,7 +588,7 @@ namespace epg123Client
             foreach (var subkey in key.GetSubKeyNames())
             {
                 var device = key.OpenSubKey(subkey);
-                if ((string) device?.GetValue("FriendlyName") == "Hauppauge HD PVR Software Tuner")
+                if ((string)device?.GetValue("FriendlyName") == "Hauppauge HD PVR Software Tuner")
                 {
                     _hdpvrTuners.Add(subkey);
                 }
@@ -764,11 +764,11 @@ namespace epg123Client
                 Logger.WriteVerbose(txt);
 
                 var proc = Process.GetProcesses().SingleOrDefault(arg => arg.ProcessName.Equals(Path.GetFileNameWithoutExtension(exePath))) ?? Process.Start(new ProcessStartInfo
-                    {
-                        FileName = exePath,
-                        UseShellExecute = false,
-                        CreateNoWindow = true
-                    });
+                {
+                    FileName = exePath,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                });
                 proc.EnableRaisingEvents = true;
                 ShowWindow(proc.MainWindowHandle, SW_SHOWNORMAL);
                 SetForegroundWindow(proc.MainWindowHandle);

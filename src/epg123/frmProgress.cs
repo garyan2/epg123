@@ -1,7 +1,7 @@
-﻿using System;
+﻿using GaRyan2.Utilities;
+using System;
 using System.ComponentModel;
 using System.Windows.Forms;
-using GaRyan2.Utilities;
 
 namespace epg123
 {

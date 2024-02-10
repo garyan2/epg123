@@ -4,7 +4,6 @@ using System;
 using System.IO;
 using System.Net;
 using System.Net.Http;
-using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
@@ -100,7 +99,7 @@ namespace GaRyan2
 
         public virtual async Task<T> GetHttpResponse<T>(HttpMethod method, string uri, object content = null)
         {
-            using (var request = new HttpRequestMessage(method, uri) 
+            using (var request = new HttpRequestMessage(method, uri)
             {
                 Content = (content != null)
                     ? new StringContent(JsonConvert.SerializeObject(content), Encoding.UTF8, "application/json")

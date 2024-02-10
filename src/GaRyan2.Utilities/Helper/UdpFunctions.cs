@@ -95,7 +95,7 @@ namespace GaRyan2.Utilities
                     foreach (var response in responses)
                     {
                         if (!ValidCRC(response.Value)) continue;
-                        var server = new ServerDetails() { Address = $"{response.Key}"};
+                        var server = new ServerDetails() { Address = $"{response.Key}" };
                         var size = response.Value[3] << 8 | response.Value[2];
                         var pos = 4;
                         while (pos < size - 4)

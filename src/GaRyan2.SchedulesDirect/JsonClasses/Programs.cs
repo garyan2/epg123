@@ -94,7 +94,7 @@ namespace GaRyan2.SchedulesDirectAPI
 
         [JsonProperty("hasMovieArtwork")]
         public bool HasMovieArtwork { get; set; }
-        
+
         [JsonProperty("hasSportsArtwork")]
         public bool HasSportsArtwork { get; set; }
 

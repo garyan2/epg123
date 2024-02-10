@@ -4,7 +4,7 @@ using System;
 using System.IO;
 using System.Linq;
 
-namespace tokenServer
+namespace epg123Server
 {
     public static class WebStats
     {
@@ -40,6 +40,8 @@ namespace tokenServer
         private static int fileCnt;
         private static long fileSz;
 
+        private static long badActorRequestCnt;
+
         public static string Html
         {
             get
@@ -54,7 +56,8 @@ namespace tokenServer
                        $"Logo requests: <font color=\"blue\">{reqLogo}</font><br>" +
                        $"Image requests: <font color=\"blue\">{reqRcvd}</font><br>" +
                        $"Conditional requests: <font color=\"blue\">{condReqRcvd}</font><br>" +
-                       $"File requests: <font color=\"blue\">{reqFile}</font><br><br>" +
+                       $"File requests: <font color=\"blue\">{reqFile}</font><br>" +
+                       $"Invalid requests: <font color=\"blue\">{badActorRequestCnt}</font><br><br>" +
                        $"<u><strong>Requests sent to Schedules Direct (<font color=\"blue\">{reqSent + condReqSent}</font>):</strong></u><br>" +
                        $"Image requests: <font color=\"blue\">{reqSent}</font><br>" +
                        $"Conditional requests: <font color=\"blue\">{condReqSent}</font><br><br>" +
@@ -71,7 +74,8 @@ namespace tokenServer
                        $"500 Internal Server Error: <font color=\"{(resp500 > 0 ? "red" : "blue")}\">{resp500}</font><br>" +
                        $"502 Bad Gateway: <font color=\"{(resp502 > 0 ? "red" : "blue")}\">{resp502}</font><br>" +
                        $"503 Service Unavailable: <font color=\"{(resp503 > 0 ? "red" : "blue")}\">{resp503}</font><br>" +
-                       $"Other (see log): <font color=\"{(respOther > 0 ? "red" : "blue")}\">{respOther}</font></p>" +
+                       $"Other (see log): <font color=\"{(respOther > 0 ? "red" : "blue")}\">{respOther}</font><br>" +
+                       $"Invalid requests ignored: <font color=\"blue\">{badActorRequestCnt}</font></p>" +
 
                        $"<h1>Logs</h1><p>" +
                        $"<a href=\"trace.log\" target=\"_blank\">View EPG123 Log</a><br>" +
@@ -127,7 +131,7 @@ namespace tokenServer
                 ret += "</tr>";
             }
             ret += "</table>";
-            ret += $"<p><small><b>Links to files above can be constructed from server address + \"/output/&lt;source&gt;.&lt;extension&gt;\"; ex. http://{Environment.MachineName}:9009/output/epg123.mxf</b></small></p></p>";
+            //ret += $"<p><small><b>Links to files above can be constructed from server address + \"/output/&lt;source&gt;.&lt;extension&gt;\"; ex. http://{Environment.MachineName}:9009/output/epg123.mxf</b></small></p></p>";
             return ret;
         }
 
@@ -278,6 +282,11 @@ namespace tokenServer
                 ++logoCnt;
                 logoSz += size;
             }
+        }
+
+        public static void IncrementBadActorRequest()
+        {
+            lock (StatLock) ++badActorRequestCnt;
         }
     }
 }

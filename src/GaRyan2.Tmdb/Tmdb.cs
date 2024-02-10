@@ -4,9 +4,12 @@ namespace GaRyan2
 {
     public static class Tmdb
     {
-        private static readonly API api = new API() { BaseAddress = "https://api.themoviedb.org/3/",
-                                                      ApiKey = "05c57e15f625338ad1c5aa8a2899e589" };
-        
+        private static readonly API api = new API()
+        {
+            BaseAddress = "https://api.themoviedb.org/3/",
+            ApiKey = "05c57e15f625338ad1c5aa8a2899e589"
+        };
+
         public static int PosterWidth { get; private set; }
         private static int _minWidth;
 

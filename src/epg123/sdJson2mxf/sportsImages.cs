@@ -79,7 +79,7 @@ namespace epg123.sdJson2mxf
 
                 // get sports event images
                 List<ProgramArtwork> artwork;
-                mxfProgram.extras.Add("artwork", artwork = GetTieredImages(response.Data, new List<string> { "team event", "sport event"}));
+                mxfProgram.extras.Add("artwork", artwork = GetTieredImages(response.Data, new List<string> { "team event", "sport event" }));
                 mxfProgram.mxfGuideImage = GetGuideImageAndUpdateCache(artwork, ImageType.Program, mxfProgram.extras["md5"]);
             }
         }

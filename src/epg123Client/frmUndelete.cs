@@ -1,9 +1,9 @@
-﻿using System;
+﻿using GaRyan2.Utilities;
+using GaRyan2.WmcUtilities;
+using Microsoft.MediaCenter.Guide;
+using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
-using Microsoft.MediaCenter.Guide;
-using GaRyan2.Utilities;
-using GaRyan2.WmcUtilities;
 
 namespace epg123Client
 {
@@ -39,7 +39,7 @@ namespace epg123Client
             BuildListView();
             listView1.EndUpdate();
 
-            int[] minWidths = {100, 60, 100, 100};
+            int[] minWidths = { 100, 60, 100, 100 };
             foreach (ColumnHeader header in listView1.Columns)
             {
                 var currentWidth = header.Width;

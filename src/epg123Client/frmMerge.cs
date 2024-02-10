@@ -17,7 +17,7 @@ namespace epg123Client
 
             foreach (var id in idList)
             {
-                listView1.Items.Add(new myChannelLvi(WmcStore.WmcObjectStore.Fetch(id) as MergedChannel) {Tag = id});
+                listView1.Items.Add(new myChannelLvi(WmcStore.WmcObjectStore.Fetch(id) as MergedChannel) { Tag = id });
             }
 
             listView1.Columns[5].AutoResize(ColumnHeaderAutoResizeStyle.ColumnContent);

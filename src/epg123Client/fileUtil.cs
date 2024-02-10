@@ -44,7 +44,7 @@ namespace epg123Client
             public RM_APP_TYPE ApplicationType;
             public uint AppStatus;
             public uint TSSessionId;
-            [MarshalAs(UnmanagedType.Bool)] 
+            [MarshalAs(UnmanagedType.Bool)]
             public bool bRestartable;
         }
 
@@ -96,7 +96,7 @@ namespace epg123Client
                 uint pnProcInfo = 0,
                     lpdwRebootReasons = RmRebootReasonNone;
 
-                var resources = new string[] {path}; // Just checking on one resource.
+                var resources = new string[] { path }; // Just checking on one resource.
 
                 res = RmRegisterResources(handle, (uint)resources.Length, resources, 0, null, 0, null);
 

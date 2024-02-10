@@ -11,7 +11,7 @@ public class ListViewColumnSorter : IComparer
     /// Specifies the column to be sorted
     /// </summary>
     public int SortColumn { get; set; }
-    
+
     /// <summary>
     /// Specifies the order in which to sort (i.e. 'Ascending').
     /// </summary>
@@ -21,7 +21,7 @@ public class ListViewColumnSorter : IComparer
     /// Specifies whether selected items should be grouped together
     /// </summary>
     public bool GroupOrder { get; set; }
-    
+
     /// <summary>
     /// Case insensitive comparer object
     /// </summary>
@@ -76,7 +76,7 @@ public class ListViewColumnSorter : IComparer
         {
             if (GroupOrder)
             {
-                if (((ListViewItem) x)?.Checked ?? false) stringX = $"00000{stringX}";
+                if (((ListViewItem)x)?.Checked ?? false) stringX = $"00000{stringX}";
                 else stringX = $"zzzzz{stringX}";
 
                 if (((ListViewItem)y)?.Checked ?? false) stringY = $"00000{stringY}";

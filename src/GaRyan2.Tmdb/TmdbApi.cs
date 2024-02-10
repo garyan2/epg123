@@ -10,7 +10,7 @@ namespace GaRyan2.TmdbApi
         private bool IsAlive = true;
 
         public TmdbConfiguration Config;
-        private bool IncludeAdultTitles;
+        private readonly bool IncludeAdultTitles;
 
         private TmdbConfiguration GetTmdbConfigurations()
         {
@@ -39,7 +39,7 @@ namespace GaRyan2.TmdbApi
             Logger.WriteVerbose($"TMDb catalog search for \"{title}\" from {year} found {movies.TotalResults} results.");
 
             // find exact title match and production year
-            var movie = movies.Results.FirstOrDefault(arg => arg.Title.Equals(title, StringComparison.OrdinalIgnoreCase) && (year > 0 ? arg.ReleaseDate.Year == year : true));
+            var movie = movies.Results.FirstOrDefault(arg => arg.Title.Equals(title, StringComparison.OrdinalIgnoreCase) && (year <= 0 || arg.ReleaseDate.Year == year));
             return movie;
         }
     }

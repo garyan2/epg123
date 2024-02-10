@@ -78,7 +78,6 @@
             this.tabTask = new System.Windows.Forms.TabPage();
             this.cbAutomatch = new System.Windows.Forms.CheckBox();
             this.lblSchedStatus = new System.Windows.Forms.Label();
-            this.btnTask = new epg123_gui.ElevatedButton();
             this.cbImport = new System.Windows.Forms.CheckBox();
             this.cbTaskWake = new System.Windows.Forms.CheckBox();
             this.tbSchedTime = new System.Windows.Forms.MaskedTextBox();
@@ -139,6 +138,7 @@
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.btnClearCache = new System.Windows.Forms.Button();
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
+            this.btnTask = new epg123_gui.ElevatedButton();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -794,17 +794,6 @@
             this.lblSchedStatus.TabIndex = 4;
             this.lblSchedStatus.Text = "Task Status";
             // 
-            // btnTask
-            // 
-            this.btnTask.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.btnTask.Location = new System.Drawing.Point(228, 87);
-            this.btnTask.Name = "btnTask";
-            this.btnTask.Size = new System.Drawing.Size(75, 23);
-            this.btnTask.TabIndex = 4;
-            this.btnTask.Text = "Create";
-            this.btnTask.UseVisualStyleBackColor = true;
-            this.btnTask.Click += new System.EventHandler(this.btnTask_Click);
-            // 
             // cbImport
             // 
             this.cbImport.AutoSize = true;
@@ -947,7 +936,7 @@
             this.cmbIpAddresses.FormattingEnabled = true;
             this.cmbIpAddresses.Location = new System.Drawing.Point(26, 191);
             this.cmbIpAddresses.Name = "cmbIpAddresses";
-            this.cmbIpAddresses.Size = new System.Drawing.Size(110, 21);
+            this.cmbIpAddresses.Size = new System.Drawing.Size(199, 21);
             this.cmbIpAddresses.TabIndex = 9;
             this.cmbIpAddresses.SelectedIndexChanged += new System.EventHandler(this.cbIpAddresses_SelectedIndexChanged);
             // 
@@ -1261,7 +1250,7 @@
             this.toolStrip6.MaximumSize = new System.Drawing.Size(0, 46);
             this.toolStrip6.MinimumSize = new System.Drawing.Size(0, 46);
             this.toolStrip6.Name = "toolStrip6";
-            this.toolStrip6.Size = new System.Drawing.Size(426, 46);
+            this.toolStrip6.Size = new System.Drawing.Size(0, 46);
             this.toolStrip6.Stretch = true;
             this.toolStrip6.TabIndex = 2;
             this.toolStrip6.Text = "toolStrip6";
@@ -1436,6 +1425,17 @@
             this.btnClearCache.Text = "Clear Cache";
             this.btnClearCache.UseVisualStyleBackColor = true;
             this.btnClearCache.Click += new System.EventHandler(this.btnClearCache_Click);
+            // 
+            // btnTask
+            // 
+            this.btnTask.FlatStyle = System.Windows.Forms.FlatStyle.System;
+            this.btnTask.Location = new System.Drawing.Point(228, 87);
+            this.btnTask.Name = "btnTask";
+            this.btnTask.Size = new System.Drawing.Size(75, 23);
+            this.btnTask.TabIndex = 4;
+            this.btnTask.Text = "Create";
+            this.btnTask.UseVisualStyleBackColor = true;
+            this.btnTask.Click += new System.EventHandler(this.btnTask_Click);
             // 
             // ConfigForm
             // 

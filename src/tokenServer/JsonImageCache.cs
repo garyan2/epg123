@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace tokenServer
+namespace epg123Server
 {
     public static class JsonImageCache
     {
@@ -37,6 +37,7 @@ namespace tokenServer
             if (!cacheImages) return;
             var markedForDelete = ImageCache.Where(arg => arg.Value.LastUsed + TimeSpan.FromDays(cacheRetention) < DateTime.Now)
                 .Select(arg => arg.Key).ToList();
+            var deleted = 0;
             foreach (var image in markedForDelete)
             {
                 var path = $"{Helper.Epg123ImageCache}{image.Substring(0, 1)}\\{image}";
@@ -44,9 +45,11 @@ namespace tokenServer
                 {
                     if (File.Exists(path)) File.Delete(path);
                     ImageCache.Remove(image);
+                    ++deleted;
                 }
                 catch { }
             }
+            if (deleted > 0) Logger.WriteInformation($"Removed {markedForDelete.Count} images from cache that haven't been accessed for over {cacheRetention} days.");
         }
 
         public static void Save()
@@ -78,7 +81,7 @@ namespace tokenServer
                     if (ImageCache[filename].ByteSize == 0) ImageCache[filename].ByteSize = fi.Length;
                     return fi;
                 }
-                ImageCache.Add(filename, new CacheImage { LastUsed = DateTime.Now, ByteSize = fi.Length});
+                ImageCache.Add(filename, new CacheImage { LastUsed = DateTime.Now, ByteSize = fi.Length });
                 return fi;
             }
         }
@@ -93,7 +96,7 @@ namespace tokenServer
                     ImageCache[filename].LastModified = lastModified.LocalDateTime;
                     ImageCache[filename].ByteSize = size;
                 }
-                else ImageCache.Add(filename, new CacheImage { LastUsed = DateTime.Now, LastModified = lastModified.LocalDateTime, ByteSize = size});
+                else ImageCache.Add(filename, new CacheImage { LastUsed = DateTime.Now, LastModified = lastModified.LocalDateTime, ByteSize = size });
             }
         }
 

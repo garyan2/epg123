@@ -10,7 +10,7 @@ using System.Text;
 using System.Threading;
 using System.Web;
 
-namespace tokenServer
+namespace epg123Server
 {
     class ConfigServer
     {

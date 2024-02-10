@@ -80,7 +80,7 @@ namespace epg123.sdJson2mxf
             {
                 IncrementProgress();
                 if (response.Data == null) continue;
-                
+
                 var season = seasons.SingleOrDefault(arg => arg.ProtoTypicalProgram == response.ProgramId);
                 if (season == null) continue;
 

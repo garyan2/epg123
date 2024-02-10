@@ -1,7 +1,7 @@
-﻿using System.ComponentModel;
-using System.Windows.Forms;
-using GaRyan2.Utilities;
+﻿using GaRyan2.Utilities;
 using GaRyan2.WmcUtilities;
+using System.ComponentModel;
+using System.Windows.Forms;
 
 namespace epg123Client
 {

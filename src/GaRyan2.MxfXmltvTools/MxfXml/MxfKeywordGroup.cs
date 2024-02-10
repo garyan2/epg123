@@ -36,7 +36,7 @@ namespace GaRyan2.MxfXml
         private string _uid;
         private int _index;
         private string _keywords;
-        private string _alpha;
+        private readonly string _alpha;
         [XmlIgnore] public List<MxfKeyword> mxfKeywords;
 
         private readonly Dictionary<string, MxfKeyword> _Keywords = new Dictionary<string, MxfKeyword>();

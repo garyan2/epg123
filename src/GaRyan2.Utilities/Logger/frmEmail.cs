@@ -17,7 +17,7 @@ namespace GaRyan2.Utilities
         private void frmEmail_Load(object sender, EventArgs e)
         {
             notifier = Helper.ReadJsonFile(Helper.EmailNotifier, typeof(EpgNotifier)) ?? new EpgNotifier();
-            
+
             txtUsername.Text = notifier.Username;
             txtPassword.Text = notifier.Password;
             txtSmtpServer.Text = notifier.SmtpServer;
@@ -44,7 +44,11 @@ namespace GaRyan2.Utilities
                 EnableSsl = chkSsl.Checked,
                 SendFrom = txtSender.Text,
                 SendTo = txtRecipient.Text,
-                NotifyOn = (chkSuccess.Checked ? 0x01 : 0x00) | (chkUpdate.Checked ? 0x02 : 0x00) | (chkWarning.Checked ? 0x04 : 0x00) | (chkError.Checked ? 0x08 : 0x00)
+                NotifyOn = (chkSuccess.Checked ? 0x01 : 0x00) | (chkUpdate.Checked ? 0x02 : 0x00) | (chkWarning.Checked ? 0x04 : 0x00) | (chkError.Checked ? 0x08 : 0x00),
+                StorageWarningGB = notifier.StorageWarningGB,
+                StorageErrorGB = notifier.StorageErrorGB,
+                ConflictWarningDays = notifier.ConflictWarningDays,
+                ConflictErrorDays = notifier.ConflictErrorDays
             };
 
             Cursor = Cursors.WaitCursor;

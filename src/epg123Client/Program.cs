@@ -74,7 +74,7 @@ namespace epg123Client
         /// <param name="value">The value to be set</param>
         public static void SetItemState(ListView list, int itemIndex, int mask, int value)
         {
-            var lvItem = new LVITEM {stateMask = mask, state = value};
+            var lvItem = new LVITEM { stateMask = mask, state = value };
             SendMessageLVItem(list.Handle, LVM_SETITEMSTATE, itemIndex, ref lvItem);
         }
     }
@@ -121,7 +121,7 @@ namespace epg123Client
 
         private static string FindDllVersion(string shortName)
         {
-            string[] targetVersions = {"6.1.0.0", "6.2.0.0", "6.3.0.0"};
+            string[] targetVersions = { "6.1.0.0", "6.2.0.0", "6.3.0.0" };
             return targetVersions.FirstOrDefault(targetVersion => IsAssemblyInGac($"{shortName}, Version={targetVersion}, Culture=neutral, PublicKeyToken=31bf3856ad364e35"));
         }
 
@@ -416,7 +416,7 @@ namespace epg123Client
                     if (import) Logger.Initialize(Helper.Epg123TraceLogPath, "Beginning MXF file import", true);
                     else Logger.Initialize(Helper.Epg123TraceLogPath, "Beginning miscellaneous WMC options", false);
                     Logger.LogWmcDescription();
-                    
+
                     // prevent machine from entering sleep mode
                     var prevThreadState = NativeMethods.SetThreadExecutionState(
                         (uint)ExecutionFlags.ES_CONTINUOUS |
@@ -499,7 +499,7 @@ namespace epg123Client
                         _ = WmcStore.ReindexDatabase();
                     }
 
-                    // import complete
+                // import complete
                 CompleteImport:
                     if (import)
                     {
@@ -583,9 +583,9 @@ namespace epg123Client
 
         private static void MyUnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
-            if (!((Exception) e.ExceptionObject).Message.Equals("access denied"))
+            if (!((Exception)e.ExceptionObject).Message.Equals("access denied"))
             {
-                Logger.WriteError($"Unhandled exception caught from {AppDomain.CurrentDomain.FriendlyName}. message: {((Exception) e.ExceptionObject).Message}\n{((Exception) e.ExceptionObject).StackTrace}");
+                Logger.WriteError($"Unhandled exception caught from {AppDomain.CurrentDomain.FriendlyName}. message: {((Exception)e.ExceptionObject).Message}\n{((Exception)e.ExceptionObject).StackTrace}");
                 Logger.CloseAndSendNotification();
             }
             var currentProcess = Process.GetCurrentProcess();

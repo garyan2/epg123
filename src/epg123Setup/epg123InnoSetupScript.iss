@@ -81,27 +81,27 @@ Name: "startmenu"; Description: "Create start menu icons"; GroupDescription: "{c
 
 [Files]
 Source: "misc\ndp462-kb3151802-web.exe"; DestDir: "{tmp}"; Flags: dontcopy
-Source: "{#SourcePath}\epg123.exe"; DestDir: "{app}"; Flags: ignoreversion; Components: main1\epg123
+Source: "{#SourcePath}\epg123.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: main1\epg123
 Source: "{#SourcePath}\epg123.exe.config"; DestDir: "{app}"; Flags: ignoreversion; Attribs: hidden; Components: main1\epg123
-Source: "{#SourcePath}\epg123_gui.exe"; DestDir: "{app}"; BeforeInstall: TaskKill('epg123_gui.exe'); Flags: ignoreversion; Components: main1\epg123 main2 and not main1
+Source: "{#SourcePath}\epg123_gui.exe"; DestDir: "{app}"; BeforeInstall: TaskKill('epg123_gui.exe'); Flags: ignoreversion signonce; Components: main1\epg123 main2 and not main1
 Source: "{#SourcePath}\epg123_gui.exe.config"; DestDir: "{app}"; Flags: ignoreversion; Attribs: hidden; Components: main1\epg123 main2 and not main1
-Source: "{#SourcePath}\epg123Server.exe"; DestDir: "{app}"; BeforeInstall: TaskKill('epg123Server.exe'); Flags: ignoreversion; Components: main1\epg123 main1\hdhr
-Source: "{#SourcePath}\hdhr2mxf.exe"; DestDir: "{app}"; Flags: ignoreversion; Components: main1\hdhr
+Source: "{#SourcePath}\epg123Server.exe"; DestDir: "{app}"; BeforeInstall: TaskKill('epg123Server.exe'); Flags: ignoreversion signonce; Components: main1\epg123 main1\hdhr
+Source: "{#SourcePath}\hdhr2mxf.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: main1\hdhr
 Source: "{#SourcePath}\Newtonsoft.Json.dll"; DestDir: "{app}"; Flags: ignoreversion; Components: main1\epg123 main1\hdhr main2
-Source: "{#SourcePath}\epg123Client.exe"; DestDir: "{app}"; BeforeInstall: TaskKill('epg123Client.exe'); Flags: ignoreversion; Components: main2
+Source: "{#SourcePath}\epg123Client.exe"; DestDir: "{app}"; BeforeInstall: TaskKill('epg123Client.exe'); Flags: ignoreversion signonce; Components: main2
 Source: "{#SourcePath}\epg123Client.exe.config"; DestDir: "{app}"; Flags: ignoreversion; Attribs: hidden; MinVersion: 6.1; OnlyBelowVersion: 6.2; Components: main2
-Source: "{#SourcePath}\epg123Transfer.exe"; DestDir: "{app}"; BeforeInstall: TaskKill('epg123Transfer.exe'); Flags: ignoreversion; Components: main2
+Source: "{#SourcePath}\epg123Transfer.exe"; DestDir: "{app}"; BeforeInstall: TaskKill('epg123Transfer.exe'); Flags: ignoreversion signonce; Components: main2
 Source: "{#SourcePath}\epg123Transfer.exe.config"; DestDir: "{app}"; Flags: ignoreversion; Attribs: hidden; MinVersion: 6.1; OnlyBelowVersion: 6.2; Components: main2
-Source: "{#SourcePath}\epgTray.exe"; DestDir: "{app}"; Flags: ignoreversion; Components: main2\tray
+Source: "{#SourcePath}\epgTray.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: main2\tray
 Source: "{#SourcePath}\epgTray.exe.config"; DestDir: "{app}"; Flags: ignoreversion; Attribs: hidden; Components: main2\tray
-Source: "{#SourcePath}\logViewer.exe"; DestDir: "{app}"; BeforeInstall: TaskKill('logViewer.exe'); Flags: ignoreversion;
+Source: "{#SourcePath}\logViewer.exe"; DestDir: "{app}"; BeforeInstall: TaskKill('logViewer.exe'); Flags: ignoreversion signonce
 Source: "{#SourcePath}\logViewer.exe.config"; DestDir: "{app}"; Flags: ignoreversion; Attribs: hidden;
-Source: "{#SourcePath}\GaRyan2.Github.dll"; DestDir: "{app}"; Flags: ignoreversion; Components: main1\epg123 main2
-Source: "{#SourcePath}\GaRyan2.MxfXmltvTools.dll"; DestDir: "{app}"; Flags: ignoreversion;
-Source: "{#SourcePath}\GaRyan2.SchedulesDirect.dll"; DestDir: "{app}"; Flags: ignoreversion; Components: main1\epg123 main2
-Source: "{#SourcePath}\GaRyan2.Tmdb.dll"; DestDir: "{app}"; Flags: ignoreversion; Components: main1\epg123
-Source: "{#SourcePath}\GaRyan2.Utilities.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#SourcePath}\GaRyan2.WmcUtilities.dll"; DestDir: "{app}"; Flags: ignoreversion; Components: main1\hdhr main2
+Source: "{#SourcePath}\GaRyan2.Github.dll"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: main1\epg123 main2
+Source: "{#SourcePath}\GaRyan2.MxfXmltvTools.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
+Source: "{#SourcePath}\GaRyan2.SchedulesDirect.dll"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: main1\epg123 main2
+Source: "{#SourcePath}\GaRyan2.Tmdb.dll"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: main1\epg123
+Source: "{#SourcePath}\GaRyan2.Utilities.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
+Source: "{#SourcePath}\GaRyan2.WmcUtilities.dll"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: main1\hdhr main2
 Source: "docs\license.rtf"; DestDir: "{app}"; Flags: ignoreversion
 Source: "links\EPG123 Online.url"; DestDir: "{commonprograms}\{#MyAppName}"; Tasks: startmenu; Flags: ignoreversion
 
@@ -224,7 +224,7 @@ begin
                 MsgBox('.NET installation failed with code: ' + IntToStr(ResultCode) + '.', mbError, MB_OK);
             end
             else begin
-                Result := 'You need to restart your machine to complete .NET Framework 4.6.2.'
+                Result := 'You need to restart your machine to complete .NET Framework 4.6.2 installation. Run EPG123 setup again once machine has been rebooted.'
                 NeedsRestart := True;
             end;
         end;

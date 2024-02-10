@@ -149,7 +149,7 @@ namespace epg123Client
             {
                 var names = new HashSet<string>();
                 foreach (var name in ScannedLineupIds.Select(id =>
-                    ((Lineup) WmcStore.WmcObjectStore.Fetch(id)).Name.Remove(0, 9)))
+                    ((Lineup)WmcStore.WmcObjectStore.Fetch(id)).Name.Remove(0, 9)))
                 {
                     names.Add(name.Remove(name.Length - 1));
                 }
@@ -162,7 +162,7 @@ namespace epg123Client
                 }
                 SubItems[4].Text = text;
             }
-            SubItems[5].Text = WmcStore.GetAllTuningInfos((Channel) MergedChannel);
+            SubItems[5].Text = WmcStore.GetAllTuningInfos((Channel)MergedChannel);
 
             // set checkbox
             Checked = Enabled = (!MergedChannel.IsSuggestedBlocked || MergedChannel.UserBlockedState != UserBlockedState.Unknown) && MergedChannel.UserBlockedState <= UserBlockedState.Enabled;

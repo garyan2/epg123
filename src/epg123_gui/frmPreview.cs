@@ -34,7 +34,7 @@ namespace epg123_gui
                 return;
             }
 
-            var items = channels.Select(channel => new ListViewItem(new[] {channel.Channel.TrimStart('0'), channel.Callsign, channel.Name})).ToList();
+            var items = channels.Select(channel => new ListViewItem(new[] { channel.Channel.TrimStart('0'), channel.Callsign, channel.Name })).ToList();
 
             if (items.Count > 0)
             {

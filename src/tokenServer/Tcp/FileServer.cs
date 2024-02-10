@@ -8,7 +8,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 
-namespace tokenServer
+namespace epg123Server
 {
     class HttpFileServer : IDisposable
     {
@@ -112,7 +112,7 @@ namespace tokenServer
 
                 try { ProcessRequest(context); }
                 catch (Exception ex) { Logger.WriteError($"Worker() Exception:{Helper.ReportExceptionMessages(ex)}"); }
-                context.Response.OutputStream?.Close();
+                try { context.Response.OutputStream?.Close(); } catch { }
             }
         }
 
@@ -170,8 +170,16 @@ namespace tokenServer
                             fs.CopyTo(context.Response.OutputStream);
                         }
                     }
-                    else context.Response.StatusCode= (int)HttpStatusCode.NotFound;
+                    else context.Response.StatusCode = (int)HttpStatusCode.NotFound;
                     return;
+            }
+
+            // ignore hacker/bot probing open ports if exposed to WAN
+            if (!context.Request.RawUrl.ToLower().StartsWith("/output/"))
+            {
+                WebStats.IncrementBadActorRequest();
+                context.Response.Abort();
+                return;
             }
 
             // service files
@@ -179,6 +187,7 @@ namespace tokenServer
             switch (context.Request.RawUrl.ToLower())
             {
                 case "/output/epg123.mxf":
+                    if (!File.Exists(Helper.Epg123ExePath)) break;
                     filepath = Helper.Epg123MxfPath;
                     contentType = "text/xml";
                     lock (_epg123Lock)
@@ -192,6 +201,7 @@ namespace tokenServer
                     }
                     break;
                 case "/output/epg123.xmltv":
+                    if (!File.Exists(Helper.Epg123ExePath)) break;
                     filepath = Helper.Epg123XmltvPath;
                     contentType = "text/xml";
                     lock (_epg123Lock)
@@ -205,6 +215,7 @@ namespace tokenServer
                     }
                     break;
                 case "/output/hdhr2mxf.m3u": // SiliconDust provides 14 days of guide listings
+                    if (!File.Exists(Helper.Hdhr2MxfExePath)) break;
                     filepath = Helper.Hdhr2MxfM3uPath;
                     contentType = "text/plain";
                     lock (_hdhrLock)
@@ -218,6 +229,7 @@ namespace tokenServer
                     }
                     break;
                 case "/output/hdhr2mxf.mxf": // SiliconDust provides 14 days of guide listings
+                    if (!File.Exists(Helper.Hdhr2MxfExePath)) break;
                     filepath = Helper.Hdhr2MxfMxfPath;
                     contentType = "text/xml";
                     lock (_hdhrLock)
@@ -231,6 +243,7 @@ namespace tokenServer
                     }
                     break;
                 case "/output/hdhr2mxf.xmltv": // SiliconDust provides 14 days of guide listings
+                    if (!File.Exists(Helper.Hdhr2MxfExePath)) break;
                     filepath = Helper.Hdhr2mxfXmltvPath;
                     contentType = "text/xml";
                     lock (_hdhrLock)
@@ -244,6 +257,7 @@ namespace tokenServer
                     }
                     break;
                 case "/output/plutotv.m3u": // PlutoTV provides 12 hours of guide listings
+                    if (!File.Exists(Helper.PlutoTvExePath)) break;
                     filepath = Helper.PlutoTvM3uPath;
                     contentType = "text/plain";
                     lock (_plutoLock)
@@ -257,6 +271,7 @@ namespace tokenServer
                     }
                     break;
                 case "/output/plutotv.xmltv": // PlutoTV provides 12 hours of guide listings
+                    if (!File.Exists(Helper.PlutoTvExePath)) break;
                     filepath = Helper.PlutoTvXmltvPath;
                     contentType = "text/xml";
                     lock (_plutoLock)
@@ -270,6 +285,7 @@ namespace tokenServer
                     }
                     break;
                 case "/output/stirrtv.m3u": // Stirr provides 24 hours of guide listings
+                    if (!File.Exists(Helper.StirrTvExePath)) break;
                     filepath = Helper.StirrTvM3uPath;
                     contentType = "text/plain";
                     lock (_stirrLock)
@@ -283,6 +299,7 @@ namespace tokenServer
                     }
                     break;
                 case "/output/stirrtv.xmltv": // Stirr provides 24 hours of guide listings
+                    if (!File.Exists(Helper.StirrTvExePath)) break;
                     filepath = Helper.StirrTvXmltvPath;
                     contentType = "text/xml";
                     lock (_stirrLock)

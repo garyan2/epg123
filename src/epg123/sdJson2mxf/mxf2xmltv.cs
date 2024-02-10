@@ -90,7 +90,7 @@ namespace epg123.sdJson2mxf
             {
                 ret.DisplayNames.Add(new XmltvText { Text = mxfService.Name });
             }
-            
+
             // add channel number if requested
             if (config.XmltvIncludeChannelNumbers)
             {
@@ -202,7 +202,7 @@ namespace epg123.sdJson2mxf
                 if (mxfProgram.MpaaRating > 0) descriptionExtended += ",";
             }
             if (mxfProgram.MpaaRating > 0) descriptionExtended += $" {mpaaRatings[mxfProgram.MpaaRating]}";
-                
+
             {
                 var advisories = string.Empty;
                 if (mxfProgram.HasAdult) advisories += "Adult Situations,";
@@ -263,7 +263,7 @@ namespace epg123.sdJson2mxf
         // Titles, SubTitles, and Descriptions
         private static List<XmltvText> MxfStringToXmlTextArray(string mxfString)
         {
-            return string.IsNullOrEmpty(mxfString) ? null : new List<XmltvText> {new XmltvText {Text = mxfString}};
+            return string.IsNullOrEmpty(mxfString) ? null : new List<XmltvText> { new XmltvText { Text = mxfString } };
         }
 
         // Credits
@@ -291,7 +291,7 @@ namespace epg123.sdJson2mxf
         }
         private static List<XmltvActor> MxfPersonRankToXmltvActors(List<MxfPersonRank> mxfPersons)
         {
-            return mxfPersons?.Select(person => new XmltvActor {Actor = person.Name, Role = person.Character }).ToList();
+            return mxfPersons?.Select(person => new XmltvActor { Actor = person.Name, Role = person.Character }).ToList();
         }
 
         // Date
@@ -321,7 +321,7 @@ namespace epg123.sdJson2mxf
                 categories.Remove("Kids");
             }
 
-            return categories.Count <= 0 ? null : categories.Select(category => new XmltvText {Text = category}).ToList();
+            return categories.Count <= 0 ? null : categories.Select(category => new XmltvText { Text = category }).ToList();
         }
 
         // Language
@@ -366,13 +366,13 @@ namespace epg123.sdJson2mxf
         private static XmltvText GrabSportEvent(MxfProgram program)
         {
             if (!program.IsSports || !program.extras.ContainsKey("genres")) return null;
-            return (from category in ((string[])program.extras["genres"]) where !category.ToLower().StartsWith("sport") select new XmltvText {Text = category}).FirstOrDefault();
+            return (from category in ((string[])program.extras["genres"]) where !category.ToLower().StartsWith("sport") select new XmltvText { Text = category }).FirstOrDefault();
         }
 
         private static List<XmltvText> BuildSportTeams(MxfProgram program)
         {
             if (!program.IsSports || !program.extras.ContainsKey("teams")) return null;
-            return ((List<string>)program.extras["teams"]).Select(team => new XmltvText {Text = team}).ToList();
+            return ((List<string>)program.extras["teams"]).Select(team => new XmltvText { Text = team }).ToList();
         }
 
         // EpisodeNums
@@ -411,7 +411,7 @@ namespace epg123.sdJson2mxf
                 }
                 else if (!string.IsNullOrEmpty(oad))
                 {
-                    oad = $"{DateTime.Parse(oad):yyyy-MM-dd}" ;
+                    oad = $"{DateTime.Parse(oad):yyyy-MM-dd}";
                 }
                 else
                 {

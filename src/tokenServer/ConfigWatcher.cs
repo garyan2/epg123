@@ -3,7 +3,7 @@ using GaRyan2;
 using GaRyan2.Utilities;
 using System.IO;
 
-namespace tokenServer
+namespace epg123Server
 {
     public partial class Server
     {
@@ -50,7 +50,7 @@ namespace tokenServer
             catch { return false; }
         }
 
-        private void StopConfigFileWatcher()
+        public void StopConfigFileWatcher()
         {
             watcher.Dispose();
         }

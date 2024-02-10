@@ -485,15 +485,15 @@ namespace epg123Client
             switch (e.KeyCode)
             {
                 case Keys.Space when mergedChannelListView.SelectedIndices.Count > 0:
-                {
-                    e.Handled = true;
-                    var state = ((myChannelLvi)mergedChannelListView.Items[mergedChannelListView.SelectedIndices[0]]).Checked;
-                    foreach (int index in mergedChannelListView.SelectedIndices)
                     {
-                        WmcStore.SetChannelEnableState(_allMergedChannels[_mergedChannelFilter[index]].ChannelId, !state);
+                        e.Handled = true;
+                        var state = ((myChannelLvi)mergedChannelListView.Items[mergedChannelListView.SelectedIndices[0]]).Checked;
+                        foreach (int index in mergedChannelListView.SelectedIndices)
+                        {
+                            WmcStore.SetChannelEnableState(_allMergedChannels[_mergedChannelFilter[index]].ChannelId, !state);
+                        }
+                        break;
                     }
-                    break;
-                }
                 case Keys.Delete when mergedChannelListView.SelectedIndices.Count > 0:
                     e.Handled = true;
                     btnDeleteChannel_Click(null, null);
@@ -549,9 +549,9 @@ namespace epg123Client
             }
 
             var textSize = e.Graphics.MeasureString(e.SubItem.Text, mergedChannelListView.Font);
-            if (e.Item.ListView.Columns[e.ColumnIndex].Width < (int) textSize.Width + 10)
+            if (e.Item.ListView.Columns[e.ColumnIndex].Width < (int)textSize.Width + 10)
             {
-                e.Item.ListView.Columns[e.ColumnIndex].Width = (int) textSize.Width + 10;
+                e.Item.ListView.Columns[e.ColumnIndex].Width = (int)textSize.Width + 10;
             }
 
             Bitmap bmp = null;
@@ -585,7 +585,7 @@ namespace epg123Client
             {
                 bmp = highlight ? Resources.music_highlight : Resources.music;
             }
-            else if (((myChannelLvi) e.Item).IsInteractiveTV)
+            else if (((myChannelLvi)e.Item).IsInteractiveTV)
             {
                 bmp = highlight ? Resources.circled_information_source_highlight : Resources.circled_information_source;
             }
@@ -593,7 +593,7 @@ namespace epg123Client
             e.DrawBackground();
             e.Graphics.FillRectangle(new SolidBrush(backColor), e.Bounds);
 
-            var sf = new StringFormat {LineAlignment = StringAlignment.Center, FormatFlags = StringFormatFlags.NoWrap};
+            var sf = new StringFormat { LineAlignment = StringAlignment.Center, FormatFlags = StringFormatFlags.NoWrap };
             e.Graphics.DrawString(e.SubItem.Text, mergedChannelListView.Font, new SolidBrush(foreColor),
                 new Rectangle(e.Bounds.X + 10, e.Bounds.Y, e.Bounds.Width + 10, e.Bounds.Height), sf);
 
@@ -674,7 +674,7 @@ namespace epg123Client
 
         private void AdjustColumnWidths(ListView listView)
         {
-            int[] minWidths = {60, 65, 100, 100, 100, 60, 60};
+            int[] minWidths = { 60, 65, 100, 100, 100, 60, 60 };
             foreach (ColumnHeader header in listView.Columns)
             {
                 var currentWidth = header.Width;
@@ -791,7 +791,7 @@ namespace epg123Client
                     Cursor = Cursors.WaitCursor;
                     foreach (int index in mergedChannelListView.SelectedIndices)
                     {
-                        WmcStore.SetChannelCustomNumber(((myChannelLvi) mergedChannelListView.Items[index]).ChannelId,
+                        WmcStore.SetChannelCustomNumber(((myChannelLvi)mergedChannelListView.Items[index]).ChannelId,
                             $"{(number == 0 ? null : digits.Length == 1 ? $"{number++}" : $"{number}.{subnumber++}")}");
                     }
                     Cursor = Cursors.Default;
@@ -949,7 +949,7 @@ namespace epg123Client
                     }
                     else goto Disable;
                 }
-                else if (((ToolStripButton) sender).Equals(btnAutoNumber))
+                else if (((ToolStripButton)sender).Equals(btnAutoNumber))
                 {
                     var lineupChannels = _lineupListViewItems.Where(arg => arg.Number.Equals(mergedChannel.SubItems[1].Text)).ToList();
                     if (lineupChannels.Count > 0)
@@ -963,7 +963,7 @@ namespace epg123Client
                 }
                 continue;
 
-                Disable:
+            Disable:
                 if (mergedChannel.Enabled && string.IsNullOrEmpty(mergedChannel.SubItems[3].Text))
                 {
                     WmcStore.SetChannelEnableState(mergedChannel.ChannelId, false);
@@ -1010,7 +1010,6 @@ namespace epg123Client
             lineupChannelListView?.Items.Clear();
 
             // populate with new lineup channels
-            var lineups = new List<myLineupLvi>();
             foreach (var channel in WmcStore.GetLineupChannels(((myLineup)cmbObjectStoreLineups.Items[cmbObjectStoreLineups.SelectedIndex]).LineupId))
             {
                 _lineupListViewItems.Add(new myLineupLvi(channel));
@@ -1137,7 +1136,7 @@ namespace epg123Client
                 IncrementProgressBar(true);
 
                 // populate AllMergedChannels list
-                foreach (MergedChannel channel in WmcStore.WmcMergedLineup.UncachedChannels)
+                foreach (MergedChannel channel in WmcStore.WmcMergedLineup.UncachedChannels.Cast<MergedChannel>())
                 {
                     // increment progress bar
                     IncrementProgressBar();
@@ -1225,7 +1224,7 @@ namespace epg123Client
                     if (!channel.IsSuggestedBlocked && !_notSuggestBlockedOnly) continue;
                 }
 
-                if (cmbSources.SelectedIndex > 0 && !channel.ScannedLineupIds.Contains(((myLineup) cmbSources.SelectedItem).LineupId)) continue;
+                if (cmbSources.SelectedIndex > 0 && !channel.ScannedLineupIds.Contains(((myLineup)cmbSources.SelectedItem).LineupId)) continue;
                 _mergedChannelFilter.Add(_allMergedChannels.IndexOf(channel));
             }
             _mergedChannelFilter.TrimExcess();
@@ -1404,7 +1403,7 @@ namespace epg123Client
 
             // gather the listview items
             var channelsToDelete = (from int index in mergedChannelListView.SelectedIndices
-                select _allMergedChannels[_mergedChannelFilter[index]]).ToList();
+                                    select _allMergedChannels[_mergedChannelFilter[index]]).ToList();
 
             // delete the channel and remove from listview items
             mergedChannelListView.VirtualListSize -= channelsToDelete.Count;
@@ -1454,8 +1453,8 @@ namespace epg123Client
 
             var defaultMethod = storeType.GetMethod("get_DefaultSingleton", BindingFlags.Static | BindingFlags.Public);
             var store = defaultMethod.Invoke(null, null);
-            var constructor = formType.GetConstructor(new[] {storeType});
-            var form = (Form) constructor.Invoke(new[] {store});
+            var constructor = formType.GetConstructor(new[] { storeType });
+            var form = (Form)constructor.Invoke(new[] { store });
             form.ShowDialog();
 
             // the store explorer form does a DisposeAll on the object store which basically breaks
@@ -1472,7 +1471,7 @@ namespace epg123Client
             Cursor = Cursors.WaitCursor;
             if (!Directory.Exists(Helper.Epg123OutputFolder)) Directory.CreateDirectory(Helper.Epg123OutputFolder);
 
-            var settings = new XmlWriterSettings() {Indent = true};
+            var settings = new XmlWriterSettings() { Indent = true };
             using (var writer = XmlWriter.Create(new StreamWriter(Helper.Epg123OutputFolder + "mxfExport.mxf"), settings))
             {
                 MxfExporter.Export(WmcStore.WmcObjectStore, writer, false);
@@ -1507,7 +1506,7 @@ namespace epg123Client
             splitContainer1.Enabled = splitContainer2.Enabled = false;
 
             // prep the client setup form
-            var frm = new frmClientSetup {ShouldBackup = WmcStore.WmcObjectStore != null};
+            var frm = new frmClientSetup { ShouldBackup = WmcStore.WmcObjectStore != null };
 
             // clear everything out
             IsolateEpgDatabase();
@@ -1675,7 +1674,7 @@ namespace epg123Client
         #endregion
 
         #region ========== Backup Database ==========
-        private static readonly string[] BackupFolders = {"lineup", "recordings", "subscriptions"};
+        private static readonly string[] BackupFolders = { "lineup", "recordings", "subscriptions" };
 
         private void btnBackup_Click(object sender, EventArgs e)
         {
@@ -1726,7 +1725,7 @@ namespace epg123Client
                 }
             }
 
-            Helper.BackupZipFile = backups.Count > 0 
+            Helper.BackupZipFile = backups.Count > 0
                 ? CompressXmlFiles.CreatePackage(backups, "backups")
                 : string.Empty;
         }
@@ -1813,7 +1812,7 @@ namespace epg123Client
                         if (DeleteActiveDatabaseFile() == null) return;
                     }
                     else if (backup == "lineup")
-                    { 
+                    {
                         var lineup = InspectLineupFile(stream);
                         if (lineup == null || DeleteActiveDatabaseFile() == null) return;
                         using (var mem = new MemoryStream())
@@ -1911,7 +1910,7 @@ namespace epg123Client
             if (registryTuners.Count == 0 || recorders.Count == 0)
             {
                 MessageBox.Show(
-                    "There are no tuners/recorders initialized for WMC on this machine. You must complete WMC TV Setup to at least the 'Scan for channels' stage before restoring this backup.\n" + 
+                    "There are no tuners/recorders initialized for WMC on this machine. You must complete WMC TV Setup to at least the 'Scan for channels' stage before restoring this backup.\n" +
                     "\nRestore function is aborted.",
                     "Restore Aborted", MessageBoxButtons.OK, MessageBoxIcon.Hand);
                 return null;
@@ -1942,8 +1941,7 @@ namespace epg123Client
             var unmatchedTuners = new List<string>();
             foreach (var device in devices)
             {
-                var regTuner = registryTuners.FirstOrDefault(arg => !arg.matched && device.Attribute("name").Value.Equals(arg.ToString()));
-                if (regTuner == null) regTuner = registryTuners.FirstOrDefault(arg => !arg.matched && arg.singleTunerGroup && device.Attribute("name").Value.Equals($"{arg} #1"));
+                var regTuner = registryTuners.FirstOrDefault(arg => !arg.matched && device.Attribute("name").Value.Equals(arg.ToString())) ?? registryTuners.FirstOrDefault(arg => !arg.matched && arg.singleTunerGroup && device.Attribute("name").Value.Equals($"{arg} #1"));
                 if (regTuner != null)
                 {
                     regTuner.matched = true;
@@ -1981,7 +1979,7 @@ namespace epg123Client
                 var deviceNames = unmatchedDevices.Select(device => device.devName).ToList();
                 deviceNames.Sort();
                 if (DialogResult.No == MessageBox.Show(
-                    "The following tuners exist on the host machine, but are not present in the backup file and will not be configured in WMC.\n" + 
+                    "The following tuners exist on the host machine, but are not present in the backup file and will not be configured in WMC.\n" +
                     $"\n{string.Join("\n", deviceNames)}\n\nDo you wish to proceed?",
                     "Approval to Proceed", MessageBoxButtons.YesNo, MessageBoxIcon.Question)) return null;
             }

@@ -4,7 +4,6 @@ using Microsoft.MediaCenter.Guide;
 using Microsoft.Win32;
 using System;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -277,6 +276,13 @@ namespace GaRyan2.WmcUtilities
                     else
                     {
                         Logger.WriteError($"Error using loadmxf.exe to import new guide information. Exit code: {proc.ExitCode}");
+                        Logger.WriteError("ACTION: Review trace.log file to view errors recorded by loadmxf.exe.");
+                        Logger.WriteError("ACTION: If error identifies an xml line/column error, the problem is with the generated mxf file.");
+                        Logger.WriteError("ACTION:   1) Open the configuration GUI an click the [Clear Cache] button.");
+                        Logger.WriteError("ACTION:   2) Click the [Save & Execute] button to build a new mxf file and import into WMC.");
+                        Logger.WriteError("ACTION: If error is not mxf/xml file related, then your database may be corrupt. Repair the database by performing the below actions:");
+                        Logger.WriteError("ACTION:   1) Open a command prompt (cmd.exe) and execute the following command, \"START /WAIT c:\\windows\\ehome\\mcupdate.exe -b -dbgc -updateTrigger\" without quotes. Wait for it to complete and try to import again using the [Manual Import] button in the client GUI.");
+                        Logger.WriteError("ACTION:   2) If above did not work, use the [Rebuild WMC Database] button from the client GUI and import the mxf file to restore guide listings.");
                     }
                 }
                 else
@@ -481,7 +487,7 @@ namespace GaRyan2.WmcUtilities
                 Logger.WriteError($"Exception thrown during RunWmcIndexTask() using {program}. Message:{Helper.ReportExceptionMessages(ex)}");
             }
 
-            Finish:
+        Finish:
             Logger.WriteMessage($"Exiting RunWmcIndexTask({task}). {(ret ? "SUCCESS" : "FAILURE")}.");
             return ret;
         }

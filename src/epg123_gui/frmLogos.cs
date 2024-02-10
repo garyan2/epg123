@@ -197,7 +197,7 @@ namespace epg123_gui
             if (e.Button != MouseButtons.Left) return;
             var img = ((PictureBox)sender).Image?.Clone();
             if (img == null) return;
-            _selectedBox = (PictureBox) sender;
+            _selectedBox = (PictureBox)sender;
             DoDragDrop(img, DragDropEffects.Copy);
         }
 
@@ -225,11 +225,11 @@ namespace epg123_gui
             }
             else if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
-                imgBitmap = Image.FromFile(((string[]) e.Data.GetData(DataFormats.FileDrop))[0]).Clone() as Bitmap;
+                imgBitmap = Image.FromFile(((string[])e.Data.GetData(DataFormats.FileDrop))[0]).Clone() as Bitmap;
             }
             else if (e.Data.GetDataPresent(DataFormats.StringFormat))
             {
-                var link = (string) e.Data.GetData(DataFormats.StringFormat);
+                var link = (string)e.Data.GetData(DataFormats.StringFormat);
                 if (!link.StartsWith("http", StringComparison.OrdinalIgnoreCase)) return;
 
                 try
@@ -282,8 +282,8 @@ namespace epg123_gui
 
         private void contextMenuStrip2_Opening(object sender, CancelEventArgs e)
         {
-            var owner = (ContextMenuStrip) sender;
-            _selectedBox = (PictureBox) owner.SourceControl;
+            var owner = (ContextMenuStrip)sender;
+            _selectedBox = (PictureBox)owner.SourceControl;
             if (_selectedBox?.Image == null) e.Cancel = true;
         }
 

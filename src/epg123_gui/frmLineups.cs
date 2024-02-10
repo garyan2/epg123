@@ -1,8 +1,8 @@
-﻿using System;
+﻿using GaRyan2.SchedulesDirectAPI;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
-using GaRyan2.SchedulesDirectAPI;
 using SdApi = GaRyan2.SchedulesDirect;
 
 namespace epg123_gui
@@ -88,7 +88,7 @@ namespace epg123_gui
             {
                 foreach (var lineup in _oldLineups.Lineups)
                 {
-                    var delete = listView1.Items.Cast<ListViewItem>().All(item => (string) item.Tag != lineup.Lineup);
+                    var delete = listView1.Items.Cast<ListViewItem>().All(item => (string)item.Tag != lineup.Lineup);
                     if (delete)
                     {
                         SdApi.RemoveLineup(lineup.Lineup);
@@ -115,7 +115,7 @@ namespace epg123_gui
                 }
                 else
                 {
-                    MessageBox.Show($"Failed to add lineup \"{(string) item.Tag}\" to your account. Check the log for more details.");
+                    MessageBox.Show($"Failed to add lineup \"{(string)item.Tag}\" to your account. Check the log for more details.");
                 }
             }
             Cancel = false;

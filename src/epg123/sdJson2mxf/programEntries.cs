@@ -39,8 +39,7 @@ namespace epg123.sdJson2mxf
                         using (var reader = new StringReader(epgCache.GetAsset(mxfProgram.extras["md5"])))
                         {
                             var serializer = new JsonSerializer();
-                            var sdProgram = (Programme)serializer.Deserialize(reader, typeof(Programme));
-                            if (sdProgram == null) throw new Exception();
+                            var sdProgram = (Programme)serializer.Deserialize(reader, typeof(Programme)) ?? throw new Exception();
                             BuildMxfProgram(mxfProgram, sdProgram);
                         }
                         IncrementProgress();
@@ -304,7 +303,7 @@ namespace epg123.sdJson2mxf
             prg.IsShortFilm = Helper.TableContains(types, "Short Film");
             prg.IsSpecial = Helper.TableContains(types, "Special");
             prg.IsSports = sd.ProgramId.StartsWith("SP") ||
-                           Helper.TableContains(types, "Event") || 
+                           Helper.TableContains(types, "Event") ||
                            Helper.TableContains(sd.Genres, "Sports talk");
 
             // set isGeneric flag if programID starts with "SH", is a series, is not a miniseries, and is not paid programming
@@ -491,7 +490,7 @@ namespace epg123.sdJson2mxf
             // if there is a season number, create a season entry
             if (mxfProgram.SeasonNumber != 0)
             {
-                mxfProgram.mxfSeason = mxf.FindOrCreateSeason(mxfProgram.mxfSeriesInfo.SeriesId, mxfProgram.SeasonNumber, 
+                mxfProgram.mxfSeason = mxf.FindOrCreateSeason(mxfProgram.mxfSeriesInfo.SeriesId, mxfProgram.SeasonNumber,
                     sdProgram.HasSeasonArtwork ? mxfProgram.ProgramId : null);
 
                 if (config.AppendEpisodeDesc || config.PrefixEpisodeDescription || config.PrefixEpisodeTitle)
@@ -679,7 +678,7 @@ namespace epg123.sdJson2mxf
         {
             if (sdProgramQualityRatings == null) return 0;
 
-            var maxValue = (from rating in sdProgramQualityRatings where !string.IsNullOrEmpty(rating.MaxRating) let numerator = double.Parse(rating.Rating, CultureInfo.InvariantCulture) let denominator = double.Parse(rating.MaxRating, CultureInfo.InvariantCulture) select numerator / denominator).Concat(new[] {0.0}).Max();
+            var maxValue = (from rating in sdProgramQualityRatings where !string.IsNullOrEmpty(rating.MaxRating) let numerator = double.Parse(rating.Rating, CultureInfo.InvariantCulture) let denominator = double.Parse(rating.MaxRating, CultureInfo.InvariantCulture) select numerator / denominator).Concat(new[] { 0.0 }).Max();
 
             // return rounded number of half stars in a 4 star scale
             if (maxValue > 0.0) return (int)(8.0 * maxValue + 0.125);

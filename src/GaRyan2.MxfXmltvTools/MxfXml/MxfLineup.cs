@@ -21,7 +21,7 @@ namespace GaRyan2.MxfXml
 
         private string _uid;
         private int _index;
-        private string _lineupId;
+        private readonly string _lineupId;
 
         public MxfLineup(int index, string lineupId, string lineupName)
         {

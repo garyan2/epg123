@@ -253,13 +253,13 @@ namespace epg123Client
             using (var allRecordings = new Recordings(WmcStore.WmcObjectStore))
             {
                 var programContentKey = new ProgramContentKey(wmc.ProgramContent);
-                var recordings = (Recordings) allRecordings.WhereKeyIsInRange(programContentKey, programContentKey);
+                var recordings = (Recordings)allRecordings.WhereKeyIsInRange(programContentKey, programContentKey);
                 if (!recordings.Any()) return;
-                
+
                 var enumerator = recordings.GetEnumerator();
                 while (enumerator.MoveNext())
                 {
-                    var recordingToUpdate = (Recording) enumerator.Current;
+                    var recordingToUpdate = (Recording)enumerator.Current;
                     if (!(recordingToUpdate?.Request is OneTimeRequest)) continue;
                     recordingToUpdate.Update(delegate
                     {
@@ -276,13 +276,13 @@ namespace epg123Client
             using (var allRecordings = new Recordings(WmcStore.WmcObjectStore))
             {
                 var programContentKey = new ProgramContentKey(wmc.ProgramContent);
-                var recordings = (Recordings) allRecordings.WhereKeyIsInRange(programContentKey, programContentKey);
+                var recordings = (Recordings)allRecordings.WhereKeyIsInRange(programContentKey, programContentKey);
                 if (recordings.Any())
                 {
                     var enumerator = recordings.GetEnumerator();
                     while (enumerator.MoveNext())
                     {
-                        var recordingAffected = (Recording) enumerator.Current;
+                        var recordingAffected = (Recording)enumerator.Current;
                         if (recordingAffected?.Request is OneTimeRequest)
                         {
                             Logger.WriteWarning($"OneTimeRequest recording on {wmc.Service.CallSign} at {wmc.StartTime.ToLocalTime()} for [{wmc.Program.Title}]-[{wmc.Program.EpisodeTitle}] may have been rescheduled or is no longer valid. Check your guide.");
@@ -290,8 +290,8 @@ namespace epg123Client
                     }
                 }
             }
-            
-            RemoveEntry:
+
+        RemoveEntry:
             wmc.Unlock();
             wmc.Update(delegate
             {

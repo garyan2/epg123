@@ -94,7 +94,7 @@ namespace epg123_gui
             Size = Settings.Default.WindowSize;
             if (Settings.Default.WindowLocation != new Point(-1, -1)) Location = Settings.Default.WindowLocation;
             if (Settings.Default.WindowMaximized) WindowState = FormWindowState.Maximized;
-            
+
             // set imagelist for listviews
             lvLineupChannels.SmallImageList = lvLineupChannels.LargeImageList = _imageList;
 
@@ -306,6 +306,8 @@ namespace epg123_gui
                     .Where(arg => arg.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
                     .OrderBy(arg => arg.ToString());
                 foreach (var address in addresses) cmbIpAddresses.Items.Add(address.ToString());
+                if (!string.IsNullOrEmpty(Config.UseIpAddress) && !cmbIpAddresses.Items.Contains(Config.UseIpAddress))
+                    cmbIpAddresses.Items.Add(Config.UseIpAddress);
             }
             else cmbIpAddresses.Items.Add(Config.UseIpAddress);
             ckIpAddress.Checked = !string.IsNullOrEmpty(Config.UseIpAddress);
@@ -329,7 +331,7 @@ namespace epg123_gui
                 UpdateTaskPanel();
                 UpdateServiceTab();
             }
-            
+
             if (Helper.InstallMethod == Helper.Installation.PORTABLE)
             {
                 cbCacheRetention.Enabled = ckIpAddress.Enabled = cmbIpAddresses.Enabled = btnServiceStart.Enabled = btnServiceStop.Enabled = linkLabel2.Enabled = linkLabel3.Enabled = false;
@@ -567,7 +569,7 @@ namespace epg123_gui
                 // build the lineup
                 _allLineups.Add(clientLineup.Lineup, new MemberLineup(clientLineup)
                 {
-                    Include = (newLineup?.Contains(clientLineup.Lineup) ?? false) || 
+                    Include = (newLineup?.Contains(clientLineup.Lineup) ?? false) ||
                               (Config.IncludedLineup?.Contains(clientLineup.Lineup) ?? false),
                     DiscardNumbers = Config.DiscardChanNumbers?.Contains(clientLineup.Lineup) ?? false,
                     Channels = lineupMap.Map.ToList()
@@ -900,7 +902,7 @@ namespace epg123_gui
             RefreshExpectedCounts();
 
             // sanity checks
-            if ((Config.ExpectedServicecount  == 0) && (sender != null))
+            if ((Config.ExpectedServicecount == 0) && (sender != null))
             {
                 MessageBox.Show("There are no INCLUDED lineups and/or no stations selected for download.\n\nConfiguration will not be saved.",
                                 "No Stations to Download", MessageBoxButtons.OK, MessageBoxIcon.Error);

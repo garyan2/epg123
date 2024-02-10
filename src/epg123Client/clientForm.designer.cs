@@ -106,14 +106,10 @@
             this.lblDatabaseUtilities = new System.Windows.Forms.Label();
             this.btnTweakWmc = new System.Windows.Forms.Button();
             this.btnBackup = new System.Windows.Forms.Button();
-            this.ebtnRestore = new epg123Client.ElevatedButton();
-            this.ebtnRebuild = new epg123Client.ElevatedButton();
-            this.ebtnSetup = new epg123Client.ElevatedButton();
             this.btnImport = new System.Windows.Forms.Button();
             this.grpScheduledTask = new System.Windows.Forms.GroupBox();
             this.cbAutomatch = new System.Windows.Forms.CheckBox();
             this.rdoClientMode = new System.Windows.Forms.RadioButton();
-            this.btnTask = new epg123Client.ElevatedButton();
             this.tbTaskInfo = new System.Windows.Forms.TextBox();
             this.cbTaskWake = new System.Windows.Forms.CheckBox();
             this.rdoFullMode = new System.Windows.Forms.RadioButton();
@@ -121,6 +117,10 @@
             this.tbSchedTime = new System.Windows.Forms.MaskedTextBox();
             this.lblUpdateTime = new System.Windows.Forms.Label();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
+            this.ebtnRestore = new epg123Client.ElevatedButton();
+            this.ebtnRebuild = new epg123Client.ElevatedButton();
+            this.ebtnSetup = new epg123Client.ElevatedButton();
+            this.btnTask = new epg123Client.ElevatedButton();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -721,6 +721,7 @@
             // 
             // cmbObjectStoreLineups
             // 
+            this.cmbObjectStoreLineups.AutoToolTip = true;
             this.cmbObjectStoreLineups.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cmbObjectStoreLineups.DropDownWidth = 300;
             this.cmbObjectStoreLineups.MaxDropDownItems = 16;
@@ -912,39 +913,6 @@
             this.btnBackup.UseVisualStyleBackColor = true;
             this.btnBackup.Click += new System.EventHandler(this.btnBackup_Click);
             // 
-            // ebtnRestore
-            // 
-            this.ebtnRestore.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.ebtnRestore.Location = new System.Drawing.Point(282, 44);
-            this.ebtnRestore.Name = "ebtnRestore";
-            this.ebtnRestore.Size = new System.Drawing.Size(72, 23);
-            this.ebtnRestore.TabIndex = 16;
-            this.ebtnRestore.Text = "Restore";
-            this.ebtnRestore.UseVisualStyleBackColor = true;
-            this.ebtnRestore.Click += new System.EventHandler(this.btnRestore_Click);
-            // 
-            // ebtnRebuild
-            // 
-            this.ebtnRebuild.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.ebtnRebuild.Location = new System.Drawing.Point(204, 70);
-            this.ebtnRebuild.Name = "ebtnRebuild";
-            this.ebtnRebuild.Size = new System.Drawing.Size(150, 23);
-            this.ebtnRebuild.TabIndex = 14;
-            this.ebtnRebuild.Text = "Rebuild WMC Database";
-            this.ebtnRebuild.UseVisualStyleBackColor = true;
-            this.ebtnRebuild.Click += new System.EventHandler(this.btnRebuild_Click);
-            // 
-            // ebtnSetup
-            // 
-            this.ebtnSetup.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.ebtnSetup.Location = new System.Drawing.Point(6, 19);
-            this.ebtnSetup.Name = "ebtnSetup";
-            this.ebtnSetup.Size = new System.Drawing.Size(93, 23);
-            this.ebtnSetup.TabIndex = 13;
-            this.ebtnSetup.Text = "Client Setup";
-            this.ebtnSetup.UseVisualStyleBackColor = true;
-            this.ebtnSetup.Click += new System.EventHandler(this.btnSetup_Click);
-            // 
             // btnImport
             // 
             this.btnImport.Enabled = false;
@@ -994,17 +962,6 @@
             this.rdoClientMode.Text = "Client Mode";
             this.rdoClientMode.UseVisualStyleBackColor = true;
             this.rdoClientMode.CheckedChanged += new System.EventHandler(this.rdoMode_CheckedChanged);
-            // 
-            // btnTask
-            // 
-            this.btnTask.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.btnTask.Location = new System.Drawing.Point(326, 19);
-            this.btnTask.Name = "btnTask";
-            this.btnTask.Size = new System.Drawing.Size(80, 23);
-            this.btnTask.TabIndex = 10;
-            this.btnTask.Text = "Create";
-            this.btnTask.UseVisualStyleBackColor = true;
-            this.btnTask.Click += new System.EventHandler(this.btnTask_Click);
             // 
             // tbTaskInfo
             // 
@@ -1072,6 +1029,50 @@
             // openFileDialog1
             // 
             this.openFileDialog1.FileName = "openFileDialog1";
+            // 
+            // ebtnRestore
+            // 
+            this.ebtnRestore.FlatStyle = System.Windows.Forms.FlatStyle.System;
+            this.ebtnRestore.Location = new System.Drawing.Point(282, 44);
+            this.ebtnRestore.Name = "ebtnRestore";
+            this.ebtnRestore.Size = new System.Drawing.Size(72, 23);
+            this.ebtnRestore.TabIndex = 16;
+            this.ebtnRestore.Text = "Restore";
+            this.ebtnRestore.UseVisualStyleBackColor = true;
+            this.ebtnRestore.Click += new System.EventHandler(this.btnRestore_Click);
+            // 
+            // ebtnRebuild
+            // 
+            this.ebtnRebuild.FlatStyle = System.Windows.Forms.FlatStyle.System;
+            this.ebtnRebuild.Location = new System.Drawing.Point(204, 70);
+            this.ebtnRebuild.Name = "ebtnRebuild";
+            this.ebtnRebuild.Size = new System.Drawing.Size(150, 23);
+            this.ebtnRebuild.TabIndex = 14;
+            this.ebtnRebuild.Text = "Rebuild WMC Database";
+            this.ebtnRebuild.UseVisualStyleBackColor = true;
+            this.ebtnRebuild.Click += new System.EventHandler(this.btnRebuild_Click);
+            // 
+            // ebtnSetup
+            // 
+            this.ebtnSetup.FlatStyle = System.Windows.Forms.FlatStyle.System;
+            this.ebtnSetup.Location = new System.Drawing.Point(6, 19);
+            this.ebtnSetup.Name = "ebtnSetup";
+            this.ebtnSetup.Size = new System.Drawing.Size(93, 23);
+            this.ebtnSetup.TabIndex = 13;
+            this.ebtnSetup.Text = "Client Setup";
+            this.ebtnSetup.UseVisualStyleBackColor = true;
+            this.ebtnSetup.Click += new System.EventHandler(this.btnSetup_Click);
+            // 
+            // btnTask
+            // 
+            this.btnTask.FlatStyle = System.Windows.Forms.FlatStyle.System;
+            this.btnTask.Location = new System.Drawing.Point(326, 19);
+            this.btnTask.Name = "btnTask";
+            this.btnTask.Size = new System.Drawing.Size(80, 23);
+            this.btnTask.TabIndex = 10;
+            this.btnTask.Text = "Create";
+            this.btnTask.UseVisualStyleBackColor = true;
+            this.btnTask.Click += new System.EventHandler(this.btnTask_Click);
             // 
             // clientForm
             // 

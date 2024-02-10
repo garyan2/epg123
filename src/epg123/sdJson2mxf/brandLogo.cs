@@ -1,7 +1,7 @@
-﻿using System;
-using System.Drawing;
-using epg123.Properties;
+﻿using epg123.Properties;
 using GaRyan2.Utilities;
+using System;
+using System.Drawing;
 
 namespace epg123
 {

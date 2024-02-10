@@ -36,7 +36,7 @@ namespace hdhr2mxf
                             _noLogos = true;
                             break;
                         case "-ip":
-                            if (i + 1 < args.Length && !args[i+1].StartsWith("-"))
+                            if (i + 1 < args.Length && !args[i + 1].StartsWith("-"))
                             {
                                 _ipAddresses = args[++i].Split(',').ToList();
                                 foreach (var addr in _ipAddresses)

@@ -96,7 +96,7 @@ namespace epg123Transfer
             var services = new Dictionary<string, string>();
 
             // collect services and keywords based on IDs
-            var allRequests = new List<MxfRequest>(_oldRecordings.ManualRequest.Count + _oldRecordings.OneTimeRequest.Count + 
+            var allRequests = new List<MxfRequest>(_oldRecordings.ManualRequest.Count + _oldRecordings.OneTimeRequest.Count +
                                                    _oldRecordings.SeriesRequest.Count + _oldRecordings.WishListRequest.Count);
             allRequests.AddRange(_oldRecordings.ManualRequest);
             allRequests.AddRange(_oldRecordings.OneTimeRequest);
@@ -188,7 +188,7 @@ namespace epg123Transfer
                 if (_wmcRecording.Contains(title)) continue;
 
                 listViewItems.Add(new ListViewItem(
-                    new []
+                    new[]
                     {
                         "WishList",
                         title + $" [{RunTypeString(request.RunType)}]"
@@ -220,7 +220,7 @@ namespace epg123Transfer
                 if (dupe != null) continue;
 
                 listViewItems.Add(new ListViewItem(
-                    new []
+                    new[]
                     {
                         "OneTime",
                         title
@@ -249,7 +249,7 @@ namespace epg123Transfer
                 }
                 else
                 {
-                    var daysOfWeek = (DaysOfWeek) int.Parse(request.DayOfWeekMask);
+                    var daysOfWeek = (DaysOfWeek)int.Parse(request.DayOfWeekMask);
                     title += " [Every";
                     if (daysOfWeek == DaysOfWeek.All) title += "day,";
                     else if (daysOfWeek != DaysOfWeek.None)
@@ -268,7 +268,7 @@ namespace epg123Transfer
 
                 var dupe = listViewItems.SingleOrDefault(arg => arg.SubItems[1].Text == title);
                 if (dupe != null) continue;
-                
+
                 listViewItems.Add(new ListViewItem(
                     new[]
                     {
@@ -398,7 +398,7 @@ namespace epg123Transfer
                 listViewItems.Add(new ListViewItem(
                     new[]
                     {
-                        "WishList", 
+                        "WishList",
                         title + $" [{RunTypeString(request.RunType)}]"
                     })
                 {
@@ -504,7 +504,7 @@ namespace epg123Transfer
             var dpiScaleFactor = 1.0;
             using (var g = CreateGraphics())
             {
-                if ((int) g.DpiX != 96)
+                if ((int)g.DpiX != 96)
                 {
                     dpiScaleFactor = g.DpiX / 96;
                 }
@@ -642,9 +642,9 @@ namespace epg123Transfer
 
         private static string ContentQualityString(string preference)
         {
-            return ContentQualityString((ContentQualityPreference) int.Parse(preference));
+            return ContentQualityString((ContentQualityPreference)int.Parse(preference));
         }
-        
+
         private static string ContentQualityString(ContentQualityPreference preference)
         {
             switch (preference)

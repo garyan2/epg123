@@ -5,7 +5,7 @@ using System.IO;
 using System.ServiceProcess;
 using System.Threading.Tasks;
 
-namespace tokenServer
+namespace epg123Server
 {
     public partial class Server : ServiceBase
     {

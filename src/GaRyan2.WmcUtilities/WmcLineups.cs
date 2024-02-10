@@ -10,7 +10,7 @@ namespace GaRyan2.WmcUtilities
     public static partial class WmcStore
     {
         private static MergedLineup _mergedLineup;
-        
+
         public static MergedLineup WmcMergedLineup
         {
             get
@@ -176,7 +176,7 @@ namespace GaRyan2.WmcUtilities
                     {
                         ret.Add(new myLineup()
                         {
-                            Name = lineup.Name,
+                            Name = $"{lineup.Name} [{lineup.GetUIdValue().Substring("!MCLineup!".Length)}]",
                             LineupId = lineup.Id,
                             ChannelCount = lineup.UncachedChannels.Count()
                         });

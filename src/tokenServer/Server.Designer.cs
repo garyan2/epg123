@@ -1,5 +1,5 @@
 ﻿
-namespace tokenServer
+namespace epg123Server
 {
     partial class Server
     {

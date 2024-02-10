@@ -255,7 +255,7 @@ namespace epgTray
                 try
                 {
                     server.WaitForConnection();
-                    
+
                     // adjust timer to 2 minutes from now for each pipe message to avoid crashing the notification tray
                     _nextUpdate = DateTime.Now + TimeSpan.FromMinutes(2);
 
