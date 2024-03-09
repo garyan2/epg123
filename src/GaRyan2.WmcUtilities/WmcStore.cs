@@ -40,6 +40,11 @@ namespace GaRyan2.WmcUtilities
             }
         }
 
+        public static bool Open()
+        {
+            return WmcObjectStore != null && _objectStore != null;
+        }
+
         /// <summary>
         /// Closes the WMC ObjectStore with the option to dispose the ObjectStore
         /// </summary>

@@ -33,6 +33,7 @@
             this.label2 = new System.Windows.Forms.Label();
             this.progressBarTask = new System.Windows.Forms.ProgressBar();
             this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
+            this.label1 = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // lblTaskProgress
@@ -69,11 +70,24 @@
             this.backgroundWorker1.ProgressChanged += new System.ComponentModel.ProgressChangedEventHandler(this.backgroundWorker_ProgressChanged);
             this.backgroundWorker1.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.backgroundWorker_RunWorkerCompleted);
             // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label1.ForeColor = System.Drawing.Color.Red;
+            this.label1.Location = new System.Drawing.Point(65, 55);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(204, 13);
+            this.label1.TabIndex = 9;
+            this.label1.Text = "Downloading. Please Wait. [00:00]";
+            this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
             // frmImport
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(334, 86);
+            this.Controls.Add(this.label1);
             this.Controls.Add(this.lblTaskProgress);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.progressBarTask);
@@ -94,5 +108,6 @@
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.ProgressBar progressBarTask;
         private System.ComponentModel.BackgroundWorker backgroundWorker1;
+        private System.Windows.Forms.Label label1;
     }
 }

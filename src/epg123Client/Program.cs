@@ -335,6 +335,7 @@ namespace epg123Client
                             break;
                         case "-p":
                             showProgress = true;
+                            nogc = true;
                             break;
                         case "-x":
                             advanced = true;
@@ -488,7 +489,7 @@ namespace epg123Client
                         // refresh the lineups after import
                         using (var mergedLineups = new MergedLineups(WmcStore.WmcObjectStore))
                         {
-                            foreach (MergedLineup mergedLineup in mergedLineups)
+                            foreach (MergedLineup mergedLineup in mergedLineups.Cast<MergedLineup>())
                             {
                                 _ = mergedLineup.Refresh();
                             }
@@ -559,7 +560,7 @@ namespace epg123Client
             var deviceCount = 0;
             using (var devices = new Devices(WmcStore.WmcObjectStore))
             {
-                foreach (Device device in devices)
+                foreach (Device device in devices.Cast<Device>())
                 {
                     if (device.Name.ToLower().Contains("delete")) continue;
                     ++deviceCount;

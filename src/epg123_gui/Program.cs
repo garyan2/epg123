@@ -1,4 +1,5 @@
-﻿using GaRyan2.Utilities;
+﻿using epg123_gui.Properties;
+using GaRyan2.Utilities;
 using System;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
@@ -22,16 +23,37 @@ namespace epg123_gui
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
-        static int Main()
+        static int Main(string[] args)
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
-            using (var mutex = Helper.GetProgramMutex($"Global\\{AppGuid}", false))
+            // copy over window size and location from previous version if needed
+            if (Settings.Default.UpgradeRequired)
+            {
+                Settings.Default.Upgrade();
+                Settings.Default.UpgradeRequired = false;
+                Settings.Default.Save();
+            }
+
+            bool clientSetup = false;
+            if (args != null)
+            {
+                foreach (string arg in args)
+                {
+                    if (arg.StartsWith("http") || arg.Contains(Helper.Epg123CfgPath))
+                    {
+                        Settings.Default.CfgLocation = arg;
+                        clientSetup = true;
+                    }
+                }
+            }
+
+            using (var mutex = Helper.GetProgramMutex($"Global\\{AppGuid}", clientSetup))
             {
                 if (mutex == null) return 0;
 
-                var mainForm = new ConfigForm();
+                var mainForm = new ConfigForm(clientSetup);
                 Application.Run(mainForm);
                 return Logger.Status;
             }

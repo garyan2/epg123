@@ -173,6 +173,26 @@ namespace epg123Client.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        public static System.Drawing.Bitmap schedules_direct {
+            get {
+                object obj = ResourceManager.GetObject("schedules_direct", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap silicondust {
+            get {
+                object obj = ResourceManager.GetObject("silicondust", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         public static System.Drawing.Bitmap television {
             get {
                 object obj = ResourceManager.GetObject("television", resourceCulture);

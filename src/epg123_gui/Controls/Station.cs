@@ -41,7 +41,7 @@ namespace epg123_gui
         public LineupStation Station { get; private set; }
         public string StationId => Station.StationId;
         public string CallSign => Station.Callsign;
-        public string LanguageCode => Station.BroadcastLanguage[0]?.ToLower().Substring(0, 2) ?? "zz";
+        public string LanguageCode => Station.BroadcastLanguage[0]?.ToLower().Split('-')[0] ?? "zzz";
         public string Name => (IsAtsc && !string.IsNullOrEmpty(Station.Affiliate) ? $"{Station.Name} ({Station.Affiliate})" : Station.Name);
         public bool IsNew { get; internal set; }
 

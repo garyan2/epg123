@@ -108,6 +108,7 @@ namespace epg123Client
                 // enable config button if epg123.exe is present
                 btnConfig.Enabled = lblConfig.Enabled = true;
                 UpdateStatusText("Click the 'Step 3' button to continue.");
+                Logger.Status = 0;
             }
 
             // STEP 3: Configure EPG123
@@ -540,38 +541,6 @@ namespace epg123Client
             Logger.WriteVerbose("Updating satellite transponders ...");
             SatMxf.UpdateDvbsTransponders(false);
         }
-
-        private static bool IsTunerCountTweaked()
-        {
-            var tuners = 0;
-            var recorders = 0;
-            using (var tunersKey = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Media Center\Service\Video\Tuners", false))
-            {
-                var subkeys = tunersKey.GetSubKeyNames().Where(arg => !arg.Equals("DVR")).ToArray();
-                foreach (var subkey in subkeys)
-                {
-                    using (var tunersKey2 = tunersKey.OpenSubKey(subkey))
-                    {
-                        tuners += tunersKey2.SubKeyCount;
-                    }
-                }
-            }
-
-            using (var key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Media Center\Settings", false))
-            {
-                var subkeys = key.GetSubKeyNames().Where(arg => arg.StartsWith("RecorderSettings")).ToArray();
-                foreach (var subkey in subkeys)
-                {
-                    using (var key2 = key.OpenSubKey(subkey))
-                    {
-                        if (!key2.GetValue("id").Equals("<<NULL>>")) ++recorders;
-                    }
-                }
-            }
-
-            if (tuners == recorders) return true;
-            return DialogResult.Yes != MessageBox.Show($"It appears there are {tuners} tuners available for use but only {recorders} of them configured in WMC.\n\nDo you wish to perform TV Setup again?", "Verify Tuner Count", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-        }
         #endregion
 
         #region ========== Hauppauge HD PVR ==========
@@ -727,8 +696,6 @@ namespace epg123Client
         #region ========== EPG123 Configurator ==========
         private bool OpenEpg123Configuration()
         {
-            var exeName = "EPG123";
-            var exePath = Helper.Epg123GuiPath;
             mxfImport = string.Empty;
 
             // simple client install
@@ -739,19 +706,31 @@ namespace epg123Client
                 mxfImport = frmRemote.mxfPath;
                 if (string.IsNullOrEmpty(mxfImport))
                 {
-                    MessageBox.Show($"No MXF files from a remote server was selected for import.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show($"No MXF file from a remote server was selected for import.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     UpdateStatusText("Click the 'Step 3' button to try again.");
                     return cbAutostep.Checked = false;
+                }
+
+                if (mxfImport.Contains("http") && mxfImport.Contains("epg123.mxf"))
+                {
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName = Helper.Epg123GuiPath,
+                        Arguments = mxfImport.Replace("output/epg123.mxf", "epg123/epg123.cfg"),
+                    }).WaitForExit();
                 }
             }
             else
             {
+                var exeName = "EPG123";
+                var exePath = Helper.Epg123GuiPath;
+                var exeArgs = "";
+
                 // hdhr2mxf installed and used
                 if (_hdhr2mxfInstalled)
                 {
-                    const string text = "You have both the EPG123 executable for guide listings from Schedules Direct and the HDHR2MXF executable for guide listings from SiliconDust.\n\nDo you wish to proceed with HDHR2MXF?";
-                    const string caption = "Multiple Guide Sources";
-                    if (!_epg123Installed || DialogResult.Yes == MessageBox.Show(text, caption, MessageBoxButtons.YesNo, MessageBoxIcon.Question))
+                    var srcForm = new frmSourceSelect();
+                    if (!_epg123Installed || DialogResult.No == srcForm.ShowDialog())
                     {
                         exeName = "HDHR2MXF";
                         exePath = Helper.Hdhr2MxfExePath;
@@ -763,9 +742,16 @@ namespace epg123Client
                 UpdateStatusText(txt);
                 Logger.WriteVerbose(txt);
 
-                var proc = Process.GetProcesses().SingleOrDefault(arg => arg.ProcessName.Equals(Path.GetFileNameWithoutExtension(exePath))) ?? Process.Start(new ProcessStartInfo
+                if (!Hdhr2MxfSrv)
+                {
+                    exeArgs = (Helper.InstallMethod == Helper.Installation.PORTABLE) ? Helper.Epg123CfgPath : "http://localhost:9009/epg123/epg123.cfg";
+                    mxfImport = Helper.Epg123MxfPath;
+                }
+
+                var proc = Process.Start(new ProcessStartInfo
                 {
                     FileName = exePath,
+                    Arguments = exeArgs,
                     UseShellExecute = false,
                     CreateNoWindow = true
                 });

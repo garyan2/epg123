@@ -73,9 +73,12 @@ namespace epg123Client
             // import the mxf file with new satellite transponders
             ImportAndLock:
                 ret = WmcStore.ImportMxfFile(mxfPath);
-                var uid = WmcStore.WmcObjectStore.UIds["!DvbsDataSet"];
-                uid.Lock();
-                uid.Update();
+                if (WmcStore.Open())
+                {
+                    var uid = WmcStore.WmcObjectStore.UIds["!DvbsDataSet"];
+                    uid.Lock();
+                    uid.Update();
+                }
             }
             catch (Exception ex)
             {

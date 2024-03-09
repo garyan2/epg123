@@ -34,11 +34,10 @@ namespace epg123Client
         private void listView1_DoubleClick(object sender, EventArgs e)
         {
             string file = "epg123.mxf";
+            var srcForm = new frmSourceSelect();
             var server = (UdpFunctions.ServerDetails)listView1.SelectedItems[0].Tag;
             if (!server.Epg123 && server.Hdhr2Mxf) file = "hdhr2mxf.mxf";
-            else if (server.Epg123 && server.Hdhr2Mxf && (DialogResult.Yes == MessageBox.Show(
-                "Both EPG123 (Schedules Direct) and HDHR2MXF (SiliconDust) are installed on this server. Would you like to use HDHR2MXF instead of the default EPG123?\n\nNote: You must have an active DVR Subscription with SiliconDust.",
-                "Select MXF Source", MessageBoxButtons.YesNo, MessageBoxIcon.Question)))
+            else if (server.Epg123 && server.Hdhr2Mxf && (DialogResult.No == srcForm.ShowDialog()))
             {
                 file = "hdhr2mxf.mxf";
             }

@@ -111,7 +111,7 @@ namespace epg123Client
             }
 
             // throw the version number into the title
-            Text += $" v{Helper.Epg123Version}{(Logger.Status == 1 ? " (UPDATE AVAILABLE)" : "")}";
+            Text += $" v{Helper.Epg123Version} [{Helper.InstallMethod}]{(Logger.Status == 1 ? " (UPDATE AVAILABLE)" : "")}";
         }
 
         private void clientForm_Shown(object sender, EventArgs e)

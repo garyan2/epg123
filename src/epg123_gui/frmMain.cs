@@ -37,6 +37,7 @@ namespace epg123_gui
         private readonly EpgTaskScheduler _task = new EpgTaskScheduler();
         private readonly ImageList _imageList = new ImageList();
         private bool _newLogin;
+        private bool _clientSetup;
 
         private epgConfig Config;
         private epgConfig _originalConfig;
@@ -44,13 +45,16 @@ namespace epg123_gui
         private string _BaseServerAddress => Settings.Default.CfgLocation.Replace("epg123/epg123.cfg", "");
 
         #region ========== Form Opening/Closing ==========
-        public ConfigForm()
+        public ConfigForm(bool setup)
         {
+            _clientSetup = setup;
+
             // required to show UAC shield on buttons
             Application.EnableVisualStyles();
 
             // create form objects
             InitializeComponent();
+            _imageList.ColorDepth = ColorDepth.Depth32Bit;
 
             // adjust components for screen dpi
             double _dpiScaleFactor = 1.0;
@@ -82,14 +86,6 @@ namespace epg123_gui
 
         private void ConfigForm_Load(object sender, EventArgs e)
         {
-            // copy over window size and location from previous version if needed
-            if (Settings.Default.UpgradeRequired)
-            {
-                Settings.Default.Upgrade();
-                Settings.Default.UpgradeRequired = false;
-                Settings.Default.Save();
-            }
-
             // restore window position and size
             Size = Settings.Default.WindowSize;
             if (Settings.Default.WindowLocation != new Point(-1, -1)) Location = Settings.Default.WindowLocation;
@@ -208,8 +204,7 @@ namespace epg123_gui
                     case Helper.Installation.CLIENT:
                         var frmRemote = new frmRemoteServers();
                         frmRemote.ShowDialog();
-                        if (string.IsNullOrEmpty(frmRemote.cfgPath)) MessageBox.Show("No server configuration files identified. Closing application.", "Exiting");
-                        else Settings.Default.CfgLocation = frmRemote.cfgPath;
+                        if (!string.IsNullOrEmpty(frmRemote.cfgPath)) Settings.Default.CfgLocation = frmRemote.cfgPath;
                         break;
                     case Helper.Installation.PORTABLE:
                         Settings.Default.CfgLocation = Helper.Epg123CfgPath;
@@ -219,7 +214,7 @@ namespace epg123_gui
                         MessageBox.Show("Unknown installation method. Closing application.", "Exiting");
                         break;
                 }
-                if (string.IsNullOrEmpty(Settings.Default.CfgLocation)) this.Close();
+                if (string.IsNullOrEmpty(Settings.Default.CfgLocation)) return;
             }
 
             // load cfg file
@@ -312,7 +307,7 @@ namespace epg123_gui
             else cmbIpAddresses.Items.Add(Config.UseIpAddress);
             ckIpAddress.Checked = !string.IsNullOrEmpty(Config.UseIpAddress);
             cmbIpAddresses.Text = Config.UseIpAddress;
-            btnChangeServer.Visible = Helper.InstallMethod == Helper.Installation.CLIENT;
+            btnChangeServer.Visible = Helper.InstallMethod == Helper.Installation.CLIENT && !_clientSetup;
 
             // disable components as needed
             if (Helper.InstallMethod == Helper.Installation.CLIENT)
@@ -503,7 +498,7 @@ namespace epg123_gui
                 tabLineups.Enabled = true;
                 tabConfigs.Enabled = true;
                 btnSave.Enabled = true;
-                btnExecute.Enabled = Helper.InstallMethod != Helper.Installation.CLIENT;
+                btnExecute.Enabled = true;
                 btnClientLineups.Enabled = true;
 
                 // disable username/password fields
@@ -570,7 +565,7 @@ namespace epg123_gui
                 _allLineups.Add(clientLineup.Lineup, new MemberLineup(clientLineup)
                 {
                     Include = (newLineup?.Contains(clientLineup.Lineup) ?? false) ||
-                              (Config.IncludedLineup?.Contains(clientLineup.Lineup) ?? false),
+                              (Config.IncludedLineup?.Contains(clientLineup.Lineup) ?? _clientSetup),
                     DiscardNumbers = Config.DiscardChanNumbers?.Contains(clientLineup.Lineup) ?? false,
                     Channels = lineupMap.Map.ToList()
                 });
@@ -618,9 +613,9 @@ namespace epg123_gui
             };
             foreach (ColumnHeader head in lvLineupChannels.Columns)
             {
-                SetSortArrow(head, SortOrder.None);
+                SetSortArrow(head, SortOrder.None, false);
             }
-            SetSortArrow(lvLineupChannels.Columns[colSort], (SortOrder)(order > 2 ? 1 : order));
+            SetSortArrow(lvLineupChannels.Columns[colSort], (SortOrder)(order > 2 ? 1 : order), order > 2);
         }
 
         private void LvLineupSort(object sender, ColumnClickEventArgs e)
@@ -630,30 +625,31 @@ namespace epg123_gui
             var sorter = (ListViewColumnSorter)listview.ListViewItemSorter;
 
             // remove sort indicator from column if new
-            if (e.Column != sorter.SortColumn) SetSortArrow(listview.Columns[sorter.SortColumn], SortOrder.None);
+            if (e.Column != sorter.SortColumn) SetSortArrow(listview.Columns[sorter.SortColumn], SortOrder.None, sorter.GroupOrder);
 
             // Perform the sort with these new sort options.
             sorter.ClickHeader(e.Column);
             listview.Sort();
-            SetSortArrow(listview.Columns[e.Column], sorter.Order);
+            SetSortArrow(listview.Columns[e.Column], sorter.Order, sorter.GroupOrder);
 
             if (lvLineupChannels.Items.Count > 0)
                 lvLineupChannels.EnsureVisible(0);
         }
 
-        private void SetSortArrow(ColumnHeader head, SortOrder order)
+        private void SetSortArrow(ColumnHeader head, SortOrder order, bool grouped)
         {
             const string ascArrow = "▲";
             const string descArrow = "▼";
+            const string grpArrow = "△";
 
             // remove arrow
-            if (head.Text.EndsWith(ascArrow) || head.Text.EndsWith(descArrow))
+            if (head.Text.EndsWith(ascArrow) || head.Text.EndsWith(descArrow) || head.Text.EndsWith(grpArrow))
                 head.Text = head.Text.Substring(0, head.Text.Length - 1);
 
             // add arrow
             switch (order)
             {
-                case SortOrder.Ascending: head.Text += ascArrow; break;
+                case SortOrder.Ascending: head.Text += grouped ? grpArrow : ascArrow; break;
                 case SortOrder.Descending: head.Text += descArrow; break;
             }
         }
@@ -820,7 +816,7 @@ namespace epg123_gui
             foreach (var language in _allStations.Select(arg => arg.Value.LanguageCode).Distinct())
             {
                 if (_imageList.Images.Keys.Contains(language)) continue;
-                _imageList.Images.Add(language, DrawText(language, new Font(lvLineupChannels.Font.Name, 16, FontStyle.Bold, lvLineupChannels.Font.Unit)));
+                _imageList.Images.Add(language, DrawText(language, new Font("Microsoft Sans Serif", 16f, FontStyle.Bold, GraphicsUnit.Point)));
             }
         }
 
@@ -833,16 +829,16 @@ namespace epg123_gui
             }
             catch
             {
-                textBytes = Encoding.ASCII.GetBytes("zaa");
+                textBytes = Encoding.ASCII.GetBytes(text);
             }
 
             // establish backColor based on language identifier
-            const int bitWeight = 8;
-            const int colorBase = 0x7A - 0xFF / bitWeight;
+            const int bitWeight = 10;
+            const int colorBase = 0x61;
             if (textBytes.Length < 3) { Array.Resize(ref textBytes, 3); textBytes[2] = textBytes[0]; }
             var backColor = Color.FromArgb((textBytes[0] - colorBase) * bitWeight,
-                                             (textBytes[1] - colorBase) * bitWeight,
-                                             (textBytes[2] - colorBase) * bitWeight);
+                                           (textBytes[1] - colorBase) * bitWeight,
+                                           (textBytes[2] - colorBase) * bitWeight);
 
             // determine best textColor
             const int threshold = 140;
@@ -862,23 +858,22 @@ namespace epg123_gui
             }
 
             // create the text image in a box
-            Image image = new Bitmap((int)textSize.Width + 1, (int)textSize.Height + 1);
+            var maxSide = (int)Math.Max(textSize.Width, textSize.Height) - 1;
+            Image image = new Bitmap(maxSide, maxSide);
             using (var g = Graphics.FromImage(image))
             {
-                g.SmoothingMode = SmoothingMode.AntiAlias;
-                g.TextRenderingHint = TextRenderingHint.AntiAlias;
+                g.SmoothingMode = SmoothingMode.HighQuality;
+                g.TextRenderingHint = TextRenderingHint.AntiAliasGridFit;
 
                 // paint the background
                 g.Clear(backColor);
 
+                // draw the text in the box
+                TextFormatFlags flags = TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter;
+                TextRenderer.DrawText(g, text, font, new Rectangle((maxSide - (int)textSize.Width + 3) / 2, (maxSide - (int)textSize.Height - 2) / 2, (int)textSize.Width, (int)textSize.Height), textColor, backColor, flags);
+
                 // draw a box around the border
                 g.DrawRectangle(Pens.Black, 0, 0, image.Width - 2, image.Height - 2);
-
-                // draw the text in the box
-                using (Brush textBrush = new SolidBrush(textColor))
-                {
-                    g.DrawString(text, font, textBrush, 0, 0);
-                }
             }
             return image;
         }
@@ -957,19 +952,33 @@ namespace epg123_gui
 
             if (sender?.Equals(btnExecute) ?? false)
             {
-                // run epg123 to create mxf file
-                var proc = Process.Start(new ProcessStartInfo
+                Process proc = null;
+                if (Helper.InstallMethod == Helper.Installation.CLIENT && !_clientSetup)
                 {
-                    FileName = Helper.Epg123ExePath,
-                    Arguments = $"-p{(cbImport.Checked ? " -import" : "")}{(cbAutomatch.Checked ? " -match" : "")}",
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                });
+                    proc = Process.Start(new ProcessStartInfo
+                    {
+                        FileName = Helper.Epg123ClientExePath,
+                        Arguments = $"-i \"{_BaseServerAddress}output/epg123.mxf\" -nogc -p",
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    });
+                }
+                else if (Helper.InstallMethod != Helper.Installation.CLIENT)
+                {
+                    var arg = _clientSetup ? "-p" : $"-p{(cbImport.Checked ? " -import" : "")}{(cbAutomatch.Checked ? " -match" : "")}";
+                    proc = Process.Start(new ProcessStartInfo
+                    {
+                        FileName = Helper.Epg123ExePath,
+                        Arguments = arg,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    });
+                }
 
                 // close gui and wait for exit
                 Close();
-                proc.WaitForExit();
-                Logger.Status = proc.ExitCode;
+                proc?.WaitForExit();
+                Logger.Status = proc?.ExitCode ?? Logger.Status;
             }
         }
 
@@ -1451,7 +1460,13 @@ namespace epg123_gui
         private void btnChangeServer_Click(object sender, EventArgs e)
         {
             // load configuration file and set component states/values
+            var oldConfig = Settings.Default.CfgLocation;
             LoadConfigurationFile(true);
+            if (string.IsNullOrEmpty(Settings.Default.CfgLocation))
+            {
+                Settings.Default.CfgLocation = oldConfig;
+                return;
+            }
 
             // complete the title bar label with version number
             var info = string.Empty;
@@ -1554,6 +1569,12 @@ namespace epg123_gui
             textToAdd += "Call Sign\tChannel\tStationID\tName\r\n";
             textToAdd = lvLineupChannels.Items.Cast<ListViewItem>().Aggregate(textToAdd, (current, listViewItem) => current + $"{listViewItem.SubItems[0].Text}\t{listViewItem.SubItems[1].Text}\t{listViewItem.SubItems[2].Text}\t{listViewItem.SubItems[3].Text}\r\n");
             Clipboard.SetText(textToAdd);
+        }
+
+        private void txtAcctExpires_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            txtAcctExpires.LinkVisited = true;
+            Process.Start("https://schedulesdirect.org");
         }
     }
 }

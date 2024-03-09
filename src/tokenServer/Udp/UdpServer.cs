@@ -46,7 +46,8 @@ namespace epg123Server
         public void Start()
         {
             _listenerThread.Start();
-            Logger.WriteInformation($"UDP Server initialized.");
+            if (_listenerThread.ThreadState == ThreadState.Running) Logger.WriteInformation("UDP Server initialized.");
+            else Logger.WriteError("UDP Server failed to initialize.");
         }
 
         public void Dispose()
