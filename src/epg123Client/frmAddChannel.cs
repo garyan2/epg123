@@ -15,7 +15,6 @@ namespace epg123Client
     {
         private const string NonTunerText = "No Device Group";
         public bool ChannelAdded;
-        private readonly List<Channel> _channelsToAdd = new List<Channel>();
 
         public frmAddChannel()
         {
@@ -30,7 +29,7 @@ namespace epg123Client
         private void PopulateScannedLineups()
         {
             var scannedLineups = new HashSet<Lineup>();
-            foreach (Device device in WmcStore.WmcMergedLineup.DeviceGroup.Devices)
+            foreach (Device device in WmcStore.WmcMergedLineup?.DeviceGroup?.Devices)
             {
                 if (device.ScannedLineup == null) continue;
                 scannedLineups.Add(device.ScannedLineup);

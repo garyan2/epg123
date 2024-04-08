@@ -274,6 +274,7 @@ namespace epg123_gui
             cbSeasonEventImages.Checked = Config.SeasonEventImages;
             cbSdLogos.Checked = Config.IncludeSdLogos;
             cmbPreferredLogos.SelectedIndex = (int)(Helper.PreferredLogos)Enum.Parse(typeof(Helper.PreferredLogos), Config.PreferredLogoStyle, true);
+            cmbPreferredLogos.Enabled = lblPreferredLogos.Enabled = Config.IncludeSdLogos;
             cbBrandLogo.Checked = !Config.BrandLogoImage?.Equals("none") ?? false;
             cbModernMedia.Checked = Config.ModernMediaUiPlusSupport;
             cbNoCastCrew.Checked = Config.ExcludeCastAndCrew;
@@ -452,6 +453,7 @@ namespace epg123_gui
                 txtPassword.Enabled = true;
                 btnLogin.Text = "Login";
                 txtPassword.Text = "";
+                txtAcctExpires.Text = "Create/Renew";
 
                 // enable form controls
                 tabLineups.Enabled = false;
@@ -1347,6 +1349,7 @@ namespace epg123_gui
             else if (sender.Equals(cbSdLogos))
             {
                 Config.IncludeSdLogos = cbSdLogos.Checked;
+                lblPreferredLogos.Enabled = cmbPreferredLogos.Enabled = cbSdLogos.Checked;
                 GetAllServiceLogos();
             }
             else if (sender.Equals(cmbPreferredLogos))

@@ -91,6 +91,7 @@
             this.label9 = new System.Windows.Forms.Label();
             this.btnRemoveLogos = new System.Windows.Forms.Button();
             this.lblTunerLimit = new System.Windows.Forms.Label();
+            this.cbBothLogoCallsign = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.trackMinutes)).BeginInit();
             this.grpMainEPG.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.trackColumnWidth)).BeginInit();
@@ -147,6 +148,7 @@
             // 
             // grpMainEPG
             // 
+            this.grpMainEPG.Controls.Add(this.cbBothLogoCallsign);
             this.grpMainEPG.Controls.Add(this.cbClock);
             this.grpMainEPG.Controls.Add(this.cbExpandedMovie);
             this.grpMainEPG.Controls.Add(this.cbExpandedEpg);
@@ -840,6 +842,16 @@
             this.lblTunerLimit.TabIndex = 6;
             this.lblTunerLimit.Text = "Increase tuner limits to 32 per tuner type.";
             // 
+            // cbBothLogoCallsign
+            // 
+            this.cbBothLogoCallsign.Location = new System.Drawing.Point(234, 433);
+            this.cbBothLogoCallsign.Name = "cbBothLogoCallsign";
+            this.cbBothLogoCallsign.Size = new System.Drawing.Size(92, 48);
+            this.cbBothLogoCallsign.TabIndex = 32;
+            this.cbBothLogoCallsign.Text = "Show Both Logos and Callsigns";
+            this.cbBothLogoCallsign.UseVisualStyleBackColor = true;
+            this.cbBothLogoCallsign.CheckedChanged += new System.EventHandler(this.trackBar_ValueChanged);
+            // 
             // frmWmcTweak
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -940,5 +952,6 @@
         private System.Windows.Forms.CheckBox cbExpandedEpg;
         private System.Windows.Forms.CheckBox cbExpandedMovie;
         private System.Windows.Forms.CheckBox cbClock;
+        private System.Windows.Forms.CheckBox cbBothLogoCallsign;
     }
 }

@@ -65,22 +65,20 @@ namespace GaRyan2.Utilities
             {
                 using (var ndpKey = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full\"))
                 {
-                    if (ndpKey.GetValue("Version") != null) ver = $"{ndpKey.GetValue("Version")}";
-                    else
-                    {
-                        var release = (int)ndpKey.GetValue("Release");
-                        if (release >= 533325) ver = "4.8.1";
-                        else if (release >= 528040) ver = "4.8";
-                        else if (release >= 461808) ver = "4.7.2";
-                        else if (release >= 461308) ver = "4.7.1";
-                        else if (release >= 460798) ver = "4.7";
-                        else if (release >= 394802) ver = "4.6.2";
-                        else if (release >= 394254) ver = "4.6.1";
-                        else if (release >= 393295) ver = "4.6";
-                        else if (release >= 379893) ver = "4.5.2";
-                        else if (release >= 378675) ver = "4.5.1";
-                        else if (release >= 378389) ver = "4.5";
-                    }
+                    var release = (int)ndpKey.GetValue("Release", 0);
+                    if (release >= 533320) ver = "4.8.1";
+                    else if (release >= 528040) ver = "4.8";
+                    else if (release >= 461808) ver = "4.7.2";
+                    else if (release >= 461308) ver = "4.7.1";
+                    else if (release >= 460798) ver = "4.7";
+                    else if (release >= 394802) ver = "4.6.2";
+                    else if (release >= 394254) ver = "4.6.1";
+                    else if (release >= 393295) ver = "4.6";
+                    else if (release >= 379893) ver = "4.5.2";
+                    else if (release >= 378675) ver = "4.5.1";
+                    else if (release >= 378389) ver = "4.5";
+                    else ver = "?.?";
+                    ver += $" ({ndpKey.GetValue("Version", "?.?.?????")})";
                 }
                 WriteMessage($"*** .NET Framework {ver} is installed. ***");
             }

@@ -271,7 +271,7 @@ namespace epg123Client
         private int CalculateColumnWidth()
         {
             var logoHeight = trackLogoSize.Value == 0 ? SmallLogoHeight : trackLogoSize.Value == 1 ? MediumLogoHeight : LargeLogoHeight;
-            return 3 * logoHeight + ScaleNumber(5) + (cbHideNumber.Checked ? 0 : (int)(CellFontPixelHeight * 2.67) + ScaleNumber(5));
+            return 3 * logoHeight + (cbHideNumber.Checked ? 0 : (int)(CellFontPixelHeight * 2.67)) + (cbBothLogoCallsign.Checked ? (int)(CellFontPixelHeight * 3.96) : 0) + ScaleNumber(20);
         }
         #endregion
 
@@ -427,7 +427,7 @@ namespace epg123Client
                 if (panels != null)
                 {
                     var e = panels.Descendants().Single(arg => arg.Name.LocalName == "FormLayoutInput");
-                    cbCenterLogo.Checked = (e.Attribute("Horizontal") != null);
+                    cbCenterLogo.Checked = (e.Attribute("Horizontal")?.Value == "Center");
                 }
             }
 
@@ -464,6 +464,14 @@ namespace epg123Client
             var clock = _shellDllResources[(int)shellresource.CLOCK_MCML].Descendants()
                 .Single(arg => arg.Name.LocalName == "DateTimeFormats");
             cbClock.Checked = clock.Attribute("DateTimeFormats").Value.Contains("AbbreviatedLongDate");
+
+            // determine if both callsigns and logos are displayed
+            var rule3 = _shellDllResources[(int)shellresource.EPGCELLS_MCML]
+                .Descendants()
+                .Where(arg => arg.Name.LocalName == "Set")
+                .Where(arg => arg.Attribute("Target") != null)
+                .Single(arg => arg.Attribute("Target").Value == "[Callsign.Visible]");
+            cbBothLogoCallsign.Checked = (rule3.Attribute("Value").Value == "true");
 
             // get channel column width
             using (var key = Registry.LocalMachine.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Media Center\\Settings\\ProgramGuide", false))
@@ -529,6 +537,16 @@ namespace epg123Client
                 }
             }
 
+            // if both logos and callsigns are to be displayed, fix callsign visible to true
+            if (cbBothLogoCallsign.Checked)
+            {
+                var rule = uiElements.Descendants()
+                    .Where(arg => arg.Name.LocalName == "Set")
+                    .Where(arg => arg.Attribute("Target") != null)
+                    .Single(arg => arg.Attribute("Target")?.Value == "[Callsign.Visible]");
+                rule.SetAttributeValue("Value", "true");
+            }
+
             // set channel number size/location attributes
             var text = uiElements.Descendants()
                 .Where(arg => arg.Name.LocalName == "Text")
@@ -540,7 +558,8 @@ namespace epg123Client
                 text.SetAttributeValue("MaximumSize", value); // default is "75,0"
 
                 var layout = text.Descendants().Single(arg => arg.Name.LocalName == "FormLayoutInput");
-                layout?.SetAttributeValue("Vertical", "Center"); // default is null
+                layout.SetAttributeValue("Vertical", "Center"); // default is null
+                if (cbBothLogoCallsign.Checked) layout.SetAttributeValue("Left", $"Parent,0,{3 * logoHeight + ScaleNumber(10)}");
             }
 
             // edit channel logo and number panels
@@ -555,8 +574,17 @@ namespace epg123Client
                         e = panel.Descendants().Single(arg => arg.Name.LocalName == "FormLayoutInput");
                         e.SetAttributeValue("Bottom", "Parent,1"); // default is "Number,1"
                         e.SetAttributeValue("Vertical", "Center"); // default is null
-                        e.SetAttributeValue("Horizontal", cbCenterLogo.Checked ? "Center" : null); // default is null
-                        e.SetAttributeValue("Left", cbCenterLogo.Checked && !cbHideNumber.Checked ? "Parent,1," + (3 * CellFontPixelHeight - trackColumnWidth.Value + 10) : null);
+                        if (cbBothLogoCallsign.Checked)
+                        {
+                            e.SetAttributeValue("Horizontal", "Center"); // default is null
+                            e.SetAttributeValue("Left", "Parent,0");
+                            e.SetAttributeValue("Right", $"Parent,0,{3 * logoHeight}");
+                        }
+                        else
+                        {
+                            e.SetAttributeValue("Horizontal", cbCenterLogo.Checked ? "Center" : null); // default is null
+                            e.SetAttributeValue("Left", cbCenterLogo.Checked && !cbHideNumber.Checked ? "Parent,1," + (3 * CellFontPixelHeight - trackColumnWidth.Value + 10) : null);
+                        }
 
                         var height = cbRemoveAnimations.Checked ? logoHeight : (int)(logoHeight * 0.82);
                         e = panel.Descendants().Single(arg => arg.Name.LocalName == "ChannelLogo");
@@ -566,6 +594,7 @@ namespace epg123Client
                         e = panel.Descendants().Single(arg => arg.Name.LocalName == "FormLayoutInput");
                         e.SetAttributeValue("Bottom", "Parent,1"); // default is "Number,1"
                         e.SetAttributeValue("Vertical", "Center"); // default is null
+                        if (cbBothLogoCallsign.Checked) e.SetAttributeValue("Left", $"{(cbHideNumber.Checked ? "SmallLogoPanel" : "Number")},1");
                         break;
                 }
             }
