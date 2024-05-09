@@ -91,7 +91,9 @@
             this.label9 = new System.Windows.Forms.Label();
             this.btnRemoveLogos = new System.Windows.Forms.Button();
             this.lblTunerLimit = new System.Windows.Forms.Label();
-            this.cbBothLogoCallsign = new System.Windows.Forms.CheckBox();
+            this.label8 = new System.Windows.Forms.Label();
+            this.cbLogoFirst = new System.Windows.Forms.CheckBox();
+            this.cbLogoLast = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.trackMinutes)).BeginInit();
             this.grpMainEPG.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.trackColumnWidth)).BeginInit();
@@ -110,7 +112,7 @@
             // 
             // btnCommitGuideChanges
             // 
-            this.btnCommitGuideChanges.Location = new System.Drawing.Point(251, 508);
+            this.btnCommitGuideChanges.Location = new System.Drawing.Point(251, 559);
             this.btnCommitGuideChanges.Name = "btnCommitGuideChanges";
             this.btnCommitGuideChanges.Size = new System.Drawing.Size(75, 23);
             this.btnCommitGuideChanges.TabIndex = 0;
@@ -148,7 +150,9 @@
             // 
             // grpMainEPG
             // 
-            this.grpMainEPG.Controls.Add(this.cbBothLogoCallsign);
+            this.grpMainEPG.Controls.Add(this.cbLogoLast);
+            this.grpMainEPG.Controls.Add(this.cbLogoFirst);
+            this.grpMainEPG.Controls.Add(this.label8);
             this.grpMainEPG.Controls.Add(this.cbClock);
             this.grpMainEPG.Controls.Add(this.cbExpandedMovie);
             this.grpMainEPG.Controls.Add(this.cbExpandedEpg);
@@ -184,17 +188,17 @@
             this.grpMainEPG.Controls.Add(this.trackMainRows);
             this.grpMainEPG.Location = new System.Drawing.Point(12, 12);
             this.grpMainEPG.Name = "grpMainEPG";
-            this.grpMainEPG.Size = new System.Drawing.Size(332, 537);
+            this.grpMainEPG.Size = new System.Drawing.Size(332, 591);
             this.grpMainEPG.TabIndex = 4;
             this.grpMainEPG.TabStop = false;
             this.grpMainEPG.Text = "Guide Tweaks";
             // 
             // cbClock
             // 
-            this.cbClock.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.cbClock.Location = new System.Drawing.Point(234, 398);
+            this.cbClock.AutoSize = true;
+            this.cbClock.Location = new System.Drawing.Point(9, 536);
             this.cbClock.Name = "cbClock";
-            this.cbClock.Size = new System.Drawing.Size(92, 40);
+            this.cbClock.Size = new System.Drawing.Size(150, 17);
             this.cbClock.TabIndex = 31;
             this.cbClock.Text = "Add Date to Clock Display";
             this.cbClock.UseVisualStyleBackColor = true;
@@ -322,7 +326,7 @@
             // 
             // btnResetToDefault
             // 
-            this.btnResetToDefault.Location = new System.Drawing.Point(170, 508);
+            this.btnResetToDefault.Location = new System.Drawing.Point(170, 559);
             this.btnResetToDefault.Name = "btnResetToDefault";
             this.btnResetToDefault.Size = new System.Drawing.Size(75, 23);
             this.btnResetToDefault.TabIndex = 6;
@@ -544,7 +548,7 @@
             this.grpWmcTweak.Controls.Add(this.btnTunerLimit);
             this.grpWmcTweak.Location = new System.Drawing.Point(349, 12);
             this.grpWmcTweak.Name = "grpWmcTweak";
-            this.grpWmcTweak.Size = new System.Drawing.Size(332, 537);
+            this.grpWmcTweak.Size = new System.Drawing.Size(332, 591);
             this.grpWmcTweak.TabIndex = 6;
             this.grpWmcTweak.TabStop = false;
             this.grpWmcTweak.Text = "WMC Tweaks";
@@ -842,22 +846,44 @@
             this.lblTunerLimit.TabIndex = 6;
             this.lblTunerLimit.Text = "Increase tuner limits to 32 per tuner type.";
             // 
-            // cbBothLogoCallsign
+            // label8
             // 
-            this.cbBothLogoCallsign.Location = new System.Drawing.Point(234, 433);
-            this.cbBothLogoCallsign.Name = "cbBothLogoCallsign";
-            this.cbBothLogoCallsign.Size = new System.Drawing.Size(92, 48);
-            this.cbBothLogoCallsign.TabIndex = 32;
-            this.cbBothLogoCallsign.Text = "Show Both Logos and Callsigns";
-            this.cbBothLogoCallsign.UseVisualStyleBackColor = true;
-            this.cbBothLogoCallsign.CheckedChanged += new System.EventHandler(this.trackBar_ValueChanged);
+            this.label8.AutoSize = true;
+            this.label8.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Underline, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label8.Location = new System.Drawing.Point(167, 491);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(156, 13);
+            this.label8.TabIndex = 33;
+            this.label8.Text = "Show Both Logos and Callsigns";
+            // 
+            // cbLogoFirst
+            // 
+            this.cbLogoFirst.AutoSize = true;
+            this.cbLogoFirst.Location = new System.Drawing.Point(173, 513);
+            this.cbLogoFirst.Name = "cbLogoFirst";
+            this.cbLogoFirst.Size = new System.Drawing.Size(72, 17);
+            this.cbLogoFirst.TabIndex = 34;
+            this.cbLogoFirst.Text = "Logo First";
+            this.cbLogoFirst.UseVisualStyleBackColor = true;
+            this.cbLogoFirst.CheckedChanged += new System.EventHandler(this.cbLogoPosition_CheckedChanged);
+            // 
+            // cbLogoLast
+            // 
+            this.cbLogoLast.AutoSize = true;
+            this.cbLogoLast.Location = new System.Drawing.Point(251, 513);
+            this.cbLogoLast.Name = "cbLogoLast";
+            this.cbLogoLast.Size = new System.Drawing.Size(73, 17);
+            this.cbLogoLast.TabIndex = 35;
+            this.cbLogoLast.Text = "Logo Last";
+            this.cbLogoLast.UseVisualStyleBackColor = true;
+            this.cbLogoLast.CheckedChanged += new System.EventHandler(this.cbLogoPosition_CheckedChanged);
             // 
             // frmWmcTweak
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoScroll = true;
-            this.ClientSize = new System.Drawing.Size(694, 561);
+            this.ClientSize = new System.Drawing.Size(694, 609);
             this.Controls.Add(this.grpWmcTweak);
             this.Controls.Add(this.grpMainEPG);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
@@ -952,6 +978,8 @@
         private System.Windows.Forms.CheckBox cbExpandedEpg;
         private System.Windows.Forms.CheckBox cbExpandedMovie;
         private System.Windows.Forms.CheckBox cbClock;
-        private System.Windows.Forms.CheckBox cbBothLogoCallsign;
+        private System.Windows.Forms.Label label8;
+        private System.Windows.Forms.CheckBox cbLogoLast;
+        private System.Windows.Forms.CheckBox cbLogoFirst;
     }
 }

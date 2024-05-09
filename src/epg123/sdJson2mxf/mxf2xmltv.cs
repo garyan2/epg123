@@ -106,6 +106,9 @@ namespace epg123.sdJson2mxf
 
                         ret.DisplayNames.Add(new XmltvText { Text = num + " " + mxfService.CallSign });
                         ret.DisplayNames.Add(new XmltvText { Text = num });
+
+                        if (ret.Lcn == null) ret.Lcn = new List<XmltvText>();
+                        ret.Lcn.Add(new XmltvText { Text = num });
                     }
                 }
             }

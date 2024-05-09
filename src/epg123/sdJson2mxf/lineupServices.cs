@@ -52,6 +52,8 @@ namespace epg123.sdJson2mxf
                 if (clientLineup.IsDeleted)
                 {
                     Logger.WriteError($"Subscribed lineup {clientLineup.Lineup} has been DELETED at the headend.");
+                    Logger.WriteError("ACTION: The lineup could have been replaced with a new lineup. Use the configuration GUI to see if there is a new lineup to replace this lineup with.");
+                    Logger.WriteError("ACTION: If there is no replacement lineup available, submit a ticket with Schedules Direct at https://schedulesdirect.org");
                     return false;
                 }
 
@@ -60,6 +62,8 @@ namespace epg123.sdJson2mxf
                 if ((lineupMap?.Stations?.Count ?? 0) == 0)
                 {
                     Logger.WriteError($"Subscribed lineup {clientLineup.Lineup} does not contain any stations.");
+                    Logger.WriteError("ACTION: The lineup could have been replaced with a new lineup. Use the configuration GUI to see if there is a new lineup to replace this lineup with.");
+                    Logger.WriteError("ACTION: If there is no replacement lineup available, submit a ticket with Schedules Direct at https://schedulesdirect.org");
                     return false;
                 }
 
@@ -83,6 +87,8 @@ namespace epg123.sdJson2mxf
                     if (!IncludedStations.Contains(station.StationId) && !config.AutoAddNew)
                     {
                         Logger.WriteWarning($"**** Lineup {clientLineup.Name} ({clientLineup.Location}) has added station {station.StationId} ({station.Callsign}). ****");
+                        Logger.WriteWarning("ACTION: If the option 'Automaticaly download new stations in lineups' is not enabled, this warning will appear every time your lineup adds a new station.");
+                        Logger.WriteWarning("ACTION: Open the configuration GUI and either add the station to be downloaded for future updates and click [Save], or just click [Save] to not download it.");
                         continue;
                     }
 

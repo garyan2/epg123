@@ -192,6 +192,10 @@ namespace epg123.sdJson2mxf
                 foreach (var keyValuePair in requestErrors)
                 {
                     Logger.WriteWarning($"Requests for MD5 schedule entries of station {request.StationId} returned error code {keyValuePair.Key} , message: {keyValuePair.Value}");
+                    if (keyValuePair.Key == 7030)
+                    {
+                        Logger.WriteWarning("ACTION: Login and report a lineup problem with Schedules Direct at https://schedulesdirect.org with the above error.");
+                    }
                 }
             }
             ReportProgress();
@@ -243,6 +247,8 @@ namespace epg123.sdJson2mxf
                         {
                             Logger.WriteWarning($"Md5 mismatch for station {response.StationId} on {response.Metadata.StartDate}. Downloaded: {response.Metadata.Md5}");
                         }
+                        Logger.WriteWarning("ACTION: This type of warning is typically temporary and will probably clear itself within 24 hours.");
+                        Logger.WriteWarning("ACTION: If the issue persists for the same station over multiple days, submit a ticket with Schedules Direct at https://schedulesdirect.org.");
                     }
                 }
             }
@@ -269,6 +275,7 @@ namespace epg123.sdJson2mxf
                     if (schedule == null)
                     {
                         Logger.WriteError("Failed to read Md5Schedule entry in cache file.");
+                        Logger.WriteError("ACTION: Use the configuration GUI to clear the cache and run another update.");
                         return;
                     }
                 }
@@ -276,6 +283,7 @@ namespace epg123.sdJson2mxf
             catch (Exception ex)
             {
                 Logger.WriteError($"Error occurred when trying to read Md5Schedule entry in cache file. Exception:{Helper.ReportExceptionMessages(ex)}");
+                Logger.WriteError("ACTION: Use the configuration GUI to clear the cache and run another update.");
                 return;
             }
 
