@@ -37,9 +37,9 @@ namespace GaRyan2.Utilities
         {
             get
             {
-                if (File.Exists(TokenServer) && File.Exists(Epg123ExePath)) return File.Exists(Epg123ClientExePath) ? Installation.FULL : Installation.SERVER;
-                if (!File.Exists(TokenServer) && File.Exists(Epg123ClientExePath)) return File.Exists(Epg123ExePath) ? Installation.PORTABLE : Installation.CLIENT;
-                return File.Exists(Epg123ExePath) ? Installation.PORTABLE : Installation.UNKNOWN;
+                if (File.Exists(TokenServer) && (File.Exists(Epg123ExePath) || File.Exists(Hdhr2MxfExePath))) return File.Exists(Epg123ClientExePath) ? Installation.FULL : Installation.SERVER;
+                if (!File.Exists(TokenServer) && File.Exists(Epg123ClientExePath)) return (File.Exists(Epg123ExePath) || File.Exists(Hdhr2MxfExePath)) ? Installation.PORTABLE : Installation.CLIENT;
+                return Installation.UNKNOWN;
             }
         }
 

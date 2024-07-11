@@ -36,7 +36,8 @@ namespace GaRyan2.SiliconDustApi
                     };
                     udpClient.Client.ReceiveTimeout = TIMEOUT_MS;
                     udpClient.AllowNatTraversal(true);
-                    udpClient.Send(bcast, bcast.Length, new IPEndPoint(IPAddress.Broadcast, udpPort));
+
+                    try { udpClient.Send(bcast, bcast.Length, new IPEndPoint(IPAddress.Broadcast, udpPort)); } catch { continue; }
 
                     do
                     {
@@ -107,7 +108,7 @@ namespace GaRyan2.SiliconDustApi
                                     break;
                             }
                         }
-                        if (devices.Any(x => x.BaseUrl == dev.BaseUrl)) continue;
+                        if (devices.Any(x => x.BaseUrl == dev.BaseUrl) || (dev.StorageID != null && devices.Any(x => x.StorageID == dev.StorageID))) continue;
                         devices.Add(dev);
                     }
                 }

@@ -137,8 +137,12 @@ namespace hdhr2mxf
                     dvrActive |= (api.GetDeviceAccount(detail.DeviceAuth)?.DvrActive ?? 0) == 1;
                 }
             }
-            Logger.WriteInformation($"HDHomeRun DVR Service is {(dvrActive ? "" : "not ")}active.");
-            if (!dvrActive) return false;
+            if (!dvrActive)
+            {
+                Logger.WriteError("HDHomeRun DVR Service is NOT active.");
+                Logger.WriteError("ACTION: You can subscribe/renew SiliconDust's HDHomeRun DVR Service at https://shop.silicondust.com/shop/.");
+                return false;
+            }
 
             // download xmltv file
             Helper.SendPipeMessage("Downloading|Requesting XMLTV from SiliconDust...");

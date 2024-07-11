@@ -17,9 +17,11 @@ namespace GaRyan2
         private static readonly Timer _timer = new Timer(TimerEvent);
         private static object _tokenLock = new object();
 
-        public static string Token { get; private set; }
-        public static DateTime TokenTimestamp = DateTime.MinValue;
-        public static bool GoodToken;
+        public static TokenResponse LastTokenResponse { get; private set; }
+        public static string Token => GoodToken ? LastTokenResponse.Token : null;
+        public static DateTime TokenTimestamp => GoodToken ? LastTokenResponse.Datetime : DateTime.MinValue;
+        public static bool GoodToken => (LastTokenResponse?.Code ?? -1) == 0;
+
         public static string Username { get; private set; }
         public static string PasswordHash { get; private set; }
         public static string ApiBaseAddress { get; private set; }
@@ -77,26 +79,22 @@ namespace GaRyan2
             lock (_tokenLock)
             {
                 api.ClearToken();
-                var ret = api.GetApiResponse<TokenResponse>(Method.POST, "token", new TokenRequest { Username = username, PasswordHash = password });
-                if ((ret?.Code ?? -1) == 0)
+                LastTokenResponse = api.GetApiResponse<TokenResponse>(Method.POST, "token", new TokenRequest { Username = username, PasswordHash = password });
+                if (GoodToken)
                 {
-                    api.SetToken(Token = ret.Token);
+                    api.SetToken(Token);
                     WebStats.IncrementTokenRefresh();
                     Username = username; PasswordHash = password;
-                    GoodToken = true;
-                    TokenTimestamp = ret.Datetime;
                     _ = _timer.Change(60000, 60000); // timer event every 60 seconds
                     Logger.WriteInformation($"Refreshed Schedules Direct API token. Token={Token.Substring(0, 5)}...");
                 }
                 else
                 {
-                    GoodToken = false;
-                    TokenTimestamp = DateTime.MinValue;
                     _ = _timer.Change(900000, 900000); // timer event every 15 minutes
-                    if (ret != null) Logger.WriteError($"Failed to get a token from Schedules Direct.\n{JsonConvert.SerializeObject(ret)}");
+                    if (LastTokenResponse != null) Logger.WriteError($"Failed to get a token from Schedules Direct.");
                     else Logger.WriteError("Did not receive a response from Schedules Direct for a token request.");
                 }
-                return (ret?.Code ?? -1) == 0;
+                return GoodToken;
             }
         }
 

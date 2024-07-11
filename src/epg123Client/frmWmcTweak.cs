@@ -1685,15 +1685,12 @@ namespace epg123Client
 
         private void cbLogoPosition_CheckedChanged(object sender, EventArgs e)
         {
-            string position = null;
             if (sender.Equals(cbLogoFirst) && cbLogoFirst.Checked)
             {
-                position = "First";
                 cbLogoLast.Checked = false;
             }
             else if (sender.Equals(cbLogoLast) && cbLogoLast.Checked)
             {
-                position = "Last";
                 cbLogoFirst.Checked = false;
             }
 

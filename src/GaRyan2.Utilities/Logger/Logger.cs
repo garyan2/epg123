@@ -27,7 +27,7 @@ namespace GaRyan2.Utilities
             _notify = notify;
 
             WriteMessage("=====================================================================================");
-            WriteMessage($"{Helper.Epg123AssemblyName}: {action}. version {Helper.Epg123Version}");
+            WriteMessage($"{Helper.Epg123AssemblyName}: {action}. version {Helper.Epg123Version} [{Helper.InstallMethod}]");
             WriteMessage("=====================================================================================");
             LogOsDescription();
             LogDotNetDescription();

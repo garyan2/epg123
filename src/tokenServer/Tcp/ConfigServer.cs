@@ -87,58 +87,37 @@ namespace epg123Server
                         else context.Response.StatusCode = (int)HttpStatusCode.NotFound;
                         break;
                     case "/epg123/token":
-                        response = new TokenResponse
+                    case "/epg123/newtoken": // deprecated with 1.8.2.13
+                        var rawParams = context.Request.Url.Query.TrimStart('?').Split('&');
+                        if (rawParams.Length > 1)
                         {
-                            Code = string.IsNullOrEmpty(SchedulesDirect.Token) ? 4003 : 0,
-                            Message = string.IsNullOrEmpty(SchedulesDirect.Token) ? "Invalid username or token has expired." : "OK",
-                            ServerId = $"{Dns.GetHostName()}",
-                            Datetime = string.IsNullOrEmpty(SchedulesDirect.Token) ? DateTime.UtcNow : SchedulesDirect.TokenTimestamp,
-                            Token = SchedulesDirect.Token
-                        };
-                        context.Response.ContentType = "application/json";
-                        content = JsonConvert.SerializeObject(response, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore, DefaultValueHandling = DefaultValueHandling.Ignore });
-                        using (var ms = new MemoryStream(Encoding.UTF8.GetBytes(content)))
-                        {
-                            ms.Position = 0;
-                            ms.CopyTo(context.Response.OutputStream);
+                            var parameters = new Dictionary<string, string>();
+                            foreach (var param in rawParams)
+                            {
+                                var kvPair = param.Split('=');
+                                var key = kvPair[0];
+                                var value = HttpUtility.UrlDecode(kvPair[1]);
+                                parameters.Add(key, value);
+                            }
+                            SchedulesDirect.GetToken(parameters["username"], parameters["password"], true);
                         }
-                        break;
-                    case "/epg123/newtoken":
-                        var parameters = new Dictionary<string, string>();
-                        var rawParams = context.Request.Url.Query.Substring(1).Split('&');
-                        foreach (var param in rawParams)
+                        else if (!SchedulesDirect.GoodToken || DateTime.UtcNow - SchedulesDirect.TokenTimestamp > TimeSpan.FromHours(22)) SchedulesDirect.GetToken();
+                        response = SchedulesDirect.LastTokenResponse;
+                        
+                        if (response == null)
                         {
-                            var kvPair = param.Split('=');
-                            var key = kvPair[0];
-                            var value = HttpUtility.UrlDecode(kvPair[1]);
-                            parameters.Add(key, value);
+                            response = new TokenResponse
+                            {
+                                Response = "NO_RESPONSE",
+                                Code = 9009,
+                                ServerId = Dns.GetHostName(),
+                                Message = "Failed to get any response from Schedules Direct. Check your internet connection.",
+                                Datetime = DateTime.UtcNow,
+                                Token = "CAFEDEADBEEFCAFEDEADBEEFCAFEDEADBEEFCAFE"
+                            };
                         }
 
-                        if (SchedulesDirect.GetToken(parameters["username"], parameters["password"], true))
-                        {
-                            response = new TokenResponse
-                            {
-                                Code = 0,
-                                Message = "OK",
-                                ServerId = $"{Dns.GetHostName()}",
-                                Datetime = SchedulesDirect.TokenTimestamp,
-                                Token = SchedulesDirect.Token
-                            };
-                        }
-                        else
-                        {
-                            context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
-                            var location = Helper.InstallMethod == Helper.Installation.CLIENT ? "remote" : "local";
-                            response = new TokenResponse
-                            {
-                                Code = 9009,
-                                Message = $"Failed to get new token. Review the {location} server.log file for SD response details.",
-                                ServerId = $"{Dns.GetHostName()}",
-                                Datetime = DateTime.UtcNow,
-                                Token = "CAFEDEADBEEFCAFEDEADBEEFCAFEDEADBEEFCAFE",
-                                Response = "FAILED_TOKEN"
-                            };
-                        }
+                        if (!SchedulesDirect.GoodToken) context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
                         context.Response.ContentType = "application/json";
                         content = JsonConvert.SerializeObject(response, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore, DefaultValueHandling = DefaultValueHandling.Ignore });
                         using (var ms = new MemoryStream(Encoding.UTF8.GetBytes(content)))

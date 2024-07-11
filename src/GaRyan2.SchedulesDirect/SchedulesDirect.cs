@@ -68,7 +68,7 @@ namespace GaRyan2
                     else if (ret1 == null) return false;
                 }
 
-                var ret = api.GetApiResponse<TokenResponse>(Method.GET, $"{baseApi}newtoken?username={HttpUtility.UrlEncode(username)}&password={passwordHash}");
+                var ret = api.GetApiResponse<TokenResponse>(Method.GET, $"{baseApi}token?username={HttpUtility.UrlEncode(username)}&password={passwordHash}");
                 if (ret != null && ret.Code == 0)
                 {
                     api.SetToken(ret.Token);
@@ -217,7 +217,7 @@ namespace GaRyan2
         public static StationChannelMap GetStationChannelMap(string lineup)
         {
             var ret = api.GetApiResponse<StationChannelMap>(Method.GET, $"lineups/{lineup}");
-            if (ret != null) Logger.WriteVerbose($"Successfully retrieved the station mapping for lineup {lineup}. ({ret.Stations.Count} stations; {ret.Map.Count} channels)");
+            if (ret != null) Logger.WriteVerbose($"Successfully retrieved the station mapping for lineup {lineup} from {ret.Metadata.Modified}. ({ret.Stations.Count} stations; {ret.Map.Count} channels)");
             else Logger.WriteError($"Did not receive a response from Schedules Direct for retrieval of lineup {lineup}.");
             return ret;
         }

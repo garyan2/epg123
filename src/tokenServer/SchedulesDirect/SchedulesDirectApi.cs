@@ -42,6 +42,7 @@ namespace GaRyan2.SchedulesDirectAPI
                         Logger.WriteVerbose("***** You must remove a lineup in your account to add another lineup. *****");
                         break;
                 }
+                if (typeof(T) == typeof(TokenResponse)) return JsonConvert.DeserializeObject<T>(content);
             }
             return default;
         }
