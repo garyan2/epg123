@@ -33,6 +33,7 @@ namespace GaRyan2.WmcUtilities
             if (mergedChannels.Count == 0)
             {
                 Logger.WriteError("There are no merged channels in the database to perform any mappings.");
+                Logger.WriteError("ACTION: Perform WMC TV Setup prior to importing guide listings.");
                 return;
             }
 

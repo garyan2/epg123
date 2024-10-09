@@ -103,8 +103,8 @@ namespace GaRyan2.Utilities
             taskDefinition.Settings.DisallowStartIfOnBatteries = false;
             taskDefinition.Settings.ExecutionTimeLimit = "PT23H";
             taskDefinition.Settings.Priority = 6;
-            taskDefinition.Settings.RestartCount = 5;
-            taskDefinition.Settings.RestartInterval = "PT30M";
+            //taskDefinition.Settings.RestartCount = 5;
+            //taskDefinition.Settings.RestartInterval = "PT30M";
             taskDefinition.Settings.StartWhenAvailable = true;
             taskDefinition.Settings.StopIfGoingOnBatteries = false;
             taskDefinition.Settings.WakeToRun = wakeToRun;

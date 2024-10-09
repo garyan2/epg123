@@ -140,7 +140,7 @@ namespace GaRyan2
                 var expires = ret.Account.Expires - DateTime.UtcNow;
                 if (expires >= TimeSpan.FromDays(7.0)) return ret;
                 Logger.WriteWarning($"Your Schedules Direct account expires in {expires.Days:D2} days {expires.Hours:D2} hours {expires.Minutes:D2} minutes.");
-                Logger.WriteInformation("*** Renew your Schedules Direct membership at https://schedulesdirect.org. ***");
+                Logger.WriteWarning("ACTION: Renew your Schedules Direct membership at https://schedulesdirect.org.");
             }
             else Logger.WriteError("Did not receive a response from Schedules Direct for a status request.");
             return ret;

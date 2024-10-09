@@ -121,7 +121,11 @@ namespace logViewer
         private void AddLineOfText(string line)
         {
             richTextBox1.SelectionStart = richTextBox1.TextLength;
-            if (line.Contains("[ERROR]"))
+            if (line.Contains("ACTION:"))
+            {
+                richTextBox1.SelectionColor = Color.Orange;
+            }
+            else if (line.Contains("[ERROR]"))
             {
                 richTextBox1.SelectionColor = Color.Red;
             }

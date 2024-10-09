@@ -4,6 +4,7 @@ using GaRyan2.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -141,6 +142,13 @@ namespace epg123.sdJson2mxf
                             logoPath = $"{Helper.Epg123LogosFolder}{logoFilename}";
                             urlLogoPath = $"http://{HostAddress}:{Helper.TcpUdpPort}/logos/{logoFilename}";
 
+                            // include refresh of logos in case logo changes but md5 is not changed
+                            var daysInMonth = DateTime.DaysInMonth(DateTime.UtcNow.Year, DateTime.UtcNow.Month);
+                            var bingo = int.Parse(stationLogo.Md5.Substring(stationLogo.Md5.Length - 2), NumberStyles.HexNumber) & 0x1F;
+                            bingo = Math.Max(Math.Min(daysInMonth, bingo), 1);
+                            TimeSpan lastRefresh = DateTime.UtcNow - (new FileInfo(logoPath)?.LastWriteTimeUtc ?? DateTime.MinValue);
+                            if ((bingo == DateTime.UtcNow.Day && lastRefresh.Days > 0) || lastRefresh.Days >= 31) Helper.DeleteFile(logoPath);
+
                             if (config.IncludeSdLogos && !File.Exists(logoPath))
                             {
                                 StationLogosToDownload.Add(new KeyValuePair<MxfService, string[]>(mxfService, new[] { logoPath, stationLogo.Url }));
@@ -269,7 +277,7 @@ namespace epg123.sdJson2mxf
             }
 
             Logger.WriteError($"There are 0 stations queued for download from {clientLineups.Lineups.Count} subscribed lineups. Exiting.");
-            Logger.WriteError("Check that lineups are 'INCLUDED' and stations are selected in the EPG123 GUI.");
+            Logger.WriteError("ACTION: Check that lineups are 'INCLUDED' and stations are selected in the EPG123 Configuration GUI.");
             return false;
         }
 

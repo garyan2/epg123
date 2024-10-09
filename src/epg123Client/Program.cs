@@ -10,6 +10,8 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Security.AccessControl;
+using System.Security.Principal;
 using System.Threading;
 using System.Windows.Forms;
 
@@ -223,7 +225,11 @@ namespace epg123Client
                     proc?.WaitForExit();
                     return 0;
                 case "-storage":
-                    using (var mutex = new Mutex(true, "Global\\EPG123Indexing", out bool createdNew))
+                    var security = new MutexSecurity();
+                    var role = new MutexAccessRule(new SecurityIdentifier(WellKnownSidType.WorldSid, null), MutexRights.FullControl, AccessControlType.Allow);
+                    security.AddAccessRule(role);
+
+                    using (var mutex = new Mutex(true, "Global\\EPG123Indexing", out bool createdNew, security))
                     {
                         if (!createdNew)
                         {
@@ -570,7 +576,8 @@ namespace epg123Client
 
             if (deviceCount == 0)
             {
-                Logger.WriteError("There are no devices/tuners configured in the database store. Perform WMC TV Setup prior to importing guide listings. Aborting Import.");
+                Logger.WriteError("There are no devices/tuners configured in the database store. Aborting Import.");
+                Logger.WriteError("ACTION: Perform WMC TV Setup prior to importing guide listings.");
                 return false;
             }
 

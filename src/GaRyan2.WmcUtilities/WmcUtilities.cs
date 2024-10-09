@@ -364,6 +364,7 @@ namespace GaRyan2.WmcUtilities
             bool ret = false;
             try
             {
+                _ = ReindexPvrSchedule();
                 Logger.WriteMessage($"Entering ReindexDatabase()");
                 var proc = Process.Start(new ProcessStartInfo
                 {

@@ -28,7 +28,7 @@ namespace GaRyan2
         public static string FindPosterArtwork(string title, int year, string lang = "en")
         {
             var movie = api.SearchMovieCatalog(title, year, lang);
-            if (movie == null || api.Config == null) return null;
+            if (string.IsNullOrEmpty(movie?.PosterPath) || api.Config == null) return null;
 
             if (PosterWidth == 0)
             {

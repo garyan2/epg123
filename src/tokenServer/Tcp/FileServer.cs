@@ -284,34 +284,6 @@ namespace epg123Server
                         }
                     }
                     break;
-                case "/output/stirrtv.m3u": // Stirr provides 24 hours of guide listings
-                    if (!File.Exists(Helper.StirrTvExePath)) break;
-                    filepath = Helper.StirrTvM3uPath;
-                    contentType = "text/plain";
-                    lock (_stirrLock)
-                    {
-                        var fi = new FileInfo(filepath);
-                        if (fi.LastWriteTimeUtc < DateTime.UtcNow - TimeSpan.FromHours(1))
-                        {
-                            Logger.WriteInformation($"Stirr update triggered by {context.Request.RemoteEndPoint} (UserAgent: {context.Request.UserAgent}).");
-                            Process.Start(Helper.StirrTvExePath).WaitForExit();
-                        }
-                    }
-                    break;
-                case "/output/stirrtv.xmltv": // Stirr provides 24 hours of guide listings
-                    if (!File.Exists(Helper.StirrTvExePath)) break;
-                    filepath = Helper.StirrTvXmltvPath;
-                    contentType = "text/xml";
-                    lock (_stirrLock)
-                    {
-                        var fi = new FileInfo(filepath);
-                        if (fi.LastWriteTimeUtc < DateTime.UtcNow - TimeSpan.FromHours(1))
-                        {
-                            Logger.WriteInformation($"Stirr update triggered by {context.Request.RemoteEndPoint} (UserAgent: {context.Request.UserAgent}).");
-                            Process.Start(Helper.StirrTvExePath).WaitForExit();
-                        }
-                    }
-                    break;
             }
             if (filepath == null || !File.Exists(filepath))
             {
