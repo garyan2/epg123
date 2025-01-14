@@ -163,6 +163,7 @@ namespace GaRyan2.WmcUtilities
                     try
                     {
                         var uri = new Uri(mxfFile);
+                        if (!Helper.WaitForHostAvailability(uri)) throw new Exception("No network connection to file host.");
                         var filepath = $"{Helper.Epg123OutputFolder}{uri.Segments[uri.Segments.Length - 1]}";
                         Helper.SendPipeMessage("Importing|Downloading remote MXF file...");
                         if (File.Exists(filepath))

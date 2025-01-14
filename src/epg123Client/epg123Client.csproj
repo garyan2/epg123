@@ -177,6 +177,7 @@
     </Compile>
     <Compile Include="ListViewSorter.cs" />
     <Compile Include="SatMxf\SatellitesXml.cs" />
+    <Compile Include="Settings.cs" />
     <Compile Include="WmcStore.cs" />
     <Compile Include="SatMxf\SatMxf.cs" />
     <Compile Include="Program.cs" />
@@ -224,6 +225,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="frmRemoteServers.resx">
       <DependentUpon>frmRemoteServers.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="frmSatellites.resx">
       <DependentUpon>frmSatellites.cs</DependentUpon>
@@ -249,15 +251,18 @@
   <ItemGroup>
     <EmbeddedResource Include="clientForm.resx">
       <DependentUpon>clientForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="frmAddChannel.resx">
       <DependentUpon>frmAddChannel.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="frmClientSetup.resx">
       <DependentUpon>frmClientSetup.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="frmImport.resx">
       <DependentUpon>frmImport.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="frmUndelete.resx">
       <DependentUpon>frmUndelete.cs</DependentUpon>

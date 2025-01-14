@@ -62,5 +62,12 @@ namespace GaRyan2.SiliconDustApi
 
         [JsonProperty("OriginalNetworkID")]
         public int OriginalNetworkId { get; set; }
+
+        [JsonProperty("DRM")]
+        public int DRM { get; set; }
+
+        // returned with the ?show=found
+        [JsonProperty("Enabled")]
+        public int Enabled { get; set; }
     }
 }

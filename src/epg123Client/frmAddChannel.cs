@@ -29,7 +29,7 @@ namespace epg123Client
         private void PopulateScannedLineups()
         {
             var scannedLineups = new HashSet<Lineup>();
-            foreach (Device device in WmcStore.WmcMergedLineup?.DeviceGroup?.Devices)
+            foreach (Device device in new Devices(WmcStore.WmcObjectStore))
             {
                 if (device.ScannedLineup == null) continue;
                 scannedLineups.Add(device.ScannedLineup);
@@ -56,7 +56,7 @@ namespace epg123Client
                 return;
             }
 
-            foreach (Device device in WmcStore.WmcMergedLineup.DeviceGroup.Devices)
+            foreach (Device device in new Devices(WmcStore.WmcObjectStore))
             {
                 if (device.ScannedLineup == null) return;
                 if (!device.ScannedLineup.IsSameAs((Lineup)cmbScannedLineups.SelectedItem)) continue;
@@ -244,17 +244,17 @@ namespace epg123Client
                         tuningInfos.Add(new ChannelTuningInfo(device, (int)chnTiNumber.Value, (int)chnTiSubnumber.Value, (int)chnTiPhysicalNumber.Value));
                         break;
                     case "ClearQAM":
-                        channel.MatchName = !string.IsNullOrEmpty(chnTiCallsign.Text) ? chnTiCallsign.Text : "";
+                        channel.MatchName = $"OC:{channel.Number}:{channel.SubNumber}{(!string.IsNullOrEmpty(service.CallSign) ? $"|{service.CallSign}" : "")}";
                         tuningInfos.Add(new ChannelTuningInfo(device, (int)chnTiNumber.Value, (int)chnTiSubnumber.Value, (ModulationType)(chnTiModulationType.SelectedIndex + 1)));
                         break;
                     case "Cable":
                     case "Digital Cable":
                     case "{adb10da8-5286-4318-9ccb-cbedc854f0dc}":
-                        channel.MatchName = !string.IsNullOrEmpty(chnTiCallsign.Text) ? chnTiCallsign.Text : "";
-                        tuningInfos.Add(new ChannelTuningInfo(device, (int)chnTiNumber.Value, (int)chnTiSubnumber.Value, ModulationType.BDA_MOD_NOT_DEFINED));
+                        channel.MatchName = !string.IsNullOrEmpty(service.CallSign) ? service.CallSign : "";
+                        tuningInfos.Add(new ChannelTuningInfo(device, channel.Number, channel.SubNumber, ModulationType.BDA_MOD_NOT_DEFINED));
                         break;
                     case "dc65aa02-5cb0-4d6d-a020-68702a5b34b8":
-                        channel.MatchName = !string.IsNullOrEmpty(chnTiCallsign.Text) ? chnTiCallsign.Text : "";
+                        channel.MatchName = !string.IsNullOrEmpty(service.CallSign) ? service.CallSign : "";
                         var tuningString = $"<tune:ChannelID ChannelID=\"{channel.OriginalNumber}\">" +
                                            "  <tune:TuningSpace xsi:type=\"tune:ChannelIDTuningSpaceType\" Name=\"DC65AA02-5CB0-4d6d-A020-68702A5B34B8\" NetworkType=\"{DC65AA02-5CB0-4d6d-A020-68702A5B34B8}\" />" +
                                            "  <tune:Locator xsi:type=\"tune:ATSCLocatorType\" Frequency=\"-1\" PhysicalChannel=\"-1\" TransportStreamID=\"-1\" ProgramNumber=\"1\" />" +
@@ -263,8 +263,8 @@ namespace epg123Client
                         tuningInfos.Add(new StringTuningInfo(device, tuningString));
                         break;
                     case "DVB-T":
-                        channel.MatchName = $"DVBT:{dvbOnid.Text}:{dvbTsid.Text}:{dvbSid}{(string.IsNullOrEmpty(service.CallSign) ? $"|{dvbTiCallsign.Text}" : "")}";
-                        tuningInfos.Add(new DvbTuningInfo(device, int.Parse(dvbOnid.Text), int.Parse(dvbTsid.Text), int.Parse(dvbSid.Text), int.Parse(dvbNid.Text), int.Parse(dvbFreq.Text)));
+                        channel.MatchName = $"DVBT:{dvbOnid.Text}:{dvbTsid.Text}:{dvbSid}{(string.IsNullOrEmpty(service.CallSign) ? $"|{service.CallSign}" : "")}";
+                        tuningInfos.Add(new DvbTuningInfo(device, int.Parse(dvbOnid.Text), int.Parse(dvbTsid.Text), int.Parse(dvbSid.Text), int.Parse(dvbNid.Text), int.Parse(dvbFreq.Text), channel.Number));
                         break;
                 }
             }

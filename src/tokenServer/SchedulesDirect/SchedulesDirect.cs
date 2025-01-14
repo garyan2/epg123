@@ -2,7 +2,6 @@
 using epg123Server;
 using GaRyan2.SchedulesDirectAPI;
 using GaRyan2.Utilities;
-using Newtonsoft.Json;
 using System;
 using System.IO;
 using System.Net.Http;

@@ -19,7 +19,7 @@ namespace GaRyan2.SiliconDustApi
         public string ModelNumber { get; set; }
 
         [JsonProperty("Legacy")]
-        public int Legacy { get; set; }
+        public bool Legacy { get; set; }
 
         [JsonProperty("FirmwareName")]
         public string FirmwareName { get; set; }

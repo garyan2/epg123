@@ -101,6 +101,9 @@ namespace hdhr2mxf
         {
             var startTime = DateTime.UtcNow;
 
+            // wait/verify internet connection
+            if (!Helper.WaitForHostAvailability(new Uri("http://silicondust.com"))) return false;
+
             // verify hdhomerun devices on network
             List<HdhrDiscover> devices;
             if (_ipAddresses != null && _ipAddresses.Count > 0)
@@ -197,7 +200,7 @@ namespace hdhr2mxf
                     var extra = extras?.FirstOrDefault(arg => xmlChannel.Lcn.Where(text => text.Text.Equals(arg.GuideNumber)).Any());
 
                     // add channel info in m3u file
-                    if (extra != null && device.Legacy == 0)
+                    if (extra != null && !device.Legacy)
                     {
                         m3uWrite.WriteLine($"#EXTINF:-1 channel-id=\"{channel.GuideNumber}\" channel-number=\"{channel.GuideNumber}\" tvg-id=\"{xmlChannel.Id}\" tvg-chno=\"{channel.GuideNumber}\" tvg-name=\"{channel.GuideName}\"{(_noLogos ? " " : $" tvg-logo=\"{extra.ImageUrl}\" ")}group-title=\"{detail.ModelNumber}-{detail.DeviceId}\",{channel.GuideNumber} {channel.GuideName}");
                         m3uWrite.WriteLine($"{channel.Url}");

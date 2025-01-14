@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.IO.Pipes;
+using System.Net.NetworkInformation;
 using System.Reflection;
 using System.Security.Principal;
 using System.Threading;
@@ -247,6 +248,44 @@ namespace GaRyan2.Utilities
                 innerException = innerException.InnerException;
             } while (innerException != null);
             return ret;
+        }
+
+        public static bool WaitForHostAvailability(Uri host, int ms_timeout = 60000)
+        {
+            bool initial = true;
+            int pings = Math.Max(1, ms_timeout / 1000);
+            do
+            {
+                if (IsHostAvailable(host))
+                {
+                    if (!initial) Logger.WriteInformation("Successfully connected to host...");
+                    return true;
+                }
+                if (initial)
+                {
+                    Logger.WriteInformation("Waiting for host connection...");
+                    initial = false;
+                }
+                Thread.Sleep(1000);
+            } while (--pings > 0);
+
+            int s_timeout = Math.Max(1, ms_timeout / 1000);
+            Logger.WriteError($"Host connection failed after {s_timeout} seconds.");
+            return false;
+        }
+
+        public static bool IsHostAvailable(Uri host)
+        {
+            try
+            {
+                using (Ping ping = new Ping())
+                {
+                    PingReply reply = ping.Send(host.DnsSafeHost);
+                    return reply.Status == IPStatus.Success;
+                }
+            }
+            catch { }
+            return false;
         }
     }
 }

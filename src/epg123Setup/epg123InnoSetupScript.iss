@@ -96,7 +96,7 @@ Source: "{#SourcePath}\epgTray.exe"; DestDir: "{app}"; Flags: ignoreversion sign
 Source: "{#SourcePath}\epgTray.exe.config"; DestDir: "{app}"; Flags: ignoreversion; Attribs: hidden; Components: main2\tray
 Source: "{#SourcePath}\logViewer.exe"; DestDir: "{app}"; BeforeInstall: TaskKill('logViewer.exe'); Flags: ignoreversion signonce
 Source: "{#SourcePath}\logViewer.exe.config"; DestDir: "{app}"; Flags: ignoreversion; Attribs: hidden;
-Source: "{#SourcePath}\GaRyan2.Github.dll"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: main1\epg123 main2
+Source: "{#SourcePath}\GaRyan2.Github.dll"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: main1 main2
 Source: "{#SourcePath}\GaRyan2.MxfXmltvTools.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
 Source: "{#SourcePath}\GaRyan2.SchedulesDirect.dll"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: main1\epg123 main2
 Source: "{#SourcePath}\GaRyan2.Tmdb.dll"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: main1\epg123

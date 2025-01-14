@@ -22,6 +22,9 @@ namespace epg123.sdJson2mxf
             // load configuration file
             config = Helper.ReadXmlFile(Helper.Epg123CfgPath, typeof(epgConfig));
 
+            // wait/verify internet connection
+            if (!Helper.WaitForHostAvailability(new Uri("http://schedulesdirect.org"))) return;
+
             // initialize components
             var userAgent = $"EPG123/{Helper.Epg123Version}";
             Github.Initialize(userAgent, "epg123");

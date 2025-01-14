@@ -108,7 +108,7 @@ namespace epg123Transfer
                 if (!(request.categories?.Count > 0)) continue;
                 foreach (var keyword in request.categories.Where(keyword => keyword.Id != null))
                 {
-                    keywords.Add(keyword.Id, keyword.Word);
+                    if (!keywords.ContainsKey(keyword.Id)) keywords.Add(keyword.Id, keyword.Word);
                 }
 
             }

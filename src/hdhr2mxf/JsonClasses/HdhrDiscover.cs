@@ -19,7 +19,7 @@ namespace GaRyan2.SiliconDustApi
         public string LocalIp { get; set; }
 
         [JsonProperty("Legacy")]
-        public int Legacy { get; set; }
+        public bool Legacy { get; set; }
 
         [JsonProperty("BaseURL")]
         public string BaseUrl { get; set; }
@@ -32,5 +32,8 @@ namespace GaRyan2.SiliconDustApi
 
         [JsonProperty("StorageURL")]
         public string StorageURL { get; set; }
+
+        public int TunerCount { get; set; }
+        public string DeviceAuth {  get; set; }
     }
 }

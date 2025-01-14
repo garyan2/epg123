@@ -76,9 +76,9 @@ namespace GaRyan2.SiliconDustApi
             return ret;
         }
 
-        public List<HdhrChannel> GetDeviceChannels(string lineupUrl, int legacy)
+        public List<HdhrChannel> GetDeviceChannels(string lineupUrl, bool legacy)
         {
-            var ret = GetApiResponse<List<HdhrChannel>>(Method.GET, $"{lineupUrl}{(legacy > 0 ? "&" : "?")}tuning");
+            var ret = GetApiResponse<List<HdhrChannel>>(Method.GET, $"{lineupUrl}{(legacy ? "&" : "?")}tuning");
             if (ret == null) Logger.WriteInformation($"Failed to get lineup channels from {lineupUrl}.");
             return ret;
         }
