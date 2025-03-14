@@ -58,6 +58,12 @@ namespace GaRyan2.SchedulesDirectAPI
                 SdErrorMessage = $"{err.Response}: {err.Message}";
                 switch (err.Code)
                 {
+                    case 2055:
+                        Logger.WriteWarning("***** Account is not enabled on debug server. Removing route for this session. *****");
+                        Logger.WriteWarning("ACTION: Disable debug routing in configuration Service tab.");
+                        _httpClient.DefaultRequestHeaders.Remove("RouteTo");
+                        SdErrorMessage += "\n\nDisable Debug routing in configuration Service tab.";
+                        break;
                     case 3000: // SERVICE_OFFLINE
                         Logger.WriteVerbose("***** Schedules Direct servers are offline. Try again later. *****");
                         break;

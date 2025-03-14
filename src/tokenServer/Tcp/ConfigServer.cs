@@ -87,7 +87,6 @@ namespace epg123Server
                         else context.Response.StatusCode = (int)HttpStatusCode.NotFound;
                         break;
                     case "/epg123/token":
-                    case "/epg123/newtoken": // deprecated with 1.8.2.13
                         var rawParams = context.Request.Url.Query.TrimStart('?').Split('&');
                         if (rawParams.Length > 1)
                         {
@@ -101,7 +100,7 @@ namespace epg123Server
                             }
                             SchedulesDirect.GetToken(parameters["username"], parameters["password"], true);
                         }
-                        else if (!SchedulesDirect.GoodToken || DateTime.UtcNow - SchedulesDirect.TokenTimestamp > TimeSpan.FromHours(22)) SchedulesDirect.GetToken();
+                        else if (!SchedulesDirect.GoodToken) SchedulesDirect.GetToken();
                         response = SchedulesDirect.LastTokenResponse;
                         
                         if (response == null)

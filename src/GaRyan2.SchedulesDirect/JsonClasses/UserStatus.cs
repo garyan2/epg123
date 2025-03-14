@@ -6,6 +6,8 @@ namespace GaRyan2.SchedulesDirectAPI
 {
     public class UserStatus : BaseResponse
     {
+        private static readonly DateTime epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
         [JsonProperty("account")]
         public StatusAccount Account { get; set; }
 
@@ -23,6 +25,11 @@ namespace GaRyan2.SchedulesDirectAPI
         [JsonProperty("systemStatus")]
         [JsonConverter(typeof(SingleOrListConverter<SystemStatus>))]
         public List<SystemStatus> SystemStatus { get; set; }
+
+        public DateTime TokenExpires => epoch.AddSeconds(tokenExpiresEpoch);
+
+        [JsonProperty("tokenExpires")]
+        public long tokenExpiresEpoch;
     }
 
     public class StatusAccount

@@ -23,6 +23,12 @@ namespace GaRyan2.SchedulesDirectAPI
                 Logger.WriteVerbose($"SD responded with error code: {err.Code} , message: {err.Message ?? err.Response} , serverID: {err.ServerId} , datetime: {err.Datetime:s}Z");
                 switch (err.Code)
                 {
+                    case 2055:
+                        Logger.WriteWarning("***** Account is not enabled on debug server. Removing route for this session. *****");
+                        Logger.WriteWarning("ACTION: Disable debug routing in configuration Service tab.");
+                        UseDebug = false;
+                        RouteApiToDebugServer();
+                        break;
                     case 3000: // SERVICE_OFFLINE
                         Logger.WriteVerbose("***** Schedules Direct servers are offline. Try again later. *****");
                         break;

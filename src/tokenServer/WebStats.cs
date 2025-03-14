@@ -138,6 +138,7 @@ namespace epg123Server
         private static string BuildEpgStatusAndConfiguration()
         {
             var uptime = DateTime.Now - StartTime;
+            var remain = SchedulesDirect.GoodToken ? SchedulesDirect.LastTokenResponse.TokenExpires - DateTime.UtcNow : TimeSpan.FromSeconds(0);
             var ret = $"<p>Uptime: <font color=\"blue\">{uptime.Days:D2}</font> days, <font color=\"blue\">{uptime.Hours:D2}</font> hours, <font color=\"blue\">{uptime.Minutes:D2}</font> minutes, <font color=\"blue\">{uptime.Seconds:D2}</font> seconds<br>";
             if (File.Exists(Helper.Epg123ExePath))
             {
@@ -146,7 +147,7 @@ namespace epg123Server
                        $"Number of cached images: <font color=\"blue\">{JsonImageCache.ImageCache.Count} ({JsonImageCache.ImageCache.Select(x => x.Value.ByteSize).Sum():N0} bytes)</font><br>" +
                        $"Download limit exceeded: <font color=\"{(LimitLocked ? "red" : "blue")}\">{LimitLocked}</font><br>" +
                        $"Number of token refreshes: <font color=\"blue\">{tokenRefresh - 1}</font><br>" +
-                       $"Valid token: <font color=\"{(SchedulesDirect.GoodToken ? "blue" : "red")}\">{SchedulesDirect.GoodToken}</font>";
+                       $"Valid token: <font color=\"{(SchedulesDirect.GoodToken ? "blue" : "red")}\">{SchedulesDirect.GoodToken}  (expires in {remain:hh\\:mm\\:ss})</font>";
             }
             return ret + "</p>";
         }
