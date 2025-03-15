@@ -18,8 +18,13 @@ namespace GaRyan2
         private static readonly Timer _timer = new Timer(TimerEvent);
         private static object _tokenLock = new object();
 
-        public static TokenResponse LastTokenResponse { get; private set; }
-        public static string Token => GoodToken ? LastTokenResponse.Token : null;
+        public static TokenResponse LastTokenResponse { get; private set; } = new TokenResponse
+        {
+            Code = 0,
+            tokenExpiresEpoch = (long)(DateTime.UtcNow - new DateTime(1970, 1, 1) + TimeSpan.FromDays(1)).TotalSeconds,
+            Datetime = DateTime.UtcNow - TimeSpan.FromHours(24)
+        };
+
         public static DateTime TokenTimestamp => GoodToken ? LastTokenResponse.Datetime : DateTime.MinValue;
         public static bool GoodToken => (LastTokenResponse?.Code ?? -1) == 0 && LastTokenResponse.TokenExpires > DateTime.UtcNow;
 

@@ -147,7 +147,7 @@ namespace epg123Server
                             Code = 0,
                             Message = "OK",
                             ServerId = $"{Dns.GetHostName()}",
-                            Datetime = SchedulesDirect.TokenTimestamp,
+                            Datetime = DateTime.UtcNow
                         };
                         context.Response.ContentType = "application/json";
                         var content = JsonConvert.SerializeObject(response, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore, DefaultValueHandling = DefaultValueHandling.Ignore });
