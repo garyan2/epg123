@@ -83,8 +83,12 @@ namespace GaRyan2
                 if (!requestNew && DateTime.UtcNow - TokenTimestamp < TimeSpan.FromMinutes(1)) return GoodToken;
 
                 api.ClearToken();
-                requestNew |= !GoodToken || LastTokenResponse.TokenExpires - DateTime.UtcNow < TimeSpan.FromMinutes(15);
                 LastTokenResponse = api.GetApiResponse<TokenResponse>(Method.POST, "token", new TokenRequest { Username = username, PasswordHash = password , NewToken = requestNew });
+
+                if (GoodToken && LastTokenResponse.TokenExpires - DateTime.UtcNow < TimeSpan.FromMinutes(15))
+                {
+                    LastTokenResponse = api.GetApiResponse<TokenResponse>(Method.POST, "token", new TokenRequest { Username = username, PasswordHash = password, NewToken = true });
+                }
 
                 if (GoodToken)
                 {

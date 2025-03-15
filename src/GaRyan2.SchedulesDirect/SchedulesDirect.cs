@@ -61,9 +61,7 @@ namespace GaRyan2
                 {
                     api.SetToken(ret.Token);
                     Logger.WriteVerbose($"Token request successful. serverID: {ret.ServerId} , datetime: {ret.Datetime:s}Z , expires: {ret.TokenExpires:s}Z");
-                    if (ValidateToken()) return true;
-                    Logger.WriteVerbose("Validation of cached token failed. Requesting new token.");
-                    api.ClearToken();
+                    return true;
                 }
                 else if (ret != null)
                 {
