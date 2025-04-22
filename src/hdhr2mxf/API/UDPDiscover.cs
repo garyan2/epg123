@@ -12,7 +12,7 @@ namespace GaRyan2.SiliconDustApi
 {
     internal static class UDPDiscover
     {
-        private const int TIMEOUT_MS = 500;
+        private const int TIMEOUT_MS = 1000;
         private const int udpPort = 65001;
         private static readonly byte[] bcast = { 0x00, 0x02,                 // HDHOMERUN_TYPE_DISCOVER_REQ
                                                  0x00, 0x06,                 // payload size (6 bytes)

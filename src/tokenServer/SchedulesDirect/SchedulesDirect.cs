@@ -95,7 +95,7 @@ namespace GaRyan2
                     api.SetToken(LastTokenResponse.Token);
                     WebStats.IncrementTokenRefresh();
                     Username = username; PasswordHash = password;
-                    _timer.Change(LastTokenResponse.TokenExpires - DateTime.UtcNow - TimeSpan.FromSeconds(_random.Next(0, 30)), TimeSpan.FromHours(24));
+                    _timer.Change(LastTokenResponse.TokenExpires - DateTime.UtcNow - TimeSpan.FromSeconds(_random.Next(300, 900)), TimeSpan.FromHours(24));
                     Logger.WriteInformation($"Refreshed Schedules Direct API token. token: {LastTokenResponse.Token.Substring(0, 5)}... , expires: {LastTokenResponse.TokenExpires:s}Z");
                 }
                 else

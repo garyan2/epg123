@@ -15,7 +15,6 @@ namespace logViewer
         private long streamLocation;
         private readonly string _filename;
         private string _lastPath;
-        private int _lines;
 
         public frmViewer(string filename = null)
         {
@@ -48,15 +47,19 @@ namespace logViewer
         private void OpenLogFileAndDisplay(string logFile)
         {
             this.Cursor = Cursors.WaitCursor;
-            richTextBox1.Hide();
+            richTextBox1.Visible = false;
+            richTextBox1.Enabled = false;
+
             var zoom = richTextBox1.ZoomFactor;
             richTextBox1.Clear();
             richTextBox1.ZoomFactor = 1.0f;
             richTextBox1.ZoomFactor = zoom;
-            streamLocation = _lines = 0;
+            streamLocation = 0;
+
+            if (backgroundWorker1.IsBusy) backgroundWorker1.CancelAsync();
+            while (backgroundWorker1.IsBusy) Application.DoEvents();
+
             DisplayLogFile(logFile);
-            richTextBox1.Show();
-            this.Cursor = Cursors.Default;
         }
 
         private void DisplayLogFile(string logFile)
@@ -67,21 +70,12 @@ namespace logViewer
                 using (var wc = new WebClient())
                 {
                     var log = wc.DownloadString(logFile);
-                    using (var sr = new StringReader(log))
-                    {
-                        string line = null;
-                        do
-                        {
-                            line = sr.ReadLine();
-                            if (line == null) break;
-                            if (line.Length < 2) continue;
-                            AddLineOfText(line);
-                            ++_lines;
-                        }
-                        while (true);
+                    if (string.IsNullOrEmpty(log)) return;
 
-                        streamLocation = log.Length;
-                    }
+                    richTextBox1.Text = log;
+                    backgroundWorker1.RunWorkerAsync(richTextBox1.Lines);
+
+                    streamLocation = log.Length;
                 }
             }
             else
@@ -98,17 +92,22 @@ namespace logViewer
                         if (fs.Length < streamLocation) streamLocation = 0;
                         else fs.Position = streamLocation;
 
-                        // read the line
-                        string line = null;
-                        do
+                        if (streamLocation == 0)
                         {
-                            line = sr.ReadLine();
-                            if (line == null) break;
-                            if (line.Length < 2) continue;
-                            AddLineOfText(line);
-                            ++_lines;
+                            richTextBox1.Text = sr.ReadToEnd();
+                            backgroundWorker1.RunWorkerAsync(richTextBox1.Lines);
                         }
-                        while (line != null);
+                        else
+                        {
+                            string line = null;
+                            do
+                            {
+                                line = sr.ReadLine();
+                                if (line == null) break;
+                                if (line.Length < 2) continue;
+                                AddLineOfText(line);
+                            } while (true);
+                        }
 
                         streamLocation = fs.Position;
                     }
@@ -118,39 +117,80 @@ namespace logViewer
             UpdateStatusBar();
         }
 
-        private void AddLineOfText(string line)
+        private void backgroundWorker1_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
+        {
+            var lines = (string[])e.Argument;
+            for (int i = 0; i < lines.Length; i++)
+            {
+                var color = GetLineColor(lines[i]);
+                if (color != Color.ForestGreen)
+                {
+                    SetLineTextColor(i, color);
+                }
+                if (backgroundWorker1.CancellationPending) break;
+            }
+            e.Cancel = true;
+        }
+
+        private void backgroundWorker1_RunWorkerCompleted(object sender, System.ComponentModel.RunWorkerCompletedEventArgs e)
         {
             richTextBox1.SelectionStart = richTextBox1.TextLength;
-            if (line.Contains("ACTION:"))
+            richTextBox1.Enabled = true;
+            richTextBox1.Visible = true;
+            this.Cursor = Cursors.Default;
+        }
+
+        private Color GetLineColor(string line)
+        {
+            if (line.Contains("ACTION:")) 
+                return Color.Orange; // action
+            if (line.Contains("[ERROR]")) 
+                return Color.Red; // error
+            if (line.Contains("[WARNG]") || 
+                line.ToLower().Contains("failed") || 
+                line.Contains("exception") ||
+                line.Contains("Did not receive") ||
+                line.Contains("error code") ||
+                line.Contains("*****") ||
+                line.Contains("no tuners")) 
+                return Color.Yellow; // warning
+            if (line.Contains("==========") ||
+                line.Contains("Beginning") || 
+                line.Contains("Activating"))
+                return Color.White; // separator
+            if (line.Contains("Entering") || 
+                line.Contains("Exiting")) 
+                return Color.Cyan; // message
+            return Color.ForestGreen; // default
+        }
+
+        private void SetLineTextColor(int line, Color color)
+        {
+            if (richTextBox1.InvokeRequired)
             {
-                richTextBox1.SelectionColor = Color.Orange;
-            }
-            else if (line.Contains("[ERROR]"))
-            {
-                richTextBox1.SelectionColor = Color.Red;
-            }
-            else if (line.Contains("[WARNG]") || line.ToLower().Contains("failed") || line.Contains("SD API WebException") || line.Contains("exception thrown") || line.Contains("SD responded") || line.Contains("Did not receive") || line.Contains("Problem occurred") || line.Contains("*****") || line.Contains("no tuners"))
-            {
-                richTextBox1.SelectionColor = Color.Yellow;
-            }
-            else if (line.Contains("==========") || line.Contains("Activating the") || line.Contains("Beginning"))
-            {
-                richTextBox1.SelectionColor = Color.White;
-            }
-            else if (line.Contains("Entering") || line.Contains("Exiting"))
-            {
-                richTextBox1.SelectionColor = Color.Cyan;
+                richTextBox1.Invoke(new MethodInvoker(() => { SetLineTextColor(line, color); }));
             }
             else
             {
-                richTextBox1.SelectionColor = Color.ForestGreen;
+                int start = richTextBox1.GetFirstCharIndexFromLine(line);
+                int end = richTextBox1.GetFirstCharIndexFromLine(line + 1);
+                if (end < start) end = richTextBox1.TextLength - 1;
+
+                richTextBox1.Select(start, end - start);
+                richTextBox1.SelectionColor = color;
             }
+        }
+
+        private void AddLineOfText(string line)
+        {
+            richTextBox1.SelectionStart = richTextBox1.TextLength;
+            richTextBox1.SelectionColor = GetLineColor(line);
             richTextBox1.AppendText($"{line}\r\n");
         }
 
         private void UpdateStatusBar()
         {
-            toolStripStatusLabel1.Text = $"[ length : {streamLocation:N0}  lines : {_lines} ] [ zoom : {(100 * richTextBox1.ZoomFactor):N0}% ]";
+            toolStripStatusLabel1.Text = $"[ length : {streamLocation:N0}  lines : {richTextBox1.Lines.Length} ] [ zoom : {(100 * richTextBox1.ZoomFactor):N0}% ]";
         }
 
         private void copyToolStripMenuItem_Click(object sender, EventArgs e)
@@ -169,6 +209,7 @@ namespace logViewer
 
         private void fileSystemWatcher1_Changed(object sender, FileSystemEventArgs e)
         {
+            richTextBox1.SelectionStart = richTextBox1.TextLength;
             DisplayLogFile($"{fileSystemWatcher1.Path}\\{fileSystemWatcher1.Filter}");
         }
 
@@ -260,7 +301,7 @@ namespace logViewer
             }
 
             var email = new Support();
-            email.AddRecipientTo("support@garyan2.net");
+            email.AddRecipientTo("support@garyan2.me");
             var logFiles = Directory.GetFiles(Helper.Epg123ProgramDataFolder, "*.log");
             foreach (var log in logFiles)
             {
@@ -307,6 +348,7 @@ namespace logViewer
                 }
                 return;
             }
+
             base.WndProc(ref m);
         }
     }
@@ -474,7 +516,7 @@ namespace logViewer
             var err = (m_lastError <= 26) ? errors[m_lastError] : m_lastError.ToString();
             return $"MAPI error [{err}]\n\n" +
                     "The log viewer failed to open/send email from an email client on this machine. It will now open file explorer so you can manually select the \"trace.log\" file and the \"server.log\" file if it exists, to attach to an email using your mail client or webmail.\n\n" +
-                    "Send the email to support@garyan2.net";
+                    "Send the email to support@garyan2.me";
         }
 
         readonly string[] errors = new string[] {

@@ -122,14 +122,6 @@ namespace epg123Server
                 ret += FileDetail(Helper.PlutoTvXmltvPath, 12);
                 ret += "</tr>";
             }
-            if (File.Exists(Helper.StirrTvExePath))
-            {
-                ret += $"<tr><td>StirrTV</td>";
-                ret += FileDetail(Helper.StirrTvM3uPath, 24);
-                ret += "<td>N/A</td>";
-                ret += FileDetail(Helper.StirrTvXmltvPath, 24);
-                ret += "</tr>";
-            }
             ret += "</table>";
             //ret += $"<p><small><b>Links to files above can be constructed from server address + \"/output/&lt;source&gt;.&lt;extension&gt;\"; ex. http://{Environment.MachineName}:9009/output/epg123.mxf</b></small></p></p>";
             return ret;
@@ -139,13 +131,14 @@ namespace epg123Server
         {
             var uptime = DateTime.Now - StartTime;
             var remain = SchedulesDirect.GoodToken ? SchedulesDirect.LastTokenResponse.TokenExpires - DateTime.UtcNow : TimeSpan.FromSeconds(0);
+            var reset = DateTime.UtcNow.Date + TimeSpan.FromDays(1) - DateTime.UtcNow;
             var ret = $"<p>Uptime: <font color=\"blue\">{uptime.Days:D2}</font> days, <font color=\"blue\">{uptime.Hours:D2}</font> hours, <font color=\"blue\">{uptime.Minutes:D2}</font> minutes, <font color=\"blue\">{uptime.Seconds:D2}</font> seconds<br>";
             if (File.Exists(Helper.Epg123ExePath))
             {
                 ret += $"Image cache enabled: <font color=\"blue\">{JsonImageCache.cacheImages}</font><br>" +
                        $"Image retention: <font color=\"blue\">{JsonImageCache.cacheRetention} days</font> after last request<br>" +
                        $"Number of cached images: <font color=\"blue\">{JsonImageCache.ImageCache.Count} ({JsonImageCache.ImageCache.Select(x => x.Value.ByteSize).Sum():N0} bytes)</font><br>" +
-                       $"Download limit exceeded: <font color=\"{(LimitLocked ? "red" : "blue")}\">{LimitLocked}</font><br>" +
+                       $"Download limit exceeded: <font color=\"{(LimitLocked ? "red" : "blue")}\">{LimitLocked} (resets in {reset:hh\\:mm\\:ss})</font><br>" +
                        $"Number of token refreshes: <font color=\"blue\">{tokenRefresh - 1}</font><br>" +
                        $"Valid token: <font color=\"{(SchedulesDirect.GoodToken ? "blue" : "red")}\">{SchedulesDirect.GoodToken}  (expires in {remain:hh\\:mm\\:ss})</font>";
             }

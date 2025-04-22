@@ -16,6 +16,7 @@ namespace epg123Server
     class HttpImageServer : IDisposable
     {
         private bool _limitExceeded;
+        private DateTime _exceedTimestamp = DateTime.MinValue;
         private bool _serviceUnavailable;
         private HashSet<string> queuedImages = new HashSet<string>();
         private readonly object _limitLock = new object();
@@ -230,6 +231,9 @@ namespace epg123Server
             // don't try to download from SD if token is invalid
             if (!SchedulesDirect.GoodToken) goto NoToken;
 
+            // don't try to download from SD if image limit has been reached
+            if (_limitExceeded && (_exceedTimestamp.Date == DateTime.UtcNow.Date)) goto NoToken;
+
             // add if-modified-since as needed
             if ((fileInfo?.LastWriteTimeUtc.Ticks ?? DateTime.MinValue.Ticks) > ifModifiedSince.Ticks)
             {
@@ -293,7 +297,14 @@ namespace epg123Server
                             }
                             break;
                         case (HttpStatusCode)429:
-                            if (!_limitExceeded) { lock (_limitLock) _limitExceeded = WebStats.LimitLocked = true; }
+                            if (!_limitExceeded)
+                            {
+                                lock (_limitLock)
+                                {
+                                    _limitExceeded = WebStats.LimitLocked = true;
+                                    _exceedTimestamp = DateTime.UtcNow;
+                                }
+                            }
                             break;
                     }
                     if (Send304OrImageFromCache(context.Response, ifModifiedSince, fileInfo)) return;
@@ -316,7 +327,8 @@ namespace epg123Server
             if (Send304OrImageFromCache(context.Response, ifModifiedSince, fileInfo)) return;
 
             // nothing to give the client
-            Send503NotUnavailable(context.Response, asset);
+            if (!_limitExceeded) Send503NotUnavailable(context.Response, asset);
+            else Send429LimitExceeded(context.Response, asset);
         }
 
         private static bool Send304OrImageFromCache(HttpListenerResponse response, DateTimeOffset ifModifiedSince, FileInfo fileInfo, bool logo = false)
@@ -347,6 +359,13 @@ namespace epg123Server
             WebStats.IncrementHttpStat(404);
             response.StatusCode = (int)HttpStatusCode.NotFound;
             Logger.WriteError($"{asset} 404 Not Found");
+        }
+
+        private static void Send429LimitExceeded(HttpListenerResponse response, string asset)
+        {
+            WebStats.IncrementHttpStat(429);
+            response.StatusCode = 429;
+            Logger.WriteError($"{asset} 429 Too Many Requests");
         }
 
         private static void Send503NotUnavailable(HttpListenerResponse response, string asset)
