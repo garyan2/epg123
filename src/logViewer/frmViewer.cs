@@ -12,6 +12,8 @@ namespace logViewer
 {
     public partial class frmViewer : Form
     {
+        private Color DEFAULT_COLOR;
+
         private long streamLocation;
         private readonly string _filename;
         private string _lastPath;
@@ -42,6 +44,7 @@ namespace logViewer
             }
 
             richTextBox1.ZoomFactor = Properties.Settings.Default.ZoomFactor;
+            DEFAULT_COLOR = richTextBox1.ForeColor;
         }
 
         private void OpenLogFileAndDisplay(string logFile)
@@ -123,7 +126,7 @@ namespace logViewer
             for (int i = 0; i < lines.Length; i++)
             {
                 var color = GetLineColor(lines[i]);
-                if (color != Color.ForestGreen)
+                if (color != DEFAULT_COLOR)
                 {
                     SetLineTextColor(i, color);
                 }
@@ -161,7 +164,7 @@ namespace logViewer
             if (line.Contains("Entering") || 
                 line.Contains("Exiting")) 
                 return Color.Cyan; // message
-            return Color.ForestGreen; // default
+            return DEFAULT_COLOR; // default
         }
 
         private void SetLineTextColor(int line, Color color)

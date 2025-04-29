@@ -254,9 +254,10 @@ namespace GaRyan2.Utilities
         {
             bool initial = true;
             int pings = Math.Max(1, ms_timeout / 1000);
+            int ping_timeout = 300;
             do
             {
-                if (IsHostAvailable(host))
+                if (IsHostAvailable(host, ping_timeout))
                 {
                     if (!initial) Logger.WriteInformation("Successfully connected to host...");
                     return true;
@@ -266,21 +267,21 @@ namespace GaRyan2.Utilities
                     Logger.WriteInformation("Waiting for host connection...");
                     initial = false;
                 }
-                Thread.Sleep(1000);
+                Thread.Sleep(1000 - ping_timeout);
             } while (--pings > 0);
 
             int s_timeout = Math.Max(1, ms_timeout / 1000);
             Logger.WriteError($"Host connection failed after {s_timeout} seconds.");
-            return false;
+            return true; // allow fail elsewhere
         }
 
-        public static bool IsHostAvailable(Uri host)
+        public static bool IsHostAvailable(Uri host, int timeout)
         {
             try
             {
                 using (Ping ping = new Ping())
                 {
-                    PingReply reply = ping.Send(host.DnsSafeHost);
+                    PingReply reply = ping.Send(host.DnsSafeHost, timeout);
                     return reply.Status == IPStatus.Success;
                 }
             }
