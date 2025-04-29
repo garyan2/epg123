@@ -271,7 +271,7 @@ namespace GaRyan2.Utilities
             } while (--pings > 0);
 
             int s_timeout = Math.Max(1, ms_timeout / 1000);
-            Logger.WriteError($"Host connection failed after {s_timeout} seconds.");
+            Logger.WriteInformation($"Host connection failed after {s_timeout} seconds.");
             return true; // allow fail elsewhere
         }
 
