@@ -26,7 +26,9 @@ namespace GaRyan2
         };
 
         public static DateTime TokenTimestamp => GoodToken ? LastTokenResponse.Datetime : DateTime.MinValue;
-        public static bool GoodToken => (LastTokenResponse?.Code ?? -1) == 0 && LastTokenResponse.TokenExpires > DateTime.UtcNow;
+        public static bool GoodToken => (LastTokenResponse?.Code ?? -1) == 0 &&
+                                         !string.IsNullOrEmpty(LastTokenResponse.Token) &&
+                                         LastTokenResponse.TokenExpires > DateTime.UtcNow;
 
         public static string Username { get; private set; }
         public static string PasswordHash { get; private set; }
