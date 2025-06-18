@@ -1,17 +1,17 @@
 ﻿using GaRyan2.Utilities;
 using Newtonsoft.Json;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace GaRyan2.SchedulesDirectAPI
 {
     internal class API : BaseAPI
     {
-        public string SdErrorMessage;
-
         public override async Task<T> GetHttpResponse<T>(HttpMethod method, string uri, object content = null)
         {
             using (var request = new HttpRequestMessage(method, uri)
@@ -55,7 +55,7 @@ namespace GaRyan2.SchedulesDirectAPI
             {
                 var err = JsonConvert.DeserializeObject<BaseResponse>(content);
                 Logger.WriteVerbose($"SD responded with error code: {err.Code} , message: {err.Message ?? err.Response} , serverID: {err.ServerId} , datetime: {err.Datetime:s}Z");
-                SdErrorMessage = $"{err.Response}: {err.Message}";
+                var SdErrorMessage = $"{err.Response}: {err.Message}";
                 switch (err.Code)
                 {
                     case 2055:
@@ -76,6 +76,9 @@ namespace GaRyan2.SchedulesDirectAPI
                     case 4004: // ACCOUNT_LOCKOUT
                         Logger.WriteVerbose("***** Account is locked out due to too many login attempts. Try again later. *****");
                         break;
+                    case 4010: // TOO_MANY_UNIQUE_IPS
+                        Logger.WriteVerbose("***** You have reached the maximum number of unique IP addresses within 24 hours. If reason is due to your ISP issuing a new IP address for any reason (power outage/equipment change), you can try again later or submit a ticket with Schedules Direct. *****");
+                        break;
                     case 4100: // MAX_LINEUP_CHANGES_REACHED
                         Logger.WriteVerbose("***** You have reached the maximum number of lineup additions to this account for today. Try again tomorrow. *****");
                         break;
@@ -86,6 +89,7 @@ namespace GaRyan2.SchedulesDirectAPI
                         Logger.WriteVerbose("***** The EPG123 Server service could not obtain a token from Schedules Direct. View the server.log file for details.");
                         break;
                 }
+                if (Process.GetCurrentProcess().SessionId != 0) MessageBox.Show(SdErrorMessage, "Account Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             return default;
         }

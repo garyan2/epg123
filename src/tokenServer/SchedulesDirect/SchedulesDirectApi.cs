@@ -41,6 +41,8 @@ namespace GaRyan2.SchedulesDirectAPI
                     case 4004: // ACCOUNT_LOCKOUT
                         Logger.WriteVerbose("***** Account is locked out due to too many login attempts. Try again later. *****");
                         break;
+                    case 4010: // TOO_MANY_UNIQUES_IPS
+                        break;
                     case 4100: // MAX_LINEUP_CHANGES_REACHED
                         Logger.WriteVerbose("***** You have reached the maximum number of lineup additions to this account for today. Try again tomorrow. *****");
                         break;
@@ -101,6 +103,7 @@ namespace GaRyan2.SchedulesDirectAPI
                     case 4001: // ACCOUNT_EXPIRED
                     case 4005: // ACCOUNT_DISABLED
                     case 4007: // APPLICATION_DISABLED
+                    case 4010: // TOO_MANY_UNIQUE_IPS
                         response.StatusCode = HttpStatusCode.Forbidden; // 403
                         response.ReasonPhrase = "Forbidden";
                         break;

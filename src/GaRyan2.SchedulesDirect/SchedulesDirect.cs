@@ -2,7 +2,6 @@
 using GaRyan2.Utilities;
 using System;
 using System.Collections.Generic;
-using System.Web;
 using static GaRyan2.BaseAPI;
 
 namespace GaRyan2
@@ -13,7 +12,6 @@ namespace GaRyan2
         public static string BaseAddress => api.BaseAddress;
         public static string BaseArtworkAddress { get; private set; }
 
-        public static string ErrorMessage => api.SdErrorMessage;
         public static int MaxLineups;
 
         /// <summary>
@@ -44,81 +42,35 @@ namespace GaRyan2
         /// </summary>
         /// <param name="username">account username</param>
         /// <param name="passwordHash">optional to provide password hash if known</param>
-        /// <param name="requestNew">demand request for new token</param>
         /// <returns>true if successful</returns>
-        public static bool GetToken(string username, string passwordHash, bool requestNew = false)
+        public static bool GetToken(string username, string passwordHash)
         {
-            api.SdErrorMessage = null;
-            if (Helper.InstallMethod == Helper.Installation.CLIENT || (Helper.InstallMethod <= Helper.Installation.SERVER && UdpFunctions.ServiceRunning()))
+            if (username == null || passwordHash == null)
             {
-                var url = Helper.InstallMethod == Helper.Installation.CLIENT ? $"{api.BaseAddress}token" : $"http://localhost:{Helper.TcpUdpPort}/epg123/token";
-                if (requestNew) url += $"?username={HttpUtility.UrlEncode(username)}&password={passwordHash}";
-
-                TokenResponse ret;
-                api.ClearToken();
-                ret = api.GetApiResponse<TokenResponse>(Method.GET, url);
-                if (ret != null && ret.Code == 0)
-                {
-                    api.SetToken(ret.Token);
-                    Logger.WriteVerbose($"Token request successful. serverID: {ret.ServerId} , datetime: {ret.Datetime:s}Z , expires: {ret.TokenExpires:s}Z");
-                    return true;
-                }
-                else if (ret != null)
-                {
-                    api.SdErrorMessage = ret.Message;
-                }
-                else Logger.WriteError("Did not receive a response from EPG123 Server for a token request.");
+                Logger.WriteError("No username and/or password provided to attempt token request from Schedules Direct.");
                 return false;
             }
 
-            if (Helper.InstallMethod == Helper.Installation.FULL && !UdpFunctions.ServiceRunning())
+            if ((Helper.InstallMethod == Helper.Installation.FULL || Helper.InstallMethod == Helper.Installation.SERVER) && !UdpFunctions.ServiceRunning())
             {
                 Logger.WriteWarning("The \"EPG123 Server\" service is not running. Program images and remote client downloads will not be available.");
             }
 
-            if (passwordHash != null)
+            api.ClearToken();
+            var ret = api.GetApiResponse<TokenResponse>(Method.POST, "token", new TokenRequest { Username = username, PasswordHash = passwordHash });
+            if (ret != null && ret.Code == 0 && ret.TokenExpires - DateTime.UtcNow < TimeSpan.FromMinutes(15))
             {
-                api.ClearToken();
-                var ret = api.GetApiResponse<TokenResponse>(Method.POST, "token", new TokenRequest { Username = username, PasswordHash = passwordHash });
-                if (ret != null && ret.Code == 0 && ret.TokenExpires - DateTime.UtcNow < TimeSpan.FromMinutes(15))
-                {
-                    ret = api.GetApiResponse<TokenResponse>(Method.POST, "token", new TokenRequest { Username = username, PasswordHash = passwordHash, NewToken = true });
-                }
-
-                if (ret != null && ret.Code == 0)
-                {
-                    api.SetToken(ret.Token);
-                    Logger.WriteVerbose($"Token request successful. serverID: {ret.ServerId} , datetime: {ret.Datetime:s}Z , expires: {ret.TokenExpires:s}Z");
-                }
-                else Logger.WriteError("Did not receive a response from Schedules Direct for a token request.");
-                return ret != null;
+                ret = api.GetApiResponse<TokenResponse>(Method.POST, "token", new TokenRequest { Username = username, PasswordHash = passwordHash, NewToken = true });
             }
-            Logger.WriteError("No password provided to attempt token request from Schedules Direct.");
-            return false;
-        }
 
-        public static bool GetTokenFromService(string serviceUrl)
-        {
-            var ret = api.GetApiResponse<TokenResponse>(Method.GET, $"{serviceUrl}token");
             if (ret != null && ret.Code == 0)
             {
                 api.SetToken(ret.Token);
-                Logger.WriteVerbose($"Token refresh successful. serverID: {ret.ServerId} , datetime: {ret.Datetime:s}Z");
+                Logger.WriteVerbose($"Token request successful. serverID: {ret.ServerId} , datetime: {ret.Datetime:s}Z , expires: {ret.TokenExpires:s}Z");
                 return true;
             }
-            else if (ret != null)
-            {
-                api.SdErrorMessage = ret.Message;
-            }
-            else Logger.WriteError("Did not receive a response from EPG123 Server for a token request.");
+            else Logger.WriteError("Did not receive a response from Schedules Direct for a token request.");
             return false;
-        }
-
-        private static bool ValidateToken()
-        {
-            var ret = api.GetApiResponse<LineupResponse>(Method.GET, "lineups");
-            if (ret == null) return false;
-            return ret.Code == 0;
         }
 
         public static UserStatus GetUserStatus()

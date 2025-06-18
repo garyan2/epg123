@@ -35,6 +35,13 @@ namespace epg123
             AppDomain.CurrentDomain.UnhandledException += MyUnhandledException;
             Application.ThreadException += MyThreadException;
 
+            if (!File.Exists(Helper.Epg123CfgPath))
+            {
+                Console.WriteLine("Configuration file does not exist. You must create a cfg file prior to attempting an update.");
+                Console.WriteLine($"Run \"{Helper.Epg123GuiPath}\" to create the cfg file.");
+                return -1;
+            }
+
             bool import, match, showProgress, error, showHelp;
             import = match = showProgress = error = showHelp = false;
             if (args != null)

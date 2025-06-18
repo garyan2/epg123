@@ -130,12 +130,7 @@ namespace epg123_gui
             }
 
             // initialize the schedules direct api
-            if (Helper.InstallMethod != Helper.Installation.PORTABLE)
-            {
-                var baseApi = $"{_BaseServerAddress}epg123/";
-                SdApi.Initialize($"EPG123/{Helper.Epg123Version}", baseApi, Config.BaseArtworkUrl, Config.UseDebug);
-            }
-            else SdApi.Initialize($"EPG123/{Helper.Epg123Version}", Config.BaseApiUrl, Config.BaseArtworkUrl, Config.UseDebug);
+            SdApi.Initialize($"EPG123/{Helper.Epg123Version}", Config.BaseApiUrl, Config.BaseArtworkUrl, Config.UseDebug);
 
             // login to Schedules Direct and get a token
             if (Login(Config.UserAccount?.LoginName, Config.UserAccount?.PasswordHash))
@@ -197,15 +192,13 @@ namespace epg123_gui
             {
                 switch (Helper.InstallMethod)
                 {
-                    case Helper.Installation.FULL:
-                    case Helper.Installation.SERVER:
-                        Settings.Default.CfgLocation = $"http://localhost:{Helper.TcpUdpPort}/epg123/epg123.cfg";
-                        break;
                     case Helper.Installation.CLIENT:
                         var frmRemote = new frmRemoteServers();
                         frmRemote.ShowDialog();
                         if (!string.IsNullOrEmpty(frmRemote.cfgPath)) Settings.Default.CfgLocation = frmRemote.cfgPath;
                         break;
+                    case Helper.Installation.FULL:
+                    case Helper.Installation.SERVER:
                     case Helper.Installation.PORTABLE:
                         Settings.Default.CfgLocation = Helper.Epg123CfgPath;
                         break;
@@ -494,7 +487,7 @@ namespace epg123_gui
                 _newLogin = true;
             }
 
-            if (SdApi.GetToken(username, passwordHash, _newLogin))
+            if (SdApi.GetToken(username, passwordHash))
             {
                 // enable form controls
                 tabLineups.Enabled = true;
@@ -528,7 +521,6 @@ namespace epg123_gui
             }
             else
             {
-                MessageBox.Show(SdApi.ErrorMessage ?? "Failed to get token. Check trace.log and/or server.log file for details.", "Failed to Login");
                 txtLoginName.Enabled = txtPassword.Enabled = true;
                 txtPassword.Text = string.Empty;
                 Cursor = Cursors.Arrow;

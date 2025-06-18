@@ -98,9 +98,9 @@ namespace epg123Server
                                 var value = HttpUtility.UrlDecode(kvPair[1]);
                                 parameters.Add(key, value);
                             }
-                            SchedulesDirect.GetToken(parameters["username"], parameters["password"], true);
+                            SchedulesDirect.GetToken(parameters["username"], parameters["password"]);
                         }
-                        else if (!SchedulesDirect.GoodToken) SchedulesDirect.GetToken();
+                        else SchedulesDirect.GetToken();
                         response = SchedulesDirect.LastTokenResponse;
                         
                         if (response == null)

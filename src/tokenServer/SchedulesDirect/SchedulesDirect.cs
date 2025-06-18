@@ -21,11 +21,10 @@ namespace GaRyan2
         public static TokenResponse LastTokenResponse { get; private set; } = new TokenResponse
         {
             Code = 0,
-            tokenExpiresEpoch = (long)(DateTime.UtcNow - new DateTime(1970, 1, 1) + TimeSpan.FromDays(1)).TotalSeconds,
+            tokenExpiresEpoch = (long)(DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds,
             Datetime = DateTime.UtcNow - TimeSpan.FromHours(24)
         };
 
-        public static DateTime TokenTimestamp => GoodToken ? LastTokenResponse.Datetime : DateTime.MinValue;
         public static bool GoodToken => (LastTokenResponse?.Code ?? -1) == 0 &&
                                          !string.IsNullOrEmpty(LastTokenResponse.Token) &&
                                          LastTokenResponse.TokenExpires > DateTime.UtcNow;
@@ -75,17 +74,16 @@ namespace GaRyan2
         {
             return GetToken(Username, PasswordHash);
         }
-        public static bool GetToken(string username = null, string password = null, bool requestNew = false)
+        public static bool GetToken(string username = null, string password = null)
         {
             if (username == null || password == null) return false;
 
             lock (_tokenLock)
             {
-                requestNew |= (Username != username) || (PasswordHash != password);
-                if (!requestNew && DateTime.UtcNow - TokenTimestamp < TimeSpan.FromMinutes(1)) return GoodToken;
+                var previousToken = LastTokenResponse?.Token;
 
                 api.ClearToken();
-                LastTokenResponse = api.GetApiResponse<TokenResponse>(Method.POST, "token", new TokenRequest { Username = username, PasswordHash = password , NewToken = requestNew });
+                LastTokenResponse = api.GetApiResponse<TokenResponse>(Method.POST, "token", new TokenRequest { Username = username, PasswordHash = password , NewToken = false });
 
                 if (GoodToken && LastTokenResponse.TokenExpires - DateTime.UtcNow < TimeSpan.FromMinutes(15))
                 {
@@ -95,10 +93,13 @@ namespace GaRyan2
                 if (GoodToken)
                 {
                     api.SetToken(LastTokenResponse.Token);
-                    WebStats.IncrementTokenRefresh();
                     Username = username; PasswordHash = password;
                     _timer.Change(LastTokenResponse.TokenExpires - DateTime.UtcNow - TimeSpan.FromSeconds(_random.Next(300, 900)), TimeSpan.FromHours(24));
-                    Logger.WriteInformation($"Refreshed Schedules Direct API token. token: {LastTokenResponse.Token.Substring(0, 5)}... , expires: {LastTokenResponse.TokenExpires:s}Z");
+                    if (!LastTokenResponse.Token.Equals(previousToken))
+                    {
+                        WebStats.IncrementTokenRefresh();
+                        Logger.WriteInformation($"Refreshed Schedules Direct API token. token: {LastTokenResponse.Token.Substring(0, 5)}... , expires: {LastTokenResponse.TokenExpires:s}Z");
+                    }
                 }
                 else
                 {
