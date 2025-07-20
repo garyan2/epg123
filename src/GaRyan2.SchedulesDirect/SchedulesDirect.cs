@@ -161,7 +161,9 @@ namespace GaRyan2
         #region ========== Program Metadata ==========
         public static StationChannelMap GetStationChannelMap(string lineup)
         {
+            api._httpClient.DefaultRequestHeaders.Add("verboseMap", "true");
             var ret = api.GetApiResponse<StationChannelMap>(Method.GET, $"lineups/{lineup}");
+            api._httpClient.DefaultRequestHeaders.Remove("verboseMap");
             if (ret != null) Logger.WriteVerbose($"Successfully retrieved the station mapping for lineup {lineup} from {ret.Metadata.Modified}. ({ret.Stations.Count} stations; {ret.Map.Count} channels)");
             else Logger.WriteError($"Did not receive a response from Schedules Direct for retrieval of lineup {lineup}.");
             return ret;

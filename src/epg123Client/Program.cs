@@ -521,7 +521,7 @@ namespace epg123Client
 
                     // all done
                     Logger.WriteInformation("Completed EPG123 client execution.");
-                    Logger.WriteVerbose($"EPG123 client execution time was {DateTime.UtcNow - startTime}.");
+                    Logger.WriteVerbose($"EPG123 client execution time was {DateTime.UtcNow - startTime:G}.");
                     NativeMethods.SetThreadExecutionState(prevThreadState | (uint)ExecutionFlags.ES_CONTINUOUS);
                 }
             }

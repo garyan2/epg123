@@ -583,7 +583,8 @@ namespace epg123.sdJson2mxf
                         if (contentRatings.Count > 0) break;
                     }
                 }
-                mxfProgram.extras.Add("ratings", contentRatings);
+                if (!mxfProgram.extras.ContainsKey("ratings")) mxfProgram.extras.Add("ratings", contentRatings);
+                else mxfProgram.extras["ratings"] = contentRatings;
             }
 
             if (sdProgram.ContentAdvisory != null)

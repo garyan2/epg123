@@ -98,7 +98,7 @@ namespace epg123.sdJson2mxf
                 Logger.WriteInformation("Completed EPG123 update execution. SUCCESS.");
             }
             mxf = null; xmltv = null; StationLogosToDownload = null;
-            Logger.WriteVerbose($"EPG123 update execution time was {DateTime.UtcNow - startTime}.");
+            Logger.WriteVerbose($"EPG123 update execution time was {DateTime.UtcNow - startTime:G}.");
         }
 
         private static bool ServiceCountSafetyCheck()

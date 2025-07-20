@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Xml.Serialization;
 
 namespace GaRyan2.MxfXml
@@ -79,7 +80,7 @@ namespace GaRyan2.MxfXml
                 {
                     Uid = "!DeviceGroup!All",
                     Name = "All",
-                    LastConfigurationChange = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ"),
+                    LastConfigurationChange = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture),
                     Rank = "0",
                     PermitAnyDeviceType = "true",
                     IsEnabled = "true",
