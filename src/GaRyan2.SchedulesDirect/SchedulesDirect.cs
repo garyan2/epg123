@@ -13,6 +13,7 @@ namespace GaRyan2
         public static string BaseArtworkAddress { get; private set; }
 
         public static int MaxLineups;
+        public static string myToken;
 
         /// <summary>
         /// Initializes the http client to communicate with Schedules Direct
@@ -65,7 +66,7 @@ namespace GaRyan2
 
             if (ret != null && ret.Code == 0)
             {
-                api.SetToken(ret.Token);
+                api.SetToken(myToken = ret.Token);
                 Logger.WriteVerbose($"Token request successful. serverID: {ret.ServerId} , datetime: {ret.Datetime:s}Z , expires: {ret.TokenExpires:s}Z");
                 return true;
             }

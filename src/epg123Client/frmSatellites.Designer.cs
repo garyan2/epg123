@@ -120,8 +120,8 @@ namespace epg123Client
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(471, 33);
             this.label1.TabIndex = 6;
-            this.label1.Text = "Update satellites and transponders from 30 October 2021. A Full Satellite Scan wi" +
-    "ll be required to add channels to the guide after TV Setup is complete.";
+            this.label1.Text = "Update satellites and transponders from 21 November 2025. A Full Satellite Scan w" +
+    "ill be required to add channels to the guide after TV Setup is complete.";
             // 
             // groupBox1
             // 

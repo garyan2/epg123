@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Windows.Forms;
 using api = GaRyan2.SchedulesDirect;
 
 namespace epg123.sdJson2mxf
@@ -336,13 +337,6 @@ namespace epg123.sdJson2mxf
         // Icons
         private static List<XmltvIcon> BuildProgramIcons(MxfProgram mxfProgram)
         {
-            if (config.XmltvSingleImage)
-            {
-                var url = mxfProgram.mxfGuideImage?.ImageUrl ?? mxfProgram.mxfSeason?.mxfGuideImage?.ImageUrl ??
-                    mxfProgram.mxfSeriesInfo?.mxfGuideImage?.ImageUrl;
-                return url == null ? null : new List<XmltvIcon> { new XmltvIcon { Src = url } };
-            }
-
             var artwork = new List<ProgramArtwork>();
 
             // a movie or sport event will have a guide image from the program
@@ -363,7 +357,11 @@ namespace epg123.sdJson2mxf
                 artwork = mxfProgram.mxfSeriesInfo.extras["artwork"];
             }
 
-            return artwork.Count == 0 ? null : artwork.Select(image => new XmltvIcon { Src = Helper.Standalone ? image.Uri : $"{image.Uri.Replace($"{api.BaseArtworkAddress}", $"http://{HostAddress}:{Helper.TcpUdpPort}/")}", Height = image.Height, Width = image.Width }).ToList();
+            if (artwork.Count == 0) return null;
+            var ret = artwork.Select(image => new XmltvIcon { Src = Helper.Standalone ? image.Uri : $"{image.Uri.Replace($"{api.BaseArtworkAddress}", $"http://{HostAddress}:{Helper.TcpUdpPort}/")}", Height = image.Height, Width = image.Width }).ToList();
+
+            if (!config.XmltvSingleImage) return ret;
+            return new List<XmltvIcon> { ret.Single(image => (double)image.Height / (double)image.Width == 1.5) }; // only 2x3 images
         }
 
         private static XmltvText GrabSportEvent(MxfProgram program)

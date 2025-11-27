@@ -45,8 +45,11 @@ namespace GaRyan2.SiliconDustApi
                 {
                     sw.Write(firstline + "\n" + xmltv);
                 }
-                Helper.GZipCompressFile(Helper.Hdhr2mxfXmltvPath);
-                Helper.DeflateCompressFile(Helper.Hdhr2mxfXmltvPath);
+                if (Helper.InstallMethod != Helper.Installation.PORTABLE)
+                {
+                    Helper.GZipCompressFile(Helper.Hdhr2mxfXmltvPath);
+                    Helper.DeflateCompressFile(Helper.Hdhr2mxfXmltvPath);
+                }
 
                 var serializer = new XmlSerializer(typeof(XMLTV));
                 TextReader reader = new StringReader(xmltv);

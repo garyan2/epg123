@@ -130,6 +130,7 @@ namespace GaRyan2.MxfXml
             }
             else if (mxfType == TYPEMXF.SATELLITES)
             {
+                _version = "6.2.0.0";
                 Assembly = new List<MxfAssembly>
                 {
                     new MxfAssembly

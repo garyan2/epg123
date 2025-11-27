@@ -70,7 +70,7 @@
             this.pbCustomLocal.ContextMenuStrip = this.contextMenuStrip2;
             this.pbCustomLocal.Location = new System.Drawing.Point(187, 12);
             this.pbCustomLocal.Name = "pbCustomLocal";
-            this.pbCustomLocal.Size = new System.Drawing.Size(120, 90);
+            this.pbCustomLocal.Size = new System.Drawing.Size(270, 90);
             this.pbCustomLocal.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pbCustomLocal.TabIndex = 0;
             this.pbCustomLocal.TabStop = false;
@@ -98,7 +98,7 @@
             this.pbDarkLocal.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.pbDarkLocal.Location = new System.Drawing.Point(187, 108);
             this.pbDarkLocal.Name = "pbDarkLocal";
-            this.pbDarkLocal.Size = new System.Drawing.Size(120, 90);
+            this.pbDarkLocal.Size = new System.Drawing.Size(270, 90);
             this.pbDarkLocal.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pbDarkLocal.TabIndex = 1;
             this.pbDarkLocal.TabStop = false;
@@ -110,7 +110,7 @@
             this.pbWhiteLocal.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.pbWhiteLocal.Location = new System.Drawing.Point(187, 204);
             this.pbWhiteLocal.Name = "pbWhiteLocal";
-            this.pbWhiteLocal.Size = new System.Drawing.Size(120, 90);
+            this.pbWhiteLocal.Size = new System.Drawing.Size(270, 90);
             this.pbWhiteLocal.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pbWhiteLocal.TabIndex = 2;
             this.pbWhiteLocal.TabStop = false;
@@ -122,7 +122,7 @@
             this.pbLightLocal.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.pbLightLocal.Location = new System.Drawing.Point(187, 300);
             this.pbLightLocal.Name = "pbLightLocal";
-            this.pbLightLocal.Size = new System.Drawing.Size(120, 90);
+            this.pbLightLocal.Size = new System.Drawing.Size(270, 90);
             this.pbLightLocal.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pbLightLocal.TabIndex = 3;
             this.pbLightLocal.TabStop = false;
@@ -134,7 +134,7 @@
             this.pbGrayLocal.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.pbGrayLocal.Location = new System.Drawing.Point(187, 396);
             this.pbGrayLocal.Name = "pbGrayLocal";
-            this.pbGrayLocal.Size = new System.Drawing.Size(120, 90);
+            this.pbGrayLocal.Size = new System.Drawing.Size(270, 90);
             this.pbGrayLocal.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pbGrayLocal.TabIndex = 4;
             this.pbGrayLocal.TabStop = false;
@@ -146,7 +146,7 @@
             this.pbDefaultLocal.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.pbDefaultLocal.Location = new System.Drawing.Point(187, 492);
             this.pbDefaultLocal.Name = "pbDefaultLocal";
-            this.pbDefaultLocal.Size = new System.Drawing.Size(120, 90);
+            this.pbDefaultLocal.Size = new System.Drawing.Size(270, 90);
             this.pbDefaultLocal.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pbDefaultLocal.TabIndex = 5;
             this.pbDefaultLocal.TabStop = false;
@@ -286,7 +286,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoScroll = true;
-            this.ClientSize = new System.Drawing.Size(326, 597);
+            this.ClientSize = new System.Drawing.Size(470, 597);
             this.Controls.Add(this.label7);
             this.Controls.Add(this.label6);
             this.Controls.Add(this.label5);

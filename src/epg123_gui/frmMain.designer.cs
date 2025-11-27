@@ -607,9 +607,9 @@
             this.cbXmltvSingleImage.AutoSize = true;
             this.cbXmltvSingleImage.Location = new System.Drawing.Point(6, 245);
             this.cbXmltvSingleImage.Name = "cbXmltvSingleImage";
-            this.cbXmltvSingleImage.Size = new System.Drawing.Size(277, 17);
+            this.cbXmltvSingleImage.Size = new System.Drawing.Size(247, 17);
             this.cbXmltvSingleImage.TabIndex = 9;
-            this.cbXmltvSingleImage.Text = "Trim XMLTV - do not include additional image formats";
+            this.cbXmltvSingleImage.Text = "Trim XMLTV - only include 2x3 program images";
             this.cbXmltvSingleImage.UseVisualStyleBackColor = true;
             this.cbXmltvSingleImage.CheckedChanged += new System.EventHandler(this.ckXmltvConfigs_Changed);
             // 
@@ -1285,7 +1285,7 @@
             // 
             this.menuInclude.CheckOnClick = true;
             this.menuInclude.Name = "menuInclude";
-            this.menuInclude.Size = new System.Drawing.Size(178, 22);
+            this.menuInclude.Size = new System.Drawing.Size(180, 22);
             this.menuInclude.Text = "Include";
             this.menuInclude.ToolTipText = "Include lineup in downloads.";
             this.menuInclude.Click += new System.EventHandler(this.menuIncludeExclude_Click);
@@ -1295,7 +1295,7 @@
             this.menuExclude.Checked = true;
             this.menuExclude.CheckState = System.Windows.Forms.CheckState.Checked;
             this.menuExclude.Name = "menuExclude";
-            this.menuExclude.Size = new System.Drawing.Size(178, 22);
+            this.menuExclude.Size = new System.Drawing.Size(180, 22);
             this.menuExclude.Text = "Exclude";
             this.menuExclude.ToolTipText = "Exclude lineup from downloads.";
             this.menuExclude.Click += new System.EventHandler(this.menuIncludeExclude_Click);
@@ -1303,7 +1303,7 @@
             // menuDiscardNumbers
             // 
             this.menuDiscardNumbers.Name = "menuDiscardNumbers";
-            this.menuDiscardNumbers.Size = new System.Drawing.Size(178, 22);
+            this.menuDiscardNumbers.Size = new System.Drawing.Size(180, 22);
             this.menuDiscardNumbers.Text = "Discard Channel #\'s";
             this.menuDiscardNumbers.ToolTipText = "Enable if you cannot use automatch with this lineup.";
             this.menuDiscardNumbers.Click += new System.EventHandler(this.menuDiscardNumbers_Click);
@@ -1323,7 +1323,6 @@
             // btnSelectAll
             // 
             this.btnSelectAll.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.btnSelectAll.Image = ((System.Drawing.Image)(resources.GetObject("btnSelectAll.Image")));
             this.btnSelectAll.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btnSelectAll.Name = "btnSelectAll";
             this.btnSelectAll.Size = new System.Drawing.Size(25, 19);
@@ -1334,7 +1333,6 @@
             // btnSelectNone
             // 
             this.btnSelectNone.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.btnSelectNone.Image = ((System.Drawing.Image)(resources.GetObject("btnSelectNone.Image")));
             this.btnSelectNone.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btnSelectNone.Name = "btnSelectNone";
             this.btnSelectNone.Size = new System.Drawing.Size(40, 19);
