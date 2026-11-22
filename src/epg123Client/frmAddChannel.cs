@@ -58,7 +58,7 @@ namespace epg123Client
 
             foreach (Device device in new Devices(WmcStore.WmcObjectStore))
             {
-                if (device.ScannedLineup == null) return;
+                if (device.ScannedLineup == null) continue;
                 if (!device.ScannedLineup.IsSameAs((Lineup)cmbScannedLineups.SelectedItem)) continue;
                 lvDevices.Items.Add(new ListViewItem(device.Name)
                 {

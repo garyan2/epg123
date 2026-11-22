@@ -20,7 +20,7 @@ namespace epg123.sdJson2mxf
             imageQueue = new List<string>();
             imageResponses = new ConcurrentBag<ProgramMetadata>();
             IncrementNextStage(sportEvents.Count);
-            if (!config.SeasonEventImages) return true;
+            if (!config.SportEventImages) return true;
             if (Helper.Standalone) return true;
 
             // scan through each series in the mxf

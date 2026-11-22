@@ -36,6 +36,8 @@ namespace epg123
             AppendEpisodeDesc = other.AppendEpisodeDesc;
             OadOverride = other.OadOverride;
             SeasonEventImages = other.SeasonEventImages;
+            SeasonImages = other.SeasonImages;
+            SportEventImages = other.SportEventImages;
             SeriesPosterAspect = other.SeriesPosterAspect;
             ArtworkSize = other.ArtworkSize;
             IncludeSdLogos = other.IncludeSdLogos;
@@ -115,7 +117,8 @@ namespace epg123
             if (!AlternateSEFormat.Equals(other.AlternateSEFormat)) return false;
             if (!AppendEpisodeDesc.Equals(other.AppendEpisodeDesc)) return false;
             if (!OadOverride.Equals(other.OadOverride)) return false;
-            if (!SeasonEventImages.Equals(other.SeasonEventImages)) return false;
+            if (!SeasonImages.Equals(other.SeasonImages)) return false;
+            if (!SportEventImages.Equals(other.SportEventImages)) return false;
             if (!SeriesPosterAspect.Equals(other.SeriesPosterAspect)) return false;
             if (!ArtworkSize.Equals(other.ArtworkSize)) return false;
             if (!IncludeSdLogos.Equals(other.IncludeSdLogos)) return false;
@@ -200,8 +203,15 @@ namespace epg123
         [XmlElement("OADOverride")]
         public bool OadOverride { get; set; } = true;
 
-        [XmlElement("SeasonEventImages")]
-        public bool SeasonEventImages { get; set; } = true;
+        [XmlElement("SeasonEventImages")] // deprecated
+        public bool SeasonEventImages { get; set; }
+        public bool ShouldSerializeSeasonEventImages() => false;
+
+        [XmlElement("SeasonImages")]
+        public bool SeasonImages { get; set; } = true;
+
+        [XmlElement("SportEventImages")]
+        public bool SportEventImages { get; set; } = true;
 
         [XmlElement("SeriesPosterArt")] // deprecated
         public bool SeriesPosterArt { get; set; }

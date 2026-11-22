@@ -80,7 +80,7 @@ namespace GaRyan2
             if (ret != null)
             {
                 Logger.WriteVerbose($"Status request successful. account expires: {ret.Account.Expires:s}Z , lineups: {ret.Lineups.Count}/{ret.Account.MaxLineups} , lastDataUpdate: {ret.LastDataUpdate:s}Z");
-                Logger.WriteVerbose($"System status: {ret.SystemStatus[0].Status} , message: {ret.SystemStatus[0].Message}");
+                Logger.WriteVerbose($"System status: {ret.SystemStatus?[0]?.Status ?? ""} , message: {ret.SystemStatus?[0]?.Message ?? ""}");
                 MaxLineups = ret.Account.MaxLineups;
 
                 var expires = ret.Account.Expires - DateTime.UtcNow;

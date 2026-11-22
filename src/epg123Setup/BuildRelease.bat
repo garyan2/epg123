@@ -2,7 +2,7 @@
 CLS
 
 SETLOCAL ENABLEEXTENSIONS
-SET COMPILER=C:\Program Files (x86)\Inno Setup 5\iscc.exe
+SET COMPILER=C:\Program Files\Inno Setup 7\iscc.exe
 SET BASE=..\..\bin\output
 SET PORTABLE=%BASE%\portable
 SET SETUP=%BASE%\setup

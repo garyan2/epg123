@@ -264,7 +264,13 @@ namespace epg123_gui
             rdoSm.Checked = Config.ArtworkSize.Equals("Sm");
             rdoMd.Checked = Config.ArtworkSize.Equals("Md");
             rdoLg.Checked = Config.ArtworkSize.Equals("Lg");
-            cbSeasonEventImages.Checked = Config.SeasonEventImages;
+            if (Config.SeasonEventImages)
+            {
+                Config.SeasonImages = true;
+                Config.SportEventImages = true;
+            }
+            cbSeasonImages.Checked = Config.SeasonImages;
+            cbSportEventImages.Checked = Config.SportEventImages;
             cbSdLogos.Checked = Config.IncludeSdLogos;
             cmbPreferredLogos.SelectedIndex = (int)(Helper.PreferredLogos)Enum.Parse(typeof(Helper.PreferredLogos), Config.PreferredLogoStyle, true);
             cmbPreferredLogos.Enabled = lblPreferredLogos.Enabled = Config.IncludeSdLogos;
@@ -325,7 +331,8 @@ namespace epg123_gui
             {
                 cbCacheRetention.Enabled = ckIpAddress.Enabled = cmbIpAddresses.Enabled = btnServiceStart.Enabled = btnServiceStop.Enabled = linkLabel2.Enabled = linkLabel3.Enabled = false;
                 label1.Enabled = label2.Enabled = label3.Enabled = false;
-                cbSeasonEventImages.Enabled = false; cbSeasonEventImages.Font = new Font(cbSeasonEventImages.Font, cbSeasonEventImages.Font.Style | FontStyle.Strikeout);
+                cbSeasonImages.Enabled = false; cbSeasonImages.Font = new Font(cbSeasonImages.Font, cbSeasonImages.Font.Style | FontStyle.Strikeout);
+                cbSportEventImages.Enabled = false; cbSportEventImages.Font = new Font(cbSportEventImages.Font, cbSportEventImages.Font.Style | FontStyle.Strikeout);
                 lblAspect.Enabled = lblSize.Enabled = pnlAspect.Enabled = pnlSize.Enabled = false;
                 lblAspect.Font = lblSize.Font = rdo2x3.Font = rdo3x4.Font = rdo4x3.Font = rdo16x9.Font = rdoSm.Font = rdoMd.Font = rdoLg.Font =
                     new Font(lblAspect.Font, lblAspect.Font.Style | FontStyle.Strikeout);
@@ -1381,7 +1388,8 @@ namespace epg123_gui
             else if (sender.Equals(cbAlternateSEFormat)) Config.AlternateSEFormat = cbAlternateSEFormat.Checked;
             else if (sender.Equals(cbAppendDescription)) Config.AppendEpisodeDesc = cbAppendDescription.Checked;
             else if (sender.Equals(cbOadOverride)) Config.OadOverride = cbOadOverride.Checked;
-            else if (sender.Equals(cbSeasonEventImages)) Config.SeasonEventImages = cbSeasonEventImages.Checked;
+            else if (sender.Equals(cbSeasonImages)) Config.SeasonImages = cbSeasonImages.Checked;
+            else if (sender.Equals(cbSportEventImages)) Config.SportEventImages = cbSportEventImages.Checked;
             else if (sender.Equals(cbAddNewStations)) Config.AutoAddNew = cbAddNewStations.Checked;
             else if (sender.Equals(cbModernMedia)) Config.ModernMediaUiPlusSupport = cbModernMedia.Checked;
             else if (sender.Equals(cbNoCastCrew)) Config.ExcludeCastAndCrew = cbNoCastCrew.Checked;

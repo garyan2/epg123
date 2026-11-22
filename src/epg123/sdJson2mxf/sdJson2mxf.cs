@@ -32,7 +32,7 @@ namespace epg123.sdJson2mxf
             api.Initialize(userAgent, config.BaseApiUrl, config.BaseArtworkUrl, config.UseDebug);
 
             var startTime = DateTime.UtcNow;
-            Logger.WriteVerbose($"DaysToDownload: {config.DaysToDownload} , TheTVDBNumbers : {config.TheTvdbNumbers} , PrefixEpisodeTitle: {config.PrefixEpisodeTitle} , PrefixEpisodeDescription : {config.PrefixEpisodeDescription} , AppendEpisodeDesc: {config.AppendEpisodeDesc} , OADOverride : {config.OadOverride} , SeasonEventImages : {config.SeasonEventImages} , IncludeSDLogos : {config.IncludeSdLogos} , AutoAddNew: {config.AutoAddNew} , CreateXmltv: {config.CreateXmltv}");
+            Logger.WriteVerbose($"DaysToDownload: {config.DaysToDownload} , TheTVDBNumbers : {config.TheTvdbNumbers} , PrefixEpisodeTitle: {config.PrefixEpisodeTitle} , PrefixEpisodeDescription : {config.PrefixEpisodeDescription} , AppendEpisodeDesc: {config.AppendEpisodeDesc} , OADOverride : {config.OadOverride} , SeasonImages : {config.SeasonImages} , SportEventImages : {config.SportEventImages} , IncludeSDLogos : {config.IncludeSdLogos} , AutoAddNew: {config.AutoAddNew} , CreateXmltv: {config.CreateXmltv}");
 
             // login to Schedules Direct and check server status
             if (!api.GetToken(config.UserAccount.LoginName, config.UserAccount.PasswordHash))

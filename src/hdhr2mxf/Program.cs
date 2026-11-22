@@ -142,9 +142,8 @@ namespace hdhr2mxf
             }
             if (!dvrActive)
             {
-                Logger.WriteError("HDHomeRun DVR Service is NOT active.");
-                Logger.WriteError("ACTION: You can subscribe/renew SiliconDust's HDHomeRun DVR Service at https://shop.silicondust.com/shop/.");
-                return false;
+                Logger.WriteInformation("HDHomeRun DVR Service is NOT active. Only 2 days of guide listings will be available.");
+                Logger.WriteInformation("ACTION: You can subscribe to SiliconDust's HDHomeRun DVR Service at https://shop.silicondust.com/shop/ and get 14 days of guide listings.");
             }
 
             // download xmltv file
